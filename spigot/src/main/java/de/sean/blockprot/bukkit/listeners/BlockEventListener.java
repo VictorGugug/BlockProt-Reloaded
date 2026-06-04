@@ -1,0 +1,314 @@
+/*
+ * Copyright (C) 2021 - 2025 spnda
+ * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package de.sean.blockprot.bukkit.listeners;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.collect.Iterables;
+import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.Permissions;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.events.BlockLockOnPlaceEvent;
+import de.sean.blockprot.bukkit.events.BlockProtLockEvent;
+import de.sean.blockprot.bukkit.integrations.PluginIntegration;
+import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
+import de.sean.blockprot.bukkit.nbt.StatHandler;
+import de.sean.blockprot.bukkit.nbt.stats.BlockCountStatistic;
+import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
+import de.sean.blockprot.bukkit.util.BlockUtil;
+import de.sean.blockprot.nbt.LockReturnValue;
+import de.tr7zw.changeme.nbtapi.NBT;
+import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.*;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Collection;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+public class BlockEventListener implements Listener {
+    private final BlockProt blockProt;
+
+    private final NamespacedKey shulkerDataKey;
+
+    private static final Cache<UUID, Boolean> settingsCache = Caffeine.newBuilder()
+        .maximumSize(512)
+        .expireAfterWrite(5, TimeUnit.SECONDS)
+        .build();
+
+    public BlockEventListener(@NotNull BlockProt blockProt) {
+        this.blockProt = blockProt;
+        this.shulkerDataKey = new NamespacedKey(blockProt, "shulker_data");
+    }
+
+    public static void invalidateSettings(@NotNull UUID uuid) {
+        settingsCache.invalidate(uuid);
+    }
+
+    public static void invalidateAllSettings() {
+        settingsCache.invalidateAll();
+    }
+
+    private boolean getLockOnPlace(@NotNull Player player) {
+        UUID uuid = player.getUniqueId();
+        Boolean cached = settingsCache.getIfPresent(uuid);
+        if (cached != null) return cached;
+        boolean value = new PlayerSettingsHandler(player).getLockOnPlace();
+        settingsCache.put(uuid, value);
+        return value;
+    }
+
+    @EventHandler
+    public void onBlockBurn(BlockBurnEvent event) {
+        if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
+        if (!BlockProt.getDefaultConfig().isLockable(event.getBlock().getType())) return;
+        BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
+        if (handler.isProtected()) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void onBlockBreak(BlockBreakEvent event) {
+        if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
+        if (!BlockProt.getDefaultConfig().isLockable(event.getBlock().getType(), event.getBlock().getWorld())) return;
+
+        BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
+        if (!handler.isOwner(event.getPlayer().getUniqueId().toString()) && handler.isProtected()) {
+            if (!BlockProt.getDefaultConfig().shouldAllowBreakProtectedBlocks()) {
+                event.setCancelled(true);
+            }
+        }
+
+        if (!event.isCancelled()) {
+            String ownerUuid = handler.getOwner();
+            if (!ownerUuid.isBlank()) {
+                OfflinePlayer owner = Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid));
+                if (owner.isOnline() && owner.getPlayer() != null) {
+                    StatHandler.removeContainer(owner.getPlayer(), event.getBlock());
+                } else {
+                    PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
+                    StatHandler.getStatisticByUuid(stat, UUID.fromString(ownerUuid));
+                    stat.remove(event.getBlock().getLocation());
+                    BlockCountStatistic countStat = new BlockCountStatistic();
+                    StatHandler.getStatistic(countStat);
+                    countStat.decrement();
+                }
+            }
+            HopperEventListener.invalidate(event.getBlock());
+            handler.clear();
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onAutoDropBlockBreak(BlockBreakEvent event) {
+        if (!BlockProt.getDefaultConfig().isAutoDropToInventory(event.getBlock().getType())) return;
+        if (!BlockProt.getDefaultConfig().isAutoDropToInventoryEnabled(event.getBlock().getWorld())) return;
+        if (BlockProt.getDefaultConfig().isLockableShulkerBox(event.getBlock().getType())) return;
+        Player player = event.getPlayer();
+        if (player.isOp() || player.hasPermission(de.sean.blockprot.bukkit.Permissions.BYPASS.key())) return;
+        if (player.getGameMode() == GameMode.CREATIVE) return;
+
+        java.util.Collection<ItemStack> drops = event.getBlock().getDrops(player.getInventory().getItemInMainHand());
+        if (drops.isEmpty()) return;
+
+        event.setDropItems(false);
+        for (ItemStack drop : drops) {
+            java.util.HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(drop);
+            for (ItemStack overflow : leftover.values()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), overflow);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+    public void onShulkerAutoDropBlockBreak(BlockBreakEvent event) {
+        if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
+        if (!BlockProt.getDefaultConfig().isLockableShulkerBox(event.getBlock().getType(), event.getBlock().getWorld())) return;
+
+        if (!(event.getBlock().getState() instanceof org.bukkit.block.TileState)) return;
+
+        BlockNBTHandler handler;
+        try {
+            handler = new BlockNBTHandler(event.getBlock());
+        } catch (RuntimeException e) {
+            return;
+        }
+
+        if (handler.isOwner(event.getPlayer().getUniqueId().toString()) && (!event.isCancelled() && event.isDropItems() && event.getPlayer().getGameMode() != GameMode.CREATIVE)) {
+            StatHandler.removeContainer(event.getPlayer(), event.getBlock());
+            HopperEventListener.invalidate(event.getBlock());
+            event.setDropItems(false);
+            Collection<ItemStack> itemsToDrop = event.getBlock().getDrops();
+            if (itemsToDrop.isEmpty()) return;
+
+            var item = Iterables.getFirst(itemsToDrop, null);
+            if (item == null) return;
+
+            boolean clearProtection = BlockProt.getDefaultConfig().shouldClearProtectionOnShulkerBreak();
+            boolean autoDropEnabled = BlockProt.getDefaultConfig().isAutoDropToInventoryEnabled(event.getBlock().getWorld());
+
+            if (!clearProtection) {
+                if (MinecraftVersion.isAtLeastVersion(MinecraftVersion.MC1_20_R4)) {
+                    final var meta = item.getItemMeta();
+                    final var pdc = meta.getPersistentDataContainer();
+                    pdc.set(shulkerDataKey, PersistentDataType.STRING, "Hi!");
+                    item.setItemMeta(meta);
+
+                    final var nbt = NBT.itemStackToNBT(item);
+                    final var entityData = nbt.getOrCreateCompound("components").getOrCreateCompound("minecraft:block_entity_data");
+                    entityData.setString("id", "minecraft:shulker_box");
+                    entityData.getOrCreateCompound("PublicBukkitValues").mergeCompound(handler.getNbtCopy());
+                    item = Objects.requireNonNull(NBT.itemStackFromNBT(nbt));
+                } else {
+                    NBT.modify(item, readWriteItemNBT -> {
+                        readWriteItemNBT.getOrCreateCompound("BlockEntityTag").getOrCreateCompound("PublicBukkitValues").mergeCompound(handler.getNbtCopy());
+                    });
+                }
+            }
+
+            event.getBlock().setType(Material.AIR);
+            event.setCancelled(true);
+
+            if (autoDropEnabled) {
+                java.util.HashMap<Integer, ItemStack> leftover = event.getPlayer().getInventory().addItem(item);
+                for (ItemStack overflow : leftover.values()) {
+                    event.getPlayer().getWorld().dropItemNaturally(event.getPlayer().getLocation(), overflow);
+                }
+            } else {
+                event.getPlayer().getWorld().dropItemNaturally(event.getBlock().getLocation(), item);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
+        if (!event.getPlayer().hasPermission(Permissions.USER.key())) return;
+        if (!BlockProt.getDefaultConfig().isLockable(event.getBlock().getType(), event.getBlock().getWorld())) return;
+
+        Block block = event.getBlockPlaced();
+        String playerUuid = event.getPlayer().getUniqueId().toString();
+        BlockNBTHandler handler = new BlockNBTHandler(block);
+
+        if (handler.isNotProtected()) {
+
+            if (getLockOnPlace(event.getPlayer()) && !event.getPlayer().isSneaking()) {
+                BlockLockOnPlaceEvent lockOnPlaceEvent = new BlockLockOnPlaceEvent(event.getBlock(), event.getPlayer());
+
+                Bukkit.getPluginManager().callEvent(lockOnPlaceEvent);
+                if (!lockOnPlaceEvent.isCancelled()) {
+                    LockReturnValue lock = handler.lockBlock(event.getPlayer(), BlockProtLockEvent.Cause.LOCK_ON_PLACE);
+                    if (!lock.success) {
+                        event.setCancelled(true);
+                        if (lock.reason != null) {
+                            event.getPlayer().sendActionBar(
+                            LegacyComponentSerializer.legacySection().deserialize(Translator.get(lock.reason)));
+                        }
+                        return;
+                    }
+
+                    new PlayerSettingsHandler(event.getPlayer()).getFriendsStream()
+                        .filter(fh -> PluginIntegration.filterFriendByUuidForAll(UUID.fromString(fh.getName()), event.getPlayer(), block))
+                        .forEach(handler::addFriend);
+
+                    event.getPlayer().sendActionBar(
+                        LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__LOCK_ON_PLACE_SUCCESS)
+                        )
+                    );
+                }
+
+                if (BlockProt.getDefaultConfig().disallowRedstoneOnPlace()) {
+                    handler.getRedstoneHandler().setAll(false);
+                }
+            }
+
+            Bukkit.getScheduler().runTaskLater(
+                this.blockProt,
+                () -> {
+                    if (block.getType() == Material.CHEST || block.getType() == Material.TRAPPED_CHEST) {
+                        final BlockState doubleChestState = BlockUtil.getDoubleChest(block);
+                        if (doubleChestState != null) {
+                            final BlockNBTHandler doubleChestHandler = new BlockNBTHandler(doubleChestState.getBlock());
+                            if (doubleChestHandler.isNotProtected() || doubleChestHandler.isOwner(playerUuid)) {
+                                handler.mergeHandler(doubleChestHandler);
+                            } else {
+                                event.getPlayer().getWorld().getBlockAt(block.getLocation()).breakNaturally();
+                            }
+
+                            StatHandler.removeContainer(event.getPlayer(), block);
+                        }
+                    } else {
+                        if (block.getState() instanceof org.bukkit.block.TileState) {
+                            handler.setName(BlockUtil.getHumanReadableBlockName(block.getType()));
+                            handler.applyToOtherContainer();
+                        }
+                    }
+                },
+                1
+            );
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockPhysics(@NotNull final BlockPhysicsEvent event) {
+        if (event.getChangedType().toString().contains("ANVIL") &&
+            BlockProt.getDefaultConfig().isLockableBlock(event.getChangedType())) {
+            BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
+
+            if (handler.isProtected())
+                event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(@NotNull final PlayerQuitEvent event) {
+        settingsCache.invalidate(event.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
+    public void onSignChanged(@NotNull final SignChangeEvent event) {
+        if (BlockProt.getDefaultConfig().isLockableBlock(event.getBlock().getType())) {
+            final var handler = new BlockNBTHandler(event.getBlock());
+            if (handler.isProtected() && !handler.isOwner(event.getPlayer().getUniqueId()))
+                event.setCancelled(true);
+        }
+    }
+}

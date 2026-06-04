@@ -1,0 +1,189 @@
+/*
+ * Copyright (C) 2021 - 2025 spnda
+ * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package de.sean.blockprot.bukkit.util;
+
+import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.audit.AuditLogger;
+import org.bukkit.Location;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+/**
+ * Sends a Discord embed webhook when a monitored audit action fires at a block
+ * that has exceeded the configured event threshold.
+ *
+ * <p>All HTTP I/O is performed asynchronously via FoliaLib so it never touches
+ * the server's main thread. A per-block cooldown prevents repeated notifications
+ * within a configurable window.
+ *
+ * <p>Configuration keys in config.yml:
+ * <pre>
+ *   discord_webhook_url: ""                  # empty = disabled
+ *   discord_webhook_events:                  # actions that trigger alerts
+ *     - ACCESS_DENIED
+ *   discord_webhook_min_count: 1             # fire on every matching event (threshold)
+ *   discord_webhook_cooldown_minutes: 10     # cooldown per block
+ * </pre>
+ */
+public final class WebhookDispatcher {
+
+    /** Singleton JDK HttpClient — reused across all requests. */
+    private static final HttpClient HTTP = HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(5))
+        .build();
+
+    /**
+     * Per-block cooldown map.
+     * Key: {@code world:x:y:z}. Value: epoch-millis of last alert.
+     */
+    private static final ConcurrentHashMap<String, Long> cooldowns = new ConcurrentHashMap<>();
+
+    /**
+     * Per-block event counter used to enforce {@code discord_webhook_min_count}.
+     * Key: {@code world:x:y:z}. Value: cumulative matching-event count.
+     */
+    private static final ConcurrentHashMap<String, Integer> eventCounts = new ConcurrentHashMap<>();
+
+    private WebhookDispatcher() {}
+
+    /**
+     * Decides whether to send a webhook alert and, if so, dispatches it asynchronously.
+     *
+     * @param playerName display name for the embed
+     * @param location   block location
+     * @param action     the audit action that just occurred
+     */
+    public static void maybeAlert(@NotNull String playerName,
+                                  @NotNull Location location,
+                                  @NotNull AuditLogger.Action action) {
+        // Read config values on call — they may change after /bp reload.
+        String url = BlockProt.getDefaultConfig().getDiscordWebhookUrl();
+        if (url.isBlank()) return;
+
+        Set<AuditLogger.Action> events = BlockProt.getDefaultConfig().getDiscordWebhookEvents();
+        if (!events.contains(action)) return;
+
+        // Increment per-block event counter; only alert once threshold is reached.
+        String blockKey = locationKey(location);
+        int minCount = BlockProt.getDefaultConfig().getDiscordWebhookMinCount();
+        int count = eventCounts.merge(blockKey, 1, Integer::sum);
+        if (count < minCount) return;
+        // Reset counter after threshold is crossed so the next N events trigger another alert.
+        eventCounts.put(blockKey, 0);
+
+        // Cooldown check.
+        long cooldownMs = BlockProt.getDefaultConfig().getDiscordWebhookCooldownMinutes() * 60_000L;
+        Long lastAlert = cooldowns.get(blockKey);
+        long now = System.currentTimeMillis();
+        if (lastAlert != null && now - lastAlert < cooldownMs) return;
+        cooldowns.put(blockKey, now);
+
+        // Build payload and fire async.
+        String payload = buildPayload(playerName, location, action);
+        BlockProt.getFoliaLib().getScheduler().runAsync(task -> sendWebhook(url, payload));
+    }
+
+    private static void sendWebhook(@NotNull String url, @NotNull String jsonPayload) {
+        try {
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Content-Type", "application/json")
+                .timeout(Duration.ofSeconds(10))
+                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                .build();
+            HttpResponse<String> resp = HTTP.send(req, HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() < 200 || resp.statusCode() >= 300) {
+                BlockProtLogger.warn("Discord webhook returned HTTP " + resp.statusCode());
+            }
+        } catch (Exception e) {
+            BlockProtLogger.warn("Discord webhook error: " + e.getMessage());
+        }
+    }
+
+    /** Builds a minimal Discord embed JSON payload. */
+    private static String buildPayload(@NotNull String playerName,
+                                       @NotNull Location location,
+                                       @NotNull AuditLogger.Action action) {
+        String world = location.getWorld() != null ? location.getWorld().getName() : "unknown";
+        String ts = Instant.now().toString();
+        String title = escape(actionLabel(action));
+        String desc  = escape(playerName + " triggered " + action.name()
+            + " at " + location.getBlockX() + ", "
+            + location.getBlockY() + ", "
+            + location.getBlockZ()
+            + " in " + world);
+
+        return "{"
+            + "\"embeds\":[{"
+            +   "\"title\":\""   + title  + "\","
+            +   "\"description\":\"" + desc + "\","
+            +   "\"color\":"     + colorFor(action) + ","
+            +   "\"timestamp\":\"" + ts + "\","
+            +   "\"footer\":{\"text\":\"BlockProt Reloaded\"}"
+            + "}]}";
+    }
+
+    private static String actionLabel(@NotNull AuditLogger.Action action) {
+        return switch (action) {
+            case ACCESS_DENIED  -> "Access Denied";
+            case ACCESS_GRANTED -> "Access Granted";
+            case OPENED         -> "Block Opened";
+            case ITEM_TAKEN     -> "Item Taken";
+            case ITEM_PLACED    -> "Item Placed";
+            case ADMIN_UNLOCK   -> "Admin Unlock";
+        };
+    }
+
+    private static int colorFor(@NotNull AuditLogger.Action action) {
+        return switch (action) {
+            case ACCESS_DENIED  -> 0xFF0000; // red
+            case ADMIN_UNLOCK   -> 0xFF8800; // orange
+            case ITEM_TAKEN     -> 0xFFFF00; // yellow
+            case OPENED         -> 0x00AAFF; // blue
+            default             -> 0x888888; // grey
+        };
+    }
+
+    /** Minimal JSON string escaping — only handles characters that break JSON. */
+    private static String escape(@Nullable String s) {
+        if (s == null) return "";
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "");
+    }
+
+    private static String locationKey(@NotNull Location loc) {
+        String world = loc.getWorld() != null ? loc.getWorld().getName() : "unknown";
+        return world + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ();
+    }
+}

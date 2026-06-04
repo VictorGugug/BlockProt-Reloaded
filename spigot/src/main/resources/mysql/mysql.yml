@@ -1,0 +1,40 @@
+# ┌─────────────────────────────────────────────────────────────────┐
+# │                 BlockProt — MySQL / Storage                      │
+# │                   BlockProt Reloaded (BPR)                      │
+# ├─────────────────────────────────────────────────────────────────┤
+# │  When disabled, BlockProt uses NBT/PDC stored on the blocks     │
+# │  themselves. Enable MySQL to use a shared relational database.  │
+# │  Run  /bp reload  to apply changes without restarting.          │
+# └─────────────────────────────────────────────────────────────────┘
+
+mysql:
+  # Switch to MySQL as the storage backend.
+  enabled: false
+
+  # Database host address.
+  host: "127.0.0.1"
+
+  # Database port.
+  port: 3306
+
+  # Database name.
+  database: "blockprot"
+
+  # Database user.
+  username: "blockprot"
+
+  # Database password.
+  password: ""
+
+  # Optional: full JDBC URL. When set, host/port/database above are ignored.
+  jdbc_url: ""
+
+  pool:
+    # Maximum number of connections in the HikariCP pool.
+    maximum_pool_size: 10
+
+    # Minimum number of idle connections kept alive.
+    minimum_idle: 2
+
+    # Time in milliseconds before a connection attempt times out.
+    connection_timeout_ms: 10000

@@ -1,0 +1,192 @@
+locale: fr
+enabled: Activé
+disabled: Désactivé
+about:
+  title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
+  original_author: '§7Auteur original: §fspnda'
+  fork_maintainers: '§7Mainteneurs du fork: §fVickey & Reim §8(alias ZarZey)'
+  report_original: §x§c§3§e§e§a§7Signaler des problèmes (plugin original)
+  report_fork: §x§6§6§c§6§6§6Signaler des problèmes (BlockProt Reloaded)
+inventories:
+  back: Retour
+  last_page: Dernière page
+  next_page: Page suivante
+  block_lock: Verrou du bloc
+  user_settings: Paramètres utilisateur
+  block_info: Informations du bloc
+  lock: Verrouiller
+  unlock: Déverrouiller
+  lock_on_place: Verrouiller automatiquement
+  copy_configuration: Copier la configuration
+  paste_configuration: Coller la configuration
+  set_block_name: Mettre un nom de bloc
+  inspect_contents: Inspecter le contenu
+  redstone:
+    settings: Paramètres Redstone
+    redstone_protection: Protection de redstone
+    piston_protection: Protection des pistons
+    hopper_protection: Protection des entonnoirs
+    enable_all: Tout activer
+    disable_all: Tout désactiver
+  friends:
+    manage: Gérer les amis
+    edit: Editer un ami
+    remove: Retirer un ami
+    search: Chercher un joueur
+    search_history: Historique des recherches
+    result: Joueurs trouvés
+    the_public: Le publique
+    the_public_desc: Représente chaque joueur sur ce serveur.
+    make_public: Mettre en publique
+    permissions: Permissions
+    permission:
+      read: Lire
+      write: Écrire
+      manager: Gérer
+  statistics:
+    statistics: Statistiques
+    player_statistics: Statistiques des joueurs
+    global_statistics: Statistiques du serveur
+    container_count: Nombre de blocs
+    your_blocks: Vos blocs
+  audit:
+    title: Journal d'accès
+    no_entries: Aucune entrée trouvée.
+    teleport: Téléporter au bloc
+    open: Journal d'accès
+messages:
+  permission_granted: Permission accordée.
+  unlocked: Déverrouillé.
+  no_permission: Aucune autorisation.
+  friend_added: Ami ajouté.
+  friend_removed: Ami supprimé.
+  friend_already_added: Ami déjà ajouté.
+  friend_cant_be_removed: L'ami ne peut pas être supprimé.
+  redstone_added: Protection Redstone ajoutée.
+  redstone_removed: Protection Redstone supprimée.
+  exceeded_max_block_count: Vous avez dépassé le nombre maximal de blocs verrouillables.
+  lock_hint: §6Vous pouvez protéger vos blocs en vous accroupissant et en faisant un clic droit sur vos coffres, vos fourneaux
+    et bien plus encore ! Consultez également les paramètres de /blockprot pour le configurer à votre convenance. (Cliquez
+    ici pour désactiver ces conseils).
+  hint_hover_text: Ouvrez un menu à partir de BlockProt ou cliquez ici pour désactiver les conseils.
+  disabled_hints: §6Indices désactivées !
+  chat_input_prompt: '§eTapez le nom du joueur §7(§bTab§7 suggestions · §aEntrée§7 confirmer · §c{cancel}§7 annuler):'
+  chat_input_cancel_word: annuler
+  chat_input_cancelled: §cRecherche annulée.
+  lock_on_place_success: §aBloc verrouillé !
+  friends_searching: §eRecherche de §f{player}§e...
+  friends_addall_success: §a§f{player}§a ajouté comme ami dans §f{count}§a bloc(s).
+  friends_addall_usage: '§cUsage: /blockprot friends addall <joueur>'
+  inactivity_cleanup_done: '§e[BlockProt] Nettoyage d''inactivité: §f{count}§e bloc(s) libéré(s).'
+  friends_list_title: §6Vos amis
+  only_players: Seuls les joueurs peuvent utiliser cette commande.
+  reload_done: §aBlockProt a été rechargé avec succès.
+  integrations_enabled: '§7Intégrations actives ({count}): {integrations}'
+console:
+  config_change_detected: "Changement de configuration détecté ; rechargement..."
+  config_reloaded: Configuration rechargée automatiquement.
+  filewatcher_error: 'Erreur du surveillant de fichiers: {error}'
+  audit_logger_started: Journal d'audit démarré.
+  audit_logger_failed: "Impossible de démarrer le journal d'audit: {error}"
+  worldedit_listener_enabled: Écouteur de collage automatique WorldEdit activé.
+  claims_system_enabled: Système de parcelles activé.
+  claims_system_disabled: Système de parcelles désactivé (claims_enabled=false).
+  worlds_yml_syntax_error: 'worlds.yml contient une erreur de syntaxe YAML ; restauration des valeurs par défaut: {error}'
+  worlds_yml_restored: worlds.yml restauré depuis les valeurs internes par défaut.
+  worlds_yml_restore_failed: 'Impossible de restaurer worlds.yml: {error}'
+  worlds_yml_save_failed: 'Impossible de sauvegarder worlds.yml: {error}'
+  backup_dir_failed: Impossible de créer le dossier de sauvegarde. Sauvegarde ignorée.
+  backup_created: 'Données BlockProt existantes détectées ; sauvegarde de sécurité créée: backups/{file}'
+  backup_review_config: Vérifiez config.yml avant d'activer les nouvelles fonctions BPR. Détails dans le journal de session.
+  backup_failed: 'Échec de la sauvegarde: {error}'
+  config_language_missing: "Le fichier de langue configuré n'existe pas: {file}"
+  lang_keys_updated: '{file} mis à jour avec {count} clé(s) de traduction manquante(s).'
+  lang_keys_save_failed: 'Impossible de sauvegarder le fichier de langue fusionné {file}: {error}'
+  config_keys_updated: "config.yml mis à jour avec {count} option(s) manquante(s). Vérifiez-le avant d'activer les nouvelles fonctions BPR."
+  config_keys_save_failed: 'Impossible de sauvegarder config.yml fusionné: {error}'
+  mysql_enabled: Index hybride MySQL activé.
+  mysql_disabled: 'Index hybride MySQL désactivé: {error}'
+  mysql_lookup_failed: 'Échec de la requête de confiance MySQL: {error}'
+  mysql_schema_failed: "Échec de l'initialisation du schéma MySQL: {error}"
+  mysql_cache_load_failed: 'Échec du chargement du cache de confiance MySQL: {error}'
+  mysql_operation_failed: "Échec d'une opération MySQL: {error}"
+  translations_incomplete: "Traductions: {total} clé(s) incomplète(s) dans {file} ; {fallback} utilisent l'anglais de secours, {missing} absente(s) des deux fichiers. Détails dans le journal de session."
+  java_too_old: 'Version Java trop ancienne: {version} (BlockProt Reloaded nécessite Java 25+)'
+  not_paper: "Serveur non Paper détecté. La recherche de joueurs par chat est désactivée et utilisera l'interface enclume. Paper est recommandé."
+  typed_views_fallback: "Paper/Spigot 1.21.0-1.21.3 sans vues d'inventaire typées. Des alternatives AnvilInput seront utilisées."
+worlds:
+  scan_start: 'Analyse des mondes... ({count} chargés)'
+  scan_world_added: "Monde '{world}' ajouté à worlds.yml avec protection activée."
+  scan_complete: 'Analyse terminée: {count} monde(s) détecté(s), {added} ajouté(s) à worlds.yml.'
+claims:
+  wand_pos_a: §bCoin A défini à §f({x}, {y}, {z})§b. Faites un clic droit sur le coin B.
+  wand_pos_b: §bCoin B défini à §f({x}, {y}, {z})§b. Tapez un nom dans le chat pour créer la parcelle.
+  created: '§aParcelle §6{name} §acréée ! Région: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(monde: {world}).'
+  deleted: §aParcelle §6{name} §asupprimée.
+  no_claim_here: §cIl n'y a pas de parcelle à votre emplacement.
+  overlap: §cCette zone chevauche la parcelle d'un autre joueur.
+  no_permission: §cVous n'avez pas la permission de modifier cette parcelle.
+  list_header: '§6Vos parcelles actives:'
+  name_prompt: '§eTapez un nom pour votre parcelle dans le chat. §7(Tapez §c{cancel}§7 pour annuler):'
+  name_cancel_word: annuler
+  name_cancelled: §cCréation de parcelle annulée.
+  name_too_long: §cNom trop long. Maximum {max} caractères.
+  name_invalid: §cNom invalide. Utilisez uniquement des lettres, chiffres, espaces, tirets bas ou tirets.
+  wand_removed: §7Baguette de parcelle retirée.
+  timeout: §cDélai expiré. Veuillez utiliser la baguette à nouveau.
+  flags:
+    title: Options de parcelle
+    fire: Propagation du feu
+    tnt: TNT / Explosions
+    redstone: Redstone (par d'autres)
+    pvp: PvP
+    flow: Écoulement eau et lave
+    leaf_decay: Chute des feuilles
+    mob_spawning: Apparition de mobs
+    chest: Accès aux conteneurs (non-membres)
+    door: Utilisation des portes (non-membres)
+    lever_button: Leviers & boutons (non-membres)
+    use_bucket: Utilisation de seaux (non-membres)
+    pet_spawning: Apprivoisement d'animaux (non-membres)
+    pet_riding: Monter des animaux (non-membres)
+    pet_moving: Mener des animaux (non-membres)
+    invincible: Zone invincible (sans dégâts)
+    deny_enderpearl: Autoriser l'entrée par perle de l'Ender
+  welcome_set: §aMessage de bienvenue défini pour la parcelle §6{name}§a.
+  welcome_cleared: §7Message de bienvenue effacé pour la parcelle §6{name}§7.
+  welcome_prompt: '§eTapez le message de bienvenue dans le chat (codes couleur & supportés). §7§c{cancel}§7 pour annuler:'
+  delete_confirm_title: §cConfirmer la suppression
+  delete_yes: §c§lSupprimer la parcelle
+  delete_cancel: §a§lGarder la parcelle
+  hub:
+    title: Gestion de parcelle
+    info: §6Infos parcelle
+    flags: §6Options
+    delete: §cSupprimer la parcelle
+    wand: §eObtenir la baguette
+    my_claims: §eMes parcelles
+    welcome: §eMessage de bienvenue
+integrations:
+  lands:
+    protect_containers_flag_name: Protéger les conteneurs (BlockProt)
+    protect_containers_desc: Autorise un joueur de protéger des coffres, des fours...
+    require_protect_for_friends_flag_name: Exige "Protéger les conteneurs" pour les amis (BlockProt)
+    require_protect_for_friends_desc: Seuls les joueurs qui ont l'autorisation "Protéger les conteneurs" peuvent être ajoutés
+      en tant qu'amis.
+help:
+  header: §6=== Aide BlockProt ===
+  footer: §6==================
+  block_protection_title: §6Protection de blocs
+  block_protection_settings: '§7  /bp §f- Ouvre tes paramètres personnels de protection.'
+  friends_title: §6Amis
+  friends_gui: '§7  /bp friends §f- Ouvre le menu des amis par défaut.'
+  friends_addall: '§7  /bp friends addall <joueur> §f- Ajoute un ami à tous tes blocs.'
+  other_title: §6Autres
+  settings: '§7  /bp settings §f- Paramètres personnels.'
+  stats: '§7  /bp stats §f- Voir les statistiques de blocs.'
+  about: '§7  /bp about §f- Infos sur le plugin et le fork.'
+  integrations: '§7  /bp integrations §f- Lister les intégrations actives. (admin)'
+  update: '§7  /bp update §f- Vérifier les mises à jour. (admin)'
+  reload: '§7  /bp reload §f- Recharger la configuration. (admin)'
+  disable_hints: "§7  /bp disablehints §f- Désactiver les messages d'aide."
+  debug: '§7  /bp debug <run|placeDebugChest|placeDebugShulker|clearSearchHistory> §f- Diagnostic développeur.'

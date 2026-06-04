@@ -1,0 +1,295 @@
+# ┌─────────────────────────────────────────────────────────────────┐
+# │                   BlockProt — Block Definitions                  │
+# │                   BlockProt Reloaded (BPR)                      │
+# ├─────────────────────────────────────────────────────────────────┤
+# │  This file is generated on first start and read at runtime.     │
+# │  Add or remove Bukkit Material names from any list below to     │
+# │  control which blocks players can lock.                         │
+# │  Run  /bp reload  to apply changes without restarting.          │
+# │                                                                 │
+# │  Sections:                                                      │
+# │   1. Lockable tile entities                                     │
+# │   2. Lockable shulker boxes                                     │
+# │   3. Lockable interactive blocks                                │
+# │   4. Lockable doors                                             │
+# │   5. Auto-drop to inventory                                     │
+# └─────────────────────────────────────────────────────────────────┘
+
+# ════════════════════════════════════════════════════════════════════
+# ─────────────────── TILE ENTITIES ──────────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+# Containers and interactive blocks that store NBT data.
+# New in The Copper Age (1.21.9 / 26.1): COPPER_CHEST, COPPER_TRAPPED_CHEST,
+#   *_SHELF (all wood variants), CRAFTER, DECORATED_POT, CHISELED_BOOKSHELF
+
+lockable_tile_entities:
+  # ── Standard chests ──────────────────────────────────────────────
+  - CHEST
+  - TRAPPED_CHEST
+  # ENDER_CHEST: shared per-player inventory, not NBT-lockable as a
+  # shared container. Included so placement/break protection still works.
+  - ENDER_CHEST
+
+  # ── Copper chests (The Copper Age — 1.21.9 / 26.1) ──────────────
+  # All 8 oxidation variants (normal + trapped) and their waxed forms.
+  - COPPER_CHEST
+  - EXPOSED_COPPER_CHEST
+  - WEATHERED_COPPER_CHEST
+  - OXIDIZED_COPPER_CHEST
+  - WAXED_COPPER_CHEST
+  - WAXED_EXPOSED_COPPER_CHEST
+  - WAXED_WEATHERED_COPPER_CHEST
+  - WAXED_OXIDIZED_COPPER_CHEST
+  - COPPER_TRAPPED_CHEST
+  - EXPOSED_COPPER_TRAPPED_CHEST
+  - WEATHERED_COPPER_TRAPPED_CHEST
+  - OXIDIZED_COPPER_TRAPPED_CHEST
+  - WAXED_COPPER_TRAPPED_CHEST
+  - WAXED_EXPOSED_COPPER_TRAPPED_CHEST
+  - WAXED_WEATHERED_COPPER_TRAPPED_CHEST
+  - WAXED_OXIDIZED_COPPER_TRAPPED_CHEST
+
+  # ── Furnaces ─────────────────────────────────────────────────────
+  - FURNACE
+  - SMOKER
+  - BLAST_FURNACE
+
+  # ── Fluid/item transport ─────────────────────────────────────────
+  - HOPPER
+  - DISPENSER
+  - DROPPER
+
+  # ── Misc storage ─────────────────────────────────────────────────
+  - BARREL
+  - BREWING_STAND
+
+  # ── Shelves (The Copper Age — 1.21.9 / 26.1) ────────────────────
+  # Stores up to 3 item stacks, displayed on the front face.
+  # Interacting swaps the player's hand item with a shelf slot.
+  - OAK_SHELF
+  - SPRUCE_SHELF
+  - BIRCH_SHELF
+  - JUNGLE_SHELF
+  - ACACIA_SHELF
+  - DARK_OAK_SHELF
+  - MANGROVE_SHELF
+  - CHERRY_SHELF
+  - PALE_OAK_SHELF
+  - BAMBOO_SHELF
+  - CRIMSON_SHELF
+  - WARPED_SHELF
+
+  # ── Decorated Pot (1.20+) ─────────────────────────────────────────
+  # Stores one item stack; hoppers interact with it.
+  - DECORATED_POT
+
+  # ── Chiseled Bookshelf (1.20+) ───────────────────────────────────
+  # Stores up to 6 books; redstone-readable.
+  - CHISELED_BOOKSHELF
+
+  # ── Crafter (1.21+) ──────────────────────────────────────────────
+  # Automated crafting block; stores a full 3x3 grid of items.
+  - CRAFTER
+
+  # ── Lectern ──────────────────────────────────────────────────────
+  - LECTERN
+
+  # ── Beehive / Bee Nest ───────────────────────────────────────────
+  # Protect honey/honeycomb production.
+  - BEEHIVE
+  - BEE_NEST
+
+  # ── Jukebox (1.21+, has NBT TileEntity) ─────────────────────────
+  # Stores one disc; its inventory is accessible via hopper.
+  - JUKEBOX
+
+# ════════════════════════════════════════════════════════════════════
+# ──────────────────── SHULKER BOXES ─────────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+# All 16 colour variants + the undyed variant.
+# Shulker boxes carry their NBT when broken, so BlockProt keeps the
+# protection data inside the item when a player picks it up.
+
+lockable_shulker_boxes:
+  - SHULKER_BOX
+  - WHITE_SHULKER_BOX
+  - LIGHT_GRAY_SHULKER_BOX
+  - GRAY_SHULKER_BOX
+  - BLACK_SHULKER_BOX
+  - BROWN_SHULKER_BOX
+  - RED_SHULKER_BOX
+  - ORANGE_SHULKER_BOX
+  - YELLOW_SHULKER_BOX
+  - LIME_SHULKER_BOX
+  - GREEN_SHULKER_BOX
+  - CYAN_SHULKER_BOX
+  - LIGHT_BLUE_SHULKER_BOX
+  - BLUE_SHULKER_BOX
+  - PURPLE_SHULKER_BOX
+  - MAGENTA_SHULKER_BOX
+  - PINK_SHULKER_BOX
+
+# ════════════════════════════════════════════════════════════════════
+# ─────── INTERACTIVE / INTERACTABLE BLOCKS ──────────────────────────
+# ════════════════════════════════════════════════════════════════════
+# Blocks that can be right-clicked to trigger an interaction.
+# Protecting them prevents non-owners/non-friends from interacting.
+
+lockable_blocks:
+  # ── Anvils ───────────────────────────────────────────────────────
+  - ANVIL
+  - CHIPPED_ANVIL
+  - DAMAGED_ANVIL
+
+  # ── Dragon Egg ───────────────────────────────────────────────────
+  # Right-clicking teleports it. Locking prevents other players from
+  # touching / teleporting your dragon egg.
+  - DRAGON_EGG
+
+  # ── Composter ────────────────────────────────────────────────────
+  # Right-clicking deposits items; locking prevents others from
+  # dumping items or scooping bone meal.
+  - COMPOSTER
+
+  # ── Cauldron variants ────────────────────────────────────────────
+  # Interact to fill/drain water, lava, or powder snow.
+  - CAULDRON
+  - WATER_CAULDRON
+  - LAVA_CAULDRON
+  - POWDER_SNOW_CAULDRON
+
+  # ── Bell ─────────────────────────────────────────────────────────
+  # Right-clicking rings it; can be used to troll or alert others.
+  - BELL
+
+  # ── Noteblock ────────────────────────────────────────────────────
+  # Right-click changes pitch; protect creative instrument builds.
+  - NOTE_BLOCK
+
+  # ── Grindstone ───────────────────────────────────────────────────
+  - GRINDSTONE
+
+  # ── Stonecutter ──────────────────────────────────────────────────
+  - STONECUTTER
+
+  # ── Loom ─────────────────────────────────────────────────────────
+  - LOOM
+
+  # ── Cartography Table ────────────────────────────────────────────
+  - CARTOGRAPHY_TABLE
+
+  # ── Smithing Table ───────────────────────────────────────────────
+  - SMITHING_TABLE
+
+  # ── Enchanting Table ─────────────────────────────────────────────
+  - ENCHANTING_TABLE
+
+  # ── Fence gates ──────────────────────────────────────────────────
+  - OAK_FENCE_GATE
+  - SPRUCE_FENCE_GATE
+  - BIRCH_FENCE_GATE
+  - JUNGLE_FENCE_GATE
+  - ACACIA_FENCE_GATE
+  - DARK_OAK_FENCE_GATE
+  - MANGROVE_FENCE_GATE
+  - CHERRY_FENCE_GATE
+  - PALE_OAK_FENCE_GATE
+  - BAMBOO_FENCE_GATE
+  - CRIMSON_FENCE_GATE
+  - WARPED_FENCE_GATE
+
+  # ── Wooden trapdoors ─────────────────────────────────────────────
+  - OAK_TRAPDOOR
+  - SPRUCE_TRAPDOOR
+  - BIRCH_TRAPDOOR
+  - JUNGLE_TRAPDOOR
+  - ACACIA_TRAPDOOR
+  - DARK_OAK_TRAPDOOR
+  - MANGROVE_TRAPDOOR
+  - CHERRY_TRAPDOOR
+  - PALE_OAK_TRAPDOOR
+  - BAMBOO_TRAPDOOR
+  - CRIMSON_TRAPDOOR
+  - WARPED_TRAPDOOR
+
+  # ── Iron / Copper trapdoors ──────────────────────────────────────
+  - IRON_TRAPDOOR
+  - COPPER_TRAPDOOR
+  - EXPOSED_COPPER_TRAPDOOR
+  - WEATHERED_COPPER_TRAPDOOR
+  - OXIDIZED_COPPER_TRAPDOOR
+  - WAXED_COPPER_TRAPDOOR
+  - WAXED_EXPOSED_COPPER_TRAPDOOR
+  - WAXED_WEATHERED_COPPER_TRAPDOOR
+  - WAXED_OXIDIZED_COPPER_TRAPDOOR
+
+# ════════════════════════════════════════════════════════════════════
+# ────────────────────────── DOORS ───────────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+
+lockable_doors:
+  # ── Wooden doors ─────────────────────────────────────────────────
+  - OAK_DOOR
+  - SPRUCE_DOOR
+  - BIRCH_DOOR
+  - JUNGLE_DOOR
+  - ACACIA_DOOR
+  - DARK_OAK_DOOR
+  - MANGROVE_DOOR
+  - CHERRY_DOOR
+  - PALE_OAK_DOOR
+  - BAMBOO_DOOR
+  - CRIMSON_DOOR
+  - WARPED_DOOR
+
+  # ── Iron / Copper doors ──────────────────────────────────────────
+  - IRON_DOOR
+  - COPPER_DOOR
+  - EXPOSED_COPPER_DOOR
+  - WEATHERED_COPPER_DOOR
+  - OXIDIZED_COPPER_DOOR
+  - WAXED_COPPER_DOOR
+  - WAXED_EXPOSED_COPPER_DOOR
+  - WAXED_WEATHERED_COPPER_DOOR
+  - WAXED_OXIDIZED_COPPER_DOOR
+
+
+# ══════════════════════════════════════════════════════════════════
+# ───────────── 5. AUTO-DROP TO INVENTORY ─────────────────────
+# ══════════════════════════════════════════════════════════════════
+#
+# When a player breaks a block listed here, the item is placed directly
+# into their inventory (hotbar first, then inventory) instead of being
+# dropped on the ground. This prevents other players from grabbing the
+# block before the owner can pick it up.
+#
+# The player with blockprot.admin or blockprot.bypass is NOT affected —
+# their breaks always drop normally.
+#
+# Blocks controlled here do NOT need to be in any lockable_* list;
+# the feature applies to all listed materials regardless of protection.
+#
+# enabled      — master switch for the entire feature.
+# blocks       — list of Bukkit Material names that should auto-drop.
+#               Add any block you want protected from theft on break.
+
+auto_drop_to_inventory:
+  enabled: true
+  blocks:
+    - SHULKER_BOX
+    - WHITE_SHULKER_BOX
+    - LIGHT_GRAY_SHULKER_BOX
+    - GRAY_SHULKER_BOX
+    - BLACK_SHULKER_BOX
+    - BROWN_SHULKER_BOX
+    - RED_SHULKER_BOX
+    - ORANGE_SHULKER_BOX
+    - YELLOW_SHULKER_BOX
+    - LIME_SHULKER_BOX
+    - GREEN_SHULKER_BOX
+    - CYAN_SHULKER_BOX
+    - LIGHT_BLUE_SHULKER_BOX
+    - BLUE_SHULKER_BOX
+    - PURPLE_SHULKER_BOX
+    - MAGENTA_SHULKER_BOX
+    - PINK_SHULKER_BOX

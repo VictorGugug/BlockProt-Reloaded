@@ -1,0 +1,145 @@
+locale: de
+enabled: Aktiviert
+disabled: Deaktiviert
+about:
+  title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
+  original_author: '§7Ursprünglicher Autor: §fspnda'
+  fork_maintainers: '§7Fork-Maintainer: §fVickey & Reim §8(alias ZarZey)'
+  report_original: §x§c§3§e§e§a§7Probleme melden (Original-Plugin)
+  report_fork: §x§6§6§c§6§6§6Probleme melden (BlockProt Reloaded)
+inventories:
+  back: Zurück
+  last_page: Vorherige Seite
+  next_page: Nächste Seite
+  block_lock: Block Sperren
+  user_settings: Nutzereinstellungen
+  block_info: Informationen
+  lock: Sperren
+  unlock: Entsperren
+  lock_on_place: Automatisch sperren
+  copy_configuration: Konfiguration kopieren
+  paste_configuration: Konfiguration übertragen
+  set_block_name: Namen ändern
+  inspect_contents: Inhalte einsehen
+  redstone:
+    settings: Redstone Einstellungen
+    redstone_protection: Redstone-Schutz
+    piston_protection: Kolben-Schutz
+    hopper_protection: Trichter-Schutz
+    enable_all: Alles aktivieren
+    disable_all: Alles deaktivieren
+  friends:
+    manage: Freunde verwalten
+    edit: Freund editieren
+    remove: Freund entfernen
+    search: Spieler suchen
+    search_history: Suchverlauf
+    result: Spieler gefunden
+    the_public: Die Öffentlichkeit
+    the_public_desc: Repräsentiert jeden Spieler auf dem Server.
+    make_public: Öffentlich machen
+    permissions: Berechtigungen
+    permission:
+      read: Inhalt einsehen
+      write: Editieren
+      manager: Manager
+  statistics:
+    statistics: Statistik
+    player_statistics: Spieler Statistiken
+    global_statistics: Server Statistiken
+    container_count: Anzahl Blöcke
+    your_blocks: Deine Blöcke
+  audit:
+    title: Zugriffsprotokoll
+    no_entries: Keine Einträge gefunden.
+    teleport: Zum Block teleportieren
+    open: Zugriffsprotokoll
+messages:
+  permission_granted: Erlaubnis erteilt.
+  unlocked: Entsperrt.
+  no_permission: Fehlende Berechtigung.
+  friend_added: Freund hinzugefügt.
+  friend_removed: Freund entfernt.
+  friend_already_added: Freund bereits hinzugefügt.
+  friend_cant_be_removed: Freund kann nicht entfernt werden.
+  redstone_added: Redstone-Schutz hinzugefügt.
+  redstone_removed: Redstone-Schutz entfernt.
+  exceeded_max_block_count: Du hast die maximale Anzahl an Blöcken überschritten.
+  lock_hint: '§6Du kannst deine Truhen, Öfen, und mehr jetzt beschützen! Einfach sneaken und rechts klicken auf deine Blöcke,
+    um auf das Menü zuzugreifen.
+
+    '
+  hint_hover_text: Öffne ein Menü von BlockProt oder klick hier um Hinweise zu deaktivieren.
+  disabled_hints: §6Hinweise deaktiviert!
+  chat_input_prompt: '§eGib den Spielernamen ein §7(§bTab§7 Vorschläge · §aEnter§7 bestätigen · §c{cancel}§7 abbrechen):'
+  chat_input_cancel_word: abbrechen
+  chat_input_cancelled: §cSuche abgebrochen.
+  lock_on_place_success: §aBlock gesperrt!
+  friends_searching: §eSuche §f{player}§e...
+  friends_addall_success: §a§f{player}§a als Freund in §f{count}§a Block/Blöcken hinzugefügt.
+  friends_addall_usage: '§cVerwendung: /blockprot friends addall <Spieler>'
+  inactivity_cleanup_done: '§e[BlockProt] Inaktivitätsbereinigung: §f{count}§e Block/Blöcke freigegeben.'
+  friends_list_title: §6Deine Freunde
+  only_players: Nur Spieler können diesen Befehl verwenden.
+  reload_done: §aBlockProt wurde erfolgreich neu geladen.
+  integrations_enabled: '§7Aktive Integrationen ({count}): {integrations}'
+console:
+  config_change_detected: Konfigurationsänderung erkannt; wird neu geladen...
+  config_reloaded: Konfiguration automatisch neu geladen.
+  filewatcher_error: 'Dateiwächter-Fehler: {error}'
+  audit_logger_started: Zugriffs-Logger gestartet.
+  audit_logger_failed: 'Zugriffs-Logger konnte nicht gestartet werden: {error}'
+  worldedit_listener_enabled: WorldEdit-Einfüge-Auto-Schutz-Listener aktiviert.
+  claims_system_enabled: Gebiets-System aktiviert.
+  claims_system_disabled: Gebiets-System deaktiviert (claims_enabled=false).
+  worlds_yml_syntax_error: 'worlds.yml hat einen YAML-Syntaxfehler; Standardwerte werden wiederhergestellt: {error}'
+  worlds_yml_restored: worlds.yml aus internen Standardwerten wiederhergestellt.
+  worlds_yml_restore_failed: 'worlds.yml konnte nicht wiederhergestellt werden: {error}'
+  worlds_yml_save_failed: 'worlds.yml konnte nicht gespeichert werden: {error}'
+  backup_dir_failed: Sicherungsordner konnte nicht erstellt werden. Sicherung wird übersprungen.
+  backup_created: 'Vorhandene BlockProt-Daten gefunden; Sicherheitskopie erstellt: backups/{file}'
+  backup_review_config: Überprüfe config.yml bevor neue BPR-Funktionen aktiviert werden. Details im Sitzungslog.
+  backup_failed: 'Sicherung fehlgeschlagen: {error}'
+  config_language_missing: 'Die konfigurierte Sprachdatei existiert nicht: {file}'
+  lang_keys_updated: '{file} mit {count} fehlenden Übersetzungsschlüssel(n) aktualisiert.'
+  lang_keys_save_failed: 'Zusammengeführte Sprachdatei {file} konnte nicht gespeichert werden: {error}'
+  config_keys_updated: 'config.yml mit {count} fehlenden Option(en) aktualisiert. Überprüfe es bevor neue BPR-Funktionen aktiviert werden.'
+  config_keys_save_failed: 'Zusammengeführte config.yml konnte nicht gespeichert werden: {error}'
+  mysql_enabled: Hybrides MySQL-Index aktiviert.
+  mysql_disabled: 'Hybrides MySQL-Index deaktiviert: {error}'
+  mysql_lookup_failed: 'MySQL-Vertrauensabfrage fehlgeschlagen: {error}'
+  mysql_schema_failed: 'MySQL-Schema-Initialisierung fehlgeschlagen: {error}'
+  mysql_cache_load_failed: 'MySQL-Vertrauens-Cache-Laden fehlgeschlagen: {error}'
+  mysql_operation_failed: 'MySQL-Operation fehlgeschlagen: {error}'
+  translations_incomplete: 'Übersetzungen: {total} unvollständige Schlüssel in {file}; {fallback} verwenden englischen Fallback, {missing} fehlen in beiden Dateien. Details im Sitzungslog.'
+  java_too_old: 'Java-Version zu alt: {version} (BlockProt Reloaded erfordert Java 25+)'
+  not_paper: Kein Paper-Server erkannt. Chat-basierte Spielersuche ist deaktiviert und nutzt die Amboss-GUI. Paper wird empfohlen.
+  typed_views_fallback: Paper/Spigot 1.21.0-1.21.3 ohne typisierte Inventaransichten erkannt. AnvilInput-Fallbacks werden verwendet.
+worlds:
+  scan_start: 'Welten werden gescannt... ({count} geladen)'
+  scan_world_added: "Welt '{world}' zu worlds.yml hinzugefügt mit standardmäßig aktiviertem Schutz."
+  scan_complete: 'Welten-Scan abgeschlossen: {count} Welt(en) erkannt, {added} zu worlds.yml hinzugefügt.'
+integrations:
+  lands:
+    protect_containers_flag_name: Kontainer schützen (BlockProt)
+    protect_containers_desc: Erlaubt einem Spieler Truhen, Öfen, ... zu sperren
+    require_protect_for_friends_flag_name: '"Kontainer schützen" für Freund erfordern (BlockProt)'
+    require_protect_for_friends_desc: Nur Spieler, die die Flagge "Kontainer schützen" haben, können als Freund hinzugefügt
+      werden.
+help:
+  header: §6=== BlockProt Hilfe ===
+  footer: §6==================
+  block_protection_title: §6Block-Schutz
+  block_protection_settings: '§7  /bp §f- Öffnet deine persönlichen Block-Schutz-Einstellungen.'
+  friends_title: §6Freunde
+  friends_gui: '§7  /bp friends §f- Öffnet das Standard-Freunde-Menü.'
+  friends_addall: '§7  /bp friends addall <Spieler> §f- Fügt einen Freund zu allen deinen Blöcken hinzu.'
+  other_title: §6Sonstiges
+  settings: '§7  /bp settings §f- Persönliche Einstellungen.'
+  stats: '§7  /bp stats §f- Blockstatistiken anzeigen.'
+  about: '§7  /bp about §f- Plugin- und Fork-Informationen.'
+  integrations: '§7  /bp integrations §f- Aktive Integrationen anzeigen. (Admin)'
+  update: '§7  /bp update §f- Auf Plugin-Updates prüfen. (Admin)'
+  reload: '§7  /bp reload §f- Plugin-Konfiguration neu laden. (Admin)'
+  disable_hints: '§7  /bp disablehints §f- Schutzhinweise deaktivieren.'
+  debug: '§7  /bp debug <run|placeDebugChest|placeDebugShulker|clearSearchHistory> §f- Entwickler-Diagnose.'

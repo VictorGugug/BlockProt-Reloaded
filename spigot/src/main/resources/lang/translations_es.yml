@@ -1,0 +1,285 @@
+---
+locale: es
+enabled: Activado
+disabled: Desactivado
+about:
+  title: "§x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin"
+  fork_maintainers: "§7Mantenedor: §fVickey §8(VictorGugug)"
+  report_fork: "§x§6§6§c§6§6§6Reportar problemas / Sugerencias"
+  report_fork_hover: "Haz clic para abrir el rastreador de problemas en GitHub"
+inventories:
+  back: Atrás
+  last_page: Última página
+  next_page: Siguiente página
+  loading: Cargando...
+  searching: Buscando...
+  block_lock: Proteger
+  user_settings: Configuración de Usuario
+  block_info: Información del Bloque
+  lock: Proteger
+  unlock: Desproteger
+  lock_on_place: Proteger siempre al colocar
+  copy_configuration: Copiar configuración
+  paste_configuration: Pegar configuración
+  set_block_name: Establecer el nombre del bloque
+  inspect_contents: Inspeccionar contenido
+  redstone:
+    settings: Configuración de Redstone
+    redstone_protection: Protección contra redstone
+    piston_protection: Protección contra pistones
+    hopper_protection: Protección contra tolvas
+    enable_all: Habilitar todo
+    disable_all: Desactivar todo
+  friends:
+    manage: Administrar permisos
+    edit: Modificar permisos
+    remove: Eliminar permisos
+    search: Buscar Jugadores
+    search_history: Buscar Historia
+    result: Jugadores encontrados
+    the_public: Público
+    the_public_desc: Representa todos los jugadores en este servidor.
+    make_public: Hacer público
+    permissions: Permisos
+    permission:
+      read: Leer
+      write: Escribir
+      manager: Manager
+  # ── Grupos de protección ─────────────────────────────────────────────────
+  groups:
+    title: "§8[§bGrupo§8] §fGestionar"
+    button: "§bGrupo de Protección"
+    button_lore: "Gestiona el grupo al que pertenece este bloque."
+    create: "§aCrear grupo"
+    create_lore: "Crea un nuevo grupo con este bloque como primer miembro."
+    join: "§bUnirse a grupo"
+    join_lore: "Ingresa un ID de grupo para unirte a uno existente."
+    dissolve: "§cDisolver grupo"
+    dissolve_lore: "Elimina todos los bloques del grupo y lo borra."
+    leave: "§eSalir del grupo"
+    leave_lore: "Elimina solo este bloque del grupo."
+    member_count: "§7Miembros: §f{count}"
+    no_group: "§7Este bloque no pertenece a ningún grupo."
+  statistics:
+    statistics: Estadísticas
+    player_statistics: Estadísticas del jugador
+    global_statistics: Estadísticas del servidor
+    container_count: Número de bloques
+    your_blocks: Tus bloques
+  stats:
+    lore_tp: "§7[✓] Clic: Teletransportar al bloque"
+    lore_no_tp: "§c[✗] Sin permiso (blockprot.blocks.tp)"
+  audit:
+    title: "Registro de Accesos"
+    no_entries: "Sin registros."
+    teleport: "Teletransportarse al bloque"
+    open: "Registro de Accesos"
+    action_count: "§7{count} acción(es)"
+    click_hint: "§7Haz clic para ver el historial completo."
+    player_history: "§aHistorial del jugador"
+    action_access_denied: "§cAcceso denegado"
+    action_opened: "§aAbrió"
+    action_item_taken: "§eTomó artículo(s)"
+    action_item_placed: "§2Colocó artículo(s)"
+  # ── Protección de mascotas ───────────────────────────────────────────────────
+  pet:
+    settings: "§dAjustes de Mascota"
+    protect: "§dProtección de mascota"
+    no_damage: "§cBloquear daño"
+    no_interact: "§eBloquear interacción"
+    no_leash: "§6Bloquear correa"
+    no_pickup: "§bBloquear recoger (loro)"
+  transfer:
+    title: "§8[§dTransferir bloque§8] Buscar jugador"
+    search_prompt: "Nombre del jugador"
+    button: "Transferir bloque"
+    button_lore: "Transferir propiedad a otro jugador."
+  timed:
+    title: "§8[§6Acceso temporal§8] Seleccionar duración"
+    button: "§eAcceso temporal"
+    button_lore: "Concede acceso por tiempo limitado."
+    info: "§eInfo"
+    over_max: "§cSupera el máximo configurado"
+    max_label: "§7Máximo: §f{duration}"
+    no_limit: "§7Máximo: §fSin límite"
+    player_label: "§7Jugador: §f{player}"
+  user_menu:
+    title: "[Usuario] BlockProt"
+    settings: "Mis ajustes"
+    settings_lore: "Configura tus preferencias personales."
+    friends: "Amigos"
+    friends_lore: "Gestiona tu lista global de amigos."
+    stats: "Estadísticas"
+    stats_lore: "Ver cuántos bloques has protegido."
+    transfer: "Transferir bloque"
+    transfer_lore: "Mira un bloque y usa /bp transfer <jugador>."
+    timed: "Acceso temporal"
+    timed_lore: "Mira un bloque y usa /bp timed <jugador> <segundos>."
+    hints: "Sugerencias de protección"
+    hints_lore: "Activa/desactiva sugerencias al colocar bloques."
+    hints_already: "Sugerencias ya gestionadas."
+    about: "Acerca de BlockProt"
+    about_lore: "Información del plugin."
+    close: "Cerrar"
+    close_lore: "Cerrar este menú."
+  admin_menu:
+    title: "BlockProt"
+    reload: "Recargar config"
+    reload_lore: "Recarga config.yml y traducciones."
+    update: "Buscar actualizaciones"
+    update_lore: "Verifica si hay una nueva versión."
+    integrations: "Integraciones activas"
+    integrations_lore: "Lista integraciones activas en el chat."
+    stats: "Estadísticas"
+    stats_lore: "Abre el menú de estadísticas globales."
+    debug: "Diagnóstico (debug)"
+    debug_lore: "Ejecuta pruebas internas y escribe en el log."
+    info: "Info de bloque"
+    info_lore: "Cierra y usa /bp info <jugador> para ver sus bloques."
+    close: "Cerrar"
+    close_lore: "Cerrar este menú."
+  # -- Lista de bloques del admin --
+  admin_block_list:
+    title: "Bloques de {player}"
+  # -- /bp unlock <jugador> GUI --
+  bp_unlock:
+    title: "Desproteger: {player}"
+    left_click_hint: "§7[✓] Clic izquierdo: ver contenido (solo lectura)"
+    right_click_hint: "§c[!] Clic derecho: quitar protección"
+  # ─────────────────────────────────────────────────────────────────────────
+messages:
+  permission_granted: Protegido.
+  unlocked: Desprotegido.
+  no_permission: No tienes permiso.
+  error_prefix: "§c[BlockProt]: "
+  pet_death_notification: "§c§l[BlockProt] §r§cTu mascota §e{pet_name}§c ha muerto."
+  friend_added: Permiso añadido.
+  friend_removed: Permiso eliminado.
+  friend_already_added: Ya tiene permiso.
+  friend_cant_be_removed: No se puede retirar el permiso.
+  redstone_added: "Se ha añadido protección contra Redstone."
+  redstone_removed: "Se ha eliminado la protección contra Redstone."
+  exceeded_max_block_count: Has excedido el número máximo de bloques bloqueables.
+  lock_hint: "§6Puedes proteger tus bloques agachándote y haciendo clic derecho en tus cofres, hornos, ¡y mucho más! Además, echa un vistazo a los ajustes con /blockprot settings para configurarlo a tu gusto. (Haz clic aquí para desactivar estas sugerencias).\n"
+  hint_hover_text: "Abra un menú desde blockprot o haga clic aquí para desactivar las sugerencias"
+  disabled_hints: "§6¡Sugerencias desactivadas!"
+  chat_input_prompt: "§eEscribe el nombre del jugador §7(§bTab§7 sugerencias · §aEnter§7 confirmar · §c{cancel}§7 cancelar):"
+  chat_input_cancel_word: "cancelar"
+  chat_input_cancelled: "§cBúsqueda cancelada."
+  lock_on_place_success: "§aBloque protegido!"
+  friends_searching: "§eBuscando a §f{player}§e..."
+  friends_addall_success: "§a§f{player}§a añadido como amigo en §f{count}§a bloque(s)."
+  friends_addall_usage: "§cUso: /blockprot friends addall <jugador> o /blockprot amigos agregartodos <jugador>"
+  inactivity_cleanup_done: "§eLimpieza de inactividad: §f{count}§e bloque(s) liberado(s)."
+  friends_list_title: "§6Tus amigos"
+  only_players: "Solo los jugadores pueden usar este comando."
+  reload_done: "§aBlockProt se recargó correctamente."
+  integrations_enabled: "§7Integraciones activas ({count}): {integrations}"
+  # ── Mensajes nuevos BPR ───────────────────────────────
+  transfer_success: "§aPropiedad transferida a §f{player}§a. Fuiste añadido como amigo."
+  transfer_usage: "§cUso: /bp transfer <jugador>  (mira un bloque tuyo)"
+  transfer_not_owner: "§cNo eres el dueño de ese bloque."
+  transfer_player_not_found: "§cJugador no encontrado: {player}"
+  transfer_self: "§cNo puedes transferir un bloque a ti mismo."
+  timed_access_success: "§aAcceso temporal concedido a §f{player}§a por §f{seconds}§a segundo(s)."
+  timed_access_usage: "§cUso: /bp timed <jugador> <segundos>  (mira un bloque tuyo)"
+  timed_access_revoked: "§6Acceso temporal de §f{player}§6 revocado."
+  timed_access_not_owner: "§cNo eres el dueño del bloque o no es bloqueable."
+  admin_info_header: "§6=== Bloques de {player} ==="
+  admin_info_entry: "§7  {world} §f{x}, {y}, {z}"
+  admin_info_usage: "§cUso: /bp info <jugador>"
+  admin_info_player_not_found: "§cJugador no encontrado: {player}"
+  admin_info_no_blocks: "§7{player} no tiene bloques bloqueados."
+  no_permission_tp: "§c[✗] Sin permiso: blockprot.blocks.tp"
+  remote_unlock_warning: "§e⚠ Desproteger remotamente.\n§7Haz clic de nuevo para confirmar."
+  admin_reload_done: "§aConfig y traducciones recargadas."
+  admin_integrations: "§7Integraciones ({count}): {integrations}"
+  admin_info_hint: "§7Usa §f/bp info <jugador>§7 para ver sus bloques protegidos."
+  admin_debug_hint: "§7Ejecutando diagnósticos..."
+  copy_done: "§aConfiguración copiada."
+  paste_done: "§aConfiguración pegada."
+  hints_disabled: "§aSugerencias de protección desactivadas."
+  hints_already: "§7Sugerencias ya gestionadas. Adjústalas en Mis ajustes."
+  transfer_self_gui: "§cNo puedes transferir un bloque a ti mismo."
+  transfer_not_owner_gui: "§cNo eres el dueño de ese bloque."
+  transfer_failed: "§cNo se pudo transferir el bloque."
+  timed_access_granted: "§aAcceso temporal concedido por §f{duration}§a."
+  timed_access_over_max: "§cLa duración supera el máximo configurado ({duration})."
+  timed_access_invalid_state: "§cEl acceso temporal solo está disponible para amigos en un bloque específico."
+  user_transfer_hint: "§7Mira un bloque tuyo y usa: §f/bp transfer <jugador>"
+  user_timed_hint: "§7Mira un bloque tuyo y usa: §f/bp timed <jugador> <segundos>"
+  # -- Admin unlock / /bp unlock GUI --
+  admin_unlock_success: "§aBloque en {x} {y} {z} ({world}) desprotegido."
+  admin_unlock_failed: "§cNo se pudo desproteger ese bloque."
+  admin_unlock_usage: "§cUso: /bp unlock <jugador>  (requiere blockprot.admin)"
+  bp_unlock_removed: "§aProtección eliminada de §f{block}§a (del jugador {player}) en {x} {y} {z}."
+  bp_unlock_usage: "§cUso: /bp unlock <jugador>"
+  bp_unlock_player_not_found: "§cJugador no encontrado: {player}"
+  bp_unlock_no_blocks: "§7{player} no tiene bloques protegidos."
+  # -- Expiración de protección --
+  expiry_set: "§aExpiración configurada: el bloque se desprotegerá en §f{duration}§a."
+  expiry_cleared: "§aExpiración eliminada. El bloque ya no se desprotegerá automáticamente."
+  expiry_expired: "§eLa protección de este bloque ha caducado y ha sido eliminada."
+  expiry_invalid_duration: "§cDuración inválida. Usa: 30s, 60m, 24h, 28d, 12mo, 1y (o combinado: 1d12h30m)."
+console:
+  config_change_detected: "Cambio detectado en la configuración; recargando..."
+  config_reloaded: "Configuración recargada automáticamente."
+  filewatcher_error: "Error del monitor de archivos: {error}"
+  audit_logger_started: "Registro de auditoría iniciado."
+  audit_logger_failed: "No se pudo iniciar el registro de auditoría: {error}"
+  worldedit_listener_enabled: "Monitor de auto-protección de pegados WorldEdit activado."
+  claims_system_enabled: "Sistema de parcelas activado."
+  claims_system_disabled: "Sistema de parcelas desactivado (claims_enabled=false)."
+  worlds_yml_syntax_error: "worlds.yml tiene un error de sintaxis YAML; restaurando valores por defecto: {error}"
+  worlds_yml_restored: "worlds.yml restaurado desde los valores internos."
+  worlds_yml_restore_failed: "No se pudo restaurar worlds.yml: {error}"
+  worlds_yml_save_failed: "No se pudo guardar worlds.yml: {error}"
+  backup_dir_failed: "No se pudo crear la carpeta de respaldos. Se omitió el respaldo."
+  backup_created: "Se detectaron datos existentes de BlockProt; respaldo de seguridad creado: backups/{file}"
+  backup_review_config: "Revisa config.yml antes de activar nuevas funciones. Los detalles están en el log de sesión."
+  backup_failed: "No se pudo crear el respaldo: {error}"
+  config_language_missing: "El archivo de idioma configurado no existe: {file}"
+  lang_keys_updated: "{file} actualizado con {count} clave(s) de traducción faltante(s)."
+  lang_keys_save_failed: "No se pudo guardar el archivo de idioma combinado {file}: {error}"
+  config_keys_updated: "config.yml actualizado con {count} opción(es) faltante(s). Revísalo antes de activar nuevas funciones."
+  config_keys_save_failed: "No se pudo guardar config.yml combinado: {error}"
+  mysql_enabled: "Índice híbrido MySQL activado."
+  mysql_disabled: "Índice híbrido MySQL desactivado: {error}"
+  mysql_lookup_failed: "Falló la búsqueda de confianza en MySQL: {error}"
+  mysql_schema_failed: "Falló la inicialización del esquema MySQL: {error}"
+  mysql_cache_load_failed: "Falló la carga de caché de confianza MySQL: {error}"
+  mysql_operation_failed: "Falló una operación MySQL: {error}"
+  translations_incomplete: "Traducciones: {total} clave(s) incompleta(s) en {file}; {fallback} usando respaldo en inglés, {missing} ausente(s) en ambos archivos. Los detalles están en el log de sesión."
+  java_too_old: "Versión de Java demasiado antigua: {version} (BlockProt Reloaded requiere Java 25+)"
+  not_paper: "El servidor no está ejecutando Paper. La búsqueda por chat se desactiva y se usará la GUI de yunque. Se recomienda Paper."
+  typed_views_fallback: "Servidor Paper/Spigot 1.21.0-1.21.3 detectado, sin vistas de inventario tipadas. Se usarán fallbacks de AnvilInput."
+worlds:
+  scan_start: "Escaneando mundos... ({count} cargados)"
+  scan_world_added: "Mundo '{world}' agregado a worlds.yml con proteccion activada."
+  scan_complete: "Escaneo de mundos completado: {count} mundo(s) detectado(s), {added} agregado(s) a worlds.yml. Detalles en el log de sesion."
+integrations:
+  lands:
+    protect_containers_flag_name: Proteger contenedores (BlockProt)
+    protect_containers_desc: Permitir a los jugadores a proteger cofres, hornos, ...
+    require_protect_for_friends_flag_name: "Requiere \"Proteger contenedores\" para amigos (BlockProt)"
+    require_protect_for_friends_desc: "Solo los jugadores que tienen el \"Proteger contenedores\" son elegibles para ser agregados a amigos."
+help:
+  header: "§6=== Ayuda de BlockProt ==="
+  footer: "§6=================="
+  block_protection_title: "§6Protección de bloques"
+  block_protection_settings: "§7  /bp §f- Abre tus ajustes personales de protección."
+  friends_title: "§6Amigos"
+  friends_gui: "§7  /bp friends §8(/bp amigos) §f- Abre el menú de amigos predeterminados."
+  friends_addall: "§7  /bp friends addall <jugador> §8(/bp amigos agregartodos) §f- Añade un amigo a todos tus bloques."
+  transfer: "§7  /bp transfer <jugador> §f- Transfiere la propiedad de un bloque a otro jugador."
+  timed_access: "§7  /bp timed <jugador> <segundos> §f- Otorga acceso temporal a un bloque."
+  admin_info: "§7  /bp info <jugador> §f- Lista todos los bloques de un jugador. (admin)"
+  other_title: "§6Otros"
+  settings: "§7  /bp settings §8(/bp ajustes) §f- Ajustes personales."
+  stats: "§7  /bp stats §8(/bp estadisticas) §f- Ver estadísticas de bloques."
+  about: "§7  /bp about §8(/bp acerca) §f- Información del plugin y del fork."
+  integrations: "§7  /bp integrations §8(/bp integraciones) §f- Lista integraciones activas. (admin)"
+  update: "§7  /bp update §8(/bp actualizar) §f- Comprueba actualizaciones del plugin. (admin)"
+  reload: "§7  /bp reload §8(/bp recargar) §f- Recarga la configuración del plugin. (admin)"
+  disable_hints: "§7  /bp disablehints §8(/bp desactivarsugerencias) §f- Desactiva los mensajes de ayuda de protección."
+  debug: "§7  /bp debug §8(/bp depurar) <run|placeDebugChest|placeDebugShulker|clearSearchHistory> §f- Diagnóstico de desarrollo."

@@ -1,0 +1,7 @@
+# BlockProt's ClaimChunk plugin integration config.
+
+# When enabled, access to blocks inside claimed chunks is restricted
+# to the chunk owner. Players who are not the chunk owner will be
+# denied access to both locked and unlocked blocks inside the chunk.
+# Set to false to only block locking (default behaviour).
+restrict_access_to_chunk_owner: false

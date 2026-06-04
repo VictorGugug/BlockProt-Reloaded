@@ -1,0 +1,235 @@
+/*
+ * Copyright (C) 2021 - 2025 spnda
+ * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package de.sean.blockprot.bukkit.inventories;
+
+import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.groups.LockGroupRegistry;
+import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Inventory for managing block lock groups.
+ * Allows the block owner to create a new group, join an existing group
+ * (by entering a group ID), leave a group, or dissolve it entirely.
+ *
+ * <p>Layout (18 slots, double row):
+ * <pre>
+ *  0=Back  1=—  2=Create  3=Join  4=Status  5=—  6=—  7=—  8=Leave/Dissolve
+ *  9-17 (empty)
+ * </pre>
+ */
+public class GroupManageInventory extends BlockProtInventory {
+    public GroupManageInventory() { super(true); }
+
+    @Override
+    int getSize() {
+        return InventoryConstants.doubleLine;
+    }
+
+    @NotNull
+    @Override
+    String getTranslatedInventoryName() {
+        return Translator.get(TranslationKey.INVENTORIES__GROUPS__TITLE);
+    }
+
+    @Override
+    public void onClick(@NotNull InventoryClickEvent event, @NotNull InventoryState state) {
+        Block block = state.getBlock();
+        if (block == null) return;
+
+        Player player = (Player) event.getWhoClicked();
+        ItemStack item = event.getCurrentItem();
+        if (item == null) return;
+
+        try {
+            BlockNBTHandler handler = new BlockNBTHandler(block);
+
+            // Check ownership for all mutating actions
+            boolean isOwner = handler.isOwner(player.getUniqueId());
+
+            switch (item.getType()) {
+                case OAK_SIGN -> {
+                    // Back button
+                    state.currentPageIndex = 0;
+                    closeAndOpen(player, new BlockLockInventory().fill(player, block.getType(), handler));
+                }
+                case GREEN_CONCRETE -> {
+                    // Create group — only owner can create
+                    if (!isOwner) {
+                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__GROUPS__NOT_OWNER)));
+                        return;
+                    }
+                    String existingGroup = handler.getGroupId();
+                    if (!existingGroup.isEmpty()) {
+                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__GROUPS__ALREADY_IN_GROUP)));
+                        closeAndOpen(player, this.fill(player, handler));
+                        return;
+                    }
+                    createNewGroup(player, block, handler);
+                }
+                case LIGHT_BLUE_CONCRETE -> {
+                    // Join group — prompt player to enter a group ID via AnvilInput
+                    if (!isOwner) {
+                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__GROUPS__NOT_OWNER)));
+                        return;
+                    }
+                    String existingGroup = handler.getGroupId();
+                    if (!existingGroup.isEmpty()) {
+                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__GROUPS__ALREADY_IN_GROUP)));
+                        closeAndOpen(player, this.fill(player, handler));
+                        return;
+                    }
+                    final Block joinBlock = block;
+                    player.closeInventory();
+                    AnvilInput.open(player, BlockProt.getInstance(), "",
+                        Translator.get(TranslationKey.INVENTORIES__GROUPS__JOIN), groupId -> {
+                            if (groupId == null || groupId.isBlank()) return;
+                            // Validate the group exists
+                            if (!LockGroupRegistry.getAllGroups().contains(groupId.trim())) {
+                                player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                                    "§cGroup not found: " + groupId.trim()));
+                                return;
+                            }
+                            BlockNBTHandler h2 = new BlockNBTHandler(joinBlock);
+                            String trimmed = groupId.trim();
+                            h2.setGroupId(trimmed);
+                            LockGroupRegistry.addBlockToGroup(joinBlock, trimmed);
+                            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                                Translator.get(TranslationKey.MESSAGES__GROUPS__JOINED)));
+                            Inventory inv = new GroupManageInventory().fill(player, h2);
+                            if (inv != null) player.openInventory(inv);
+                        });
+                }
+                case RED_CONCRETE -> {
+                    // Dissolve group — removes all members (only owner)
+                    if (!isOwner) {
+                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__GROUPS__NOT_OWNER)));
+                        closeAndOpen(player, this.fill(player, handler));
+                        return;
+                    }
+                    String groupId = handler.getGroupId();
+                    if (!groupId.isEmpty()) {
+                        int memberCount = LockGroupRegistry.getGroupBlocks(groupId).size();
+                        LockGroupRegistry.dissolveGroup(groupId);
+                        handler.setGroupId("");
+                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__GROUPS__DISSOLVED)
+                                .replace("{count}", String.valueOf(memberCount))));
+                    }
+                    closeAndOpen(player, this.fill(player, handler));
+                }
+                case YELLOW_CONCRETE -> {
+                    // Leave group — removes only this block
+                    if (!isOwner) {
+                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__GROUPS__NOT_OWNER)));
+                        closeAndOpen(player, this.fill(player, handler));
+                        return;
+                    }
+                    String groupId = handler.getGroupId();
+                    if (!groupId.isEmpty()) {
+                        LockGroupRegistry.removeBlockFromGroup(block);
+                        handler.setGroupId("");
+                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__GROUPS__LEFT)));
+                    }
+                    closeAndOpen(player, this.fill(player, handler));
+                }
+            }
+        } catch (RuntimeException e) {
+            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                "§c" + e.getMessage()));
+        }
+    }
+
+    @Override
+    public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {}
+
+    /**
+     * Fills and returns the inventory for the given block's NBT handler.
+     */
+    @NotNull
+    public Inventory fill(@NotNull Player player, @NotNull BlockNBTHandler handler) {
+        this.inventory = createInventory();
+
+        String blockGroupId = handler.getGroupId();
+        boolean inGroup = !blockGroupId.isEmpty();
+
+        setItemStack(0, Material.OAK_SIGN, TranslationKey.INVENTORIES__BACK);
+
+        if (!inGroup) {
+            setItemStack(2, Material.GREEN_CONCRETE, TranslationKey.INVENTORIES__GROUPS__CREATE,
+                List.of(Translator.get(TranslationKey.INVENTORIES__GROUPS__CREATE_LORE)));
+
+            setItemStack(3, Material.LIGHT_BLUE_CONCRETE, TranslationKey.INVENTORIES__GROUPS__JOIN,
+                List.of(Translator.get(TranslationKey.INVENTORIES__GROUPS__JOIN_LORE)));
+
+            setItemStack(4, Material.GRAY_CONCRETE, TranslationKey.INVENTORIES__GROUPS__NO_GROUP);
+        } else {
+            int memberCount = LockGroupRegistry.getGroupBlocks(blockGroupId).size();
+
+            setItemStack(4, Material.LIME_CONCRETE,
+                Translator.get(TranslationKey.INVENTORIES__GROUPS__MEMBER_COUNT)
+                    .replace("{count}", String.valueOf(memberCount)),
+                List.of("§7ID: §f" + blockGroupId));
+
+            setItemStack(6, Material.YELLOW_CONCRETE, TranslationKey.INVENTORIES__GROUPS__LEAVE,
+                List.of(Translator.get(TranslationKey.INVENTORIES__GROUPS__LEAVE_LORE)));
+
+            setItemStack(8, Material.RED_CONCRETE, TranslationKey.INVENTORIES__GROUPS__DISSOLVE,
+                List.of(Translator.get(TranslationKey.INVENTORIES__GROUPS__DISSOLVE_LORE)));
+        }
+
+        return this.inventory;
+    }
+
+    /**
+     * Creates a new group with a short random ID and registers the block.
+     */
+    private void createNewGroup(@NotNull Player player, @NotNull Block block, @NotNull BlockNBTHandler handler) {
+        String groupId = UUID.randomUUID().toString().substring(0, 8);
+        handler.setGroupId(groupId);
+        LockGroupRegistry.addBlockToGroup(block, groupId);
+
+        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+            Translator.get(TranslationKey.MESSAGES__GROUPS__CREATED)));
+
+        closeAndOpen(player, this.fill(player, handler));
+    }
+}

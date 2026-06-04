@@ -1,0 +1,193 @@
+locale: pt-BR
+enabled: Habilitado
+disabled: Desabilitado
+about:
+  title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
+  original_author: '§7Autor original: §fspnda'
+  fork_maintainers: '§7Mantenedores do fork: §fVickey & Reim §8(alias ZarZey)'
+  report_original: §x§c§3§e§e§a§7Reportar problemas (plugin original)
+  report_fork: §x§6§6§c§6§6§6Reportar problemas (BlockProt Reloaded)
+inventories:
+  back: Voltar
+  last_page: Última página
+  next_page: Próxima página
+  block_lock: Bloco Trancado
+  user_settings: Configurações do Usuário
+  block_info: Informações do Bloco
+  lock: Trancar
+  unlock: Destrancar
+  lock_on_place: Trancar automaticamente
+  copy_configuration: Copiar configuração
+  paste_configuration: Colar configuração
+  set_block_name: Definir nome do bloco
+  inspect_contents: Inspecionar conteúdo
+  redstone:
+    settings: Configurações de Redstone
+    redstone_protection: Proteção de redstone
+    piston_protection: Proteção do pistão
+    hopper_protection: Proteção do funil
+    enable_all: Habilitar todos
+    disable_all: Desativar tudo
+  friends:
+    manage: Gerenciar amigos
+    edit: Editar amigo
+    remove: Remover amigo
+    search: Pesquisar jogadores
+    search_history: Histórico de busca
+    result: Jogadores encontrados
+    the_public: O público
+    the_public_desc: Representa todos os jogadores neste servidor.
+    make_public: Tornar público
+    permissions: Permissões
+    permission:
+      read: Ler
+      write: Escrever
+      manager: Gerenciar
+  statistics:
+    statistics: Estatísticas
+    player_statistics: Estatísticas do jogador
+    global_statistics: Estatísticas do servidor
+    container_count: Contagem de blocos
+    your_blocks: Seus blocos
+  audit:
+    title: Registro de acesso
+    no_entries: Nenhuma entrada encontrada.
+    teleport: Teleportar para o bloco
+    open: Registro de acesso
+messages:
+  permission_granted: Permissão garantida.
+  unlocked: Desbloqueado.
+  no_permission: Sem permissão.
+  friend_added: Amigo adicionado.
+  friend_removed: Amigo removido.
+  friend_already_added: Amigo já adicionado.
+  friend_cant_be_removed: Amigo não pode ser removido.
+  redstone_added: Proteção Redstone adicionada.
+  redstone_removed: Proteção Redstone removida.
+  exceeded_max_block_count: Você excedeu a contagem máxima de blocos bloqueáveis.
+  lock_hint: '§6Você pode proteger seus blocos agachando-se e clicando com o botão direito do mouse em seus baús, fornalhas
+    e muito mais! Além disso, verifique as configurações de /blockprot para configurá-lo ao seu gosto. (Clique aqui para desativar
+    essas dicas.)
+
+    '
+  hint_hover_text: Abra um menu do BlockProt ou clique aqui para desativar as dicas.
+  disabled_hints: §6Dicas desativadas!
+  chat_input_prompt: '§eDigite o nome do jogador §7(§bTab§7 sugestões · §aEnter§7 confirmar · §c{cancel}§7 cancelar):'
+  chat_input_cancel_word: cancelar
+  chat_input_cancelled: §cBusca cancelada.
+  lock_on_place_success: §aBloco trancado!
+  friends_searching: §eProcurando §f{player}§e...
+  friends_addall_success: §a§f{player}§a adicionado como amigo em §f{count}§a bloco(s).
+  friends_addall_usage: '§cUso: /blockprot friends addall <jogador>'
+  inactivity_cleanup_done: '§e[BlockProt] Limpeza de inatividade: §f{count}§e bloco(s) liberado(s).'
+  friends_list_title: §6Seus amigos
+  only_players: Apenas jogadores podem usar este comando.
+  reload_done: §aBlockProt foi recarregado com sucesso.
+  integrations_enabled: '§7Integrações ativas ({count}): {integrations}'
+console:
+  config_change_detected: Alteração de configuração detectada; recarregando...
+  config_reloaded: Configuração recarregada automaticamente.
+  filewatcher_error: 'Erro no monitoramento de arquivos: {error}'
+  audit_logger_started: Logger de auditoria iniciado.
+  audit_logger_failed: 'Não foi possível iniciar o logger de auditoria: {error}'
+  worldedit_listener_enabled: Listener de auto-proteção de colagem WorldEdit ativado.
+  claims_system_enabled: Sistema de áreas ativado.
+  claims_system_disabled: Sistema de áreas desativado (claims_enabled=false).
+  worlds_yml_syntax_error: 'worlds.yml tem um erro de sintaxe YAML; restaurando padrões: {error}'
+  worlds_yml_restored: worlds.yml restaurado a partir dos padrões internos.
+  worlds_yml_restore_failed: 'Não foi possível restaurar worlds.yml: {error}'
+  worlds_yml_save_failed: 'Não foi possível salvar worlds.yml: {error}'
+  backup_dir_failed: Não foi possível criar a pasta de backup. Backup ignorado.
+  backup_created: 'Dados BlockProt existentes encontrados; backup de segurança criado: backups/{file}'
+  backup_review_config: Revise config.yml antes de ativar novas funções BPR. Detalhes no log de sessão.
+  backup_failed: 'Falha no backup: {error}'
+  config_language_missing: 'O arquivo de idioma configurado não existe: {file}'
+  lang_keys_updated: '{file} atualizado com {count} chave(s) de tradução ausente(s).'
+  lang_keys_save_failed: 'Não foi possível salvar o arquivo de idioma mesclado {file}: {error}'
+  config_keys_updated: 'config.yml atualizado com {count} opção(ões) ausente(s). Revise-o antes de ativar novas funções BPR.'
+  config_keys_save_failed: 'Não foi possível salvar config.yml mesclado: {error}'
+  mysql_enabled: Índice MySQL híbrido ativado.
+  mysql_disabled: 'Índice MySQL híbrido desativado: {error}'
+  mysql_lookup_failed: 'Falha na consulta de confiança MySQL: {error}'
+  mysql_schema_failed: 'Falha na inicialização do esquema MySQL: {error}'
+  mysql_cache_load_failed: 'Falha no carregamento do cache de confiança MySQL: {error}'
+  mysql_operation_failed: 'Operação MySQL falhou: {error}'
+  translations_incomplete: 'Traduções: {total} chave(s) incompleta(s) em {file}; {fallback} usando inglês como fallback, {missing} ausente(s) em ambos os arquivos. Detalhes no log de sessão.'
+  java_too_old: 'Versão Java muito antiga: {version} (BlockProt Reloaded requer Java 25+)'
+  not_paper: Servidor não é Paper. A busca de jogadores por chat está desativada e usará a GUI de bigorna. Paper é recomendado.
+  typed_views_fallback: Paper/Spigot 1.21.0-1.21.3 sem vistas de inventário tipadas. Serão usados fallbacks do AnvilInput.
+worlds:
+  scan_start: 'Verificando mundos... ({count} carregados)'
+  scan_world_added: "Mundo '{world}' adicionado ao worlds.yml com proteção ativada."
+  scan_complete: 'Verificação concluída: {count} mundo(s) detectado(s), {added} adicionado(s) ao worlds.yml.'
+claims:
+  wand_pos_a: §bCanto A definido em §f({x}, {y}, {z})§b. Agora clique com o botão direito no canto B.
+  wand_pos_b: §bCanto B definido em §f({x}, {y}, {z})§b. Digite um nome no chat para criar a área.
+  created: '§aÁrea §6{name} §acriada! Região: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(mundo: {world}).'
+  deleted: §aÁrea §6{name} §aexcluída.
+  no_claim_here: §cNão há nenhuma área na sua localização atual.
+  overlap: §cEsta área se sobrepõe à área de outro jogador.
+  no_permission: §cVocê não tem permissão para modificar esta área.
+  list_header: '§6Suas áreas ativas:'
+  name_prompt: '§eDigite um nome para sua área no chat. §7(Digite §c{cancel}§7 para cancelar):'
+  name_cancel_word: cancelar
+  name_cancelled: §cCriação de área cancelada.
+  name_too_long: §cNome muito longo. Máximo {max} caracteres.
+  name_invalid: §cNome inválido. Use apenas letras, números, espaços, sublinhados ou hífens.
+  wand_removed: §7Varinha de área removida.
+  timeout: §cTempo esgotado. Por favor, use a varinha novamente.
+  flags:
+    title: Opções da área
+    fire: Propagação de fogo
+    tnt: TNT / Explosões
+    redstone: Redstone (por outros)
+    pvp: PvP
+    flow: Fluxo de água e lava
+    leaf_decay: Queda de folhas
+    mob_spawning: Spawn de mobs
+    chest: Acesso a contêineres (não-membros)
+    door: Uso de portas (não-membros)
+    lever_button: Alavancas & botões (não-membros)
+    use_bucket: Uso de baldes (não-membros)
+    pet_spawning: Domar animais (não-membros)
+    pet_riding: Montar animais (não-membros)
+    pet_moving: Conduzir animais (não-membros)
+    invincible: Zona invencível (sem dano)
+    deny_enderpearl: Permitir entrada com pérola do Ender
+  welcome_set: §aMensagem de boas-vindas definida para a área §6{name}§a.
+  welcome_cleared: §7Mensagem de boas-vindas removida da área §6{name}§7.
+  welcome_prompt: '§eDigite a mensagem de boas-vindas no chat (suporta códigos de cor &). §7§c{cancel}§7 para cancelar:'
+  delete_confirm_title: §cConfirmar exclusão
+  delete_yes: §c§lExcluir área
+  delete_cancel: §a§lManter área
+  hub:
+    title: Gestão de área
+    info: §6Info da área
+    flags: §6Opções
+    delete: §cExcluir área
+    wand: §eObtener varinha
+    my_claims: §eMinhas áreas
+    welcome: §eMensagem de boas-vindas
+integrations:
+  lands:
+    protect_containers_flag_name: Proteger contêineres (BlockProt)
+    protect_containers_desc: Permite que um jogador proteja baús, fornos, ...
+    require_protect_for_friends_flag_name: Exigir "Proteger contêineres" para amigos (BlockProt)
+    require_protect_for_friends_desc: Apenas jogadores com a permissão "Proteger contêineres" podem ser adicionados como amigos.
+help:
+  header: §6=== Ajuda BlockProt ===
+  footer: §6==================
+  block_protection_title: §6Proteção de blocos
+  block_protection_settings: '§7  /bp §f- Abre suas configurações pessoais de proteção.'
+  friends_title: §6Amigos
+  friends_gui: '§7  /bp friends §f- Abre o menu de amigos padrão.'
+  friends_addall: '§7  /bp friends addall <jogador> §f- Adiciona um amigo a todos os seus blocos.'
+  other_title: §6Outros
+  settings: '§7  /bp settings §f- Configurações pessoais.'
+  stats: '§7  /bp stats §f- Ver estatísticas de blocos.'
+  about: '§7  /bp about §f- Informações do plugin e do fork.'
+  integrations: '§7  /bp integrations §f- Listar integrações ativas. (admin)'
+  update: '§7  /bp update §f- Verificar atualizações. (admin)'
+  reload: '§7  /bp reload §f- Recarregar a configuração. (admin)'
+  disable_hints: '§7  /bp disablehints §f- Desativar mensagens de dica.'
+  debug: '§7  /bp debug <run|placeDebugChest|placeDebugShulker|clearSearchHistory> §f- Diagnóstico do desenvolvedor.'

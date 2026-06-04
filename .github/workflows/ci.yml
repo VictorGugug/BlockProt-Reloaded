@@ -1,0 +1,41 @@
+name: BlockProt SP26-ZV CI
+
+on:
+  push:
+    branches: [ master, main ]
+    paths:
+      - '**.java'
+      - 'gradle/**'
+      - '**.gradle'
+      - '**.gradle.kts'
+  pull_request:
+    branches: [ master, main ]
+    paths:
+      - '**.java'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    # Setting any container image breaks actions/checkout@v2.
+    # container:
+    #   image: openjdk:16-jdk
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'java' ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+      - uses: gradle/wrapper-validation-action@v2
+      - name: Ensure gradlew.sh is executable
+        run: chmod +x gradlew
+      - name: Build project
+        run: ./gradlew :blockprot-spigot:compileJava --no-daemon

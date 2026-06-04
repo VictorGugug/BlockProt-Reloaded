@@ -1,0 +1,203 @@
+# ┌─────────────────────────────────────────────────────────────────┐
+# │                  BlockProt Reloaded — Configuration             │
+# ├─────────────────────────────────────────────────────────────────┤
+# │  Sections:                                                      │
+# │   1. General                                                    │
+# │   2. Player & Protection Defaults                               │
+# │   3. Safety & Protection Behavior                               │
+# │   4. Pet Protection                                             │
+# │   5. Effects                                                    │
+# │   6. Timed Access                                               │
+# │   7. WorldEdit Integration                                      │
+# │   8. Menus & Commands                                           │
+# │                                                                 │
+# │  MySQL / Storage  →  mysql/mysql.yml                            │
+# │  Block definitions + auto-drop  →  blocks.yml                   │
+# └─────────────────────────────────────────────────────────────────┘
+
+# ════════════════════════════════════════════════════════════════════
+# ─────────────────────── 1. GENERAL ────────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+
+# Translation file loaded from /lang/. Example: translations_en.yml
+language_file: translations_en.yml
+
+# Fallback text when a translation key is missing.
+fallback_string: "Unknown translation"
+
+# Overwrite player translation files with the plugin's bundled version on startup.
+replace_translations: true
+
+# Notify online operators when a plugin update is available.
+notify_op_of_updates: false
+
+# Use localized aliases for /bp subcommands (loaded from the translation file).
+localized_command_aliases: true
+
+# Worlds where BlockProt is entirely disabled.
+excluded_worlds: []
+
+# Enable per-world configuration from worlds.yml.
+worlds_config_enabled: false
+
+# Bedrock (Geyser) player username prefixes. Used to skip UUID lookups.
+bedrock_username_prefixes:
+  - "."
+  - "*"
+  - "_"
+
+# Remove protection data for players inactive longer than this many days.
+# Set to -1 to disable.
+inactivity_cleanup_days: -1
+
+
+# ════════════════════════════════════════════════════════════════════
+# ─────────── 2. PLAYER & PROTECTION DEFAULTS ───────────────────────
+# ════════════════════════════════════════════════════════════════════
+
+# Automatically lock a block when a player places it.
+lock_on_place_by_default: true
+
+# Treat the public (everyone) as a friend by default for newly locked blocks.
+public_is_friend_by_default: false
+
+# Maximum number of blocks a single player can lock. -1 = unlimited.
+player_max_locked_block_count: -1
+
+# Seconds before the "this block is locked" hint is shown again to the same player.
+lock_hint_cooldown_in_seconds: 10
+
+# Minimum string similarity (0.0–1.0) for the friend name search to accept a match.
+friend_search_similarity: 0.5
+
+# Disable the add-friend / friend-search functionality entirely.
+disable_friend_functionality: false
+
+# Treat redstone as disallowed on newly locked blocks.
+redstone_disallowed_by_default: false
+
+
+# ════════════════════════════════════════════════════════════════════
+# ───────── 3. SAFETY & PROTECTION BEHAVIOR ─────────────────────────
+# ════════════════════════════════════════════════════════════════════
+
+# Prevent explosions (TNT, creepers, etc.) from breaking locked blocks.
+protect_locked_blocks_from_explosions: true
+
+# Prevent pistons from pushing or pulling protected blocks.
+block_protected_block_piston_movement: true
+
+# Remove protection data when a shulker box is broken.
+clear_protection_on_shulker_break: false
+
+# Allow any player to break a protected block (protection data is removed on break).
+allow_break_protected_blocks: false
+
+# Respect the vanilla spawn-protection radius; do not lock blocks inside it.
+respect_spawn_protection: true
+
+
+# ════════════════════════════════════════════════════════════════════
+# ──────────── 4. PET PROTECTION ────────────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+#
+# Protects tamed animals (wolves, cats, parrots, horses, etc.)
+# similarly to how blocks are protected.
+# Use /bp reload to apply changes — no restart required.
+#
+# ┌─ Functions ─────────────────────────────────────────────────────┐
+# │  auto_protect_on_tame  — protect pet automatically on tame      │
+# │  no_damage             — block other players from damaging pet   │
+# │  no_interact           — block right-click (feed, name, etc.)   │
+# │  no_leash              — block others from leashing the pet      │
+# │  no_pickup             — block parrot shoulder-pickup by others  │
+# └─────────────────────────────────────────────────────────────────┘
+# Message shown on denial: messages.pet_denied in the lang file.
+# Players with blockprot.admin or blockprot.bypass always bypass.
+
+pet_protection:
+
+  # Master switch — false disables the entire system.
+  enabled: false
+
+  # Automatically protect a pet the moment it is tamed.
+  auto_protect_on_tame: true
+
+  # Item held in main hand to open the pet settings menu.
+  # Must be a valid Bukkit Material name.
+  menu_item: STICK
+
+
+# ════════════════════════════════════════════════════════════════════
+# ─────────────────────── 5. EFFECTS ────────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+
+# Play particle effects when a block is locked/unlocked.
+block_lock_effects: true
+
+# Play sounds when a block is locked/unlocked.
+block_lock_sounds: true
+
+
+# ════════════════════════════════════════════════════════════════════
+# ─────────────────── 6. TIMED ACCESS ───────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+
+# Maximum duration (in days) that timed block access can be granted via the GUI.
+# 0 or negative = no limit. Default is 90 (3 months).
+timed_access_max_duration_days: 90
+
+
+# ════════════════════════════════════════════════════════════════════
+# ──────────── 7. WORLDEDIT INTEGRATION ─────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+#
+# Automatically lock blocks placed by a WorldEdit paste operation.
+# Requires WorldEdit or FastAsyncWorldEdit to be installed.
+
+worldedit_paste_autolock:
+  enabled: false
+  radius: 24
+  max_blocks_per_paste: 5000
+  delay_ticks: 20
+
+
+# ════════════════════════════════════════════════════════════════════
+# ──────────── 8. MENUS & COMMANDS ──────────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+
+# When true, all commands (stats, transfer, timed, debug, etc.) are hidden and the
+# /bp user menu is used instead. When false (default), all extra commands are active.
+# Changing this requires a /bp reload.
+use_menus: false
+
+
+# ════════════════════════════════════════════════════════════════════
+# ──────────── 10. LOGGING & BACKUPS ────────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+
+# Write a session log file on each server start.
+# Log files are stored in plugins/BlockProtReloaded/logs/
+enable_session_log: true
+
+# Create a ZIP backup of plugin data on each server start (and on /bp reload).
+# Backups are stored in plugins/BlockProtReloaded/backups/
+enable_backups: true
+
+
+# ════════════════════════════════════════════════════════════════════
+# ──────────── 9. PROTECTION EXPIRY ───────────────────────────────
+# ════════════════════════════════════════════════════════════════════
+#
+# When enabled, block owners can set an expiry date on their lock.
+# The block auto-unlocks at startup (expiry_scan_on_startup: true) or
+# when an interaction reaches it while already expired.
+#
+# enable_protection_expiry   — master switch (false by default)
+# expiry_scan_on_startup     — scan all indexed blocks at startup and
+#     clear expired ones (requires MySQL index to be enabled)
+
+enable_protection_expiry: false
+expiry_scan_on_startup: true
+
+

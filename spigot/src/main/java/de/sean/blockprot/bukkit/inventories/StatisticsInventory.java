@@ -1,0 +1,143 @@
+/*
+ * Copyright (C) 2021 - 2025 spnda
+ * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package de.sean.blockprot.bukkit.inventories;
+
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.nbt.StatHandler;
+import de.sean.blockprot.bukkit.nbt.stats.BlockCountStatistic;
+import de.sean.blockprot.bukkit.nbt.stats.BukkitListStatistic;
+import de.sean.blockprot.bukkit.nbt.stats.BukkitStatistic;
+import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
+import de.sean.blockprot.nbt.stats.ListStatisticItem;
+import de.sean.blockprot.nbt.stats.StatisticOnClickAction;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public final class StatisticsInventory extends BlockProtInventory {
+    public StatisticsInventory() { super(true); }
+    private final List<BukkitStatistic<?>> playerStatistics = new ArrayList<>() {{
+        add(new PlayerBlocksStatistic());
+    }};
+    private final List<BukkitStatistic<?>> serverStatistics = new ArrayList<>() {{
+        add(new BlockCountStatistic());
+    }};
+
+    @Override
+    int getSize() {
+        return InventoryConstants.sextupletLine;
+    }
+
+    @Override
+    @NotNull String getTranslatedInventoryName() {
+        return Translator.get(TranslationKey.INVENTORIES__STATISTICS__PLAYER_STATISTICS); /* We default to player statistics. */
+    }
+
+    @Override
+    public void onClick(@NotNull InventoryClickEvent event, @NotNull InventoryState state) {
+        ItemStack item = event.getCurrentItem();
+        if (item == null) return;
+        switch (item.getType()) {
+            case BLUE_STAINED_GLASS_PANE:
+                if (event.getWhoClicked() instanceof Player) {
+                    state.currentPageIndex ^= 1L; // Toggles the first bit, switching between 0 and 1.
+                    this.updateTitle((Player) event.getWhoClicked(),
+                            state.currentPageIndex == 0
+                                    ? Translator.get(TranslationKey.INVENTORIES__STATISTICS__PLAYER_STATISTICS)
+                                    : Translator.get(TranslationKey.INVENTORIES__STATISTICS__GLOBAL_STATISTICS));
+                    this.fill((Player) event.getWhoClicked());
+                }
+                break;
+            case BLACK_STAINED_GLASS_PANE:
+                if (event.getWhoClicked() instanceof Player player) {
+                    goBack(player, state);
+                } else {
+                    closeAndOpen(event.getWhoClicked(), null);
+                }
+                break;
+            default:
+                List<BukkitStatistic<?>> page = state.currentPageIndex == 0
+                    ? playerStatistics
+                    : serverStatistics;
+                int slot = event.getSlot();
+                if (slot >= 0 && slot < page.size()) {
+                    state.origin = InventoryState.MenuOrigin.STATISTICS;
+                    openStatInventory(page.get(slot), (Player) event.getWhoClicked());
+                }
+                break;
+        }
+        event.setCancelled(true);
+    }
+
+    @Override
+    public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {
+
+    }
+
+    public void openStatInventory(@NotNull final BukkitStatistic<?> stat, @NotNull final Player player) {
+        if (stat.getClickAction() == StatisticOnClickAction.NONE) return;
+        if (player.getOpenInventory().getTopInventory().getHolder() instanceof StatisticListInventory) return;
+        if (stat.getClickAction() == StatisticOnClickAction.LIST_MENU && stat instanceof BukkitListStatistic<?, ?> listStat) {
+            // Safe unchecked cast: stat is already narrowed to BukkitListStatistic<?,?> by instanceof.
+            // Cast to BukkitListStatistic<ListStatisticItem<?,Material>,?> is verified by runtime behavior:
+            // the statistic always contains ListStatisticItem entries with Material values.
+            @SuppressWarnings("unchecked")
+            BukkitListStatistic<ListStatisticItem<?, Material>, ?> castedStat = (BukkitListStatistic<ListStatisticItem<?, Material>, ?>) listStat;
+            closeAndOpen(player, new StatisticListInventory().fill(player, castedStat));
+        }
+    }
+
+    public Inventory fill(@NotNull final Player player) {
+        final InventoryState state = InventoryState.get(player.getUniqueId());
+        if (state == null || state.currentPageIndex >= 2) return inventory; // We only have 2 pages.
+
+        final List<BukkitStatistic<?>> statistics = state.currentPageIndex == 0
+            ? playerStatistics
+            : serverStatistics;
+        for (int i = 0; i < statistics.size() && i < getSize() - 2; ++i) {
+            BukkitStatistic<?> stat = statistics.get(i);
+            StatHandler.getStatistic(stat, player);
+            setItemStack(
+                i,
+                stat.getItemType(),
+                stat.getTitle()
+            );
+        }
+
+        setItemStack(
+            getSize() - 2,
+            Material.BLUE_STAINED_GLASS_PANE,
+            state.currentPageIndex == 0
+                ? TranslationKey.INVENTORIES__STATISTICS__GLOBAL_STATISTICS
+                : TranslationKey.INVENTORIES__STATISTICS__PLAYER_STATISTICS
+        );
+        setBackButton();
+        return inventory;
+    }
+}

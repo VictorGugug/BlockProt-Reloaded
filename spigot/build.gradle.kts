@@ -1,0 +1,172 @@
+buildscript {
+    repositories {
+        maven("https://plugins.gradle.org/m2/")
+    }
+}
+
+plugins {
+    id("maven-publish")
+    // Updated to com.gradleup.shadow which supports Java 25+ (ASM updated)
+    id("com.gradleup.shadow") version "8.3.8"
+    id("xyz.jpenilla.run-paper") version "3.0.2"
+}
+
+val nbtApiVersion: String by project
+val townyVersion: String by project
+val papiVersion: String by project
+val worldGuardVersion: String by project
+
+repositories {
+    mavenCentral()
+    maven("https://repo.papermc.io/repository/maven-public/") {
+        name = "PaperMC"
+    }
+    maven("https://oss.sonatype.org/content/repositories/snapshots/") {
+        name = "Sonatype Snapshots"
+    }
+    maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+    maven("https://maven.enginehub.org/repo/")
+    maven("https://repo.codemc.org/repository/maven-public/") {
+        name = "CodeMC"
+        content {
+            includeGroup("de.tr7zw")
+        }
+    }
+    maven("https://repo.tcoded.com/releases") {
+        name = "TCoded"
+    }
+
+}
+
+dependencies {
+    implementation(project(":common"))
+
+    // Compile against Paper/Spigot 1.20.6 — the oldest version we support.
+    // All APIs introduced after 1.20.6 (typed inventory views in 1.21.4,
+    // new Paper 26.1 versioning, etc.) are accessed via VersionCompat
+    // checks and reflection at runtime, never directly imported.
+    // Paper 26.1.x loads this JAR fine because it remains backward-compatible
+    // with plugins compiled against older API versions.
+    compileOnly("io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT")
+    compileOnly("org.apache.commons:commons-lang3:3.13.0")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
+    testImplementation("com.github.seeseemelk:MockBukkit-v1.20:3.93.2")
+
+    // bStats — 3.2.1
+    api("org.bstats:bstats-bukkit:3.2.1")
+
+    // Dependencies
+    implementation("de.tr7zw:item-nbt-api:$nbtApiVersion")
+
+    // FoliaLib: cross-platform scheduler (Spigot / Paper / Purpur / Pufferfish / Folia)
+    implementation("com.tcoded:FoliaLib:0.4.3")
+
+    implementation("org.enginehub:squirrelid:0.3.2")
+    implementation("com.zaxxer:HikariCP:7.0.2")
+    implementation("com.mysql:mysql-connector-j:9.7.0")
+
+    // Integrations (soft-depend — provided at runtime by the server)
+    compileOnly("com.github.TownyAdvanced:Towny:$townyVersion")
+    compileOnly("me.clip:placeholderapi:$papiVersion")
+    compileOnly("com.sk89q.worldguard:worldguard-bukkit:$worldGuardVersion")
+    compileOnly("com.github.angeschossen:LandsAPI:6.28.11")
+    compileOnly("com.cjburkey.claimchunk:claimchunk:0.0.25-FIX3")
+}
+
+val targetJavaVersion: String by project
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+    withJavadocJar()
+    withSourcesJar()
+}
+
+val pluginVersion: String = project.version.toString()
+
+tasks.processResources {
+    inputs.property("version", pluginVersion)
+
+    filesMatching("plugin.yml") {
+        expand("version" to pluginVersion)
+    }
+}
+
+tasks.javadoc {
+    options {
+            source = "21"
+        encoding = "UTF-8"
+        memberLevel = JavadocMemberLevel.PACKAGE
+        (this as CoreJavadocOptions).addStringOption("Xdoclint:none", "-quiet")
+    }
+
+    this.isFailOnError = false
+}
+
+tasks.shadowJar {
+    relocate("de.tr7zw.changeme.nbtapi", "de.sean.blockprot.bukkit.shaded.nbtapi")
+    relocate("org.bstats", "de.sean.blockprot.bukkit.metrics")
+    relocate("org.enginehub.squirrelid", "de.sean.blockprot.bukkit.squirrelid")
+    relocate("com.zaxxer.hikari", "de.sean.blockprot.bukkit.shaded.hikari")
+    relocate("com.tcoded.folialib", "de.sean.blockprot.bukkit.shaded.folialib")
+    // minimize()
+
+    dependencies {
+        this.include(project(":common"))
+        this.include(dependency("org.jetbrains:annotations"))
+        this.include(dependency("de.tr7zw:item-nbt-api"))
+        this.include(dependency("org.bstats:bstats-base"))
+        this.include(dependency("org.bstats:bstats-bukkit"))
+        this.include(dependency("com.tcoded:FoliaLib"))
+        this.include(dependency("org.enginehub:squirrelid"))
+        this.include(dependency("com.zaxxer:HikariCP"))
+        this.include(dependency("com.mysql:mysql-connector-j"))
+        this.include(dependency("org.slf4j:slf4j-api"))
+        this.include(dependency("com.github.ben-manes.caffeine:caffeine"))
+    }
+
+    // Output: BlockProtReloaded-1.3.0.jar  /  BlockProtReloaded-1.3.0-SNAPSHOT.jar
+    val branch = ext["gitBranchName"] as String
+    val isMaster = branch == "master" || branch == "HEAD" || branch == "main"
+    val jarVersion = project.version as String
+    val jarSuffix  = if (isMaster) "" else "-$branch"
+    archiveFileName.set("BlockProtReloaded-${jarVersion}${jarSuffix}.jar")
+}
+
+tasks.build {
+    dependsOn(tasks["javadocJar"])
+    dependsOn(tasks.shadowJar)
+}
+
+tasks.test {
+    useJUnitPlatform()
+}
+
+tasks.runServer {
+    downloadPlugins {
+        url("https://download.luckperms.net/1561/bukkit/loader/LuckPerms-Bukkit-5.4.146.jar")
+    }
+    minecraftVersion("26.1.2")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            groupId = project.group as String
+            artifactId = project.name
+            version = project.version as String
+
+            from(components["java"])
+        }
+    }
+    repositories {
+        mavenLocal()
+    }
+}

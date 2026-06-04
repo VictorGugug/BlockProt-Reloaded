@@ -1,0 +1,194 @@
+locale: it
+enabled: Attivo
+disabled: Inattivo
+about:
+  title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
+  original_author: '§7Autore originale: §fspnda'
+  fork_maintainers: '§7Manutentori del fork: §fVickey & Reim §8(alias ZarZey)'
+  report_original: §x§c§3§e§e§a§7Segnala problemi (plugin originale)
+  report_fork: §x§6§6§c§6§6§6Segnala problemi (BlockProt Reloaded)
+inventories:
+  back: Indietro
+  last_page: Ultima pagina
+  next_page: Prossima pagina
+  block_lock: Blocca Blocco
+  user_settings: Impostazioni Utente
+  block_info: Info Blocco
+  lock: Blocca
+  unlock: Sblocca
+  lock_on_place: Blocca automaticamente
+  copy_configuration: Copia configurazione
+  paste_configuration: Incolla configurazione
+  set_block_name: Imposta nome blocco
+  inspect_contents: Ispeziona contenuti
+  redstone:
+    settings: Impostazioni Redstone
+    redstone_protection: Protezione redstone
+    piston_protection: Protezione pistoni
+    hopper_protection: Protezione tramogge
+    enable_all: Attiva tutto
+    disable_all: Disattiva tutto
+  friends:
+    manage: Gestisci Amici
+    edit: Modifica Amico
+    remove: Rimuovi Amico
+    search: Cerca Giocatori
+    search_history: Cerca cronologia
+    result: Giocatori trovati
+    the_public: Il pubblico
+    the_public_desc: Rappresenta ogni giocatore nel server.
+    make_public: Rendi pubblico
+    permissions: Permessi
+    permission:
+      read: Leggi
+      write: Scrivi
+      manager: Gestore
+  statistics:
+    statistics: Statistiche
+    player_statistics: Statistiche del giocatore
+    global_statistics: Statistiche del server
+    container_count: Contatore blocchi
+    your_blocks: I tuoi blocchi
+  audit:
+    title: Registro accessi
+    no_entries: Nessuna voce trovata.
+    teleport: Teletrasportati al blocco
+    open: Registro accessi
+messages:
+  permission_granted: Permesso garantito.
+  unlocked: Sbloccato.
+  no_permission: Nessun permesso.
+  friend_added: Amico aggiunto.
+  friend_removed: Amico rimosso.
+  friend_already_added: Amico già aggiunto.
+  friend_cant_be_removed: L'amico non può essere rimosso.
+  redstone_added: Protezione redstone aggiunta.
+  redstone_removed: Protezione redstone rimossa.
+  exceeded_max_block_count: Hai superato il numero massimo di blocchi bloccabili.
+  lock_hint: '§6Puoi proteggere i tuoi blocchi accovacciandoti e cliccando col pulsante destro del mouse i tuoi bauli, le
+    tue fornaci, e tutto il resto.
+
+    Inoltre, dai un''occhiata alle impostazioni /blockprot per configurarle come più desideri. (Premi qui per disattivare
+    questi suggerimenti)'
+  hint_hover_text: Apri un menù di BlockProt o clicca qui per disattivare i suggerimenti.
+  disabled_hints: §6Suggerimenti disattivati!
+  chat_input_prompt: '§eInserisci il nome del giocatore §7(§bTab§7 suggerimenti · §aInvio§7 conferma · §c{cancel}§7 annulla):'
+  chat_input_cancel_word: annulla
+  chat_input_cancelled: §cRicerca annullata.
+  lock_on_place_success: §aBlocco bloccato!
+  friends_searching: §eRicerca di §f{player}§e...
+  friends_addall_success: §a§f{player}§a aggiunto come amico in §f{count}§a blocco/blocchi.
+  friends_addall_usage: '§cUso: /blockprot friends addall <giocatore>'
+  inactivity_cleanup_done: '§e[BlockProt] Pulizia inattività: §f{count}§e blocco/blocchi liberato/i.'
+  friends_list_title: §6I tuoi amici
+  only_players: Solo i giocatori possono usare questo comando.
+  reload_done: §aBlockProt è stato ricaricato con successo.
+  integrations_enabled: '§7Integrazioni attive ({count}): {integrations}'
+console:
+  config_change_detected: Modifica alla configurazione rilevata; ricaricamento in corso...
+  config_reloaded: Configurazione ricaricata automaticamente.
+  filewatcher_error: 'Errore del monitoraggio file: {error}'
+  audit_logger_started: Logger di accesso avviato.
+  audit_logger_failed: 'Impossibile avviare il logger di accesso: {error}'
+  worldedit_listener_enabled: Listener di auto-protezione incolla WorldEdit attivato.
+  claims_system_enabled: Sistema parcelle attivato.
+  claims_system_disabled: Sistema parcelle disattivato (claims_enabled=false).
+  worlds_yml_syntax_error: 'worlds.yml contiene un errore di sintassi YAML; ripristino dei valori predefiniti: {error}'
+  worlds_yml_restored: worlds.yml ripristinato dai valori interni predefiniti.
+  worlds_yml_restore_failed: 'Impossibile ripristinare worlds.yml: {error}'
+  worlds_yml_save_failed: 'Impossibile salvare worlds.yml: {error}'
+  backup_dir_failed: Impossibile creare la cartella di backup. Backup ignorato.
+  backup_created: 'Dati BlockProt esistenti rilevati; backup di sicurezza creato: backups/{file}'
+  backup_review_config: Verificare config.yml prima di attivare le nuove funzioni BPR. Dettagli nel log di sessione.
+  backup_failed: 'Backup fallito: {error}'
+  config_language_missing: 'Il file di lingua configurato non esiste: {file}'
+  lang_keys_updated: '{file} aggiornato con {count} chiave/i di traduzione mancante/i.'
+  lang_keys_save_failed: 'Impossibile salvare il file di lingua unito {file}: {error}'
+  config_keys_updated: 'config.yml aggiornato con {count} opzione/i mancante/i. Verificarlo prima di attivare le nuove funzioni BPR.'
+  config_keys_save_failed: 'Impossibile salvare config.yml unito: {error}'
+  mysql_enabled: Indice MySQL ibrido attivato.
+  mysql_disabled: 'Indice MySQL ibrido disattivato: {error}'
+  mysql_lookup_failed: 'Ricerca di fiducia MySQL fallita: {error}'
+  mysql_schema_failed: 'Inizializzazione schema MySQL fallita: {error}'
+  mysql_cache_load_failed: 'Caricamento cache di fiducia MySQL fallito: {error}'
+  mysql_operation_failed: 'Operazione MySQL fallita: {error}'
+  translations_incomplete: 'Traduzioni: {total} chiave/i incompleta/e in {file}; {fallback} usano il fallback inglese, {missing} assente/i in entrambi i file. Dettagli nel log di sessione.'
+  java_too_old: 'Versione Java troppo vecchia: {version} (BlockProt Reloaded richiede Java 25+)'
+  not_paper: Server non Paper rilevato. La ricerca giocatori via chat è disattivata e userà la GUI incudine. Paper è raccomandato.
+  typed_views_fallback: Paper/Spigot 1.21.0-1.21.3 senza viste inventario tipizzate. Verranno usati i fallback AnvilInput.
+worlds:
+  scan_start: 'Scansione dei mondi... ({count} caricati)'
+  scan_world_added: "Mondo '{world}' aggiunto a worlds.yml con protezione attivata."
+  scan_complete: 'Scansione completata: {count} mondo/i rilevato/i, {added} aggiunto/i a worlds.yml.'
+claims:
+  wand_pos_a: §bAngolo A impostato in §f({x}, {y}, {z})§b. Ora clicca col destro sull'angolo B.
+  wand_pos_b: §bAngolo B impostato in §f({x}, {y}, {z})§b. Scrivi un nome in chat per creare la parcella.
+  created: '§aParcella §6{name} §acreata! Regione: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(mondo: {world}).'
+  deleted: §aParcella §6{name} §aeliminata.
+  no_claim_here: §cNon c'è nessuna parcella nella tua posizione attuale.
+  overlap: §cQuest'area si sovrappone alla parcella di un altro giocatore.
+  no_permission: §cNon hai il permesso di modificare questa parcella.
+  list_header: '§6Le tue parcelle attive:'
+  name_prompt: '§eDigita un nome per la tua parcella in chat. §7(Digita §c{cancel}§7 per annullare):'
+  name_cancel_word: annulla
+  name_cancelled: §cCreazione parcella annullata.
+  name_too_long: §cNome troppo lungo. Massimo {max} caratteri.
+  name_invalid: §cNome non valido. Usa solo lettere, numeri, spazi, trattini bassi o trattini.
+  wand_removed: §7Bacchetta parcella rimossa.
+  timeout: §cTempo scaduto. Usa di nuovo la bacchetta.
+  flags:
+    title: Opzioni parcella
+    fire: Propagazione fuoco
+    tnt: TNT / Esplosioni
+    redstone: Redstone (da altri)
+    pvp: PvP
+    flow: Flusso acqua e lava
+    leaf_decay: Caduta foglie
+    mob_spawning: Spawn mob
+    chest: Accesso contenitori (non-membri)
+    door: Uso porte (non-membri)
+    lever_button: Leve & pulsanti (non-membri)
+    use_bucket: Uso secchi (non-membri)
+    pet_spawning: Addomesticamento animali (non-membri)
+    pet_riding: Cavalcare animali (non-membri)
+    pet_moving: Condurre animali (non-membri)
+    invincible: Zona invincibile (nessun danno)
+    deny_enderpearl: Consenti ingresso con perla dell'Ender
+  welcome_set: §aMessaggio di benvenuto impostato per la parcella §6{name}§a.
+  welcome_cleared: §7Messaggio di benvenuto rimosso per la parcella §6{name}§7.
+  welcome_prompt: '§eDigita il messaggio di benvenuto in chat (supporta codici colore &). §7§c{cancel}§7 per annullare:'
+  delete_confirm_title: §cConferma eliminazione
+  delete_yes: §c§lElimina parcella
+  delete_cancel: §a§lTieni parcella
+  hub:
+    title: Gestione parcella
+    info: §6Info parcella
+    flags: §6Opzioni
+    delete: §cElimina parcella
+    wand: §eOttieni bacchetta
+    my_claims: §eLe mie parcelle
+    welcome: §eMessaggio di benvenuto
+integrations:
+  lands:
+    protect_containers_flag_name: Proteggi contenitori (BlockProt)
+    protect_containers_desc: Consente a un giocatore di proteggere forzieri, fornaci, ...
+    require_protect_for_friends_flag_name: Richiede "Proteggi contenitori" per gli amici (BlockProt)
+    require_protect_for_friends_desc: Soltanto i giocatori che hanno la flag "Proteggi contenitori" possono essere aggiunti
+      come amici.
+help:
+  header: §6=== Aiuto BlockProt ===
+  footer: §6==================
+  block_protection_title: §6Protezione blocchi
+  block_protection_settings: '§7  /bp §f- Apre le impostazioni personali di protezione.'
+  friends_title: §6Amici
+  friends_gui: '§7  /bp friends §f- Apre il menu amici predefinito.'
+  friends_addall: '§7  /bp friends addall <giocatore> §f- Aggiunge un amico a tutti i tuoi blocchi.'
+  other_title: §6Altro
+  settings: '§7  /bp settings §f- Impostazioni personali.'
+  stats: '§7  /bp stats §f- Visualizza statistiche blocchi.'
+  about: '§7  /bp about §f- Informazioni sul plugin e sul fork.'
+  integrations: '§7  /bp integrations §f- Mostra integrazioni attive. (admin)'
+  update: '§7  /bp update §f- Controlla aggiornamenti. (admin)'
+  reload: '§7  /bp reload §f- Ricarica la configurazione. (admin)'
+  disable_hints: '§7  /bp disablehints §f- Disattiva i messaggi di suggerimento.'
+  debug: '§7  /bp debug <run|placeDebugChest|placeDebugShulker|clearSearchHistory> §f- Diagnostica sviluppatore.'

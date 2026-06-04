@@ -1,0 +1,33 @@
+name: BlockProtReloaded
+version: ${version}
+main: de.sean.blockprot.bukkit.BlockProt
+api-version: '1.20'
+authors: [ Zar ]
+description: Block protection plugin — BlockProt Reloaded
+prefix: BlockProt
+website: https://github.com/VictorGugug/BlockProt-Reloaded
+folia-supported: true
+permissions:
+  blockprot.user:
+    default: true
+    description: Grants access to all standard user features via /bp user (lock, friends, settings, stats, transfer, about)
+  blockprot.user.admin:
+    default: op
+    description: Grants access to all admin features via /bp admin (reload, update, integrations, stats, debug, info)
+  blockprot.bypass:
+    default: false
+    description: Allows a player to bypass any protection, effectively having access to every block.
+  blockprot.blocks.tp:
+    default: op
+    description: Allows teleporting to a block from the statistics list (left-click).
+commands:
+  blockprot:
+    description: The main blockprot command
+    usage: "/blockprot <user|admin>"
+    aliases: ["bp"]
+softdepend:
+  - Towny
+  - PlaceholderAPI
+  - WorldGuard
+  - Lands
+  - ClaimChunk
