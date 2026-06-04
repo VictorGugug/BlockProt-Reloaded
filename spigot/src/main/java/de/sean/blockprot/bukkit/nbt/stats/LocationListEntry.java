@@ -21,6 +21,8 @@
 package de.sean.blockprot.bukkit.nbt.stats;
 
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.nbt.stats.ListStatisticItem;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -146,7 +148,7 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
             if (lockedAt <= 0) return "";
             long elapsedMs = System.currentTimeMillis() - lockedAt;
             if (elapsedMs < 0) return "";
-            return "§8Locked " + formatElapsed(elapsedMs) + " ago";
+            return Translator.get(TranslationKey.MESSAGES__LOCATION__LOCKED_AGO).replace("{time}", formatElapsed(elapsedMs));
         } catch (Exception ignored) {
             return "";
         }
@@ -179,7 +181,7 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
                 if (record != null && !record.getType().isAir()) {
                     return List.of("§8- 1x " + toHumanReadable(record.getType()).substring(2));
                 } else {
-                    return List.of("§8Empty");
+                    return List.of(Translator.get(TranslationKey.MESSAGES__LOCATION__EMPTY_CONTENTS));
                 }
             }
 
@@ -193,7 +195,7 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
                     }
                 }
                 if (itemCounts.isEmpty()) {
-                    return List.of("§8Empty");
+                    return List.of(Translator.get(TranslationKey.MESSAGES__LOCATION__EMPTY_CONTENTS));
                 }
                 List<String> list = new ArrayList<>();
                 int count = 0;

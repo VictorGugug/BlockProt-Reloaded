@@ -24,9 +24,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.destroystokyo.paper.profile.PlayerProfile;
 import de.sean.blockprot.bukkit.BlockProt;
 import org.bukkit.Bukkit;
+import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -94,7 +94,7 @@ public final class SkinCache {
         if (cached != null) return cached;
 
         // Return a plain profile now; start async fetch (Mojang or SkinsRestorer) in background.
-        PlayerProfile placeholder = Bukkit.createProfile(offlineUuid, name);
+        PlayerProfile placeholder = Bukkit.getServer().createPlayerProfile(offlineUuid, name);
         if (inflight.putIfAbsent(key, Boolean.TRUE) == null) {
             CompletableFuture.runAsync(() -> fetchAndCache(key, name, offlineUuid));
         }
@@ -131,7 +131,7 @@ public final class SkinCache {
             if (!root.has("textures") || !root.getAsJsonObject("textures").has("SKIN")) return null;
             String skinUrl = root.getAsJsonObject("textures")
                 .getAsJsonObject("SKIN").get("url").getAsString();
-            PlayerProfile profile = Bukkit.createProfile(uuid, name);
+            PlayerProfile profile = Bukkit.getServer().createPlayerProfile(uuid, name);
             PlayerTextures textures = profile.getTextures();
             textures.setSkin(URI.create(skinUrl).toURL());
             profile.setTextures(textures);
@@ -142,7 +142,7 @@ public final class SkinCache {
     }
 
     // -------------------------------------------------------------------------
-    // Private helpers (why i do this to myself i have no idea, but at least it's not spaghetti code in the main method)
+    // Private helpers
     // -------------------------------------------------------------------------
 
     private static void fetchAndCache(@NotNull String key, @NotNull String name, @NotNull UUID fallbackUuid) {
@@ -161,7 +161,7 @@ public final class SkinCache {
             if (mojangUuid == null) {
                 // No Mojang UUID found (name does not exist online), cache the plain profile so
                 // we don't hammer the API on every GUI open.
-                PlayerProfile plain = Bukkit.createProfile(fallbackUuid, name);
+                PlayerProfile plain = Bukkit.getServer().createPlayerProfile(fallbackUuid, name);
                 cache.put(key, plain);
                 return;
             }
@@ -169,7 +169,7 @@ public final class SkinCache {
             // Step 2 — fetch the full profile with skin texture.
             String profileJson = fetchProfileJson(mojangUuid);
             if (profileJson == null) {
-                cache.put(key, Bukkit.createProfile(mojangUuid, name));
+                cache.put(key, Bukkit.getServer().createPlayerProfile(mojangUuid, name));
                 return;
             }
 
@@ -225,7 +225,7 @@ public final class SkinCache {
     private static PlayerProfile buildProfileFromJson(
             @NotNull UUID uuid, @NotNull String name, @NotNull String json) {
 
-        PlayerProfile profile = Bukkit.createProfile(uuid, name);
+        PlayerProfile profile = Bukkit.getServer().createPlayerProfile(uuid, name);
 
         try {
             JsonObject root = JsonParser.parseString(json).getAsJsonObject();
@@ -271,4 +271,3 @@ public final class SkinCache {
         }
     }
 }
-/** finish this torture please ahhh (jk) */

@@ -341,6 +341,56 @@ help:
   about: "§7  /bp about §f- Plugin and fork information."
   integrations: "§7  /bp integrations §f- List enabled integrations."
   update: "§7  /bp update §f- Check for updates."
+
+messages:
+  debug:
+    chest_placed: "§aChest placed"
+    shulker_placed: "§aShulker placed"
+    history_cleared: "§aHistory cleared"
+    running_diagnostics: "§eRunning diagnostics..."
+    results_go_to_log: "§77 Results go to the session log. Summary at the end."
+    checks_passed_actionbar: "§a✔ All {passed} checks passed"
+    checks_failed_actionbar: "§c✗ {failed} failed / {total}"
+    checks_passed_chat: "§a§l[BlockProt] §r§aAll §l{passed}§r§a checks passed."
+    checks_failed_chat: "§c§l[BlockProt] §r§c{failed} check(s) FAILED — see log."
+    log_path: "§7Log: §f{path}"
+  time:
+    days: "days"
+    day: "day"
+    hours: "hours"
+    hour: "hour"
+    minutes: "minutes"
+    minute: "minute"
+  location:
+    locked_ago: "§8Locked {time} ago"
+    empty_contents: "§8Empty"
+  integrations:
+    name: "Integrations"
+    separator: "§7, "
+    none: "§7None"
+  update:
+    outdated: "§cBlockProt is outdated! New version: {version}"
+    ahead: "§eBlockProt version is ahead of release ({version})"
+    up_to_date: "§aBlockProt is up-to-date"
+
+console:
+  update:
+    available: "A newer version of BlockProt Reloaded is available: {version}"
+    up_to_date: "BlockProt Reloaded is up-to-date"
+
+inventories:
+  audit:
+    action_unknown: "§7Access"
+    action_access_denied: "§cAccess Denied"
+    action_opened: "§eOpened"
+    action_item_taken: "§cItem Taken"
+    action_item_placed: "§aItem Placed"
+  world_prot_del:
+    environment: "§7Environment: "
+    no_undo_available: "§7No undo available"
+  integrations:
+    separator: "§7, "
+    none: "§8-"
   reload: "§7  /bp reload §f- Reload config and translations."
   disable_hints: "§7  /bp disablehints §f- Disable protection hint messages."
   debug: "§7  /bp debug <run|...> §f- Developer diagnostics."

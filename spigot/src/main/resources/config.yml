@@ -10,6 +10,8 @@
 # │   6. Timed Access                                               │
 # │   7. WorldEdit Integration                                      │
 # │   8. Menus & Commands                                           │
+# │   9. Protection Expiry                                          │
+# │  10. Logging & Backups                                          │
 # │                                                                 │
 # │  MySQL / Storage  →  mysql/mysql.yml                            │
 # │  Block definitions + auto-drop  →  blocks.yml                   │

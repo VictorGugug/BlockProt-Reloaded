@@ -155,7 +155,7 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
                 List<Component> lore = new ArrayList<>();
                 lore.add(LegacyComponentSerializer.legacySection()
                     .deserialize(hintKey != null ? hintKey : "§eClick to select"));
-                lore.add(Component.text("§7Environment: " + w.getEnvironment().name()));
+                lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__ENVIRONMENT) + w.getEnvironment().name()));
                 meta.lore(lore);
                 item.setItemMeta(meta);
             }

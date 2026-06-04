@@ -57,22 +57,22 @@ public class DebugCommand implements CommandExecutor {
             case "placeDebugChest" -> {
                 player.getWorld().setType(player.getLocation(), Material.CHEST);
                 new BlockNBTHandler(player.getWorld().getBlockAt(player.getLocation())).setOwner(NOTCH_UUID);
-                ab(player, "§aChest placed");
+                ab(player, Translator.get(TranslationKey.MESSAGES__DEBUG__CHEST_PLACED));
                 return true;
             }
             case "placeDebugShulker" -> {
                 player.getWorld().setType(player.getLocation(), Material.SHULKER_BOX);
                 new BlockNBTHandler(player.getWorld().getBlockAt(player.getLocation())).setOwner(NOTCH_UUID);
-                ab(player, "§aShulker placed");
+                ab(player, Translator.get(TranslationKey.MESSAGES__DEBUG__SHULKER_PLACED));
                 return true;
             }
             case "clearSearchHistory" -> {
                 new PlayerSettingsHandler(player).clearSearchHistory();
-                ab(player, "§aHistory cleared");
+                ab(player, Translator.get(TranslationKey.MESSAGES__DEBUG__HISTORY_CLEARED));
                 return true;
             }
             case "run" -> {
-                ab(player, "§eRunning diagnostics...");
+                ab(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS));
                 Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(),
                     () -> runDiagnostics(player));
                 return true;
@@ -110,8 +110,8 @@ public class DebugCommand implements CommandExecutor {
         BlockProtLogger.log("Compat : " + VersionCompat.getDiagnosticString());
         BlockProtLogger.log("BukkitCompat: " + BukkitCompat.getDiagnosticString());
 
-        chat(player, "§6§l[BlockProt Debug] §r§eRunning all checks…");
-        chat(player, "§7Results go to the session log. Summary at the end.");
+        chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS));
+        chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RESULTS_GO_TO_LOG));
 
         // Run each group sequentially. Groups that touch world/inventory must run on main thread.
         runGroup(player, passed, failed, "1. Config",         () -> checkConfig(player, passed, failed));
@@ -137,14 +137,22 @@ public class DebugCommand implements CommandExecutor {
             BlockProtLogger.log("=== SUMMARY: " + p2 + " passed, " + f2 + " failed / " + total + " total ===");
 
             boolean ok = f2 == 0;
-            ab(player, ok ? "§a✔ All " + p2 + " checks passed" : "§c✘ " + f2 + " failed / " + total);
+            ab(player, ok
+                ? Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_PASSED_ACTIONBAR)
+                    .replace("{passed}", String.valueOf(p2))
+                : Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_FAILED_ACTIONBAR)
+                    .replace("{failed}", String.valueOf(f2))
+                    .replace("{total}", String.valueOf(total)));
             chat(player, ok
-                ? "§a§l[BlockProt] §r§aAll §l" + p2 + "§r§a checks passed."
-                : "§c§l[BlockProt] §r§c" + f2 + " check(s) FAILED — see log.");
+                ? Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_PASSED_CHAT)
+                    .replace("{passed}", String.valueOf(p2))
+                : Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_FAILED_CHAT)
+                    .replace("{failed}", String.valueOf(f2)));
 
             var logFile = BlockProtLogger.getCurrentLogFile();
             if (logFile != null)
-                chat(player, "§7Log: §f" + logFile.getPath());
+                chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__LOG_PATH)
+                    .replace("{path}", logFile.getPath()));
         });
     }
 

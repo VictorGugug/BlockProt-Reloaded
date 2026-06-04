@@ -34,8 +34,8 @@ public class IntegrationsCommand implements CommandExecutor {
 
         String names = enabledIntegrations.stream()
             .map(integration -> "§6" + integration.name)
-            .reduce((left, right) -> left + "§7, " + right)
-            .orElse("§8-");
+            .reduce((left, right) -> left + Translator.get(TranslationKey.MESSAGES__INTEGRATIONS__SEPARATOR) + right)
+            .orElse(Translator.get(TranslationKey.MESSAGES__INTEGRATIONS__NONE));
 
         sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
             Translator.get(TranslationKey.MESSAGES__INTEGRATIONS_ENABLED)

@@ -242,7 +242,7 @@ public final class AuditInventory extends BlockProtInventory {
             case OPENED        -> Translator.get(TranslationKey.INVENTORIES__AUDIT__ACTION_OPENED);
             case ITEM_TAKEN    -> Translator.get(TranslationKey.INVENTORIES__AUDIT__ACTION_ITEM_TAKEN);
             case ITEM_PLACED   -> Translator.get(TranslationKey.INVENTORIES__AUDIT__ACTION_ITEM_PLACED);
-            default            -> "§7Access";
+            default            -> Translator.get(TranslationKey.INVENTORIES__AUDIT__ACTION_UNKNOWN);
         };
     }
 
