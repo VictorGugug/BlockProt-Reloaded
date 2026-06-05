@@ -50,14 +50,24 @@ public final class WorldsConfig {
             if (ws == null) continue;
 
             boolean enabled = ws.getBoolean("enabled", false);
-            worlds.put(name.toLowerCase(), new WorldEntry(
+            WorldEntry entry = new WorldEntry(
                 enabled,
                 loadMaterials(ws, "lockable_tile_entities"),
                 loadMaterials(ws, "lockable_blocks"),
                 loadMaterials(ws, "lockable_shulker_boxes"),
                 loadMaterials(ws, "lockable_doors"),
                 ws.getBoolean("auto_drop_to_inventory_enabled", true)
-            ));
+            );
+            worlds.put(name.toLowerCase(), entry);
+
+            // On 26.x, Minecraft uses NamespacedKey values for world storage.
+            // Register an alias so lookups succeed whether the admin wrote "world"
+            // or the server returns "minecraft:world" from world.getKey().asString().
+            // e.g. "world" also registers "minecraft:world"; "world_nether" -> "minecraft:the_nether" is NOT added
+            // automatically here — only exact name-based aliases are safe without a live World instance.
+            // The resolveEntry() method handles the fallback at query time.
+            String namespacedAlias = "minecraft:" + name.toLowerCase();
+            worlds.putIfAbsent(namespacedAlias, entry);
         }
     }
 
@@ -186,48 +196,75 @@ public final class WorldsConfig {
     // Public queries
     // -------------------------------------------------------------------------
 
+    /**
+     * Resolves a consistent lookup key for a World that works on both classic (1.x)
+     * and year-based (26.x) naming schemes.
+     *
+     * Strategy:
+     *  1. Try world.getName() — always present, matches admin config most of the time.
+     *  2. If not found, try world.getKey().value() — the NamespacedKey value, which is
+     *     the stable identifier Paper 26.1 uses internally after the world-storage rework.
+     *
+     * This means admins can continue using plain world names ("world", "world_nether") in
+     * worlds.yml, and we transparently fall back to the key-based lookup when needed.
+     */
+    @Nullable
+    private WorldEntry resolveEntry(@NotNull World world) {
+        WorldEntry e = worlds.get(world.getName().toLowerCase());
+        if (e != null) return e;
+        try {
+            String keyValue = world.getKey().value().toLowerCase();
+            e = worlds.get(keyValue);
+            if (e != null) return e;
+            String fullKey = world.getKey().asString().toLowerCase();
+            return worlds.get(fullKey);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     /** Returns true if the world has an entry in worlds.yml with enabled: true. */
     public boolean hasWorldConfig(@NotNull World world) {
-        WorldEntry e = worlds.get(world.getName().toLowerCase());
+        WorldEntry e = resolveEntry(world);
         return e != null && e.enabled();
     }
 
     /** Returns true if the world has an entry in worlds.yml with enabled: false (no protection). */
     public boolean isWorldDisabled(@NotNull World world) {
-        WorldEntry e = worlds.get(world.getName().toLowerCase());
+        WorldEntry e = resolveEntry(world);
         return e != null && !e.enabled();
     }
 
     public boolean isLockable(@NotNull World world, @NotNull Material type) {
-        WorldEntry e = worlds.get(world.getName().toLowerCase());
+        WorldEntry e = resolveEntry(world);
         if (e == null || !e.enabled()) return false;
         return e.tileEntities().contains(type) || e.blocks().contains(type)
             || e.shulkerBoxes().contains(type) || e.doors().contains(type);
     }
 
     public boolean isLockableTileEntity(@NotNull World world, @NotNull Material type) {
-        WorldEntry e = worlds.get(world.getName().toLowerCase());
+        WorldEntry e = resolveEntry(world);
         return e != null && e.enabled() && e.tileEntities().contains(type);
     }
 
     public boolean isLockableBlock(@NotNull World world, @NotNull Material type) {
-        WorldEntry e = worlds.get(world.getName().toLowerCase());
+        WorldEntry e = resolveEntry(world);
         return e != null && e.enabled() && (e.blocks().contains(type) || e.doors().contains(type));
     }
 
     public boolean isLockableShulkerBox(@NotNull World world, @NotNull Material type) {
-        WorldEntry e = worlds.get(world.getName().toLowerCase());
+        WorldEntry e = resolveEntry(world);
         return e != null && e.enabled() && e.shulkerBoxes().contains(type);
     }
 
     public boolean isLockableDoor(@NotNull World world, @NotNull Material type) {
-        WorldEntry e = worlds.get(world.getName().toLowerCase());
+        WorldEntry e = resolveEntry(world);
         return e != null && e.enabled() && e.doors().contains(type);
     }
 
     /** Per-world auto-drop switch. Defaults to true when the world has no entry. */
     public boolean isAutoDropToInventoryEnabled(@NotNull World world) {
-        WorldEntry e = worlds.get(world.getName().toLowerCase());
+        WorldEntry e = resolveEntry(world);
         return e == null || e.autoDropEnabled();
     }
 

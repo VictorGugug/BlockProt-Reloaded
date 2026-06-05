@@ -377,6 +377,11 @@ console:
   update:
     available: "A newer version of BlockProt Reloaded is available: {version}"
     up_to_date: "BlockProt Reloaded is up-to-date"
+  viaversion_detected: "ViaVersion {version} detected — multi-version client support active."
+  viaversion_api_missing: "ViaVersion plugin present but API class not found — skipping."
+  craftbukkit_unsupported: "This plugin does not support CraftBukkit. Please use Spigot or Paper."
+  integration_enabled: "Integration enabled: {name}"
+  startup_complete: "BlockProt v{version} enabled."
 
 inventories:
   audit:
@@ -399,3 +404,7 @@ inventories:
   gui_mode_title: "§6► GUI Mode"
   gui_user: "§7  /bp user  §f- Open User Menu (settings, friends, stats, about)"
   gui_admin: "§7  /bp admin §f- Open Admin Menu (reload, update, integrations, stats, debug, info)"
+  block_info:
+    owner_label: "§6Owner"
+    owner_lore: "§7This block is owned by §f{player}§7."
+    friend_count: "§7Friends: §f{count}"

@@ -140,7 +140,28 @@ public class BlockInfoInventory extends BlockProtInventory {
                 final var profile = BlockProt.getProfileService().findByUuid(UUID.fromString(owner));
                 assert profile != null;
                 final String ownerName = profile.getName() != null ? profile.getName() : owner.substring(0, 8);
-                setPlayerSkull(0, BlockProtInventory.createPlayerProfile(profile.getUniqueId(), ownerName));
+                final int friendCount = filteredFriends.size();
+                final ItemStack ownerSkull = new ItemStack(Material.PLAYER_HEAD, 1);
+                final org.bukkit.inventory.meta.SkullMeta skullMeta =
+                    (org.bukkit.inventory.meta.SkullMeta) ownerSkull.getItemMeta();
+                if (skullMeta != null) {
+                    var pp = BlockProtInventory.createPlayerProfile(profile.getUniqueId(), ownerName);
+                    skullMeta.setOwnerProfile(pp);
+                    skullMeta.displayName(net.kyori.adventure.text.Component.text(
+                        Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
+                    skullMeta.lore(java.util.List.of(
+                        net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                            .legacySection().deserialize(
+                                Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LORE)
+                                    .replace("{player}", ownerName)),
+                        net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                            .legacySection().deserialize(
+                                Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__FRIEND_COUNT)
+                                    .replace("{count}", String.valueOf(friendCount)))
+                    ));
+                    ownerSkull.setItemMeta(skullMeta);
+                }
+                inventory.setItem(0, ownerSkull);
             } catch (Exception e) {
                 BlockProt.getInstance().getLogger().warning("Failed to update PlayerProfile: " + e.getMessage());
             }

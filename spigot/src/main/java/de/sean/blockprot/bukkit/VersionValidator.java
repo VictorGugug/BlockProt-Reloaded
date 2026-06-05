@@ -67,7 +67,7 @@ public final class VersionValidator {
                 "Falling back to anvil GUI.");
         }
 
-        if (!hasTypedViews && VersionCompat.isAtLeast(1, 20, 0)) {
+        if (!hasTypedViews && VersionCompat.isAtLeast(1, 20, 0) && !VersionCompat.is26Family()) {
             warn(Translator.get(TranslationKey.CONSOLE__TYPED_VIEWS_FALLBACK));
             BlockProtLogger.warn("Typed inventory views unavailable (1.21.0–1.21.3). Using fallback methods.");
         }

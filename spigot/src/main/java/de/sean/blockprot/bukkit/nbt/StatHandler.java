@@ -140,61 +140,43 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
 
     @SuppressWarnings("deprecation")
     public static void saveFile() throws IOException {
-        // Skip disk write if nothing has changed since the last save.
         if (!dirty) return;
         dirty = false;
-        /* We will always first save to a temporary file and then
-           swap it with the actual file. This ensures that the write
-           process on the actual file does not get interrupted, thus
-           never corrupting it. */
-        if (nbtFile != null && backupFile != null && temporarySwapFile != null) {
-            // Write to backup file using try-with-resources to ensure stream closure
-            try (OutputStream outputStream = Files.newOutputStream(backupFile.toPath())) {
-                nbtFile.writeCompound(outputStream);
+        if (nbtFile == null || backupFile == null || temporarySwapFile == null) return;
+
+        synchronized (StatHandler.class) {
+            // Step 1: write current in-memory NBT to the temp file (never touches the live file)
+            try (OutputStream out = Files.newOutputStream(temporarySwapFile.toPath())) {
+                nbtFile.writeCompound(out);
             }
 
+            // Step 2: validate the temp file before committing
             try {
-                if (backupFile.exists())
-                    new NBTFile(backupFile);
+                new NBTFile(temporarySwapFile);
             } catch (NbtApiException e) {
-                BlockProt.getInstance().getLogger().warning("Failed to re-read statistic NBT File!");
-                backupFile.delete();
+                temporarySwapFile.delete();
+                BlockProt.getInstance().getLogger().warning("Stat save aborted — temp file failed validation.");
                 return;
             }
 
-            // Synchronize the swap so concurrent saves don't interfere with each other
-            synchronized (StatHandler.class) {
-                if (nbtFile.getFile().exists() && backupFile.exists()) {
-                    // Try atomic moves first, fall back to non-atomic replace if not supported
-                    try {
-                        Files.move(backupFile.toPath(), temporarySwapFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-                        Files.move(nbtFile.getFile().toPath(), backupFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-                        Files.move(temporarySwapFile.toPath(), nbtFile.getFile().toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException atomicEx) {
-                        // Fallback to non-atomic replace
-                        try {
-                            Files.move(backupFile.toPath(), temporarySwapFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                            Files.move(nbtFile.getFile().toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                            Files.move(temporarySwapFile.toPath(), nbtFile.getFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
-                        } catch (IOException e) {
-                            // Best-effort restore: if temporarySwapFile exists and target missing, try to restore
-                            try {
-                                if (temporarySwapFile.exists() && !nbtFile.getFile().exists()) {
-                                    Files.move(temporarySwapFile.toPath(), nbtFile.getFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
-                                }
-                            } catch (IOException ignore) {
-                            }
-                            throw new IOException("Failed to swap backup NBT file: " + e.getMessage(), e);
-                        }
-                    }
-                } else if (backupFile.exists()) {
-                    /* The base NBT file doesn't exist, probably got corrupted */
-                    if (!backupFile.renameTo(nbtFile.getFile())) {
-                        throw new IOException("Failed to rename backup NBT file.");
-                    }
-                } else {
-                    // This shouldn't happen
-                    throw new IOException("NBT files have been deleted after usage!");
+            // Step 3: rotate files — tmp -> backup, then tmp -> live
+            // Copy temp to backup (keeps a known-good copy)
+            try {
+                Files.copy(temporarySwapFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException ignored) {
+                // Backup write failure is non-fatal; proceed to update the live file
+            }
+
+            // Step 4: replace the live file with the newly written temp file
+            try {
+                Files.move(temporarySwapFile.toPath(), nbtFile.getFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                // Atomic move not supported on this OS/FS — copy then delete
+                try {
+                    Files.copy(temporarySwapFile.toPath(), nbtFile.getFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    temporarySwapFile.delete();
+                } catch (IOException ce) {
+                    throw new IOException("Failed to commit stats file: " + ce.getMessage(), ce);
                 }
             }
         }

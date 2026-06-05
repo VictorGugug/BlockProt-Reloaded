@@ -31,3 +31,5 @@ softdepend:
   - WorldGuard
   - Lands
   - ClaimChunk
+  - ViaVersion
+  - ViaBackwards

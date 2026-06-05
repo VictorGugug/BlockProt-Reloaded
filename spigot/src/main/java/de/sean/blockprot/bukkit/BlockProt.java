@@ -149,6 +149,7 @@ public final class BlockProt extends JavaPlugin {
         }
         try { registerIntegration(new TownyIntegration());          } catch (NoClassDefFoundError ignored) {}
         try { registerIntegration(new PlaceholderAPIIntegration()); } catch (NoClassDefFoundError ignored) {}
+        try { registerIntegration(new ViaVersionIntegration());     } catch (NoClassDefFoundError ignored) {}
         for (PluginIntegration integration : integrations) {
             try { integration.load(); } catch (NoClassDefFoundError ignored) {}
         }
@@ -157,7 +158,21 @@ public final class BlockProt extends JavaPlugin {
     @Override
     public void onEnable() {
         if (isRunningCraftBukkit()) {
-            final var message = "This plugin does not support CraftBukkit. Please use Spigot or Paper.";
+            // Load translations minimally so we can emit a translated error message,
+            // then register the error listener and abort the rest of onEnable.
+            this.saveDefaultConfig();
+            this.reloadConfig();
+            defaultConfig = new DefaultConfig(this.getConfig(), this.getDataFolder());
+            Translator.resetTranslations();
+            try {
+                InputStream s = this.getResource("lang/" + defaultLanguageFile);
+                if (s != null) {
+                    YamlConfiguration cfg = YamlConfiguration.loadConfiguration(
+                        new java.io.BufferedReader(new java.io.InputStreamReader(s, java.nio.charset.StandardCharsets.UTF_8)));
+                    Translator.loadFromConfigs(cfg, cfg);
+                }
+            } catch (Exception ignored) {}
+            final var message = Translator.get(TranslationKey.CONSOLE__CRAFTBUKKIT_UNSUPPORTED);
             getLogger().severe(message);
             getServer().getPluginManager().registerEvents(new ErrorEventListener(message), this);
             return;
@@ -420,19 +435,26 @@ public final class BlockProt extends JavaPlugin {
         YamlConfiguration template = YamlConfiguration.loadConfiguration(
             new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
 
-        // Overlay user values onto the clean template (template keys only).
+        // Strategy: start from the user's config and only ADD keys that are missing.
+        // This guarantees that every value the admin has set is preserved verbatim,
+        // including keys that do not exist in the current template (custom or legacy).
+        int added = 0;
         for (String key : template.getKeys(true)) {
             if (template.isConfigurationSection(key)) continue;
-            if (userValues.contains(key)) {
-                template.set(key, userValues.get(key));
+            if (EXTERNAL_CONFIG_KEYS.contains(key)) continue;
+            if (!userValues.contains(key)) {
+                userValues.set(key, template.get(key));
+                added++;
             }
         }
 
         try {
-            template.save(diskFile);
-            BlockProtLogger.log("config-clean", "config.yml rewritten with clean format; user values preserved.");
+            userValues.save(diskFile);
+            BlockProtLogger.log("config-clean",
+                "config.yml merged: all user values preserved" +
+                (added > 0 ? ", added " + added + " missing key(s) from template." : "."));
         } catch (IOException e) {
-            BlockProtLogger.warn("Failed to rewrite config.yml: " + e.getMessage());
+            BlockProtLogger.warn("Failed to save config.yml after merge: " + e.getMessage());
         }
     }
 
@@ -599,10 +621,33 @@ public final class BlockProt extends JavaPlugin {
             if (new File(legacyFolder, ".migrated").exists()) continue;
             if (!new File(legacyFolder, "config.yml").exists()) continue;
 
-            // Translator is not yet loaded at this point — store raw strings for post-init logging.
             pendingMigrationLog = legacyName;
             try {
+                // Copy every file that does NOT already exist in the destination.
+                // This preserves any files the new plugin already created (e.g. defaults).
                 copyDirectoryContents(legacyFolder.toPath(), this.getDataFolder().toPath());
+
+                // Additionally merge the legacy config.yml into the new one key-by-key
+                // so that custom values the admin set are preserved even if the new
+                // template has a different structure.
+                mergeYamlUserValues(
+                    new File(legacyFolder, "config.yml"),
+                    new File(this.getDataFolder(), "config.yml")
+                );
+
+                // Merge every lang file present in the legacy folder.
+                File legacyLang = new File(legacyFolder, "lang");
+                File newLang    = new File(this.getDataFolder(), "lang");
+                if (legacyLang.isDirectory()) {
+                    File[] langFiles = legacyLang.listFiles(
+                        f -> f.isFile() && f.getName().endsWith(".yml"));
+                    if (langFiles != null) {
+                        for (File lf : langFiles) {
+                            mergeYamlUserValues(lf, new File(newLang, lf.getName()));
+                        }
+                    }
+                }
+
                 Files.createFile(legacyFolder.toPath().resolve(".migrated"));
                 pendingMigrationSuccess = true;
             } catch (IOException e) {
@@ -610,6 +655,31 @@ public final class BlockProt extends JavaPlugin {
             }
             break;
         }
+    }
+
+    /**
+     * Merges user values from {@code src} YAML into {@code dst} YAML.
+     * Every key present in {@code src} that is absent in {@code dst} is copied.
+     * Keys already in {@code dst} are never overwritten — the destination wins.
+     * If {@code dst} does not exist, {@code src} is copied verbatim.
+     */
+    private static void mergeYamlUserValues(@NotNull File src, @NotNull File dst) throws IOException {
+        if (!src.exists()) return;
+        YamlConfiguration srcCfg = YamlConfiguration.loadConfiguration(src);
+        if (!dst.exists()) {
+            Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.COPY_ATTRIBUTES);
+            return;
+        }
+        YamlConfiguration dstCfg = YamlConfiguration.loadConfiguration(dst);
+        boolean changed = false;
+        for (String key : srcCfg.getKeys(true)) {
+            if (srcCfg.isConfigurationSection(key)) continue;
+            if (!dstCfg.contains(key)) {
+                dstCfg.set(key, srcCfg.get(key));
+                changed = true;
+            }
+        }
+        if (changed) dstCfg.save(dst);
     }
 
     /**

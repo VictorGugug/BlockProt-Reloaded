@@ -292,7 +292,12 @@ public final class DefaultConfig extends BlockProtConfig {
             WorldsConfig wc = BlockProt.getWorldsConfig();
             if (wc != null && wc.isWorldDisabled(world)) return true;
         }
-        return listContainsIgnoreCase(excludedWorlds, world.getName());
+        if (listContainsIgnoreCase(excludedWorlds, world.getName())) return true;
+        try {
+            String keyVal = world.getKey().value();
+            if (listContainsIgnoreCase(excludedWorlds, keyVal)) return true;
+        } catch (Exception ignored) {}
+        return false;
     }
 
     public boolean isWorldsConfigEnabled() { return config.getBoolean("worlds_config_enabled", false); }

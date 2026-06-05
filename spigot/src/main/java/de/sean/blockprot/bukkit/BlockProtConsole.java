@@ -21,6 +21,8 @@
 package de.sean.blockprot.bukkit;
 
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -73,10 +75,9 @@ public final class BlockProtConsole {
         List<String> lines = startupBuffer != null ? startupBuffer : new ArrayList<>();
         startupBuffer = null;
 
-        // Single console line
-        log("BlockProt v" + version + " enabled.");
+        log(Translator.get(TranslationKey.CONSOLE__STARTUP_COMPLETE)
+            .replace("{version}", version));
 
-        // Everything else goes to the session log only
         for (String line : lines) {
             BlockProtLogger.log("startup", line);
         }
@@ -118,7 +119,8 @@ public final class BlockProtConsole {
      * @param integrationName The plugin id (e.g. "claimchunk").
      */
     public static void integrationEnabled(@NotNull String integrationName) {
-        emit("Integration enabled: " + integrationName);
+        emit(Translator.get(TranslationKey.CONSOLE__INTEGRATION_ENABLED)
+            .replace("{name}", integrationName));
     }
 
     // -------------------------------------------------------------------------
