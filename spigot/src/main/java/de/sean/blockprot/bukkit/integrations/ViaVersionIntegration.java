@@ -16,8 +16,16 @@ public final class ViaVersionIntegration extends PluginIntegration {
     private static final String VIA_API_CLASS = "com.viaversion.viaversion.api.Via";
 
     public ViaVersionIntegration() {
-        super("viaversion");
+        super("viaversion", false);
     }
+
+    /**
+     * ViaVersion has no integration config file — skip the file load entirely.
+     * Overriding reload() prevents the parent from trying to load integrations/viaversion.yml
+     * on every /bp reload, which would produce a console warning.
+     */
+    @Override
+    public void reload() { /* no config to reload */ }
 
     @Override
     public boolean isEnabled() {
@@ -45,6 +53,27 @@ public final class ViaVersionIntegration extends PluginIntegration {
     @Nullable
     public Plugin getPlugin() {
         return BlockProt.getInstance().getPlugin("ViaVersion");
+    }
+
+    /**
+     * Returns a human-readable MC version string for the player's client.
+     * Uses ViaVersion protocol map to convert protocol number to version string.
+     * Returns the server MC version string when ViaVersion is not active or the
+     * player is on the same version as the server.
+     */
+    @NotNull
+    public String getPlayerVersionString(@NotNull Player player) {
+        int protocol = getPlayerProtocolVersion(player);
+        if (protocol <= 0) return de.sean.blockprot.bukkit.VersionCompat.getVersionString();
+        try {
+            Class<?> protoClass = Class.forName("com.viaversion.viaversion.api.protocol.version.ProtocolVersion");
+            Object pv = protoClass.getMethod("getProtocol", int.class).invoke(null, protocol);
+            Object ver = pv.getClass().getMethod("getName").invoke(pv);
+            String name = ver != null ? ver.toString() : String.valueOf(protocol);
+            return name.isBlank() ? String.valueOf(protocol) : name;
+        } catch (Exception ignored) {
+            return String.valueOf(protocol);
+        }
     }
 
     public int getPlayerProtocolVersion(@NotNull Player player) {

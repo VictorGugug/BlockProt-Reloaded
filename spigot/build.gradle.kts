@@ -41,20 +41,19 @@ repositories {
 dependencies {
     implementation(project(":common"))
 
-    // Compile against Paper/Spigot 1.20.6 — the oldest version we support.
-    // All APIs introduced after 1.20.6 (typed inventory views in 1.21.4,
-    // new Paper 26.1 versioning, etc.) are accessed via VersionCompat
-    // checks and reflection at runtime, never directly imported.
-    // Paper 26.1.x loads this JAR fine because it remains backward-compatible
-    // with plugins compiled against older API versions.
-    compileOnly("io.papermc.paper:paper-api:1.20.6-R0.1-SNAPSHOT")
+    // Compile against Paper 1.21.1 — the oldest version we actively support.
+    // 1.20.x users receive bug fixes only (legacy support, no new features).
+    // Primary targets: Paper/Purpur 26.1.2 (80%+ of installs) and 1.21.1+.
+    // APIs introduced after 1.21.1 are accessed via VersionCompat checks and
+    // reflection at runtime, never directly imported.
+    compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
     compileOnly("org.apache.commons:commons-lang3:3.13.0")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
-    testImplementation("com.github.seeseemelk:MockBukkit-v1.20:3.93.2")
+    testImplementation("com.github.seeseemelk:MockBukkit-v1.21:4.8.0")
 
     // bStats — 3.2.1
     api("org.bstats:bstats-bukkit:3.2.1")
@@ -63,7 +62,7 @@ dependencies {
     implementation("de.tr7zw:item-nbt-api:$nbtApiVersion")
 
     // FoliaLib: cross-platform scheduler (Spigot / Paper / Purpur / Pufferfish / Folia)
-    implementation("com.tcoded:FoliaLib:0.4.3")
+    implementation("com.tcoded:FoliaLib:0.5.1")
 
     implementation("org.enginehub:squirrelid:0.3.2")
     implementation("com.zaxxer:HikariCP:7.0.2")

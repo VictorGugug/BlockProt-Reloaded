@@ -30,7 +30,7 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
- * /bp protdell [world]
+ * /bp protdel [world]
  *
  * <p>Without argument: opens the world-selector GUI.
  * <p>With argument: skips the selector and goes directly to the confirmation GUI for that world.

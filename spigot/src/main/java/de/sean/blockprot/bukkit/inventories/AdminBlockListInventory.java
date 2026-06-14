@@ -19,7 +19,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Admin GUI — lists every block owned by a specific player.
@@ -163,14 +162,20 @@ public final class AdminBlockListInventory extends BlockProtInventory {
 
     // ── helpers ────────────────────────────────────────────────────────────
 
+    /**
+     * Returns all stat entries for this player.
+     *
+     * <p>The previous implementation called {@link org.bukkit.block.Block#getType()} on every
+     * entry to filter out AIR blocks, which triggered synchronous chunk loads for unloaded chunks
+     * and silently discarded entries whose chunks were not resident in memory.
+     *
+     * <p>This version shows all stored entries. The on-disk stat list is the authoritative source;
+     * stale entries (broken blocks) are cleaned up by the {@link de.sean.blockprot.bukkit.nbt.StatHandler}
+     * purge scan and should not be hidden by the GUI.
+     */
     private List<LocationListEntry> filteredList() {
         if (statistic == null) return List.of();
-        return statistic.get().stream()
-            .filter(e -> {
-                try   { return e.get().getBlock().getType() != Material.AIR; }
-                catch (Exception ignored) { return false; }
-            })
-            .collect(Collectors.toList());
+        return statistic.get();
     }
 
     private void renderEntry(int slot, @NotNull LocationListEntry entry, @NotNull String loreTp) {

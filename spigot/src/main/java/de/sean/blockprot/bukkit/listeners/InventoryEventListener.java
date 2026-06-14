@@ -32,6 +32,7 @@ import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.FriendHandler;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
 import org.bukkit.block.DoubleChest;
@@ -47,21 +48,25 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 public class InventoryEventListener implements Listener {
 
-    // InventoryActions that represent a player taking items out of a container.
     private static final Set<InventoryAction> TAKE_ACTIONS = EnumSet.of(
         InventoryAction.PICKUP_ALL, InventoryAction.PICKUP_HALF,
         InventoryAction.PICKUP_ONE, InventoryAction.PICKUP_SOME,
-        InventoryAction.DROP_ALL_SLOT, InventoryAction.DROP_ONE_SLOT
+        InventoryAction.DROP_ALL_SLOT, InventoryAction.DROP_ONE_SLOT,
+        InventoryAction.MOVE_TO_OTHER_INVENTORY,
+        InventoryAction.HOTBAR_MOVE_AND_READD, InventoryAction.HOTBAR_SWAP,
+        InventoryAction.COLLECT_TO_CURSOR
     );
-    // InventoryActions that represent a player placing items into a container.
     private static final Set<InventoryAction> PLACE_ACTIONS = EnumSet.of(
         InventoryAction.PLACE_ALL, InventoryAction.PLACE_ONE, InventoryAction.PLACE_SOME
     );
@@ -71,29 +76,22 @@ public class InventoryEventListener implements Listener {
         final Player player = (Player) event.getWhoClicked();
         final InventoryState state = InventoryState.get(player.getUniqueId());
         if (state != null) {
-            // We have some sort of inventory state, so we'll assume the player is currently in
-            // some of our inventories. We'll check from which inventory the clicked item actually is,
-            // so that the onClick method is only called for menu clicks, but we'll still cancel all
-            // clicks in the players inventory.
             InventoryHolder holder = event.getInventory().getHolder();
             if (holder instanceof BlockProtInventory) {
-                // While getInventory always returns the top inventory, getClickedInventory returns the
-                // inventory in which this event occurred.
                 final var clickedInventory = event.getClickedInventory();
                 if (clickedInventory != null && clickedInventory.getHolder() instanceof BlockProtInventory bpInventory) {
                     bpInventory.onClick(event, state);
                 } else {
-                    event.setCancelled(true); // Don't allow interaction in a menu.
+                    event.setCancelled(true);
                 }
             }
         } else {
-            // No state, let's check if they're in some block inventory.
             try {
-                // Casting null does not trigger a ClassCastException.
                 if (event.getInventory().getHolder() == null) return;
                 BlockInventoryHolder blockHolder = (BlockInventoryHolder) event.getInventory().getHolder();
-                if (BlockProt.getDefaultConfig().isLockable(blockHolder.getBlock().getType())) {
-                    BlockNBTHandler handler = new BlockNBTHandler(blockHolder.getBlock());
+                Block block = blockHolder.getBlock();
+                if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
+                    BlockNBTHandler handler = new BlockNBTHandler(block);
                     String playerUuid = player.getUniqueId().toString();
 
                     if (handler.isProtected() && !handler.isOwner(playerUuid)) {
@@ -104,19 +102,35 @@ public class InventoryEventListener implements Listener {
                             } else if (!friend.get().canRead()) {
                                 event.setCancelled(true);
                                 player.closeInventory();
+                            } else {
+                                if (event.getClickedInventory() != null
+                                        && event.getClickedInventory().equals(event.getInventory())) {
+                                    notifyOwnerItemAction(handler, player, block, event.getAction(), event.getCurrentItem());
+                                }
                             }
                         } else {
-                            // The player is not a friend and not the owner; they shouldn't have
-                            // access anyway.
                             player.closeInventory();
                             event.setCancelled(true);
                         }
-                    } else if (handler.isProtected()) {
-                        // Owner interacting — do NOT log (owner actions are excluded from audit)
+                    } else if (handler.isProtected() && handler.isOwner(playerUuid)) {
+                        // Owner — log item actions to audit
+                        if (event.getClickedInventory() != null
+                                && event.getClickedInventory().equals(event.getInventory())) {
+                            ItemStack item = event.getCurrentItem();
+                            if (item != null && !item.getType().isAir()) {
+                                AuditLogger audit = BlockProt.getAuditLogger();
+                                if (audit != null) {
+                                    AuditLogger.Action act = TAKE_ACTIONS.contains(event.getAction())
+                                        ? AuditLogger.Action.ITEM_TAKEN
+                                        : (PLACE_ACTIONS.contains(event.getAction()) ? AuditLogger.Action.ITEM_PLACED : null);
+                                    if (act != null) audit.log(player.getUniqueId(), player.getName(), block.getLocation(), act);
+                                }
+                            }
+                        }
                     }
                 }
             } catch (ClassCastException e) {
-                // It's not a block, and it's therefore also not lockable.
+                // Not a block inventory.
             }
         }
     }
@@ -127,18 +141,15 @@ public class InventoryEventListener implements Listener {
         final var uuid = event.getPlayer().getUniqueId();
 
         if (handler.isProtected() && !handler.isOwner(uuid)) {
-            // The player taking the book is not the owner.
             final var friend = handler.getFriend(uuid.toString());
             if (friend.isPresent()) {
                 if (!friend.get().canWrite()) {
                     event.setCancelled(true);
                 } else if (!friend.get().canRead()) {
-                    // Not a friend who should be able to access the inventory
                     event.setCancelled(true);
                     event.getPlayer().closeInventory();
                 }
             } else {
-                // Not a friend; close the inventory
                 event.setCancelled(true);
                 event.getPlayer().closeInventory();
             }
@@ -150,7 +161,6 @@ public class InventoryEventListener implements Listener {
         Player player = (Player) event.getPlayer();
         final InventoryState state = InventoryState.get(player.getUniqueId());
         if (state == null) return;
-
         InventoryHolder holder = event.getInventory().getHolder();
         if (holder instanceof BlockProtInventory) {
             ((BlockProtInventory) holder).onClose(event, state);
@@ -159,29 +169,26 @@ public class InventoryEventListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryOpen(@NotNull InventoryOpenEvent event) {
-        // Double-check any inventories and close them if permissions are not valid.
         String playerUuid = event.getPlayer().getUniqueId().toString();
         InventoryHolder holder = event.getInventory().getHolder();
+
         if (holder instanceof BlockProtInventory) {
-            // We've got one of our inventories, check the inventory state if the player can access
-            // the block. Also fixes issues when the block gets destroyed.
             InventoryState state = InventoryState.get(playerUuid);
             if (state == null || state.getBlock() == null) return;
             try {
                 BlockNBTHandler handler = new BlockNBTHandler(state.getBlock());
                 Optional<FriendHandler> friend = handler.getFriend(playerUuid);
                 if (!(handler.isNotProtected()
-                    || handler.isOwner(playerUuid)
-                    || (friend.isPresent() && friend.get().isManager())
-                    || event.getPlayer().hasPermission(Permissions.USER_ADMIN.key())
-                    || event.getPlayer().hasPermission(Permissions.USER_ADMIN.key()))) {
+                        || handler.isOwner(playerUuid)
+                        || (friend.isPresent() && friend.get().isManager())
+                        || event.getPlayer().hasPermission(Permissions.USER_ADMIN.key()))) {
                     event.setCancelled(true);
                     sendMessage(event.getPlayer(), Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
                 }
-            } catch (RuntimeException ignored) {
-            }
+            } catch (RuntimeException ignored) {}
+
         } else if ((holder instanceof Container || holder instanceof DoubleChest)
-            && event.getPlayer() instanceof Player player) {
+                && event.getPlayer() instanceof Player player) {
             Block block;
             if (holder instanceof Container container) {
                 block = container.getBlock();
@@ -190,27 +197,35 @@ public class InventoryEventListener implements Listener {
             }
 
             if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
-                BlockAccessEvent accessEvent = new BlockAccessEvent(block, (Player) event.getPlayer());
+                BlockAccessEvent accessEvent = new BlockAccessEvent(block, player);
                 Bukkit.getPluginManager().callEvent(accessEvent);
+
                 if (accessEvent.isCancelled()) {
                     event.setCancelled(true);
                     sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
                 } else {
                     BlockNBTHandler handler = new BlockNBTHandler(block);
                     if (!accessEvent.shouldBypassProtections()
-                            && !(handler.canAccess(player.getUniqueId().toString()) || player.hasPermission(Permissions.BYPASS.key()))) {
+                            && !(handler.canAccess(playerUuid) || player.hasPermission(Permissions.USER_ADMIN.key()))) {
                         event.setCancelled(true);
                         sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
-                        // Log denied access.
                         AuditLogger audit = BlockProt.getAuditLogger();
                         if (audit != null && handler.isProtected()) {
                             audit.log(player.getUniqueId(), player.getName(), block.getLocation(), AuditLogger.Action.ACCESS_DENIED);
                         }
-                    } else if (handler.isProtected() && !handler.isOwner(playerUuid)) {
-                        // Non-owner allowed friend — log OPENED (owners are never logged)
+                    } else if (handler.isProtected()) {
+                        // Log OPENED for both owner and friends
                         AuditLogger audit = BlockProt.getAuditLogger();
                         if (audit != null) {
                             audit.log(player.getUniqueId(), player.getName(), block.getLocation(), AuditLogger.Action.OPENED);
+                        }
+                        // Notify owner only when a non-owner opens the block
+                        if (!handler.isOwner(playerUuid) && BlockProt.getDefaultConfig().isNotifyOnOpen()) {
+                            String blockName = friendlyBlockName(block);
+                            notifyOwner(handler, player,
+                                Translator.get(TranslationKey.MESSAGES__NOTIFY_OPENED)
+                                    .replace("{player}", player.getName())
+                                    .replace("{block}", blockName));
                         }
                     }
                 }
@@ -218,22 +233,81 @@ public class InventoryEventListener implements Listener {
         }
     }
 
+    // ── Helpers ────────────────────────────────────────────────────────────────
+
     private void sendMessage(@NotNull HumanEntity player, @NotNull String text) {
         if (!(player instanceof Player p)) return;
         p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(text));
     }
 
     /**
-     * Logs an item interaction (take or place) against the audit log when the action
-     * targets the block's own inventory (top slot range), not the player's hotbar.
+     * Sends an action-bar notification to the block owner if they are online,
+     * different from the accessing player, and have notifications enabled.
      */
-    private void logItemAction(@NotNull Player player, @NotNull Block block, @NotNull InventoryAction action) {
-        AuditLogger audit = BlockProt.getAuditLogger();
-        if (audit == null) return;
-        if (TAKE_ACTIONS.contains(action)) {
-            audit.log(player.getUniqueId(), player.getName(), block.getLocation(), AuditLogger.Action.ITEM_TAKEN);
-        } else if (PLACE_ACTIONS.contains(action)) {
-            audit.log(player.getUniqueId(), player.getName(), block.getLocation(), AuditLogger.Action.ITEM_PLACED);
+    private static void notifyOwner(@NotNull BlockNBTHandler handler,
+                                    @NotNull Player accessor,
+                                    @NotNull String message) {
+        String ownerUuid = handler.getOwner();
+        if (ownerUuid.isBlank()) return;
+        try {
+            UUID uuid = UUID.fromString(ownerUuid);
+            if (uuid.equals(accessor.getUniqueId())) return;
+            Player owner = Bukkit.getPlayer(uuid);
+            if (owner != null && owner.isOnline()) {
+                // Respect per-player notification preference
+                if (!new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(owner).getNotificationsEnabled()) return;
+                owner.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(message));
+            }
+        } catch (IllegalArgumentException ignored) {}
+    }
+
+    /**
+     * Notifies the owner about an item take/place action by a friend, if enabled.
+     */
+    private static void notifyOwnerItemAction(@NotNull BlockNBTHandler handler,
+                                              @NotNull Player player,
+                                              @NotNull Block block,
+                                              @NotNull InventoryAction action,
+                                              @Nullable ItemStack item) {
+        if (item == null || item.getType().isAir()) return;
+        String blockName = friendlyBlockName(block);
+        String itemName  = friendlyMaterialName(item.getType().name());
+        int    amount    = item.getAmount();
+
+        if (TAKE_ACTIONS.contains(action) && BlockProt.getDefaultConfig().isNotifyOnTake()) {
+            notifyOwner(handler, player,
+                Translator.get(TranslationKey.MESSAGES__NOTIFY_ITEM_TAKEN)
+                    .replace("{player}", player.getName())
+                    .replace("{amount}", String.valueOf(amount))
+                    .replace("{item}", itemName)
+                    .replace("{block}", blockName));
+            AuditLogger audit = BlockProt.getAuditLogger();
+            if (audit != null) audit.log(player.getUniqueId(), player.getName(), block.getLocation(), AuditLogger.Action.ITEM_TAKEN);
+        } else if (PLACE_ACTIONS.contains(action) && BlockProt.getDefaultConfig().isNotifyOnPlace()) {
+            notifyOwner(handler, player,
+                Translator.get(TranslationKey.MESSAGES__NOTIFY_ITEM_PLACED)
+                    .replace("{player}", player.getName())
+                    .replace("{amount}", String.valueOf(amount))
+                    .replace("{item}", itemName)
+                    .replace("{block}", blockName));
+            AuditLogger audit = BlockProt.getAuditLogger();
+            if (audit != null) audit.log(player.getUniqueId(), player.getName(), block.getLocation(), AuditLogger.Action.ITEM_PLACED);
         }
+    }
+
+    /** "OAK_CHEST" → "Oak Chest" */
+    @NotNull
+    private static String friendlyBlockName(@NotNull Block block) {
+        return friendlyMaterialName(block.getType().name());
+    }
+
+    @NotNull
+    private static String friendlyMaterialName(@NotNull String name) {
+        String[] words = name.toLowerCase().split("_");
+        StringBuilder sb = new StringBuilder();
+        for (String w : words) {
+            if (!w.isEmpty()) sb.append(Character.toUpperCase(w.charAt(0))).append(w.substring(1)).append(' ');
+        }
+        return sb.toString().trim();
     }
 }

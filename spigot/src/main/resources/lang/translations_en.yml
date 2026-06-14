@@ -1,9 +1,6 @@
-# Reference translation file for English
-# All colour codes can be used, as found here: https://www.spigotmc.org/wiki/textcosmetics-colors-and-formats/
-# We would be very happy if you submit your translations onto the
-# GitHub repository: https://github.com/spnda/BlockProt/pulls
+# BlockProt Reloaded — translations_en.yml
+# Reference English translation file.
 locale: en
-
 enabled: Enabled
 disabled: Disabled
 
@@ -21,7 +18,12 @@ inventories:
   searching: "Searching..."
   block_lock: "Block Lock"
   user_settings: "User Settings"
-  block_info: "Block Info"
+  user_settings_notifications: "Access notifications"
+  block_info:
+    title: "Block Info"
+    owner_label: "§6Owner"
+    owner_lore: "§7This block is owned by §f{player}§7."
+    friend_count: "§7Friends: §f{count}"
   lock: "Lock"
   unlock: "Unlock"
   lock_on_place: "Lock automatically"
@@ -55,7 +57,6 @@ inventories:
       read: "Read"
       write: "Write"
       manager: "Manager"
-  # ── Lock Groups ────────────────────────────────────────────────────────────
   groups:
     title: "Lock Group"
     button: "§bLock Group"
@@ -91,7 +92,7 @@ inventories:
     action_opened: "§aOpened"
     action_item_taken: "§eTook item(s)"
     action_item_placed: "§2Placed item(s)"
-  # ── Pet protection ────────────────────────────────────────────────────────
+    action_unknown: "§7Access"
   pet:
     settings: "§dPet Settings"
     protect: "§dPet protection"
@@ -99,13 +100,11 @@ inventories:
     no_interact: "§eBlock interaction"
     no_leash: "§6Block leash"
     no_pickup: "§bBlock pickup (parrot)"
-  # ── Transfer GUI ──────────────────────────────────────────────────────────
   transfer:
     title: "Transfer: {player}"
     search_prompt: "Player name"
     button: "Transfer block"
     button_lore: "Transfer ownership to another player."
-  # ── Timed access GUI ──────────────────────────────────────────────────────
   timed:
     title: "Timed Access"
     button: "§eTimed Access"
@@ -115,7 +114,6 @@ inventories:
     max_label: "§7Maximum: §f{duration}"
     no_limit: "§7Maximum: §fNo limit"
     player_label: "§7Player: §f{player}"
-  # ── User menu ─────────────────────────────────────────────────────────────
   user_menu:
     title: "§8[§bUser§8] §fBlockProt"
     settings: "§fMy Settings"
@@ -126,6 +124,8 @@ inventories:
     stats_lore: "See how many blocks you have protected."
     transfer: "§dTransfer all blocks"
     transfer_lore: "Transfer all your protected blocks to another player."
+    timed: "§eTimed Access"
+    timed_lore: "Grant temporary access to a block."
     hints: "§7Protection hints"
     hints_lore: "Toggle block-placement protection hints."
     hints_already: "§7Hints already managed."
@@ -133,7 +133,6 @@ inventories:
     about_lore: "Plugin information."
     close: "§cClose"
     close_lore: "Close this menu."
-  # ── Admin menu ────────────────────────────────────────────────────────────
   admin_menu:
     title: "BlockProt - Admin"
     reload: "§aReload config"
@@ -150,15 +149,22 @@ inventories:
     info_lore: "Search a player's protected blocks (opens GUI)."
     close: "§cClose"
     close_lore: "Close this menu."
-  # -- Admin block list --
   admin_block_list:
     title: "{player}'s Blocks"
-  # -- /bp unlock <player> GUI --
+  player_list:
+    title: "All Players"
+    empty: "§7No players found."
+    block_count: "§7Protected blocks: §f{count}"
+    online: "§aOnline"
+    offline: "§7Offline"
+    sort_name_asc: "§fSort: Name A-Z"
+    sort_name_desc: "§fSort: Name Z-A"
+    sort_blocks_desc: "§fSort: Most blocks"
+    sort_blocks_asc: "§fSort: Fewest blocks"
   bp_unlock:
     title: "Unlock: {player}"
     left_click_hint: "§7[✓] Left-click: view contents (read-only)"
     right_click_hint: "§c[!] Right-click: remove protection"
-  # -- /bp protdell [world] GUI --
   world_prot_del:
     title: "Delete World Protections"
     search_prompt: "§7Type a world name to filter..."
@@ -169,6 +175,11 @@ inventories:
     cancel_button: "§fCancel"
     undo_button: "§aUndo Last Deletion"
     undo_lore: "§7Restores the protections removed in the last operation."
+    environment: "§7Environment: "
+    no_undo_available: "§7No undo available"
+  integrations:
+    separator: "§7, "
+    none: "§8-"
 
 messages:
   permission_granted: "Permission granted."
@@ -202,7 +213,6 @@ messages:
   only_players: "Only players can use this command."
   reload_done: "§aFinished reloading BlockProt."
   integrations_enabled: "§7Enabled integrations ({count}): {integrations}"
-  # ── Transfer ──────────────────────────────────────────────────────────────
   transfer_success: "§aOwnership transferred to §f{player}§a. You were added as a friend."
   transfer_usage: "§cUsage: /bp transferall <player>"
   transfer_not_owner: "§cYou are not the owner of that block."
@@ -213,7 +223,6 @@ messages:
   transfer_failed: "§cCould not transfer the block."
   transfer_all_success: "§aTransferred §f{count}§a block(s) to §f{player}§a."
   transfer_all_no_blocks: "§cYou have no protected blocks to transfer."
-  # ── Timed access ──────────────────────────────────────────────────────────
   timed_access_success: "§aGranted §f{player}§a temporary access for §f{seconds}§a second(s)."
   timed_access_granted: "§aTemporary access granted for §f{duration}§a."
   timed_access_usage: "§cUsage: /bp timed <player> <seconds>  (look at a block you own)"
@@ -221,40 +230,41 @@ messages:
   timed_access_not_owner: "§cYou are not the owner of that block or it is not lockable."
   timed_access_over_max: "§cDuration exceeds the configured maximum ({duration})."
   timed_access_invalid_state: "§cTimed access is only available for friends on a specific block."
-  # ── Admin info ────────────────────────────────────────────────────────────
   admin_info_header: "§6=== Blocks owned by {player} ==="
   admin_info_entry: "§7  {world} §f{x}, {y}, {z}"
   admin_info_usage: "§cUsage: /bp info <player>"
   admin_info_player_not_found: "§cPlayer not found: {player}"
   admin_info_no_blocks: "§7{player} owns no locked blocks."
-  # ── User / Admin menus ────────────────────────────────────────────────────
   user_transfer_hint: "§7Use: §f/bp transferall <player>§7 to transfer all your protected blocks."
   user_timed_hint: "§7Look at a block you own then use: §f/bp timed <player> <seconds>"
   hints_disabled: "§aProtection hints disabled."
   hints_already: "§7Hints already managed. Adjust them in My Settings."
   copy_done: "§aConfiguration copied."
   paste_done: "§aConfiguration pasted."
+  notify_opened: "§7{player} §fopened your §e{block}§f."
+  notify_item_taken: "§7{player} §ftook §e{amount}x {item}§f from your §e{block}§f."
+  notify_item_placed: "§7{player} §fput §e{amount}x {item}§f into your §e{block}§f."
+  raid_alert: "§c⚠ Possible raid! §e{block} §cat §e{world} [{x}, {y}, {z}]§c — Actor: §e{actor}"
+  raid_coords: "§c§l[BlockProt] §r§cPossible raid on your §e{block}§c at §f{world} [{x}, {y}, {z}]§c. Actor: §e{actor}"
+  raid_tp_label: "§a[Teleport]"
+  raid_pending: "§c§l[BlockProt] §r§cWhile you were offline, a possible raid was detected on your block §e{block}§c at §f{world} [{x}, {y}, {z}]§c. Actor: §e{actor}"
   no_permission_tp: "§c[✗] No permission: blockprot.blocks.tp"
   remote_unlock_warning: "§e⚠ This will unlock the block remotely. Click again to confirm. To re-lock, visit the block directly."
   admin_reload_done: "§aConfig and translations reloaded."
   admin_integrations: "§7Integrations ({count}): {integrations}"
   admin_info_hint: "§7Use §f/bp info <player>§7 to list their protected blocks."
   admin_debug_hint: "§7Running diagnostics..."
-  # ── Admin unlock ──────────────────────────────────────────────────────────
   admin_unlock_success: "§aBlock at {x} {y} {z} ({world}) has been unlocked."
   admin_unlock_failed: "§cFailed to unlock that block. It may not be protected or lockable."
   admin_unlock_usage: "§cUsage: /bp unlock <player>  (requires blockprot.admin)"
-  # ── /bp unlock <player> GUI ───────────────────────────────────────────────
   bp_unlock_removed: "§aProtection removed from §f{block}§a (owned by {player}) at {x} {y} {z}."
   bp_unlock_usage: "§cUsage: /bp unlock <player>"
   bp_unlock_player_not_found: "§cPlayer not found: {player}"
   bp_unlock_no_blocks: "§7{player} owns no locked blocks."
-  # ── Protection expiry ─────────────────────────────────────────────────────
   expiry_set: "§aExpiry set: block will unlock in §f{duration}§a."
   expiry_cleared: "§aExpiry removed. This block will no longer auto-unlock."
   expiry_expired: "§eThis block's protection has expired and has been cleared."
   expiry_invalid_duration: "§cInvalid duration. Use: 30s, 60m, 24h, 28d, 12mo, 1y (or combined: 1d12h30m)."
-  # ── Lock Groups ────────────────────────────────────────────────────────────
   groups:
     created: "§aGroup created. This block is now the first member."
     dissolved: "§aGroup dissolved. All {count} block(s) removed from the group."
@@ -263,17 +273,44 @@ messages:
     not_owner: "§cYou are not the owner of this block."
     already_in_group: "§cThis block is already in a group. Leave the current group first."
     disabled: "§cLock groups are disabled on this server."
-  # ── Debug ─────────────────────────────────────────────────────────────────
   debug_usage: "§cUsage: /bp debug <run|...>"
   console_warn_prefix: "§c[BlockProt WARN] "
   cmd_usage_menus: "§cUsage: /bp <user|admin>"
-  # ── World protection delete ────────────────────────────────────────
   world_prot_del_done: "§aRemoved §f{count}§a protection(s) from world §e{world}§a."
   world_prot_del_none: "§eNo protected blocks found in world §f{world}§e."
   world_prot_del_world_not_found: "§cWorld not found: {world}"
-  world_prot_del_usage: "§cUsage: /bp protdell [world]"
+  world_prot_del_usage: "§cUsage: /bp protdel [world]"
   world_prot_del_undo_done: "§aUndo complete: restored §f{count}§a protection(s)."
   world_prot_del_undo_nothing: "§eNo deletion to undo."
+  debug:
+    chest_placed: "§aChest placed"
+    shulker_placed: "§aShulker placed"
+    history_cleared: "§aHistory cleared"
+    running_diagnostics: "§eRunning diagnostics..."
+    results_go_to_log: "§77 Results go to the session log. Summary at the end."
+    checks_passed_actionbar: "§a✔ All {passed} checks passed"
+    checks_failed_actionbar: "§c✗ {failed} failed / {total}"
+    checks_passed_chat: "§a§l[BlockProt] §r§aAll §l{passed}§r§a checks passed."
+    checks_failed_chat: "§c§l[BlockProt] §r§c{failed} check(s) FAILED — see log."
+    log_path: "§7Log: §f{path}"
+  time:
+    days: "days"
+    day: "day"
+    hours: "hours"
+    hour: "hour"
+    minutes: "minutes"
+    minute: "minute"
+  location:
+    locked_ago: "§8Locked {time} ago"
+    empty_contents: "§8Empty"
+  integrations:
+    name: "Integrations"
+    separator: "§7, "
+    none: "§7None"
+  update:
+    outdated: "§cBlockProt is outdated! New version: {version}"
+    ahead: "§eBlockProt version is ahead of release ({version})"
+    up_to_date: "§aBlockProt is up-to-date"
 
 console:
   config_change_detected: "Configuration change detected; reloading..."
@@ -312,6 +349,14 @@ console:
   migration_done: "Migration from {source} complete. Old folder left intact."
   migration_failed: "Migration from {source} failed: {error}"
   saving_statistics: "Saving statistics to disk..."
+  update:
+    available: "A newer version of BlockProt Reloaded is available: {version}"
+    up_to_date: "BlockProt Reloaded is up-to-date"
+  viaversion_detected: "ViaVersion {version} detected — multi-version client support active."
+  viaversion_api_missing: "ViaVersion plugin present but API class not found — skipping."
+  craftbukkit_unsupported: "This plugin does not support CraftBukkit. Please use Spigot or Paper."
+  integration_enabled: "Integration enabled: {name}"
+  startup_complete: "BlockProt v{version} enabled."
 
 worlds:
   scan_start: "Scanning worlds... ({count} loaded)"
@@ -320,10 +365,10 @@ worlds:
 
 integrations:
   lands:
-    protect_containers_flag_name: Protect containers (BlockProt)
-    protect_containers_desc: Allows a player to protect chests, furnaces, ...
-    require_protect_for_friends_flag_name: Require "Protect containers" for friends (BlockProt)
-    require_protect_for_friends_desc: Only players that have the "Protect containers" flag are eligible to be added as a friend.
+    protect_containers_flag_name: "Protect containers (BlockProt)"
+    protect_containers_desc: "Allows a player to protect chests, furnaces, ..."
+    require_protect_for_friends_flag_name: "Require \"Protect containers\" for friends (BlockProt)"
+    require_protect_for_friends_desc: "Only players that have the \"Protect containers\" flag are eligible to be added as a friend."
 
 help:
   header: "§6=== §fBlockProt §7Help §6==="
@@ -334,6 +379,7 @@ help:
   friends_gui: "§7  /bp friends §f- Opens your default-friends menu."
   friends_addall: "§7  /bp friends addall <player> §f- Adds a friend to all your blocks."
   transfer: "§7  /bp transferall <player> §f- Transfers all your protected blocks to another player."
+  timed_access: "§7  /bp timed <player> <seconds> §f- Grant temporary access to a locked block."
   admin_info: "§7  /bp info <player> §f- Opens player block list GUI."
   other_title: "§6► Other"
   settings: "§7  /bp settings §f- Personal settings menu."
@@ -341,70 +387,11 @@ help:
   about: "§7  /bp about §f- Plugin and fork information."
   integrations: "§7  /bp integrations §f- List enabled integrations."
   update: "§7  /bp update §f- Check for updates."
-
-messages:
-  debug:
-    chest_placed: "§aChest placed"
-    shulker_placed: "§aShulker placed"
-    history_cleared: "§aHistory cleared"
-    running_diagnostics: "§eRunning diagnostics..."
-    results_go_to_log: "§77 Results go to the session log. Summary at the end."
-    checks_passed_actionbar: "§a✔ All {passed} checks passed"
-    checks_failed_actionbar: "§c✗ {failed} failed / {total}"
-    checks_passed_chat: "§a§l[BlockProt] §r§aAll §l{passed}§r§a checks passed."
-    checks_failed_chat: "§c§l[BlockProt] §r§c{failed} check(s) FAILED — see log."
-    log_path: "§7Log: §f{path}"
-  time:
-    days: "days"
-    day: "day"
-    hours: "hours"
-    hour: "hour"
-    minutes: "minutes"
-    minute: "minute"
-  location:
-    locked_ago: "§8Locked {time} ago"
-    empty_contents: "§8Empty"
-  integrations:
-    name: "Integrations"
-    separator: "§7, "
-    none: "§7None"
-  update:
-    outdated: "§cBlockProt is outdated! New version: {version}"
-    ahead: "§eBlockProt version is ahead of release ({version})"
-    up_to_date: "§aBlockProt is up-to-date"
-
-console:
-  update:
-    available: "A newer version of BlockProt Reloaded is available: {version}"
-    up_to_date: "BlockProt Reloaded is up-to-date"
-  viaversion_detected: "ViaVersion {version} detected — multi-version client support active."
-  viaversion_api_missing: "ViaVersion plugin present but API class not found — skipping."
-  craftbukkit_unsupported: "This plugin does not support CraftBukkit. Please use Spigot or Paper."
-  integration_enabled: "Integration enabled: {name}"
-  startup_complete: "BlockProt v{version} enabled."
-
-inventories:
-  audit:
-    action_unknown: "§7Access"
-    action_access_denied: "§cAccess Denied"
-    action_opened: "§eOpened"
-    action_item_taken: "§cItem Taken"
-    action_item_placed: "§aItem Placed"
-  world_prot_del:
-    environment: "§7Environment: "
-    no_undo_available: "§7No undo available"
-  integrations:
-    separator: "§7, "
-    none: "§8-"
   reload: "§7  /bp reload §f- Reload config and translations."
   disable_hints: "§7  /bp disablehints §f- Disable protection hint messages."
   debug: "§7  /bp debug <run|...> §f- Developer diagnostics."
   unlock: "§7  /bp unlock <player> §f- Open block unlock GUI for a player."
-  world_prot_del: "§7  /bp protdell [world] §f- Delete all protections in a world."
+  world_prot_del: "§7  /bp protdel [world] §f- Delete all protections in a world."
   gui_mode_title: "§6► GUI Mode"
   gui_user: "§7  /bp user  §f- Open User Menu (settings, friends, stats, about)"
-  gui_admin: "§7  /bp admin §f- Open Admin Menu (reload, update, integrations, stats, debug, info)"
-  block_info:
-    owner_label: "§6Owner"
-    owner_lore: "§7This block is owned by §f{player}§7."
-    friend_count: "§7Friends: §f{count}"
+  gui_admin: "§7  /bp admin §f- Open Admin Menu (reload, update, integrations, stats, debug, info, lockables)"

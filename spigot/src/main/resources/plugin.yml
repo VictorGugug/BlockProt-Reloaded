@@ -1,7 +1,7 @@
 name: BlockProtReloaded
 version: ${version}
 main: de.sean.blockprot.bukkit.BlockProt
-api-version: '1.20'
+api-version: '1.21.1'
 authors: [ Zar ]
 description: Block protection plugin — BlockProt Reloaded
 prefix: BlockProt
@@ -10,16 +10,29 @@ folia-supported: true
 permissions:
   blockprot.user:
     default: true
-    description: Grants access to all standard user features via /bp user (lock, friends, settings, stats, transfer, about)
+    description: >
+      Grants access to all standard player features — locking blocks, managing friends,
+      personal settings, statistics, transfer, and the /bp user menu.
   blockprot.user.admin:
     default: op
-    description: Grants access to all admin features via /bp admin (reload, update, integrations, stats, debug, info)
-  blockprot.bypass:
+    description: >
+      Grants all admin features — reload, update check, integrations list, debug,
+      /bp info, /bp unlock, /bp protdell, and the /bp admin menu.
+      Also allows breaking any protected block or shulker owned by another player,
+      with protection data automatically cleared on break.
+    children:
+      blockprot.user: true
+  blockprot.max_blocks:
     default: false
-    description: Allows a player to bypass any protection, effectively having access to every block.
+    description: >
+      Exempts the player from the player_max_locked_block_count limit in config.yml.
+      Assign to VIPs, donors, or trusted players who should protect more blocks than
+      the configured cap allows.
   blockprot.blocks.tp:
     default: op
-    description: Allows teleporting to a block from the statistics list (left-click).
+    description: >
+      Allows teleporting to a protected block from the statistics inventory
+      (left-click on a location entry).
 commands:
   blockprot:
     description: The main blockprot command

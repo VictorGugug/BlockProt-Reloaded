@@ -187,6 +187,11 @@ public final class UpdateChecker implements Runnable {
                     "BlockProt Reloaded v" + currentVersion
                         + " — update available: v" + latestVersion
                         + " | " + RELEASE_URL);
+            } else if (latestVersion.compareTo(currentVersion) < 0) {
+                // Running ahead of latest release — do not warn, just log.
+                BlockProtLogger.log("update-checker",
+                    "BlockProt Reloaded v" + currentVersion
+                        + " is ahead of the latest release (v" + latestVersion + ").");
             } else {
                 BlockProtLogger.log("update-checker",
                     "BlockProt Reloaded is up to date (v" + currentVersion + ")");

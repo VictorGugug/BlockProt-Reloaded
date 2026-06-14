@@ -13,6 +13,7 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -20,23 +21,42 @@ import java.util.concurrent.atomic.AtomicLong;
  * files change. Reloads are debounced to avoid duplicate reloads while an
  * editor is still writing the file.
  *
- * <p>The pre-reload backup is performed on an async thread so that the ZIP
- * creation never stalls the main thread tick.</p>
+ * <h3>Self-write suppression</h3>
+ * {@code reloadConfigAndTranslations()} writes several YAML files to disk
+ * (merge, clean, lang). Without suppression those writes trigger new
+ * {@code ENTRY_MODIFY} events that cause another reload — infinitely.
+ *
+ * Fix: before any plugin-initiated write, call {@link #suppressNext()} which
+ * records the current timestamp. The watcher ignores any event that arrives
+ * within {@link #SUPPRESS_WINDOW_MS} of that timestamp.
+ * An external editor change takes at least a second to reach the JVM, so
+ * a 3-second suppression window is safe.
  */
 public final class ConfigFileWatcher implements Runnable {
 
-    private static final long DEBOUNCE_MS = 2000;
+    private static final long DEBOUNCE_MS      = 2_000;
+    /** How long (ms) after a plugin-initiated write to ignore ENTRY_MODIFY events. */
+    private static final long SUPPRESS_WINDOW_MS = 3_000;
 
-    private final BlockProt plugin;
-    private final File watchDir;
-    private final AtomicLong lastEventTime = new AtomicLong(0);
-    private boolean reloadScheduled = false;
+    private final BlockProt    plugin;
+    private final File         watchDir;
+    private final AtomicLong   lastEventTime      = new AtomicLong(0);
+    private final AtomicLong   lastSuppressTime   = new AtomicLong(0);
+    private final AtomicBoolean reloadScheduled   = new AtomicBoolean(false);
 
     private WatchService watchService;
 
     public ConfigFileWatcher(@NotNull BlockProt plugin) {
-        this.plugin = plugin;
+        this.plugin   = plugin;
         this.watchDir = plugin.getDataFolder();
+    }
+
+    /**
+     * Call this immediately before the plugin writes any config file to disk.
+     * Suppresses watch events for {@link #SUPPRESS_WINDOW_MS} milliseconds.
+     */
+    public void suppressNext() {
+        lastSuppressTime.set(System.currentTimeMillis());
     }
 
     public void start() {
@@ -66,14 +86,23 @@ public final class ConfigFileWatcher implements Runnable {
             while (!Thread.currentThread().isInterrupted()) {
                 WatchKey key = watchService.take();
 
+                boolean relevant = false;
                 for (WatchEvent<?> event : key.pollEvents()) {
                     Path changed = (Path) event.context();
-                    String name = changed.getFileName().toString();
+                    String name  = changed.getFileName().toString();
 
                     if (name.equals("config.yml") || name.equals("worlds.yml") || name.endsWith(".yml")) {
-                        lastEventTime.set(System.currentTimeMillis());
-                        scheduleReload();
+                        // Ignore events that arrived within the suppress window —
+                        // these were written by the plugin itself during a reload.
+                        long now = System.currentTimeMillis();
+                        if (now - lastSuppressTime.get() < SUPPRESS_WINDOW_MS) continue;
+                        relevant = true;
                     }
+                }
+
+                if (relevant) {
+                    lastEventTime.set(System.currentTimeMillis());
+                    scheduleReload();
                 }
 
                 if (!key.reset()) break;
@@ -86,9 +115,8 @@ public final class ConfigFileWatcher implements Runnable {
         }
     }
 
-    private synchronized void scheduleReload() {
-        if (reloadScheduled) return;
-        reloadScheduled = true;
+    private void scheduleReload() {
+        if (!reloadScheduled.compareAndSet(false, true)) return;
 
         BlockProt.getFoliaLib().getScheduler().runLaterAsync(() -> {
             long timeSinceLastEvent = System.currentTimeMillis() - lastEventTime.get();
@@ -100,9 +128,7 @@ public final class ConfigFileWatcher implements Runnable {
                     plugin.getLogger().info(Translator.get(TranslationKey.CONSOLE__CONFIG_RELOADED));
                 });
             }
-            synchronized (this) {
-                reloadScheduled = false;
-            }
+            reloadScheduled.set(false);
         }, (DEBOUNCE_MS / 50) + 5L);
     }
 }

@@ -142,7 +142,10 @@ public final class BlockProt extends JavaPlugin {
         pluginVersion = this.getDescription().getVersion();
         pluginAuthors = this.getDescription().getAuthors();
         try {
-            playerProfileCache   = new SQLiteCache(new File(Bukkit.getWorldContainer(), "blockprot_usercache.sqlite"));
+            // Store the usercache inside the plugin data folder — not next to server.jar.
+            File cacheFile = new File(this.getDataFolder(), "blockprot_usercache.sqlite");
+            if (!cacheFile.getParentFile().exists()) cacheFile.getParentFile().mkdirs();
+            playerProfileCache   = new SQLiteCache(cacheFile);
             playerProfileService = new CachedProfileService(playerProfileCache);
         } catch (IOException e) {
             throw new RuntimeException("Failed to open SQLite connection to usercache database", e);
@@ -180,14 +183,14 @@ public final class BlockProt extends JavaPlugin {
 
         // Migrate data from legacy plugin folder names before anything else reads disk.
         migrateFromLegacyFolders();
+        // Migrate legacy blockprot_usercache.sqlite from server root to plugin folder.
+        migrateLegacySqliteFile();
 
         foliaLib = new FoliaLib(this);
         foliaLib.getScheduler().runAsync(task -> new UpdateChecker(BlockProt.getPluginVersion()).run());
         MinecraftVersion.disableUpdateCheck();
-        this.cleanLegacyConfigKeys();
         this.saveDefaultConfig();
         saveResourceSilent("blocks.yml", false);
-        saveResourceSilent("mysql/mysql.yml", false);
         this.reloadConfigAndTranslations();
         this.flushMigrationLog();
         boolean sessionLogEnabled = defaultConfig.isSessionLogEnabled();
@@ -204,18 +207,12 @@ public final class BlockProt extends JavaPlugin {
         BlockProtConsole.beginStartup(this.getLogger());
         StatHandler.enable();
 
-        if (!BlockProt.getPluginVersion().equals(getConfig().getString("last_known_version", ""))) {
-            getConfig().set("last_known_version", BlockProt.getPluginVersion());
-            saveConfig();
-        }
-
         boolean hasUpgradeData = BackupTask.hasPriorData(this.getDataFolder());
         if (hasUpgradeData && defaultConfig.isBackupsEnabled()) {
             new BackupTask(this.getDataFolder()).run();
         }
-        this.mergeMissingConfigKeys();
         saveResourceSilent("worlds.yml", false);
-        if (defaultConfig.isWorldsConfigEnabled()) {
+        if (defaultConfig.isPerWorldsConfigEnabled()) {
             File worldsFile = new File(this.getDataFolder(), "worlds.yml");
             YamlConfiguration worldsDisk = WorldsConfig.scanAndPopulate(worldsFile, this.getConfig(), this.getLogger());
             worldsConfig = new WorldsConfig(worldsDisk);
@@ -233,7 +230,9 @@ public final class BlockProt extends JavaPlugin {
         }
 
         fileWatcher = new ConfigFileWatcher(this);
-        fileWatcher.start();
+        if (defaultConfig.isAutoReloadEnabled()) {
+            fileWatcher.start();
+        }
 
         int inactivityDays = this.getConfig().getInt("inactivity_cleanup_days", -1);
         if (inactivityDays > 0) {
@@ -276,6 +275,10 @@ public final class BlockProt extends JavaPlugin {
         // immediately when disabled, adding zero overhead when the feature is off.
         registerEvent(pm, new PetProtectionListener());
         registerEvent(pm, new PetMenuOpenListener());
+        // ── Entity protection listeners (item frames, chest boats, minecarts) ──
+        registerEvent(pm, new ItemFrameListener());
+        registerEvent(pm, new VehicleProtectionListener());
+        registerEvent(pm, new RaidDetectionListener());
         // ─────────────────────────────────────────────────────────────────────
 
         if (defaultConfig.isWorldEditPasteAutolockEnabled()) {
@@ -311,7 +314,12 @@ public final class BlockProt extends JavaPlugin {
     }
 
     public void reloadConfigAndTranslations() {
+        if (fileWatcher != null) fileWatcher.suppressNext();
+        this.cleanLegacyConfigKeys();
         this.mergeMissingConfigKeys();
+        this.mergeMissingBlocksKeys();
+        saveResourceSilent("mysql/mysql.yml", false);
+        saveResourceSilent("worlds.yml", false);
         this.reloadConfig();
         defaultConfig = new DefaultConfig(this.getConfig(), this.getDataFolder());
 
@@ -341,13 +349,13 @@ public final class BlockProt extends JavaPlugin {
             langFolder, fileName, BlockProt.defaultConfig.shouldReplaceTranslations());
         Translator.loadFromConfigs(defaultLanguageConfig, wantedConfig);
 
-        if (defaultConfig.isWorldsConfigEnabled()) {
+        if (defaultConfig.isPerWorldsConfigEnabled()) {
             File worldsFile = new File(this.getDataFolder(), "worlds.yml");
             YamlConfiguration worldsDisk = WorldsConfig.scanAndPopulate(worldsFile, this.getConfig(), this.getLogger());
             worldsConfig = new WorldsConfig(worldsDisk);
         } else {
             worldsConfig = null;
-            BlockProtLogger.log("worlds-scan", "worlds_config_enabled=false; using global config.yml lockable lists.");
+            BlockProtLogger.log("worlds-scan", "per_worlds_config=false; using global config.yml lockable lists.");
         }
 
         for (PluginIntegration integration : integrations) {
@@ -381,8 +389,11 @@ public final class BlockProt extends JavaPlugin {
             try {
                 this.saveResource(path, replace);
             } catch (IllegalArgumentException e) {
-                getLogger().warning(Translator.get(TranslationKey.CONSOLE__CONFIG_LANGUAGE_MISSING)
-                    .replace("{file}", name));
+                // Only warn when it's a lang file; integration configs are optional.
+                if (!folder.startsWith("integrations")) {
+                    getLogger().warning(Translator.get(TranslationKey.CONSOLE__CONFIG_LANGUAGE_MISSING)
+                        .replace("{file}", name));
+                }
                 return new YamlConfiguration();
             }
         }
@@ -438,6 +449,15 @@ public final class BlockProt extends JavaPlugin {
         // Strategy: start from the user's config and only ADD keys that are missing.
         // This guarantees that every value the admin has set is preserved verbatim,
         // including keys that do not exist in the current template (custom or legacy).
+
+        // ── Migrate renamed keys (non-destructive: old key removed after new key is set) ──
+        // worlds_config_enabled → per_worlds_config (renamed for clarity)
+        if (userValues.contains("worlds_config_enabled") && !userValues.contains("per_worlds_config")) {
+            userValues.set("per_worlds_config", userValues.getBoolean("worlds_config_enabled", false));
+            userValues.set("worlds_config_enabled", null);
+            BlockProtLogger.log("config-migrate", "Migrated 'worlds_config_enabled' -> 'per_worlds_config'");
+        }
+
         int added = 0;
         for (String key : template.getKeys(true)) {
             if (template.isConfigurationSection(key)) continue;
@@ -466,6 +486,95 @@ public final class BlockProt extends JavaPlugin {
         "mysql.pool.maximum_pool_size", "mysql.pool.minimum_idle", "mysql.pool.connection_timeout_ms",
         "console.prefix_color", "console.info_color"
     );
+
+    /**
+     * Merges new block entries from the JAR blocks.yml into the admin's blocks.yml.
+     *
+     * Two levels of merging:
+     * 1. Top-level sections absent on disk are copied from the JAR wholesale
+     *    (e.g. the entire auto_drop_to_inventory section when it did not exist).
+     * 2. For flat-list keys (lockable_tile_entities, lockable_shulker_boxes,
+     *    lockable_blocks, lockable_doors) each individual entry from the JAR
+     *    that is not already present in the disk list is appended.
+     *    This ensures new blocks added in a plugin update appear automatically
+     *    without requiring the admin to delete and regenerate blocks.yml.
+     *    Entries the admin removed intentionally will be re-added; they must
+     *    be removed again after upgrading — this matches standard plugin behaviour.
+     *    This step is skipped when the disk file uses family expressions
+     *    (modern_family_blocks=true), because expressions already resolve
+     *    against the full family registry dynamically.
+     */
+    private void mergeMissingBlocksKeys() {
+        String blocksPath = this.getConfig().getString("blocks_file", "blocks.yml");
+        File diskFile = new File(this.getDataFolder(), blocksPath);
+        if (!diskFile.exists()) return;
+        InputStream jarStream = this.getResource("blocks.yml");
+        if (jarStream == null) return;
+
+        YamlConfiguration jarConfig  = YamlConfiguration.loadConfiguration(new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
+        YamlConfiguration diskConfig = YamlConfiguration.loadConfiguration(diskFile);
+
+        boolean diskIsModern = isBlocksFileModern(diskConfig);
+        int added = 0;
+
+        for (String key : jarConfig.getKeys(false)) {
+            if (!diskConfig.contains(key)) {
+                // Entire section missing — add it wholesale.
+                diskConfig.set(key, jarConfig.get(key));
+                added++;
+                BlockProtLogger.log("blocks-merge", "blocks.yml — added missing section: " + key);
+            } else if (!diskIsModern) {
+                // Section exists and file is in legacy flat-list mode.
+                // Append individual entries from the JAR that are not yet on disk.
+                Object jarRaw  = jarConfig.get(key);
+                Object diskRaw = diskConfig.get(key);
+                if (!(jarRaw instanceof List<?> jarList) || !(diskRaw instanceof List<?>)) continue;
+
+                // Only merge flat string lists (lockable_* block lists).
+                // Skip non-string lists and sub-section keys (auto_drop_to_inventory).
+                if (!key.startsWith("lockable_")) continue;
+
+                @SuppressWarnings("unchecked")
+                List<String> diskList = new ArrayList<>((List<String>) diskRaw);
+                Set<String> diskSet = new HashSet<>(diskList);
+
+                for (Object entry : jarList) {
+                    if (!(entry instanceof String s)) continue;
+                    String trimmed = s.trim();
+                    if (!diskSet.contains(trimmed)) {
+                        diskList.add(trimmed);
+                        diskSet.add(trimmed);
+                        added++;
+                        BlockProtLogger.log("blocks-merge", "blocks.yml — added new entry to " + key + ": " + trimmed);
+                    }
+                }
+                diskConfig.set(key, diskList);
+            }
+        }
+
+        if (added == 0) return;
+        try {
+            diskConfig.save(diskFile);
+            BlockProtLogger.log("blocks-merge", "blocks.yml — merged " + added + " new entry/section(s) from JAR.");
+        } catch (IOException e) {
+            BlockProtLogger.warn("Failed to save blocks.yml after merge: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Returns true if any lockable key in the given blocks.yml uses a family expression.
+     * Used to skip per-item list merging in modern mode.
+     */
+    private static boolean isBlocksFileModern(@NotNull YamlConfiguration cfg) {
+        for (String key : List.of("lockable_tile_entities", "lockable_shulker_boxes",
+                                  "lockable_blocks", "lockable_doors", "lockable_entities")) {
+            Object raw = cfg.get(key);
+            if (raw instanceof String s && s.trim().startsWith("[")) return true;
+            if (raw instanceof List<?> list && !list.isEmpty()
+                    && list.get(0) instanceof String s && s.trim().startsWith("[")) return true;
+        }
+        return false;
+    }
 
     private void mergeMissingConfigKeys() {
         File diskFile = new File(this.getDataFolder(), "config.yml");
@@ -710,6 +819,29 @@ public final class BlockProt extends JavaPlugin {
      * Existing files in {@code dst} are never overwritten.
      * Directory structure is replicated as needed.
      */
+    /**
+     * Moves the legacy {@code blockprot_usercache.sqlite} from the server root
+     * (next to {@code server.jar}) into the plugin data folder.
+     * Runs once on startup; if the file has already been moved no-op.
+     */
+    private void migrateLegacySqliteFile() {
+        File legacyFile = new File(Bukkit.getWorldContainer(), "blockprot_usercache.sqlite");
+        if (!legacyFile.exists()) return;
+        File newFile = new File(this.getDataFolder(), "blockprot_usercache.sqlite");
+        if (newFile.exists()) {
+            // Already present in new location — remove the orphan from server root.
+            if (!legacyFile.delete())
+                getLogger().warning("[BlockProt] Could not delete legacy blockprot_usercache.sqlite from server root.");
+            return;
+        }
+        try {
+            Files.move(legacyFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            getLogger().info("[BlockProt] Moved blockprot_usercache.sqlite into plugin data folder.");
+        } catch (IOException e) {
+            getLogger().warning("[BlockProt] Failed to move blockprot_usercache.sqlite: " + e.getMessage());
+        }
+    }
+
     private static void copyDirectoryContents(@NotNull Path src, @NotNull Path dst) throws IOException {
         Files.walkFileTree(src, new SimpleFileVisitor<>() {
             @Override

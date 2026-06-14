@@ -189,7 +189,6 @@ public final class PetProtectionListener implements Listener {
      */
     private boolean isBypassing(@NotNull Player player, @NotNull PetNBTHandler handler) {
         return handler.isOwner(player.getUniqueId())
-            || player.hasPermission(Permissions.USER_ADMIN.key())
-            || player.hasPermission(Permissions.BYPASS.key());
+            || player.hasPermission(Permissions.USER_ADMIN.key());
     }
 }

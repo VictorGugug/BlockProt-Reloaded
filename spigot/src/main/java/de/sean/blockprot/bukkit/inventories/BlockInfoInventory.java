@@ -47,7 +47,7 @@ public class BlockInfoInventory extends BlockProtInventory {
     @NotNull
     @Override
     String getTranslatedInventoryName() {
-        return Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO);
+        return Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__TITLE);
     }
 
     @Override

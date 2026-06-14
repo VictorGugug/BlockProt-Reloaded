@@ -20,6 +20,8 @@
 
 package de.sean.blockprot.bukkit.nbt;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.nbt.stats.BlockCountStatistic;
 import de.sean.blockprot.bukkit.nbt.stats.BukkitStatistic;
@@ -46,6 +48,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 /**
@@ -75,6 +79,17 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
      * I/O on idle servers. Always flushed synchronously in {@link #disable()}.
      */
     private static volatile boolean dirty = false;
+
+    /**
+     * Throttle cache for {@link #purgeStalePbsEntries}: tracks which players have had
+     * their stale-entry scan run recently. An entry present in this cache means the
+     * scan was performed within the last 60 seconds for that player, and should be
+     * skipped to avoid iterating potentially large block lists on every block-place event.
+     */
+    private static final Cache<UUID, Boolean> purgeThrottle = Caffeine.newBuilder()
+        .maximumSize(512)
+        .expireAfterWrite(60, TimeUnit.SECONDS)
+        .build();
 
     /** Marks the in-memory NBT as modified. Call after every addBlock / removeContainer. */
     static void markDirty() { dirty = true; }
@@ -195,6 +210,28 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
     }
 
     /**
+     * Adds given block to given player's block statistic by UUID, while also incrementing the
+     * global block count. Works for both online and offline players.
+     *
+     * <p>Must be called from the main server thread.
+     *
+     * @param uuid  the owner UUID (online or offline)
+     * @param block the location to register
+     */
+    public static void addBlockByUuid(@NotNull final UUID uuid, @NotNull final Location block) {
+        BlockCountStatistic countStatistic = new BlockCountStatistic();
+        PlayerBlocksStatistic containersStatistic = new PlayerBlocksStatistic();
+        // Populate the global count statistic from the server NBT compound.
+        StatHandler.getStatistic(countStatistic);
+        // Bind the containers statistic directly to this player's NBT compound.
+        getStatsForPlayer(uuid.toString()).ifPresent(h -> h.updateStatistic(containersStatistic));
+        // Mutate both -- the changes are live because the statistic holds a reference to the NBT compound.
+        countStatistic.increment();
+        containersStatistic.add(block);
+        markDirty();
+    }
+
+    /**
      * Adds given block to given player's block statistic, while also incrementing the
      * global block count.
      */
@@ -269,8 +306,14 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
                     stats.ifPresent(handler -> {
                         handler.updateStatistic(statistic);
                         // Purge stale location entries (broken blocks) and sync the global count.
+                        // Throttled: at most once per 60 seconds per player to avoid iterating
+                        // large block lists on every block-place event.
                         if (statistic instanceof de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic pbs) {
-                            purgeStalePbsEntries(pbs);
+                            UUID uuid = player.getUniqueId();
+                            if (purgeThrottle.getIfPresent(uuid) == null) {
+                                purgeThrottle.put(uuid, Boolean.TRUE);
+                                purgeStalePbsEntries(pbs);
+                            }
                         }
                     });
                 }
@@ -340,7 +383,18 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
 
     /**
      * Removes stale entries from a {@link PlayerBlocksStatistic} where the block
-     * no longer exists (AIR or unloaded world), and decrements the global count.
+     * no longer exists (AIR), and decrements the global count.
+     *
+     * <p><strong>Chunk-load safety:</strong> this method runs on the server thread during
+     * block-place events. Calling {@link org.bukkit.block.Block#getType()} on a block whose
+     * chunk is not in memory triggers a synchronous chunk load via
+     * {@code ServerChunkCache.syncLoad()}, which parks the server thread until the chunk is
+     * fully loaded — causing the 20-second freeze observed in production logs.
+     *
+     * <p>Fix: skip any entry whose chunk is not already loaded.
+     * {@link World#isChunkLoaded(int, int)} is a pure in-memory lookup with no I/O side effects.
+     * Skipped entries will be reconsidered on the next call where that chunk happens to be
+     * loaded, or cleaned up by the async startup scan.
      */
     private static void purgeStalePbsEntries(
             @NotNull PlayerBlocksStatistic pbs) {
@@ -349,8 +403,19 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
         for (var entry : entries) {
             try {
                 Location loc = entry.get();
-                if (loc.getWorld() == null
-                        || loc.getBlock().getType() == org.bukkit.Material.AIR) {
+                World world = loc.getWorld();
+                if (world == null) {
+                    // World is gone entirely — safe to remove without a chunk load.
+                    pbs.remove(loc);
+                    removed++;
+                    continue;
+                }
+                // CRITICAL: only call getType() when the chunk is already resident in memory.
+                // isChunkLoaded() never triggers a chunk load; getType() / getBlock() would.
+                if (!world.isChunkLoaded(loc.getBlockX() >> 4, loc.getBlockZ() >> 4)) {
+                    continue; // chunk not loaded — skip this cycle, revisit later
+                }
+                if (loc.getBlock().getType() == org.bukkit.Material.AIR) {
                     pbs.remove(loc);
                     removed++;
                 }
@@ -359,10 +424,8 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
             }
         }
         if (removed > 0) {
-            // Read the current server-side block count, decrement it by the number of
-            // purged stale entries, then write it back. The previous implementation only
-            // decremented the in-memory statistic object but never flushed it to NBT,
-            // causing the global counter to drift upward over time (N3 fix).
+            // Decrement the global block counter by the number of purged stale entries
+            // and flush back to NBT so the counter stays accurate.
             BlockCountStatistic countStat = new BlockCountStatistic();
             StatHandler serverStats = getServerStats();
             serverStats.updateStatistic(countStat);   // populate countStat from NBT

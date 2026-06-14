@@ -47,7 +47,9 @@ public final class BlockProtCommand implements TabExecutor {
     private static final Map<String, CommandExecutor> GUI_COMMANDS   = new LinkedHashMap<>();
     /** CLI-mode commands: only shown when use_menus=false. */
     private static final Map<String, CommandExecutor> CLI_COMMANDS   = new LinkedHashMap<>();
-    /** All commands by canonical name (union of both maps). */
+    /** Admin commands: accessible in BOTH modes (admin-only). */
+    private static final Map<String, CommandExecutor> ADMIN_COMMANDS = new LinkedHashMap<>();
+    /** All commands by canonical name (union of all maps). */
     private static final Map<String, CommandExecutor> ALL_COMMANDS   = new LinkedHashMap<>();
 
     static {
@@ -69,7 +71,9 @@ public final class BlockProtCommand implements TabExecutor {
         cli("integrations", new IntegrationsCommand());
         cli("debug",        new DebugCommand());
         cli("unlock",       new AdminUnlockCommand());
-        cli("protdell",     new WorldProtDeleteCommand());
+        cli("protdel",      new WorldProtDeleteCommand());
+
+        admin("lockables",  new LockablesCommand());
     }
 
     private static void gui(String name, CommandExecutor exec) {
@@ -79,6 +83,11 @@ public final class BlockProtCommand implements TabExecutor {
 
     private static void cli(String name, CommandExecutor exec) {
         CLI_COMMANDS.put(name, exec);
+        ALL_COMMANDS.put(name, exec);
+    }
+
+    private static void admin(String name, CommandExecutor exec) {
+        ADMIN_COMMANDS.put(name, exec);
         ALL_COMMANDS.put(name, exec);
     }
 
@@ -101,6 +110,12 @@ public final class BlockProtCommand implements TabExecutor {
         }
 
         String sub = args[0].toLowerCase(Locale.ROOT);
+
+        // Admin commands work regardless of mode
+        CommandExecutor adminExec = ADMIN_COMMANDS.get(sub);
+        if (adminExec != null) {
+            return adminExec.onCommand(sender, command, label, args);
+        }
 
         if (menusEnabled) {
             // Only GUI commands are accessible
@@ -139,10 +154,13 @@ public final class BlockProtCommand implements TabExecutor {
 
         boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
         Map<String, CommandExecutor> visible = menusEnabled ? GUI_COMMANDS : CLI_COMMANDS;
+        // Admin commands are always visible to admins in tab-complete
+        Map<String, CommandExecutor> combined = new LinkedHashMap<>(visible);
+        combined.putAll(ADMIN_COMMANDS);
 
         String partial = args.length == 1 ? args[0].toLowerCase(Locale.ROOT) : "";
         List<String> result = new ArrayList<>();
-        for (var entry : visible.entrySet()) {
+        for (var entry : combined.entrySet()) {
             if (entry.getKey().startsWith(partial) && entry.getValue().canUseCommand(sender))
                 result.add(entry.getKey());
         }

@@ -496,7 +496,7 @@ public class DebugCommand implements CommandExecutor {
         BlockProtLogger.log("--- Inventory title translation coverage ---");
         TranslationKey[] titleKeys = {
             TranslationKey.INVENTORIES__BLOCK_LOCK,
-            TranslationKey.INVENTORIES__BLOCK_INFO,
+            TranslationKey.INVENTORIES__BLOCK_INFO__TITLE,
             TranslationKey.INVENTORIES__USER_SETTINGS,
             TranslationKey.INVENTORIES__USER_MENU__TITLE,
             TranslationKey.INVENTORIES__ADMIN_MENU__TITLE,

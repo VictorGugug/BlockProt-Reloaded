@@ -21,35 +21,71 @@
 package de.sean.blockprot.bukkit;
 
 /**
- * Permission nodes for BlockProt.
+ * Permission nodes for BlockProt Reloaded.
  *
- * <p>Three node model:
+ * <p>Four active nodes (declared in plugin.yml):
  * <ul>
- *   <li>{@link #USER}       — all standard player actions (lock, friends, settings, stats, etc.)  default: true</li>
- *   <li>{@link #USER_ADMIN} — all admin actions (reload, info, debug, etc.)                       default: op</li>
- *   <li>{@link #BYPASS}     — bypass all block protections                                        default: false</li>
+ *   <li>{@link #USER}       — all standard player actions. Default: true (everyone)</li>
+ *   <li>{@link #USER_ADMIN} — all admin actions plus the ability to break any protected
+ *                             block or shulker, clearing the protection on break.
+ *                             Implicitly grants USER. Default: op</li>
+ *   <li>{@link #MAX_BLOCKS} — exempts the player from the player_max_locked_block_count
+ *                             cap in config.yml. Default: false</li>
+ *   <li>{@link #BLOCKS_TP}  — teleport to a block from the statistics inventory.
+ *                             Default: op</li>
  * </ul>
  *
- * <p>Legacy nodes are kept as aliases so existing code that references them continues to compile;
- * internally they resolve to one of the three real nodes above.
+ * <p>{@link #BYPASS} is kept as a deprecated alias of {@link #USER_ADMIN} so that any
+ * external code or permission plugin entries that still reference {@code blockprot.bypass}
+ * continue to compile and behave correctly without modification.
  *
  * @since 1.1.7
  */
 public enum Permissions {
 
-    // ── Real permission nodes (declared in plugin.yml) ──────────────────────
+    // ── Active permission nodes (declared in plugin.yml) ────────────────────
+
+    /** Standard player features: locking, friends, settings, statistics, transfer. */
     USER("blockprot.user"),
+
+    /**
+     * Admin features and the ability to break any protected block (incl. shulkers
+     * owned by other players). Protection data is cleared automatically on break.
+     * Implicitly grants {@link #USER} via plugin.yml children.
+     */
     USER_ADMIN("blockprot.user.admin"),
-    BYPASS("blockprot.bypass"),
+
+    /**
+     * Exempts the holder from the {@code player_max_locked_block_count} limit.
+     * Assign to VIPs, donors, or trusted players.
+     */
+    MAX_BLOCKS("blockprot.max_blocks"),
+
+    /** Teleport to a protected block from the statistics inventory. */
     BLOCKS_TP("blockprot.blocks.tp"),
 
-    // ── Legacy aliases (not in plugin.yml; used internally for back-compat) ─
+    // ── Legacy / deprecated aliases ──────────────────────────────────────────
+
+    /**
+     * @deprecated Use {@link #USER_ADMIN}. Kept as an alias so existing permission
+     *             plugin entries and compiled code referencing {@code blockprot.bypass}
+     *             continue to work without changes. The node is no longer declared in
+     *             plugin.yml; {@code blockprot.user.admin} now covers its purpose.
+     */
+    @Deprecated
+    BYPASS("blockprot.user.admin"),
+
     /** @deprecated Use {@link #USER} */
-    @Deprecated LOCK("blockprot.user"),
+    @Deprecated
+    LOCK("blockprot.user"),
+
     /** @deprecated Use {@link #USER_ADMIN} */
-    @Deprecated INFO("blockprot.user.admin"),
+    @Deprecated
+    INFO("blockprot.user.admin"),
+
     /** @deprecated Use {@link #USER_ADMIN} */
-    @Deprecated ADMIN("blockprot.user.admin");
+    @Deprecated
+    ADMIN("blockprot.user.admin");
 
     private final String text;
 

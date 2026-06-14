@@ -37,25 +37,21 @@ import org.jetbrains.annotations.NotNull;
 /**
  * Single-row inventory with user settings.
  *
- * Layout (singleLine = 9 slots, 0-8):
- *   0 = Lock on place
- *   1 = Hints toggle        ← new, above the back button area
- *   2 = Friends skull
+ * Layout (9 slots, 0-8):
+ *   0 = Lock on place   (BARRIER)
+ *   1 = Hints toggle    (KNOWLEDGE_BOOK)
+ *   2 = Notifications   (BELL)
+ *   3 = Friends skull   (PLAYER_HEAD)
  *   8 = Back
- *
- * Hints semantics:
- *   hasPlayerInteractedWithMenu = false → hints are ENABLED (player hasn't dismissed them)
- *   hasPlayerInteractedWithMenu = true  → hints are DISABLED
- *   Toggle flips the value and updates the enchant visual.
  */
 public class UserSettingsInventory extends BlockProtInventory {
 
     public UserSettingsInventory() { super(true); }
 
-    // Slot indices
-    private static final int SLOT_LOCK_ON_PLACE = 0;
-    private static final int SLOT_HINTS         = 1;
-    private static final int SLOT_FRIENDS        = 2;
+    private static final int SLOT_LOCK_ON_PLACE   = 0;
+    private static final int SLOT_HINTS           = 1;
+    private static final int SLOT_NOTIFICATIONS   = 3;
+    private static final int SLOT_FRIENDS         = 4;
 
     @Override
     int getSize() { return InventoryConstants.lineLength; }
@@ -71,22 +67,24 @@ public class UserSettingsInventory extends BlockProtInventory {
         Player player = (Player) event.getWhoClicked();
         ItemStack item = event.getCurrentItem();
         if (item == null) return;
+
         switch (item.getType()) {
             case BARRIER -> {
-                // Lock on place toggle
                 PlayerSettingsHandler h = new PlayerSettingsHandler(player);
                 h.setLockOnPlace(!h.getLockOnPlace());
                 BlockEventListener.invalidateSettings(player.getUniqueId());
                 inventory.setItem(SLOT_LOCK_ON_PLACE, toggleOption(item, null));
             }
             case KNOWLEDGE_BOOK -> {
-                // Hints toggle
                 PlayerSettingsHandler h = new PlayerSettingsHandler(player);
-                // hasPlayerInteractedWithMenu=true means hints are DISABLED; flip it
                 boolean hintsCurrentlyEnabled = !h.hasPlayerInteractedWithMenu();
-                h.setHasPlayerInteractedWithMenu(hintsCurrentlyEnabled); // true = disable, false = enable
-                // Refresh the whole inventory so the enchant / name updates
+                h.setHasPlayerInteractedWithMenu(hintsCurrentlyEnabled);
                 fill(player);
+            }
+            case BELL -> {
+                PlayerSettingsHandler h = new PlayerSettingsHandler(player);
+                h.setNotificationsEnabled(!h.getNotificationsEnabled());
+                inventory.setItem(SLOT_NOTIFICATIONS, toggleOption(item, null));
             }
             case PLAYER_HEAD -> {
                 state.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
@@ -94,8 +92,6 @@ public class UserSettingsInventory extends BlockProtInventory {
                 closeAndOpen(player, new FriendManageInventory().fill(player));
             }
             case BLACK_STAINED_GLASS_PANE -> {
-                // Back: return to wherever we came from.
-                // If opened directly from a command (origin=NONE), just close.
                 if (state.origin == InventoryState.MenuOrigin.NONE
                         || state.origin == InventoryState.MenuOrigin.USER_SETTINGS) {
                     player.closeInventory();
@@ -123,7 +119,6 @@ public class UserSettingsInventory extends BlockProtInventory {
         );
 
         // Slot 1: Hints toggle
-        // hintsEnabled = true when player has NOT yet dismissed them
         boolean hintsEnabled = !settings.hasPlayerInteractedWithMenu();
         setEnchantedOptionItemStack(
             SLOT_HINTS,
@@ -132,7 +127,15 @@ public class UserSettingsInventory extends BlockProtInventory {
             hintsEnabled
         );
 
-        // Slot 2: Friends skull
+        // Slot 2: Notifications toggle
+        setEnchantedOptionItemStack(
+            SLOT_NOTIFICATIONS,
+            Material.BELL,
+            TranslationKey.INVENTORIES__USER_SETTINGS_NOTIFICATIONS,
+            settings.getNotificationsEnabled()
+        );
+
+        // Slot 3: Friends skull
         if (!BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {
             setItemStack(
                 SLOT_FRIENDS,

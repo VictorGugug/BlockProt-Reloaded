@@ -71,14 +71,31 @@ public abstract class PluginIntegration {
     /**
      * Creates a new plugin integration.
      *
+     * @param name      The name of the integration, as well as the name of the config file.
+     * @param hasConfig Whether this integration has an optional config file in integrations/.
+     *                  Pass {@code false} for integrations that need no config (e.g. ViaVersion)
+     *                  to avoid a console warning about a missing file.
+     * @since 0.4.0
+     */
+    public PluginIntegration(@NotNull final String name, boolean hasConfig) {
+        this.name = name;
+        if (hasConfig) {
+            configuration =
+                BlockProt.getInstance().saveAndLoadConfigFile("integrations/", name + ".yml", false);
+        } else {
+            configuration = new YamlConfiguration();
+        }
+        pluginManager = BlockProt.getInstance().getServer().getPluginManager();
+    }
+
+    /**
+     * Creates a new plugin integration that has a config file.
+     *
      * @param name The name of the integration, as well as the name of the config file.
      * @since 0.4.0
      */
     public PluginIntegration(@NotNull final String name) {
-        this.name = name;
-        configuration =
-            BlockProt.getInstance().saveAndLoadConfigFile("integrations/", name + ".yml", false);
-        pluginManager = BlockProt.getInstance().getServer().getPluginManager();
+        this(name, true);
     }
 
     /**

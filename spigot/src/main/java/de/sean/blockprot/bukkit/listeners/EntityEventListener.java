@@ -23,34 +23,61 @@ package de.sean.blockprot.bukkit.listeners;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Enderman;
 import org.bukkit.entity.FallingBlock;
+import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityChangeBlockEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.jetbrains.annotations.NotNull;
 
 public final class EntityEventListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityChangeBlock(@NotNull final EntityChangeBlockEvent event) {
+        Material blockType = event.getBlock().getType();
+        if (blockType == Material.AIR || blockType == Material.CAVE_AIR || blockType == Material.VOID_AIR) return;
+
         Entity entity = event.getEntity();
         if (entity instanceof FallingBlock) {
             Material mat = ((FallingBlock) entity).getBlockData().getMaterial();
 
             if (mat.toString().contains("ANVIL") &&
                 BlockProt.getDefaultConfig().isLockableBlock(mat)) {
-                // Ensure the target block is actually lockable before constructing the handler.
-                if (BlockProt.getDefaultConfig().isLockable(event.getBlock().getType())) {
+                if (BlockProt.getDefaultConfig().isLockable(blockType)) {
                     BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
                     if (handler.isProtected()) event.setCancelled(true);
                 }
             }
-        }
-        else if (BlockProt.getDefaultConfig().isLockable(event.getBlock().getType())) {
+        } else if (entity instanceof Enderman) {
+            if (BlockProt.getDefaultConfig().isLockable(blockType)) {
+                BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
+                if (handler.isProtected()) event.setCancelled(true);
+            }
+        } else if (BlockProt.getDefaultConfig().isLockable(blockType)) {
             BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
-            if (handler.isProtected())
-                event.setCancelled(true);
+            if (handler.isProtected()) event.setCancelled(true);
+        }
+    }
+
+    /**
+     * Prevents Chest Minecarts from entering a column directly below a protected chest.
+     * A chest minecart on the rails under a chest can pull items without going through
+     * the hopper pipeline, bypassing {@link HopperEventListener}.
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onStorageMinecartEnter(@NotNull VehicleEnterEvent event) {
+        if (!(event.getVehicle() instanceof StorageMinecart)) return;
+        // Check the block directly above the minecart location for a protected chest
+        Block above = event.getVehicle().getLocation().getBlock().getRelative(0, 1, 0);
+        if (BlockProt.getDefaultConfig().isLockableTileEntity(above.getType())) {
+            BlockNBTHandler handler;
+            try { handler = new BlockNBTHandler(above); } catch (RuntimeException ignored) { return; }
+            if (handler.isProtected()) event.setCancelled(true);
         }
     }
 }

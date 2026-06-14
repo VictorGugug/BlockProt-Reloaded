@@ -108,8 +108,12 @@ public final class TransferCommand implements CommandExecutor {
                             finalNewOwner.getUniqueId().toString()
                         );
                         if (result.success) {
-                            if (finalNewOwner.isOnline() && finalNewOwner.getPlayer() != null)
-                                StatHandler.addBlock(finalNewOwner.getPlayer(), loc);
+                            Player onlineTarget = Bukkit.getPlayer(finalNewOwner.getUniqueId());
+                            if (onlineTarget != null) {
+                                StatHandler.addBlock(onlineTarget, loc);
+                            } else {
+                                StatHandler.addBlockByUuid(finalNewOwner.getUniqueId(), loc);
+                            }
                             transferred++;
                         }
                     } catch (RuntimeException ignored) {}
@@ -152,9 +156,13 @@ public final class TransferCommand implements CommandExecutor {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                                 @NotNull String alias, @NotNull String[] args) {
         if (args.length == 2) {
-            return Bukkit.getOnlinePlayers().stream()
-                .map(Player::getName)
-                .filter(n -> n.toLowerCase().startsWith(args[1].toLowerCase()))
+            String prefix = args[1].toLowerCase();
+            // Include all offline players that have played before so targets do not need to be online.
+            return java.util.Arrays.stream(Bukkit.getOfflinePlayers())
+                .filter(op -> op.getName() != null && op.getName().toLowerCase().startsWith(prefix))
+                .map(op -> op.getName())
+                .sorted()
+                .limit(20)
                 .toList();
         }
         return Collections.emptyList();

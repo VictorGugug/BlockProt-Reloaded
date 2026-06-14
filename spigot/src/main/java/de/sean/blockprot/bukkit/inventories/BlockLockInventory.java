@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.events.BlockAccessMenuEvent;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerInventoryClipboard;
 import de.sean.blockprot.bukkit.util.DurationParser;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -36,6 +37,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -187,7 +189,13 @@ public class BlockLockInventory extends BlockProtInventory {
 
         boolean isAdmin = player.hasPermission(Permissions.USER_ADMIN.key());
 
-        // Slot 0: lock / unlock button — no lore, always clean
+        // Determine context from the block type.
+        boolean isStorageBlock    = isStorageType(material);
+        boolean isDisplayBlock    = isDisplayType(material);   // lectern, sign, atril
+        boolean isTraversalBlock  = isTraversalType(material); // door, trapdoor, gate
+        boolean isInteractOnly    = !isStorageBlock && !isDisplayBlock && !isTraversalBlock;
+
+        // Slot 0: lock / unlock
         if (state.menuPermissions.contains(BlockAccessMenuEvent.MenuPermission.LOCK)) {
             setItemStack(0, getProperMaterial(material),
                 isNotProtected
@@ -196,17 +204,16 @@ public class BlockLockInventory extends BlockProtInventory {
                 Collections.emptyList());
         }
 
-        // ── Row 1: manager items slots 1-4 ───────────────────────────────────
-        // Layout (photo): Lock(0) | Redstone(1) | Friends(2) | Name(3) | Transfer(4)
+        // Row 1 manager items
         if (!isNotProtected && state.menuPermissions.contains(BlockAccessMenuEvent.MenuPermission.MANAGER)) {
-            fillManagerItems(state, player, handler);
+            fillManagerItems(state, player, handler, isStorageBlock, isDisplayBlock, isTraversalBlock);
         }
 
-        // ── Row 2 layout: Inspect(9) | ... | Log(13) | Paste(14) | Copy(15) | Info(16) | Back(17) ──
+        // Row 2
         boolean isOwnerOrAdmin = handler.isOwner(player.getUniqueId()) || isAdmin;
-        boolean showInspect = !isNotProtected
-            && (state.getBlock().getState() instanceof InventoryHolder)
-            && (isAdmin || handler.isOwner(player.getUniqueId()));
+        boolean showInspect = !isNotProtected && isStorageBlock
+            && (state.getBlock() != null && state.getBlock().getState() instanceof InventoryHolder)
+            && isOwnerOrAdmin;
         if (showInspect) {
             setItemStack(9, Material.SPYGLASS, TranslationKey.INVENTORIES__INSPECT_CONTENTS);
         }
@@ -218,31 +225,125 @@ public class BlockLockInventory extends BlockProtInventory {
                 setItemStack(14, Material.KNOWLEDGE_BOOK, TranslationKey.INVENTORIES__PASTE_CONFIGURATION);
             }
             setItemStack(15, Material.PAPER, TranslationKey.INVENTORIES__COPY_CONFIGURATION);
-            setItemStack(16, Material.COMPASS, TranslationKey.INVENTORIES__BLOCK_INFO);
+            setItemStack(16, Material.COMPASS, TranslationKey.INVENTORIES__BLOCK_INFO__TITLE);
         } else if (!isNotProtected && isAdmin) {
-            // Admin viewing someone else's block: show block info without full manager permissions.
-            setItemStack(16, Material.COMPASS, TranslationKey.INVENTORIES__BLOCK_INFO);
+            setItemStack(16, Material.COMPASS, TranslationKey.INVENTORIES__BLOCK_INFO__TITLE);
         }
-        // Slot 17: BARRIER as back button
         setItemStack(17, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
         return inventory;
     }
 
-    private void fillManagerItems(@NotNull InventoryState state, @NotNull Player player, @NotNull BlockNBTHandler handler) {
+    /**
+     * Fills a simplified protection menu for an entity (item frame, chest boat, minecart).
+     * Entities do not have hopper/piston/redstone protection options, and there is no
+     * inspect-contents button for item frames.
+     *
+     * @param player  The player opening the menu.
+     * @param handler The entity's NBT handler.
+     * @return The inventory, or null if the player has no permission to open it.
+     */
+    @Nullable
+    public Inventory fillForEntity(@NotNull Player player, @NotNull EntityNBTHandler handler) {
+        if (!player.hasPermission(Permissions.USER.key())) return null;
+
+        boolean isAdmin      = player.hasPermission(Permissions.USER_ADMIN.key());
+        boolean isProtected  = handler.isProtected();
+        boolean isOwner      = handler.isOwner(player.getUniqueId().toString());
+        boolean canManage    = isOwner || isAdmin;
+
+        // Slot 0 — lock / unlock using a name tag icon for entities
+        setItemStack(0, Material.NAME_TAG,
+            isProtected
+                ? Translator.get(TranslationKey.INVENTORIES__UNLOCK)
+                : Translator.get(TranslationKey.INVENTORIES__LOCK),
+            Collections.emptyList());
+
+        if (isProtected && canManage) {
+            // Slot 1 — manage friends
+            if (!BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {
+                setItemStack(1, Material.PLAYER_HEAD, TranslationKey.INVENTORIES__FRIENDS__MANAGE);
+            }
+        }
+
+        setItemStack(17, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
+        return inventory;
+    }
+
+    // ── Context helpers ───────────────────────────────────────────────────────
+
+    /** True for blocks that have an inventory (chests, barrels, shulkers, hoppers, etc.). */
+    private static boolean isStorageType(@NotNull Material m) {
+        String n = m.name();
+        return n.contains("CHEST") || n.equals("BARREL") || n.contains("SHULKER_BOX")
+            || n.equals("HOPPER") || n.equals("DISPENSER") || n.equals("DROPPER")
+            || n.equals("FURNACE") || n.equals("SMOKER") || n.equals("BLAST_FURNACE")
+            || n.equals("BREWING_STAND") || n.equals("JUKEBOX")
+            || n.equals("CHISELED_BOOKSHELF") || n.equals("DECORATED_POT") || n.equals("CRAFTER")
+            || n.endsWith("_SHELF");
+    }
+
+    /** True for display-only blocks (lectern, signs) — no hopper/redstone options. */
+    private static boolean isDisplayType(@NotNull Material m) {
+        String n = m.name();
+        return n.equals("LECTERN") || n.endsWith("_SIGN") || n.endsWith("_WALL_SIGN")
+            || n.endsWith("_HANGING_SIGN") || n.endsWith("_WALL_HANGING_SIGN")
+            || n.equals("BEEHIVE") || n.equals("BEE_NEST");
+    }
+
+    /** True for traversal blocks (doors, trapdoors, fence gates). */
+    private static boolean isTraversalType(@NotNull Material m) {
+        String n = m.name();
+        return (n.endsWith("_DOOR") && !n.contains("TRAP")) || n.contains("TRAPDOOR") || n.contains("FENCE_GATE");
+    }
+
+    /**
+     * Fills the manager action items in row 1 (slots 1-7) of the lock menu.
+     *
+     * <p>Which items appear depends on the block's context category:</p>
+     * <ul>
+     *   <li><b>Storage</b> (chests, hoppers, furnaces, etc.): Redstone, Friends, Name, Transfer, Expiry.</li>
+     *   <li><b>Display</b> (lecterns, signs, beehives): Friends, Name, Transfer only — no redstone/expiry
+     *       because there is no hopper or redstone interaction to gate.</li>
+     *   <li><b>Traversal</b> (doors, trapdoors, gates): Redstone, Friends, Name, Transfer.
+     *       No expiry slot — time-based door locking is not a supported use-case.</li>
+     *   <li><b>Other</b> (workstations, bell, etc.): Friends, Name, Transfer only.</li>
+     * </ul>
+     */
+    private void fillManagerItems(
+            @NotNull InventoryState state,
+            @NotNull Player player,
+            @NotNull BlockNBTHandler handler,
+            boolean isStorage,
+            boolean isDisplay,
+            boolean isTraversal) {
         int offset = 1;
-        setItemStack(offset++, Material.REDSTONE, TranslationKey.INVENTORIES__REDSTONE__SETTINGS);
+
+        // Redstone settings: only for storage and traversal blocks.
+        if (isStorage || isTraversal) {
+            setItemStack(offset++, Material.REDSTONE, TranslationKey.INVENTORIES__REDSTONE__SETTINGS);
+        }
+
+        // Friends: always shown when friend functionality is enabled.
         if (!BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {
             setItemStack(offset++, Material.PLAYER_HEAD, TranslationKey.INVENTORIES__FRIENDS__MANAGE);
         }
+
+        // Name tag.
         setItemStack(offset++, Material.NAME_TAG, TranslationKey.INVENTORIES__SET_BLOCK_NAME);
+
+        // Transfer.
         setItemStack(offset++, Material.ENDER_PEARL, TranslationKey.INVENTORIES__TRANSFER__BUTTON);
-        if (offset < InventoryConstants.doubleLine / 2 && BlockProt.getDefaultConfig().isProtectionExpiryEnabled()) {
+
+        // Expiry: only for storage blocks (guarding an inventory makes sense to expire).
+        if (isStorage && offset < InventoryConstants.doubleLine / 2
+                && BlockProt.getDefaultConfig().isProtectionExpiryEnabled()) {
             long exp = handler.getExpiresAt();
-            if (exp > 0) {
-                setItemStack(offset, Material.LIME_DYE, TranslationKey.INVENTORIES__BLOCK_LOCK_EXPIRY_SET);
-            } else {
-                setItemStack(offset, Material.HOPPER, TranslationKey.INVENTORIES__BLOCK_LOCK_EXPIRY_UNSET);
-            }
+            setItemStack(offset, exp > 0
+                ? Material.LIME_DYE
+                : Material.HOPPER,
+                exp > 0
+                    ? TranslationKey.INVENTORIES__BLOCK_LOCK_EXPIRY_SET
+                    : TranslationKey.INVENTORIES__BLOCK_LOCK_EXPIRY_UNSET);
         }
     }
 }

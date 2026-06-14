@@ -52,6 +52,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
+import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -110,8 +111,12 @@ public class BlockEventListener implements Listener {
         if (!BlockProt.getDefaultConfig().isLockable(event.getBlock().getType(), event.getBlock().getWorld())) return;
 
         BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
-        if (!handler.isOwner(event.getPlayer().getUniqueId().toString()) && handler.isProtected()) {
-            if (!BlockProt.getDefaultConfig().shouldAllowBreakProtectedBlocks()) {
+        final Player breaker = event.getPlayer();
+        final boolean isAdmin = breaker.hasPermission(Permissions.USER_ADMIN.key());
+        final boolean isOwner = handler.isOwner(breaker.getUniqueId().toString());
+
+        if (!isOwner && handler.isProtected()) {
+            if (!isAdmin && !BlockProt.getDefaultConfig().shouldAllowBreakProtectedBlocks()) {
                 event.setCancelled(true);
             }
         }
@@ -142,7 +147,7 @@ public class BlockEventListener implements Listener {
         if (!BlockProt.getDefaultConfig().isAutoDropToInventoryEnabled(event.getBlock().getWorld())) return;
         if (BlockProt.getDefaultConfig().isLockableShulkerBox(event.getBlock().getType())) return;
         Player player = event.getPlayer();
-        if (player.isOp() || player.hasPermission(de.sean.blockprot.bukkit.Permissions.BYPASS.key())) return;
+        if (player.isOp() || player.hasPermission(Permissions.USER_ADMIN.key())) return;
         if (player.getGameMode() == GameMode.CREATIVE) return;
 
         java.util.Collection<ItemStack> drops = event.getBlock().getDrops(player.getInventory().getItemInMainHand());
@@ -171,8 +176,12 @@ public class BlockEventListener implements Listener {
             return;
         }
 
-        if (handler.isOwner(event.getPlayer().getUniqueId().toString()) && (!event.isCancelled() && event.isDropItems() && event.getPlayer().getGameMode() != GameMode.CREATIVE)) {
-            StatHandler.removeContainer(event.getPlayer(), event.getBlock());
+        final Player shulkerBreaker = event.getPlayer();
+        final boolean isShulkerAdmin = shulkerBreaker.hasPermission(Permissions.USER_ADMIN.key());
+        final boolean isShulkerOwner = handler.isOwner(shulkerBreaker.getUniqueId().toString());
+
+        if ((isShulkerOwner || isShulkerAdmin) && (!event.isCancelled() && event.isDropItems() && shulkerBreaker.getGameMode() != GameMode.CREATIVE)) {
+            StatHandler.removeContainer(shulkerBreaker, event.getBlock());
             HopperEventListener.invalidate(event.getBlock());
             event.setDropItems(false);
             Collection<ItemStack> itemsToDrop = event.getBlock().getDrops();
@@ -181,8 +190,13 @@ public class BlockEventListener implements Listener {
             var item = Iterables.getFirst(itemsToDrop, null);
             if (item == null) return;
 
-            boolean clearProtection = BlockProt.getDefaultConfig().shouldClearProtectionOnShulkerBreak();
-            boolean autoDropEnabled = BlockProt.getDefaultConfig().isAutoDropToInventoryEnabled(event.getBlock().getWorld());
+            boolean clearProtection = isShulkerAdmin && !isShulkerOwner
+                ? true
+                : BlockProt.getDefaultConfig().shouldClearProtectionOnShulkerBreak();
+            // Respect both the global feature flag AND the per-material list.
+            // isAutoDropToInventory(type) checks both: enabled flag + material in blocks list.
+            boolean autoDropEnabled = BlockProt.getDefaultConfig().isAutoDropToInventoryEnabled(event.getBlock().getWorld())
+                && BlockProt.getDefaultConfig().isAutoDropToInventory(event.getBlock().getType());
 
             if (!clearProtection) {
                 if (MinecraftVersion.isAtLeastVersion(MinecraftVersion.MC1_20_R4)) {
@@ -207,12 +221,12 @@ public class BlockEventListener implements Listener {
             event.setCancelled(true);
 
             if (autoDropEnabled) {
-                java.util.HashMap<Integer, ItemStack> leftover = event.getPlayer().getInventory().addItem(item);
+                java.util.HashMap<Integer, ItemStack> leftover = shulkerBreaker.getInventory().addItem(item);
                 for (ItemStack overflow : leftover.values()) {
-                    event.getPlayer().getWorld().dropItemNaturally(event.getPlayer().getLocation(), overflow);
+                    shulkerBreaker.getWorld().dropItemNaturally(shulkerBreaker.getLocation(), overflow);
                 }
             } else {
-                event.getPlayer().getWorld().dropItemNaturally(event.getBlock().getLocation(), item);
+                shulkerBreaker.getWorld().dropItemNaturally(event.getBlock().getLocation(), item);
             }
         }
     }
@@ -276,7 +290,8 @@ public class BlockEventListener implements Listener {
                             StatHandler.removeContainer(event.getPlayer(), block);
                         }
                     } else {
-                        if (block.getState() instanceof org.bukkit.block.TileState) {
+                        BlockState freshState = block.getState(true);
+                        if (freshState instanceof org.bukkit.block.TileState) {
                             handler.setName(BlockUtil.getHumanReadableBlockName(block.getType()));
                             handler.applyToOtherContainer();
                         }
@@ -296,6 +311,24 @@ public class BlockEventListener implements Listener {
             if (handler.isProtected())
                 event.setCancelled(true);
         }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockDispense(@NotNull BlockDispenseEvent event) {
+        if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
+        org.bukkit.block.BlockFace facing = null;
+        try {
+            org.bukkit.block.data.Directional dir =
+                (org.bukkit.block.data.Directional) event.getBlock().getBlockData();
+            facing = dir.getFacing();
+        } catch (ClassCastException ignored) { return; }
+        if (facing == null) return;
+        org.bukkit.block.Block target = event.getBlock().getRelative(facing);
+        if (!BlockProt.getDefaultConfig().isLockable(target.getType())) return;
+        try {
+            BlockNBTHandler handler = new BlockNBTHandler(target);
+            if (handler.isProtected()) event.setCancelled(true);
+        } catch (RuntimeException ignored) {}
     }
 
     @EventHandler

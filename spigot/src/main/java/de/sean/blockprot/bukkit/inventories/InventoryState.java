@@ -63,6 +63,15 @@ public final class InventoryState {
     private UUID petEntityId = null;
 
     /**
+     * UUID of the entity (item frame, chest boat, minecart) being edited through
+     * an entity protection menu. Null when the current menu is for a block.
+     *
+     * @since SP26-ZV.BPR
+     */
+    @Nullable
+    public UUID entityUUID = null;
+
+    /**
      * The current state of the friend search mechanism.
      *
      * @since 0.4.7

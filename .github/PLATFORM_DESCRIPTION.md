@@ -5,10 +5,10 @@
 Players lock chests, furnaces, and other blocks through a modern GUI — no commands to memorize.
 This fork extends the original NBT core with production-grade features for large or long-running servers.
 
-![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Plus/main/images/main_menu.png)
-![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Plus/main/images/friend_settings.png)
-![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Plus/main/images/user_settings.png)
-![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Plus/main/images/redstone_settings.png)
+![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/main_menu.png)
+![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/friend_settings.png)
+![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/user_settings.png)
+![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/redstone_settings.png)
 
 ---
 
@@ -35,7 +35,7 @@ All additions are **disabled by default**. The upstream NBT core is untouched un
 
 **SQLite access audit log** — records `ACCESS_DENIED` / `ACCESS_GRANTED` events with UUID, name, location, and timestamp; in-game GUI with player-head grouping; auto-pruning at 50 000 rows.
 
-![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Plus/main/images/audit-log.png)
+![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/audit-log.png)
 
 **Automatic backup** — ZIP backup of plugin data before startup migration or `/bp reload`; keeps the last 10 backups.
 
@@ -94,13 +94,13 @@ Alias: `/blockprot`. Spanish aliases available when `localized_command_aliases: 
 
 The complete feature reference, all configuration options, permissions, and the full list of
 added files and dependencies are maintained in the
-**[GitHub README](https://github.com/VictorGugug/BlockProt-Plus#readme)**.
+**[GitHub README](https://github.com/VictorGugug/BlockProt-Reloaded#readme)**.
 That is the authoritative source — updated every time something new is added.
 
 ---
 
 ## Source & issues
 
-[github.com/VictorGugug/BlockProt-Plus](https://github.com/VictorGugug/BlockProt-Plus)
+[github.com/VictorGugug/BlockProt-Reloaded](https://github.com/VictorGugug/BlockProt-Reloaded)
 
 Licensed under **GPL v3**. Based on [BlockProt](https://github.com/spnda/BlockProt) by spnda.

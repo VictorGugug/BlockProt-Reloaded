@@ -21,9 +21,15 @@
 package de.sean.blockprot.bukkit.listeners;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.Permissions;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
 import de.sean.blockprot.bukkit.util.SkinCache;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -31,6 +37,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.util.Collections;
+import java.util.List;
 
 public class JoinEventListener implements Listener {
     @EventHandler
@@ -53,5 +60,37 @@ public class JoinEventListener implements Listener {
         if (BlockProt.getDefaultConfig().publicIsFriendByDefault() && !player.hasPlayedBefore()) {
             new PlayerSettingsHandler(player).addEveryoneAsFriend();
         }
+
+        // Deliver queued raid alerts to the owner on join.
+        List<String> pending = RaidDetectionListener.popPendingAlerts(player.getUniqueId());
+        if (pending != null && !pending.isEmpty()) {
+            boolean hasTp = player.hasPermission(Permissions.BLOCKS_TP.key());
+            for (String alertLine : pending) {
+                Component msg = LegacyComponentSerializer.legacySection().deserialize(alertLine);
+                if (hasTp) {
+                    // Parse coords from the pre-built string — re-use the full pending message as TP command source.
+                    // The TP label is appended as a clickable component.
+                    String tpLabel = Translator.get(TranslationKey.MESSAGES__RAID_TP_LABEL);
+                    Component tpLink = LegacyComponentSerializer.legacySection().deserialize(tpLabel)
+                        .clickEvent(ClickEvent.suggestCommand("/tp " + extractCoordsHint(alertLine)));
+                    msg = msg.append(Component.space()).append(tpLink);
+                }
+                player.sendMessage(msg);
+            }
+        }
+    }
+
+    /**
+     * Extracts a rough coordinate hint from a pre-built raid alert string for
+     * suggesting a /tp command to the player. Parses the first bracket-enclosed
+     * group in the message and returns it as "x y z".
+     * Falls back to an empty string when parsing fails.
+     */
+    private String extractCoordsHint(String line) {
+        int open  = line.indexOf('[');
+        int close = line.indexOf(']', open);
+        if (open < 0 || close < 0) return "";
+        String coords = line.substring(open + 1, close).replace(",", "").trim();
+        return coords;
     }
 }

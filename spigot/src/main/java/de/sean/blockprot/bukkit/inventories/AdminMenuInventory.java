@@ -25,6 +25,7 @@ import java.util.function.Consumer;
 
 public class AdminMenuInventory extends BlockProtInventory {
 
+    private static final int SLOT_LOCKABLES    = 10;
     private static final int SLOT_RELOAD       = 11;
     private static final int SLOT_UPDATE       = 12;
     private static final int SLOT_INTEGRATIONS = 13;
@@ -45,6 +46,9 @@ public class AdminMenuInventory extends BlockProtInventory {
     public Inventory fill(@NotNull Player player) {
         inventory = createInventory();
 
+        inventory.setItem(SLOT_LOCKABLES, item(Material.CHEST,
+            "Lockable Blocks",
+            "View all lockable blocks on this server"));
         inventory.setItem(SLOT_RELOAD, item(Material.COMPARATOR,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD_LORE)));
@@ -79,7 +83,15 @@ public class AdminMenuInventory extends BlockProtInventory {
         int slot = event.getRawSlot();
         if (slot < 0 || slot >= getSize()) return;
 
-        if (slot == SLOT_RELOAD) {
+        if (slot == SLOT_LOCKABLES) {
+            InventoryState newState = InventoryState.builder()
+                .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                .build();
+            newState.currentPageIndex = 0;
+            InventoryState.set(player.getUniqueId(), newState);
+            player.openInventory(new LockablesInventory().fill(player, 0));
+
+        } else if (slot == SLOT_RELOAD) {
             player.closeInventory();
             if (BlockProt.getDefaultConfig().isBackupsEnabled()) {
                 new de.sean.blockprot.bukkit.tasks.BackupTask(

@@ -56,6 +56,23 @@ public class InteractEventListener implements Listener {
         if (!BlockProt.getDefaultConfig().isLockable(event.getClickedBlock().getState().getType())) return;
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
+        // Dragon Egg teleports on ANY click (left or right) and bypasses cancel in some Paper versions.
+        // Force-cancel both PHYSICAL and RIGHT_CLICK_BLOCK to prevent the teleport.
+        if (event.getClickedBlock().getType() == Material.DRAGON_EGG) {
+            BlockNBTHandler eggHandler = new BlockNBTHandler(event.getClickedBlock());
+            if (eggHandler.isProtected()) {
+                Player eggPlayer = event.getPlayer();
+                if (!eggHandler.canAccess(eggPlayer.getUniqueId().toString())
+                        && !eggPlayer.hasPermission(Permissions.USER_ADMIN.key())) {
+                    event.setCancelled(true);
+                    event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
+                    event.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
+                    sendMessage(eggPlayer, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+                    return;
+                }
+            }
+        }
+
         Player player = event.getPlayer();
         if (!player.isSneaking()) {
             BlockAccessEvent accessEvent = new BlockAccessEvent(event.getClickedBlock(), player);
@@ -72,7 +89,7 @@ public class InteractEventListener implements Listener {
                     event.setCancelled(false);
                     return;
                 }
-                if (!(handler.canAccess(player.getUniqueId().toString()) || player.hasPermission(Permissions.BYPASS.key()))) {
+                if (!(handler.canAccess(player.getUniqueId().toString()) || player.hasPermission(Permissions.USER_ADMIN.key()))) {
                     event.setCancelled(true);
                     sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
                     // Registrar intento fallido en el audit log

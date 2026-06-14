@@ -1,6 +1,8 @@
 /*
  * Copyright (C) 2021 - 2025 spnda
- * This file is part of BlockProt <https://github.com/spnda/BlockProt>.
+ * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
  * BlockProt is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +26,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.inventories.AdminBlockListInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
+import de.sean.blockprot.bukkit.inventories.PlayerListInventory;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
@@ -43,12 +46,15 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Handles {@code /bp info <player>} — admin command that lists all blocks
- * currently owned by the specified player (player must be online).
+ * Handles {@code /bp info [player]}.
  *
- * <p>Requires {@code blockprot.admin} permission or OP.
+ * <ul>
+ *   <li>No argument + Player sender: opens {@link PlayerListInventory} (all players, sortable).</li>
+ *   <li>With player name: opens {@link AdminBlockListInventory} for that specific player.</li>
+ *   <li>Console sender: always requires a player name argument.</li>
+ * </ul>
  *
- * @since 1.2.0
+ * Requires {@code blockprot.admin} permission or OP.
  */
 public final class InfoCommand implements CommandExecutor {
 
@@ -66,16 +72,23 @@ public final class InfoCommand implements CommandExecutor {
             return true;
         }
 
+        // No argument: Player opens the full player-list GUI; console gets usage.
         if (args.length < 2) {
-            sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_USAGE)));
+            if (sender instanceof Player player) {
+                InventoryState state = new InventoryState(null);
+                state.origin = InventoryState.MenuOrigin.ADMIN_MENU;
+                InventoryState.set(player.getUniqueId(), state);
+                new PlayerListInventory().open(player);
+            } else {
+                sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                    Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_USAGE)));
+            }
             return true;
         }
 
         final String targetName = args[1];
 
         Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
-            // Resolve the target player
             OfflinePlayer offlineTarget = PlayerNameResolver.findOfflinePlayer(targetName);
             if (offlineTarget == null) {
                 @SuppressWarnings("deprecation")
@@ -91,23 +104,23 @@ public final class InfoCommand implements CommandExecutor {
                 return;
             }
 
-            final OfflinePlayer finalTarget   = offlineTarget;
-            final String        displayName   = finalTarget.getName() != null ? finalTarget.getName() : targetName;
+            final OfflinePlayer finalTarget = offlineTarget;
+            final String displayName = finalTarget.getName() != null ? finalTarget.getName() : targetName;
 
             Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
                 PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
                 StatHandler.getStatisticByUuid(stat, finalTarget.getUniqueId());
 
-                // ── GUI for Player senders ────────────────────────────────
                 if (sender instanceof Player player) {
                     InventoryState ns = new InventoryState(null);
                     ns.currentPageIndex = 0;
+                    ns.origin = InventoryState.MenuOrigin.ADMIN_MENU;
                     InventoryState.set(player.getUniqueId(), ns);
                     player.openInventory(new AdminBlockListInventory().fill(player, displayName, stat));
                     return;
                 }
 
-                // ── Chat output for Console senders ───────────────────────
+                // Console output
                 List<LocationListEntry> entries = stat.get();
                 if (entries.isEmpty()) {
                     sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
@@ -149,9 +162,13 @@ public final class InfoCommand implements CommandExecutor {
                                                 @NotNull String alias, @NotNull String[] args) {
         if (!canUseCommand(sender)) return Collections.emptyList();
         if (args.length == 2) {
-            return Bukkit.getOnlinePlayers().stream()
-                .map(Player::getName)
-                .filter(n -> n.toLowerCase().startsWith(args[1].toLowerCase()))
+            String prefix = args[1].toLowerCase();
+            // Include all offline players that have played before for tab complete
+            return java.util.Arrays.stream(Bukkit.getOfflinePlayers())
+                .filter(op -> op.getName() != null && op.getName().toLowerCase().startsWith(prefix))
+                .map(op -> op.getName())
+                .sorted()
+                .limit(20)
                 .toList();
         }
         return Collections.emptyList();

@@ -47,11 +47,10 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
 
     static final String PLAYER_SEARCH_HISTORY = "blockprot_player_search_history";
 
-    /**
-     * Flag saved in NBT to check if the player has ever interacted with a
-     * menu from BlockProt and if any hints should be sent to them.
-     */
     static final String PLAYER_HAS_INTERACTED_WITH_MENU = "blockprot_player_has_interacted_with_menu";
+
+    /** Per-player toggle: receive access notifications. Defaults to server config value. */
+    static final String NOTIFICATIONS_ENABLED_ATTRIBUTE = "blockprot_notifications_enabled";
 
     private static final int MAX_HISTORY_SIZE = InventoryConstants.tripleLine - 2;
 
@@ -243,6 +242,22 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
             }
         } catch (IllegalArgumentException ignored) {
         }
+    }
+
+    /**
+     * Whether this player wants to receive access notifications when someone
+     * opens or interacts with their protected blocks.
+     * Defaults to the server-wide config value when the player has no preference stored.
+     */
+    public boolean getNotificationsEnabled() {
+        if (!container.hasTag(NOTIFICATIONS_ENABLED_ATTRIBUTE))
+            return BlockProt.getDefaultConfig().isOwnerNotificationsEnabled();
+        return container.getBoolean(NOTIFICATIONS_ENABLED_ATTRIBUTE);
+    }
+
+    /** Persists the player's notification preference. */
+    public void setNotificationsEnabled(boolean enabled) {
+        container.setBoolean(NOTIFICATIONS_ENABLED_ATTRIBUTE, enabled);
     }
 
     /**
