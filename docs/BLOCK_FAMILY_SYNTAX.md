@@ -1,0 +1,176 @@
+# Block Family Syntax — BlockProt Reloaded
+
+Family expressions are a compact syntax for `blocks.yml`, `worlds.yml`, and
+`auto_drop_to_inventory`. They are **always parsed** regardless of the `modern_family_blocks`
+flag in `config.yml`.
+
+`modern_family_blocks: true` only controls one thing: whether flat material lists are
+automatically converted to expressions on startup. It does not gate expression parsing.
+
+They replace flat material lists with token-based expressions that resolve dynamically
+against the full family registry at startup and on `/bp reload`.
+
+---
+
+## Expression tokens
+
+All expressions are wrapped in `[...]` and contain space-separated tokens.
+
+| Token    | Operation                                                           |
+|----------|---------------------------------------------------------------------|
+| `*`      | Include all members of the current top-level family                 |
+| `*-TAG`  | Include all members of the named sub-family                         |
+| `-*TAG`  | Exclude all members of the named sub-family from the result         |
+| `NAME`   | Include a specific material (must belong to this family)            |
+| `-NAME`  | Exclude a specific material (must belong to this family)            |
+
+**Key rule**: the result set starts empty. `*` or `*-TAG` populate it first.
+`-*TAG` removes from it. `NAME` / `-NAME` add or remove individual materials.
+
+**Important**: `-*TAG` alone without a prior `*` or `*-TAG` produces an empty set —
+there is nothing to remove from. To disable a sub-family while keeping the rest:
+use `[* -*TAG]` (include all, then subtract).
+
+---
+
+## Cross-family validation
+
+`NAME` and `-NAME` tokens are checked against the family of the config key.
+A material that does not belong to the current family is rejected with a warning and discarded.
+
+```yaml
+# lockable_tile_entities belongs to the TILE_ENTITIES family.
+# COPPER_CHESTPLATE is armor — not a TILE_ENTITIES member — rejected.
+lockable_tile_entities:
+  - "[*-CHEST -COPPER_CHESTPLATE]"   # ERROR: COPPER_CHESTPLATE not in TILE_ENTITIES -> discarded
+
+# COPPER_CHEST is a CHEST sub-family member — valid.
+lockable_tile_entities:
+  - "[*-CHEST -COPPER_CHEST]"        # OK: all chest variants except COPPER_CHEST
+```
+
+---
+
+## Token behaviour by context
+
+| Expression                                   | Result                                                                          |
+|----------------------------------------------|---------------------------------------------------------------------------------|
+| `[*]`                                        | All members of the family                                                       |
+| `[* -CHEST]`                                 | All members except the CHEST material itself                                    |
+| `[*-CHEST]`                                  | Only the CHEST sub-family (all chest variants)                                  |
+| `[*-CHEST -COPPER_CHEST]`                    | Whole CHEST sub-family minus COPPER_CHEST                                       |
+| `[* -*CHEST]`                                | All family members except the CHEST sub-family                                  |
+| `[-*CHEST]`                                  | **Empty** — no base inclusion, nothing to remove from                           |
+| `[* -*CHEST COPPER_CHEST]`                   | All family except CHEST sub-family, but COPPER_CHEST re-included                |
+| `[*-FURNACE *-SHELF *-TRANSPORT *-MISC *-CHEST -COPPER_CHEST]` | All tile-entity sub-families, CHEST minus COPPER_CHEST |
+| `[CHEST BARREL]`                             | Only CHEST and BARREL (empty base, explicit inclusions)                         |
+
+---
+
+## Syntax examples
+
+```yaml
+# All members of a family
+lockable_tile_entities:
+  - "[*]"
+
+# All except one block
+lockable_blocks:
+  - "[* -DRAGON_EGG]"
+
+# Include only specific blocks (empty base + explicit inclusions)
+lockable_tile_entities:
+  - "[CHEST BARREL]"
+
+# One sub-family only
+lockable_tile_entities:
+  - "[*-CHEST]"
+
+# Multiple sub-families
+lockable_tile_entities:
+  - "[*-CHEST *-SHELF]"
+
+# Sub-family minus one member
+lockable_shulker_boxes:
+  - "[*-SHULKERS -WHITE_SHULKER_BOX]"
+
+# All shulkers except red
+lockable_shulker_boxes:
+  - "[*-SHULKERS -RED_SHULKER_BOX]"
+
+# All family members except a sub-family (correct syntax)
+lockable_tile_entities:
+  - "[* -*SIGN]"
+
+# All tile-entity sub-families with one exclusion inside CHEST
+lockable_tile_entities:
+  - "[*-FURNACE *-SHELF *-TRANSPORT *-MISC *-CHEST -COPPER_CHEST]"
+
+# worlds.yml — per-world example
+worlds:
+  survival:
+    enabled: true
+    auto_drop_to_inventory_enabled: true
+    lockable_tile_entities:
+      - "[*]"
+    lockable_shulker_boxes:
+      - "[*-SHULKERS -WHITE_SHULKER_BOX]"
+    lockable_blocks:
+      - "[* -DRAGON_EGG]"
+    lockable_doors:
+      - "[*]"
+  creative:
+    enabled: false
+    lockable_tile_entities: []
+    lockable_shulker_boxes: []
+    lockable_blocks: []
+    lockable_doors: []
+```
+
+---
+
+## auto_drop_to_inventory
+
+Resolves expressions against **all families** independently (union).
+Each family processes the expression against its own members.
+Sub-family tokens that do not belong to a given family are silently skipped for that family.
+
+```yaml
+auto_drop_to_inventory:
+  enabled: true
+  blocks:
+    - "[*-SHULKERS]"                       # all shulkers auto-drop to inventory
+    - "[*-SHULKERS -RED_SHULKER_BOX]"      # all shulkers except red
+    - "[*]"                                # all lockable blocks across all families
+    - "[*-SHULKERS *-CHEST]"              # shulkers + all chest variants
+
+# To disable shulker auto-drop entirely:
+#   Option A — set enabled: false
+#   Option B — remove shulker entries from blocks list
+#   Option C — do not include [*-SHULKERS] or individual shulker names
+#
+# Note: [-*SHULKERS] alone produces an empty set (no base inclusion = nothing to remove from).
+# It will NOT disable shulkers that are listed via other entries in the same blocks list.
+```
+
+---
+
+## Sub-family reference
+
+| Key                       | Family          | Available sub-family tags                                 |
+|---------------------------|-----------------|-----------------------------------------------------------|
+| `lockable_tile_entities`  | `TILE_ENTITIES` | `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN`  |
+| `lockable_shulker_boxes`  | `SHULKER_BOXES` | `SHULKERS`                                                |
+| `lockable_blocks`         | `BLOCKS`        | `ANVIL`, `CAULDRON`, `FENCE_GATE`, `TRAPDOOR`, `WORKSTATION` |
+| `lockable_doors`          | `DOORS`         | `DOORS`                                                   |
+| `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`      |
+
+For the full list of materials in each sub-family: see `LOCKABLE_BLOCKS_REFERENCE.md`.
+
+---
+
+## Item frames
+
+Item frames (`ITEM_FRAME`, `GLOW_ITEM_FRAME`) are entities, not blocks. They do not appear in
+`blocks.yml` and are not part of any family. Protection is always active via `ItemFrameListener`.
+See `LOCKABLE_BLOCKS_REFERENCE.md` — "Item frames" section for details.
