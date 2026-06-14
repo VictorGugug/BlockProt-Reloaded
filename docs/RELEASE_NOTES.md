@@ -1,6 +1,4 @@
-# Release Notes — BlockProt Reloaded
 
-## 1.3.3
 
 ![1.3.3](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/1.3.3.png)
 
