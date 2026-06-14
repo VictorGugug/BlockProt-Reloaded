@@ -1,11 +1,42 @@
 
-![ENTITY PROTECTION](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/ENTITY%20PROTECTION.png)
+![RELEASE NOTES](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BH/LBP_model.bbmodel)
+
+## Additions
+
+### Item frames in /bp lockables
+
+`ITEM_FRAME` and `GLOW_ITEM_FRAME` are now full members of the `ENTITIES` family under the `ITEM_FRAMES` sub-family. They appear in `/bp lockables` with `Status: INACTIVE` by default (not included in `lockable_entities`) or `ACTIVE` when listed.
+
+Supported token: `*-ITEM_FRAMES` to include only frames or exclude all frames.
+
+To protect a frame: sneak + right-click with an empty hand.
+
+### Villager workstation protection
+
+New protection for villagers linked to locked workstation blocks. Blocks:
+- Damage to the villager
+- Trading interaction
+- Block breaking within a 2×1×2 area around the workstation
+- Block interaction in that area (except the workstation block itself)
+
+Only applies if the villager has a `JOB_SITE` memory matching a protected block.
+
+### Locate Villager button
+
+New Emerald button (`§aLocate Linked Villager`) in the workstation protection menu. Clicking it emits magenta particles showing the linked villager's location (visible only to the player who clicked, for `villager_locate_seconds`).
+
+### ViaBackwards and ViaRewind detection
+
+`ViaVersionIntegration` now detects ViaBackwards and ViaRewind, displaying the version of each detected plugin in the log.
+
+---
+
+## Fixed & Improved
 
 ### Entity protection (renamed from Pet Protection)
 
-The `pet_protection` config section and all related internal identifiers have been renamed to `entity_protection`. The old `pet_protection` keys remain readable as a fallback so existing server configs continue to work without any manual edit.
+The `pet_protection` config section in `config.yml` has been renamed to `entity_protection`. Old keys remain functional for backward compatibility.
 
-`config.yml` now reads:
 ```yaml
 entity_protection:
   enabled: false
@@ -14,113 +45,35 @@ entity_protection:
   villager_locate_seconds: 6
 ```
 
-The in-game menu title changed from `§dPet Settings` to `§dEntity Settings`. All translation keys (`inventories.pet.*`) are preserved unchanged so custom language files do not need updating.
+Menu title changed from `§dPet Settings` to `§dEntity Settings`.
 
 ### Vehicle protection fixes
 
-`VehicleProtectionListener` previously only blocked right-click access (`PlayerInteractEntityEvent`). Hopper pipelines could still extract items from protected chest minecarts and chest boats via `InventoryMoveItemEvent`, which never fires a player interact event. A new `onHopperPullFromVehicle` handler intercepts `InventoryMoveItemEvent` when the source inventory holder is a protected storage vehicle and cancels the extraction.
-
-The fix covers all three protected vehicle types: `StorageMinecart` (chest minecart), `HopperMinecart`, and chest boats (resolved via runtime reflection to support both the 1.20.x and 1.21+ package locations).
-
-A `BLOCKED hopper pipeline extraction` log entry is written to the `entity-protection` log channel whenever an extraction is blocked, making the behavior fully observable in the session log.
-
-### Item frames in /bp lockables
-
-`ITEM_FRAME` and `GLOW_ITEM_FRAME` are now full members of the `ENTITIES` family under the `ITEM_FRAMES` sub-family in `BlockFamilyParser`. They appear in `/bp lockables` like all other entity types with `Status: INACTIVE` when the `lockable_entities` list does not include them (the default), or `Status: ACTIVE` when they are listed.
-
-The sub-family token `*-ITEM_FRAMES` is supported in all expression contexts:
-```yaml
-lockable_entities:
-  - '[*-ITEM_FRAMES]'                                      # only item frames
-  - '[*]'                                                  # all entity types including frames
-  - '[*-CHEST_BOATS *-CHEST_MINECARTS *-ITEM_FRAMES]'     # boats, minecarts, and frames
-```
-
-Item frames are **disabled by default** (`lockable_entities` ships as an empty list). This matches the behavior described in `LOCKABLE_BLOCKS_REFERENCE.md` and is forward-compatible: servers that had no `lockable_entities` key in their `blocks.yml` will have it patched in automatically as an empty list on next startup via `patchBlocksFileIfNeeded()`, with no existing data modified.
-
-How to protect a frame once enabled: sneak + right-click the frame with an empty hand. The BlockProt protection menu opens. Once protected, non-owners cannot rotate, replace the displayed item, or break the frame. Players with `blockprot.user.admin` always bypass frame protection.
-
-### Villager workstation protection
-
-`VillagerWorkstationProtectionListener` is a new listener that extends protection from a locked workstation block to the villager linked to it as a job site.
-
-When a villager's memory contains a job-site location that matches a protected workstation block, the following are blocked for non-owners:
-- Damage from players and their projectiles (`EntityDamageByEntityEvent`)
-- Right-click interaction — trading GUI (`PlayerInteractEntityEvent`)
-- Breaking blocks within a 2×1×2 area around the workstation (`BlockBreakEvent`)
-- Interacting with blocks in that same area (`PlayerInteractEvent`) unless the clicked block is the workstation itself
-
-The protection area is: ±2 blocks horizontally (X and Z), ±1 block vertically (Y) relative to the workstation. The exact size is intentionally minimal — it covers the immediate vicinity without affecting adjacent builds.
-
-The linked villager is found at runtime by scanning nearby entities and comparing their `JOB_SITE` memory key to the workstation location via reflection (compatible with 1.14+ without requiring NMS). If no villager is linked to the workstation, no extra protection is applied.
-
-All checks log to the `entity-protection` channel so denials are visible in the session log.
-
-This feature is controlled by `entity_protection.enabled` in `config.yml` (same flag as tamed animal protection). When disabled, no villager protection is active.
-
-### Locate Villager button in workstation lock menu
-
-When a player opens the BlockProt lock menu for a protected workstation block, an Emerald button (`§aLocate Linked Villager`) appears in the slot sequence if the block material is in the `WORKSTATION` sub-family.
-
-Clicking the button:
-1. Closes the protection menu.
-2. Starts a `VillagerLocateTask` that runs every 10 ticks.
-3. The task emits magenta `DUST_COLOR_TRANSITION` particles on the villager's location, visible only to the player who clicked.
-4. The task runs for `villager_locate_seconds` (default 6, max 10, configured in `config.yml` under `entity_protection.villager_locate_seconds`).
-5. If no villager is linked, nothing happens (the button is still shown but the task finds no target).
-
-The button slot is dynamic — it occupies the next available slot after redstone, friends, name, and transfer buttons, so it does not break the existing layout for non-workstation blocks.
-
-### ViaBackwards and ViaRewind detection
-
-`ViaVersionIntegration` previously detected only ViaVersion itself. It now also probes for ViaBackwards and ViaRewind on enable, logging each companion that is found:
-```
-[integration] ViaVersion v5.x.x detected — multi-version client support active.
-[integration] ViaBackwards detected — v5.x.x (extends ViaVersion protocol translation)
-[integration] ViaRewind detected — v4.x.x (extends ViaVersion protocol translation)
-```
-
-`getDetailedStatus()` returns a combined string listing ViaVersion and any active companions, used by the debug command and the integrations menu.
-
-Protocol version lookup always goes through the ViaVersion API regardless of which companion plugins are present — they share the same API surface.
+Fixed storage vehicle protection (chest minecarts, chest boats, hopper minecarts). Hopper pipes can no longer extract items from protected storage vehicles. Logs are recorded when extraction is blocked.
 
 ### Debug command expanded
 
-`/bp debug run` now tests the following new areas in addition to the existing checks:
+`/bp debug run` now tests the following new areas:
 
 | Check | What it verifies |
 |---|---|
 | Lockable entities | Lists all ENTITIES family members with ACTIVE / INACTIVE status |
 | Item frame protection | Reads `isLockableEntity(ITEM_FRAME)` and `isLockableEntity(GLOW_ITEM_FRAME)` and logs the result |
-| Raid detection config | Reads `raid_detection.enabled` and `shouldProtectLockedBlocksFromExplosions()` and confirms AuditLogger is active |
-| Integrations (expanded) | Calls `ViaVersionIntegration.getDetailedStatus()` for a full Via summary including companions; logs version for each integration |
-| NBT entity write/read | Spawns a temporary `ArmorStand`, writes owner UUID via `EntityNBTHandler`, reads it back, then removes the entity |
-
-The summary counter now covers all 18 check groups. The session log includes a separator line before each group for readability.
+| Raid detection config | Reads `raid_detection.enabled` and confirms AuditLogger is active |
+| Integrations (expanded) | Calls `ViaVersionIntegration.getDetailedStatus()` for full Via summary including companions |
+| NBT entity write/read | Spawns a temporary `ArmorStand`, writes owner UUID, reads it back, then removes the entity |
 
 ### Audit log — correct action classification
 
-`InteractEventListener` already logged `ACCESS_DENIED` on blocked access. A review confirmed that `OPENED` is never written for denied accesses — the action code is only written by `InventoryEventListener` for actual inventory openings. No code change was needed; the behavior was already correct. This entry documents the audit trail behavior for clarity:
-
+Audit trail behavior clarification:
 - `ACCESS_DENIED` — player attempted to access a protected block and was blocked
 - `OPENED` — player with access opened the inventory of a protected block
-- `RAID_EXPLOSION` — an explosion affected a protected block (written by `ExplodeEventListener`)
+- `RAID_EXPLOSION` — an explosion affected a protected block
 - `ITEM_TAKEN` / `ITEM_PLACED` — player moved items in a protected inventory
 
 ### blocks.yml comment corrected
 
-The `lockable_entities` comment in `blocks.yml` previously stated that item frame protection was "always active via ItemFrameListener" regardless of the list. This was wrong. Item frames require an explicit entry in `lockable_entities` (or a family expression that includes them) just like all other entity types. The comment has been corrected and expanded with full opt-in examples and sub-family documentation.
-
-## 1.3.3 additions diff summary
-
-| Area | Before | After |
-|---|---|---|
-| Pet → entity protection naming | `pet_protection` config key | `entity_protection` with `pet_protection` fallback |
-| Vehicle hopper extraction | Not blocked | Blocked via `InventoryMoveItemEvent` |
-| Item frames in `/bp lockables` | Not shown | ITEM_FRAMES sub-family, INACTIVE by default |
-| Item frames in family expressions | Not supported | `[*-ITEM_FRAMES]` token active |
-| Villager workstation protection | Not present | `VillagerWorkstationProtectionListener`, 2×1×2 area |
-| Locate Villager button | Not present | Emerald slot in workstation lock menu |
+Updated `lockable_entities` comment to clarify that item frames require explicit entry in the list (or family expression that includes them), not automatically active.
 | `VillagerLocateTask` | Not present | Particle beacon on linked villager, configurable duration |
 | ViaBackwards / ViaRewind detection | Not detected | Probed and logged on enable |
 | `getDetailedStatus()` on Via integration | Not present | Returns Via + companions string |
