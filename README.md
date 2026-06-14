@@ -1,17 +1,15 @@
 <div align="center">
 
-# BlockProt Reloaded
+<img src="https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BPR.png" alt="BlockProt Reloaded" />
 
 [![CI](https://img.shields.io/github/actions/workflow/status/VictorGugug/BlockProt-Reloaded/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/VictorGugug/BlockProt-Reloaded/actions)
 [![Release](https://img.shields.io/github/v/release/VictorGugug/BlockProt-Reloaded?style=flat-square&color=brightgreen&label=Release)](https://github.com/VictorGugug/BlockProt-Reloaded/releases)
 [![Modrinth](https://img.shields.io/modrinth/dt/C2ZYTu62?style=flat-square&color=00AF5C&logo=modrinth&label=Modrinth)](https://modrinth.com/plugin/blockprot-reloaded)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
-[![Paper](https://img.shields.io/badge/Paper-1.20%2B%20%7C%2026.x-white?style=flat-square)](https://papermc.io/)
+[![Paper](https://img.shields.io/badge/Paper-1.21.1%2B%20%7C%2026.x-white?style=flat-square)](https://papermc.io/)
 
-**Fork created and maintained by [Zar](https://github.com/VictorGugug)**
-
-Java 25 · Paper 1.20 through 26.x · MySQL index · per-world config · access audit · pet protection · auto-backup · ownership transfer · item frame and vehicle protection
+Java 25 · Paper 1.21.1 through 26.x · MySQL index · per-world config · access audit · pet protection · auto-backup · ownership transfer · item frame and vehicle protection
 
 </div>
 
@@ -68,7 +66,7 @@ Admin tool to view all blocks owned by any player, including offline players. Cl
 
 ## Installing
 
-Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` folder. Requires **Java 25** and **Paper or Spigot 1.20+**.
+Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` folder. Requires **Java 25** and **Paper or Spigot 1.21.1+**.
 
 ### Build from Source
 
@@ -248,9 +246,9 @@ Command visibility is controlled by `use_menus` in `config.yml`. With `use_menus
 
 Sneak and right-click any lockable block to open the protection GUI. Add friends with Read, Write, or Manager permission levels. Redstone, hopper, and piston interaction can be toggled per block. Copy and paste protection settings between blocks. A per-player default friend list is applied to all new locks automatically.
 
-### Java 25 and Paper 1.20 through 26.x Compatibility
+### Java 25 and Paper 1.21.1 through 26.x Compatibility
 
-Compiles against the Paper 1.20.6 API and runs on every version from 1.20 through 26.1.x. Both the classic `1.x` and the year-based `26.x` version schemes are detected at runtime. APIs introduced in newer versions, such as typed inventory views in 1.21.4, are accessed via `VersionCompat` checks so the plugin never throws `NoClassDefFoundError` on older servers.
+Compiles against the Paper 1.21.1 API and runs on every version from 1.21.1 through 26.1.x. 1.20.x received its last big update in 1.3.3. Both the classic `1.x` and the year-based `26.x` version schemes are detected at runtime.
 
 ### Item Frame Protection
 
@@ -482,7 +480,7 @@ MySQL is configured separately in `mysql/mysql.yml`.
 
 | | |
 |---|---|
-| Minecraft | 1.20, 1.20.x, 1.21, 1.21.x, 26.1.x |
+| Minecraft | 1.21.1, 1.21.x, 26.1.x |
 | Server software | Paper, Spigot, Folia |
 | Java | 25+ required |
 | MySQL | MySQL 8+, MariaDB 10.5+ (optional) |
