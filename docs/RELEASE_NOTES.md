@@ -1,7 +1,5 @@
 ![1.3.3](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/1.3.3.png)
 
-![RELEASE NOTES](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BH/LBP_model.bbmodel)
-
 ## Additions
 
 ### Item frames in /bp lockables
