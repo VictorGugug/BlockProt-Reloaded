@@ -1,5 +1,3 @@
-# Lockable Blocks Reference — BlockProt Reloaded
-
 ![LOCKABLE BLOCKS REFERENCE](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/LOCKABLE%20BLOCKS%20REFERENCE.png)
 
 Complete list of every block and entity that can be locked, organized by family and sub-family.
@@ -9,7 +7,7 @@ For the family expression syntax used in modern mode: see `BLOCK_FAMILY_SYNTAX.m
 For the in-game block browser and how to use it: see the `/bp lockables` section below.
 
 ---
-
+https://github.com/VictorGugug/BlockProt-Reloaded
 ## The /bp lockables command
 
 `/bp lockables` opens a paged GUI that shows every block the family system knows about,
