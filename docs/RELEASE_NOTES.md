@@ -1,3 +1,4 @@
+![1.3.3](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/1.3.3.png)
 
 ![RELEASE NOTES](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BH/LBP_model.bbmodel)
 
@@ -85,8 +86,6 @@ Updated `lockable_entities` comment to clarify that item frames require explicit
 | `blocks.yml` entity comment | Incorrect ("always active") | Corrected with full opt-in examples |
 
 ---
-
-![1.3.3](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/1.3.3.png)
 
 ### Support policy change
 
