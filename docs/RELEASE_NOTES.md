@@ -72,7 +72,7 @@ Audit trail behavior clarification:
 
 ### blocks.yml comment corrected
 
-Updated `lockable_entities` comment to clarify that item frames require explicit entry in the list (or family expression that includes them), not automatically active.
+Updated the `lockable_entities` comment to clarify that item frames must be explicitly listed (or included via a family expression) to be treated as lockable; they are not active by default.
 | `VillagerLocateTask` | Not present | Particle beacon on linked villager, configurable duration |
 | ViaBackwards / ViaRewind detection | Not detected | Probed and logged on enable |
 | `getDetailedStatus()` on Via integration | Not present | Returns Via + companions string |
