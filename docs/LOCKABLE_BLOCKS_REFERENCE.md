@@ -7,7 +7,6 @@ For the family expression syntax used in modern mode: see `BLOCK_FAMILY_SYNTAX.m
 For the in-game block browser and how to use it: see the `/bp lockables` section below.
 
 ---
-https://github.com/VictorGugug/BlockProt-Reloaded
 ## The /bp lockables command
 
 `/bp lockables` opens a paged GUI that shows every block the family system knows about,
