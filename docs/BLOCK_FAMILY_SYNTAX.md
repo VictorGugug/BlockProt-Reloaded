@@ -1,4 +1,4 @@
-# Block Family Syntax — BlockProt Reloaded
+![BLOCK FAMILY SYNTAX](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BLOCK%20FAMILY%20SYNTAX.png)
 
 Family expressions are a compact syntax for `blocks.yml`, `worlds.yml`, and
 `auto_drop_to_inventory`. They are **always parsed** regardless of the `modern_family_blocks`
@@ -106,6 +106,14 @@ lockable_tile_entities:
 lockable_tile_entities:
   - "[*-FURNACE *-SHELF *-TRANSPORT *-MISC *-CHEST -COPPER_CHEST]"
 
+# Entity family — item frames only
+lockable_entities:
+  - "[*-ITEM_FRAMES]"
+
+# Entity family — storage vehicles and item frames
+lockable_entities:
+  - "[*-CHEST_BOATS *-CHEST_MINECARTS *-HOPPER_MINECARTS *-ITEM_FRAMES]"
+
 # worlds.yml — per-world example
 worlds:
   survival:
@@ -157,20 +165,12 @@ auto_drop_to_inventory:
 
 ## Sub-family reference
 
-| Key                       | Family          | Available sub-family tags                                 |
-|---------------------------|-----------------|-----------------------------------------------------------|
-| `lockable_tile_entities`  | `TILE_ENTITIES` | `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN`  |
-| `lockable_shulker_boxes`  | `SHULKER_BOXES` | `SHULKERS`                                                |
-| `lockable_blocks`         | `BLOCKS`        | `ANVIL`, `CAULDRON`, `FENCE_GATE`, `TRAPDOOR`, `WORKSTATION` |
-| `lockable_doors`          | `DOORS`         | `DOORS`                                                   |
-| `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`      |
+| Key                       | Family          | Available sub-family tags                                          |
+|---------------------------|-----------------|--------------------------------------------------------------------|
+| `lockable_tile_entities`  | `TILE_ENTITIES` | `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN`           |
+| `lockable_shulker_boxes`  | `SHULKER_BOXES` | `SHULKERS`                                                         |
+| `lockable_blocks`         | `BLOCKS`        | `ANVIL`, `CAULDRON`, `FENCE_GATE`, `TRAPDOOR`, `WORKSTATION`       |
+| `lockable_doors`          | `DOORS`         | `DOORS`                                                            |
+| `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES`|
 
 For the full list of materials in each sub-family: see `LOCKABLE_BLOCKS_REFERENCE.md`.
-
----
-
-## Item frames
-
-Item frames (`ITEM_FRAME`, `GLOW_ITEM_FRAME`) are entities, not blocks. They do not appear in
-`blocks.yml` and are not part of any family. Protection is always active via `ItemFrameListener`.
-See `LOCKABLE_BLOCKS_REFERENCE.md` — "Item frames" section for details.
