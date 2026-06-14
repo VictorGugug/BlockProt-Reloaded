@@ -1,6 +1,8 @@
 # Lockable Blocks Reference — BlockProt Reloaded
 
-Complete list of every block that can be locked, organized by family and sub-family.
+![LOCKABLE BLOCKS REFERENCE](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/LOCKABLE%20BLOCKS%20REFERENCE.png)
+
+Complete list of every block and entity that can be locked, organized by family and sub-family.
 Covers all Minecraft versions up to 1.21.x / 26.1 (The Copper Age).
 
 For the family expression syntax used in modern mode: see `BLOCK_FAMILY_SYNTAX.md`.
@@ -37,15 +39,16 @@ and a count of how many blocks are currently active vs inactive.
 
 ## Families overview
 
-| Config key                | Family tag      | Sub-families                                              |
-|---------------------------|-----------------|-----------------------------------------------------------|
-| `lockable_tile_entities`  | `TILE_ENTITIES` | `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN`  |
-| `lockable_shulker_boxes`  | `SHULKER_BOXES` | `SHULKERS`                                                |
-| `lockable_blocks`         | `BLOCKS`        | `ANVIL`, `CAULDRON`, `FENCE_GATE`, `TRAPDOOR`, `WORKSTATION` |
-| `lockable_doors`          | `DOORS`         | `DOORS`                                                   |
-| `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`      |
+| Config key                | Family tag      | Sub-families                                                                    |
+|---------------------------|-----------------|---------------------------------------------------------------------------------|
+| `lockable_tile_entities`  | `TILE_ENTITIES` | `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN`                        |
+| `lockable_shulker_boxes`  | `SHULKER_BOXES` | `SHULKERS`                                                                      |
+| `lockable_blocks`         | `BLOCKS`        | `ANVIL`, `CAULDRON`, `FENCE_GATE`, `TRAPDOOR`, `WORKSTATION`                   |
+| `lockable_doors`          | `DOORS`         | `DOORS`                                                                         |
+| `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES`            |
 
-`lockable_entities` uses entity NBT, not block NBT. Family expressions are fully supported.
+`lockable_entities` uses entity NBT (persistent data container), not block NBT. Family expressions are fully supported.
+All entity sub-families are **disabled by default** — the `lockable_entities` list ships empty. Add entries to enable.
 
 ---
 
@@ -217,7 +220,8 @@ Token: `*-CAULDRON`
 
 Token: `*-WORKSTATION`
 
-Blocks non-owners from opening the GUI.
+Blocks non-owners from opening the GUI. A villager linked to a protected workstation is also
+protected — see the [Entity protection](#entity-protection) section below.
 
 | Material | MC version |
 |---|---|
@@ -328,16 +332,27 @@ Token: `*-DOORS` (also matches `[*]`)
 
 ## lockable_entities
 
-Boats and minecarts that carry inventories. Protection is stored as entity NBT and survives
-being broken and re-placed as long as the item's NBT is preserved.
+Storage entities and item frames. Protection is stored in the entity's persistent data container
+(PDC) via NBT-API and survives chunk reloads and server restarts. It does NOT survive the entity
+being killed (the entity ceases to exist; protection data goes with it).
 
-Present in `blocks.yml` as an empty list by default — add material names or family expressions
-to enable entity protection. The Entities section of `/bp lockables` only appears when at
-least one entity type is active.
+**Default state:** `lockable_entities` ships as an empty list. No entity type is protected until
+an admin adds it to `blocks.yml`. This is intentional — entity protection has a higher
+performance profile than block protection because entities are not indexed by chunk the same way.
+
+To enable all entity types:
+```yaml
+lockable_entities:
+  - "[*]"
+```
 
 ### Sub-family: CHEST_BOATS
 
 Token: `*-CHEST_BOATS`
+
+Protects the inventory from player access and hopper-pipeline extraction.
+`ChestBoat` is resolved at runtime via reflection to support both 1.20.x
+(`org.bukkit.entity.ChestBoat`) and 1.21+ (`org.bukkit.entity.boat.ChestBoat`).
 
 | Material | MC version |
 |---|---|
@@ -356,6 +371,8 @@ Token: `*-CHEST_BOATS`
 
 Token: `*-CHEST_MINECARTS`
 
+Protects the inventory from player access and hopper-pipeline extraction.
+
 | Material | MC version |
 |---|---|
 | `CHEST_MINECART` | 1.0 |
@@ -364,18 +381,90 @@ Token: `*-CHEST_MINECARTS`
 
 Token: `*-HOPPER_MINECARTS`
 
+Protects the inventory from player access and disables item-collection by the minecart.
+
 | Material | MC version |
 |---|---|
 | `HOPPER_MINECART` | 1.5 |
 
-Example `blocks.yml` expressions:
+### Sub-family: ITEM_FRAMES
+
+Token: `*-ITEM_FRAMES`
+
+Item frames and glowing item frames use entity PDC for protection. They are part of the
+`ENTITIES` family and are shown in `/bp lockables`. They are **disabled by default** (not in
+`lockable_entities`). Enable them by adding `ITEM_FRAME` and/or `GLOW_ITEM_FRAME` to
+`blocks.yml`, or use the sub-family token `*-ITEM_FRAMES`.
+
+| Material | MC version | Notes |
+|---|---|---|
+| `ITEM_FRAME` | 1.4 | Standard item frame. |
+| `GLOW_ITEM_FRAME` | 1.17 | Glowing variant, always illuminated. |
+
+**How to protect an item frame:**
+
+1. Sneak and right-click the frame with an empty hand.
+2. The BlockProt protection menu opens (owner assignment, friends).
+3. Once protected: non-owners cannot rotate or swap the displayed item, and cannot break the frame.
+
+**Admin override:** players with `blockprot.user.admin` always bypass frame protection.
+
+Example `blocks.yml` to enable all entity types including frames:
 ```yaml
 lockable_entities:
-  - "[*]"                                          # all entity types
-  - "[*-CHEST_BOATS]"                              # only chest boats
-  - "[*-CHEST_MINECARTS *-HOPPER_MINECARTS]"       # minecarts only
-  - "[*-CHEST_BOATS -BAMBOO_CHEST_BOAT]"           # all boats except bamboo
+  - "[*]"
 ```
+
+Enable only storage vehicles and keep frames disabled:
+```yaml
+lockable_entities:
+  - "[*-CHEST_BOATS *-CHEST_MINECARTS *-HOPPER_MINECARTS]"
+```
+
+---
+
+## Entity protection
+
+Entity protection covers tamed animals and villagers linked to protected workstations.
+Configured under `entity_protection` in `config.yml` (legacy key: `pet_protection`).
+
+```yaml
+entity_protection:
+  enabled: false              # master switch
+  auto_protect_on_tame: true  # auto-protect newly tamed animals
+  villager_locate_seconds: 6  # duration (1-10 s) of the particle locate effect
+```
+
+### Tamed animals
+
+When `entity_protection.enabled: true`, owners can open the entity protection menu
+by right-clicking their tamed pet with the configured menu item (default: stick).
+
+Protection flags per pet:
+- `no_damage` — blocks damage from non-owners (player attacks and projectiles)
+- `no_interact` — blocks right-click (feeding, naming, etc.)
+- `no_leash` — blocks leashing/unleashing by non-owners
+- `no_pickup` — blocks parrot-on-shoulder pickup by non-owners
+
+Death notification: if the owner is online when a protected pet dies, they receive a chat message.
+
+### Villagers linked to workstations
+
+When a villager's job site (stored in its memory) points to a protected workstation block, the
+villager inherits protection from the block owner. No explicit configuration is needed — it is
+automatic whenever the workstation block is locked.
+
+Protected actions:
+- Damage by non-owners (attacks and projectiles)
+- Right-click interaction (trading GUI) by non-owners
+- Breaking blocks within a 2×1×2 area around the workstation (horizontal 2, vertical 1)
+
+**Locate villager button:**
+
+In the BlockProt lock menu for a protected workstation, an Emerald button appears. Clicking it
+closes the menu and starts a particle effect on the linked villager for `villager_locate_seconds`
+(default 6, max 10). The particles are only visible to the player who clicked the button.
+If no villager is linked to the workstation, nothing happens.
 
 ---
 
@@ -412,31 +501,3 @@ Other useful modern expressions:
     - "[*-SHULKERS *-CHEST]"             # shulkers + all chest variants
     - "[*-SHULKERS -WHITE_SHULKER_BOX]"  # shulkers except white
 ```
-
----
-
-## Item frames (entity protection, always active)
-
-Item frames and glowing item frames are protected by `ItemFrameListener`. They are entities,
-not blocks, so they do not appear in `blocks.yml` and cannot be toggled per-world. The feature
-is always active.
-
-| Entity type | MC version | Notes |
-|---|---|---|
-| `ITEM_FRAME` | 1.4 | Standard item frame. |
-| `GLOW_ITEM_FRAME` | 1.17 | Glowing variant, always illuminated. |
-
-**How to protect an item frame:**
-
-1. Sneak and right-click the frame with an empty hand.
-2. The BlockProt protection menu opens.
-3. Assign the frame to yourself as owner. Add friends if needed.
-4. Once protected: non-owners cannot rotate or swap the displayed item, and cannot break the frame.
-
-**ImageFrame compatibility:**
-
-Frames placed by the ImageFrame plugin carry a creator UUID in their NBT. BlockProt reads this
-tag and treats the creator as the owner on first access, so multi-map image displays are
-automatically protected without any extra configuration.
-
-**Admin override:** players with `blockprot.user.admin` always bypass frame protection.

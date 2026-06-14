@@ -213,16 +213,14 @@ public final class LockablesInventory extends BlockProtInventory {
             }
         }
 
-        // Entity family: only include if at least one entity is active in the config.
-        // When lockable_entities is empty or commented out, the Entities category is hidden
-        // entirely rather than showing a section full of INACTIVE items.
+        // Entity family: always include supported entities, including inactive ones.
+        // This keeps /bp lockables useful when entity protection is disabled by default.
         List<Entry> entityEntries = new ArrayList<>();
         for (Material m : BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.ENTITIES)) {
             boolean active = cfg.isLockableEntity(m);
             entityEntries.add(Entry.block(m, active));
         }
-        boolean hasActiveEntities = entityEntries.stream().anyMatch(Entry::active);
-        if (hasActiveEntities) {
+        if (!entityEntries.isEmpty()) {
             entityEntries.sort(Comparator
                 .<Entry, Boolean>comparing(e -> !e.active())
                 .thenComparing(e -> e.material() != null ? e.material().name() : ""));
@@ -347,6 +345,7 @@ public final class LockablesInventory extends BlockProtInventory {
             Material fallback = Material.matchMaterial("OAK_CHEST_BOAT");
             return fallback != null ? fallback : Material.CHEST;
         }
+        if (name.equals("ITEM_FRAME") || name.equals("GLOW_ITEM_FRAME")) return mat;
         return mat;
     }
 

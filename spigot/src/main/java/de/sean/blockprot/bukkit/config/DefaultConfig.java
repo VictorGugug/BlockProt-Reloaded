@@ -300,7 +300,8 @@ public final class DefaultConfig extends BlockProtConfig {
         loadBlockListFromConfig("lockable_entities", lockableEntities, inactiveEntities,
             BlockFamilyParser.Family.ENTITIES, m -> {
                 String name = m.name();
-                return name.contains("CHEST_BOAT") || name.equals("CHEST_MINECART") || name.equals("HOPPER_MINECART");
+                return name.contains("CHEST_BOAT") || name.equals("CHEST_MINECART") || name.equals("HOPPER_MINECART")
+                    || name.equals("ITEM_FRAME") || name.equals("GLOW_ITEM_FRAME");
             });
     }
 
@@ -553,18 +554,36 @@ public final class DefaultConfig extends BlockProtConfig {
     // ── Pet protection ────────────────────────────────────────────────────────
 
     public boolean isPetProtectionEnabled() {
-        return config.getBoolean("pet_protection.enabled", false);
+        return getEntityProtectionBoolean("enabled", false);
     }
 
     public boolean isPetAutoProtectOnTame() {
-        return config.getBoolean("pet_protection.auto_protect_on_tame", true);
+        return getEntityProtectionBoolean("auto_protect_on_tame", true);
     }
 
     @NotNull
     public Material getPetMenuItem() {
-        String raw = config.getString("pet_protection.menu_item", "STICK");
+        String raw = getEntityProtectionString("menu_item", "STICK");
         Material m = Material.matchMaterial(raw == null ? "STICK" : raw);
         return m == null ? Material.STICK : m;
+    }
+
+    public int getVillagerLocateSeconds() {
+        return Math.max(1, Math.min(10, config.getInt("entity_protection.villager_locate_seconds",
+            config.getInt("pet_protection.villager_locate_seconds", 6))));
+    }
+
+    private boolean getEntityProtectionBoolean(@NotNull String leaf, boolean def) {
+        String modern = "entity_protection." + leaf;
+        if (config.contains(modern)) return config.getBoolean(modern, def);
+        return config.getBoolean("pet_protection." + leaf, def);
+    }
+
+    @Nullable
+    private String getEntityProtectionString(@NotNull String leaf, @NotNull String def) {
+        String modern = "entity_protection." + leaf;
+        if (config.contains(modern)) return config.getString(modern, def);
+        return config.getString("pet_protection." + leaf, def);
     }
 
     @NotNull

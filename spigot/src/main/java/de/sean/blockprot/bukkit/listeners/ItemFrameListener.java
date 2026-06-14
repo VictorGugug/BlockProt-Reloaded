@@ -19,13 +19,16 @@
 package de.sean.blockprot.bukkit.listeners;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.inventories.BlockLockInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.GlowItemFrame;
 import org.bukkit.entity.ItemFrame;
@@ -66,6 +69,7 @@ public final class ItemFrameListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onFrameInteract(@NotNull PlayerInteractEntityEvent event) {
         if (!(event.getRightClicked() instanceof ItemFrame frame)) return;
+        if (!isFrameProtectionEnabled(frame)) return;
 
         Player player = event.getPlayer();
         if (BlockProt.getDefaultConfig().isWorldExcluded(player.getWorld())) return;
@@ -101,6 +105,12 @@ public final class ItemFrameListener implements Listener {
                     || player.hasPermission(Permissions.USER_ADMIN.key())) return;
             event.setCancelled(true);
             sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            AuditLogger audit = BlockProt.getAuditLogger();
+            if (audit != null) {
+                audit.log(player.getUniqueId(), player.getName(), frame.getLocation(), AuditLogger.Action.ACCESS_DENIED);
+            }
+            BlockProtLogger.log("entity-protection", "ACCESS_DENIED frame interact: "
+                + frame.getType().name() + " entity=" + frame.getUniqueId() + " player=" + player.getName());
         }
     }
 
@@ -110,6 +120,7 @@ public final class ItemFrameListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onFrameBreakByPlayer(@NotNull HangingBreakByEntityEvent event) {
         if (!(event.getEntity() instanceof ItemFrame frame)) return;
+        if (!isFrameProtectionEnabled(frame)) return;
         if (!(event.getRemover() instanceof Player player)) return;
 
         if (BlockProt.getDefaultConfig().isWorldExcluded(player.getWorld())) return;
@@ -121,6 +132,8 @@ public final class ItemFrameListener implements Listener {
                 && !player.hasPermission(Permissions.USER_ADMIN.key())) {
             event.setCancelled(true);
             sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            BlockProtLogger.log("entity-protection", "ACCESS_DENIED frame break: "
+                + frame.getType().name() + " entity=" + frame.getUniqueId() + " player=" + player.getName());
         }
     }
 
@@ -130,6 +143,7 @@ public final class ItemFrameListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onFrameDamageByEntity(@NotNull EntityDamageByEntityEvent event) {
         if (!(event.getEntity() instanceof ItemFrame frame)) return;
+        if (!isFrameProtectionEnabled(frame)) return;
         if (!(event.getDamager() instanceof Player player)) return;
 
         if (BlockProt.getDefaultConfig().isWorldExcluded(player.getWorld())) return;
@@ -141,7 +155,14 @@ public final class ItemFrameListener implements Listener {
                 && !player.hasPermission(Permissions.USER_ADMIN.key())) {
             event.setCancelled(true);
             sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            BlockProtLogger.log("entity-protection", "ACCESS_DENIED frame damage: "
+                + frame.getType().name() + " entity=" + frame.getUniqueId() + " player=" + player.getName());
         }
+    }
+
+    private boolean isFrameProtectionEnabled(@NotNull ItemFrame frame) {
+        Material mat = frame instanceof GlowItemFrame ? Material.GLOW_ITEM_FRAME : Material.ITEM_FRAME;
+        return BlockProt.getDefaultConfig().isLockableEntity(mat, frame.getWorld());
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String text) {

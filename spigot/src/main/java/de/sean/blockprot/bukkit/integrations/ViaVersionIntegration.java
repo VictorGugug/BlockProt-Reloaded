@@ -9,10 +9,22 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Integration for the ViaVersion plugin family.
+ *
+ * <p>Detects ViaVersion as the primary protocol translator. Additionally probes for
+ * ViaBackwards and ViaRewind, which allow clients on older protocol versions to join
+ * newer servers. All three are logged on enable so the session log clearly shows
+ * which protocol bridges are active.</p>
+ *
+ * <p>Protocol version lookup always goes through the ViaVersion API regardless of
+ * whether ViaBackwards or ViaRewind are present — they share the same API surface.</p>
+ */
 public final class ViaVersionIntegration extends PluginIntegration {
 
     private boolean enabled = false;
 
+    /** ViaVersion main API class — always present when ViaVersion is active. */
     private static final String VIA_API_CLASS = "com.viaversion.viaversion.api.Via";
 
     public ViaVersionIntegration() {
@@ -40,13 +52,39 @@ public final class ViaVersionIntegration extends PluginIntegration {
         try {
             Class.forName(VIA_API_CLASS);
             enabled = true;
+
+            String viaVer = via.getPluginMeta().getVersion();
             BlockProtLogger.log("integration",
                 Translator.get(TranslationKey.CONSOLE__VIAVERSION_DETECTED)
-                    .replace("{version}", via.getDescription().getVersion()));
+                    .replace("{version}", viaVer));
+
+            // Log companion plugins — they extend ViaVersion but share its API.
+            probeCompanion("ViaBackwards");
+            probeCompanion("ViaRewind");
+
         } catch (ClassNotFoundException ignored) {
             BlockProtLogger.log("integration",
                 Translator.get(TranslationKey.CONSOLE__VIAVERSION_API_MISSING));
         }
+    }
+
+    /**
+     * Logs a companion plugin (ViaBackwards, ViaRewind) if installed and enabled.
+     * Does not affect the enabled flag — detection is informational only.
+     */
+    private void probeCompanion(@NotNull String pluginName) {
+        Plugin plugin = BlockProt.getInstance().getPlugin(pluginName);
+        if (plugin == null || !plugin.isEnabled()) return;
+        String ver;
+        try {
+            ver = plugin.getPluginMeta().getVersion();
+        } catch (NoSuchMethodError e) {
+            @SuppressWarnings("deprecation")
+            String fallback = plugin.getDescription().getVersion();
+            ver = fallback;
+        }
+        BlockProtLogger.log("integration", pluginName + " detected — v" + ver
+            + " (extends ViaVersion protocol translation)");
     }
 
     @Override
@@ -57,9 +95,10 @@ public final class ViaVersionIntegration extends PluginIntegration {
 
     /**
      * Returns a human-readable MC version string for the player's client.
-     * Uses ViaVersion protocol map to convert protocol number to version string.
+     *
+     * <p>Uses ViaVersion protocol map to convert protocol number to version string.
      * Returns the server MC version string when ViaVersion is not active or the
-     * player is on the same version as the server.
+     * player is on the same version as the server.</p>
      */
     @NotNull
     public String getPlayerVersionString(@NotNull Player player) {
@@ -76,17 +115,69 @@ public final class ViaVersionIntegration extends PluginIntegration {
         }
     }
 
+    /**
+     * Returns the raw protocol version integer for the given player, or -1 if
+     * ViaVersion is not active or the lookup fails.
+     */
     public int getPlayerProtocolVersion(@NotNull Player player) {
         if (!enabled) return -1;
         try {
-            Class<?> viaClass   = Class.forName(VIA_API_CLASS);
-            Object   viaApi     = viaClass.getMethod("getAPI").invoke(null);
-            Object   playerInfo = viaApi.getClass()
-                .getMethod("getPlayerVersion", Player.class)
-                .invoke(viaApi, player);
-            return playerInfo instanceof Integer i ? i : -1;
-        } catch (Exception ignored) {
-            return -1;
+            Class<?> viaClass = Class.forName(VIA_API_CLASS);
+            Object   viaApi   = viaClass.getMethod("getAPI").invoke(null);
+            // Try UUID-based lookup first (preferred), then Player-based fallback.
+            try {
+                Object result = viaApi.getClass()
+                    .getMethod("getPlayerVersion", java.util.UUID.class)
+                    .invoke(viaApi, player.getUniqueId());
+                if (result instanceof Integer i) return i;
+            } catch (Exception e) {
+                try {
+                    Object result = viaApi.getClass()
+                        .getMethod("getPlayerVersion", Object.class)
+                        .invoke(viaApi, player);
+                    if (result instanceof Integer i) return i;
+                } catch (Exception e2) {
+                    Object result = viaApi.getClass()
+                        .getMethod("getPlayerVersion", Player.class)
+                        .invoke(viaApi, player);
+                    if (result instanceof Integer i) return i;
+                }
+            }
+        } catch (Exception ignored) {}
+        return -1;
+    }
+
+    /**
+     * Returns a summary string listing ViaVersion and any active companion plugins.
+     * Used by the debug command and integrations menu.
+     */
+    @NotNull
+    public String getDetailedStatus() {
+        if (!enabled) return "ViaVersion: not detected";
+        StringBuilder sb = new StringBuilder("ViaVersion");
+        Plugin via = getPlugin();
+        if (via != null) {
+            try { sb.append(" v").append(via.getPluginMeta().getVersion()); }
+            catch (NoSuchMethodError e) {
+                @SuppressWarnings("deprecation")
+                String fallback = via.getDescription().getVersion();
+                sb.append(" v").append(fallback);
+            }
+        }
+        appendCompanion(sb, "ViaBackwards");
+        appendCompanion(sb, "ViaRewind");
+        return sb.toString();
+    }
+
+    private void appendCompanion(@NotNull StringBuilder sb, @NotNull String name) {
+        Plugin p = BlockProt.getInstance().getPlugin(name);
+        if (p == null || !p.isEnabled()) return;
+        sb.append(" + ").append(name);
+        try { sb.append(" v").append(p.getPluginMeta().getVersion()); }
+        catch (NoSuchMethodError e) {
+            @SuppressWarnings("deprecation")
+            String fallback = p.getDescription().getVersion();
+            sb.append(" v").append(fallback);
         }
     }
 }

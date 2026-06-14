@@ -23,6 +23,7 @@ import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -33,6 +34,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -76,6 +78,7 @@ public final class RaidDetectionListener implements Listener {
      * Persists across reloads in memory only — not written to disk.
      */
     private static final Map<UUID, java.util.List<String>> pendingAlerts = new HashMap<>();
+    private static final UUID ENVIRONMENT_UUID = new UUID(0L, 0L);
 
     /** Returns and clears all pending alerts for the given player UUID. */
     @Nullable
@@ -83,13 +86,13 @@ public final class RaidDetectionListener implements Listener {
         return pendingAlerts.remove(uuid);
     }
 
-    @EventHandler(ignoreCancelled = false)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void onBlockExplode(@NotNull BlockExplodeEvent event) {
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
         checkBlocks(event.blockList(), null, event.getBlock().getLocation());
     }
 
-    @EventHandler(ignoreCancelled = false)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = false)
     public void onEntityExplode(@NotNull EntityExplodeEvent event) {
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getEntity().getWorld())) return;
         checkBlocks(event.blockList(), event.getEntity(), event.getLocation());
@@ -122,6 +125,14 @@ public final class RaidDetectionListener implements Listener {
             BlockProtLogger.log(logLine);
 
             if (!handler.isProtected()) continue;
+
+            AuditLogger audit = BlockProt.getAuditLogger();
+            if (audit != null) {
+                UUID actorUuid = source instanceof Player p ? p.getUniqueId() : ENVIRONMENT_UUID;
+                audit.log(actorUuid, actorDisplay, loc, AuditLogger.Action.RAID_EXPLOSION);
+            }
+            BlockProtLogger.log("raid-detection", "RAID_EXPLOSION audit queued for protected "
+                + material + " at " + world + " [" + x + "," + y + "," + z + "] actor=" + actorDisplay);
 
             String ownerUuid = handler.getOwner();
             if (ownerUuid == null || ownerUuid.isBlank()) continue;

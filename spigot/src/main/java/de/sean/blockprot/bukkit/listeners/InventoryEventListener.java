@@ -29,15 +29,20 @@ import de.sean.blockprot.bukkit.events.BlockAccessEvent;
 import de.sean.blockprot.bukkit.inventories.BlockProtInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.FriendHandler;
+import de.sean.blockprot.bukkit.BlockProtLogger;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
 import org.bukkit.block.DoubleChest;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.minecart.HopperMinecart;
+import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -70,6 +75,7 @@ public class InventoryEventListener implements Listener {
     private static final Set<InventoryAction> PLACE_ACTIONS = EnumSet.of(
         InventoryAction.PLACE_ALL, InventoryAction.PLACE_ONE, InventoryAction.PLACE_SOME
     );
+    private static final Class<?> CHEST_BOAT_CLASS = resolveChestBoatClass();
 
     @EventHandler
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
@@ -88,7 +94,12 @@ public class InventoryEventListener implements Listener {
         } else {
             try {
                 if (event.getInventory().getHolder() == null) return;
-                BlockInventoryHolder blockHolder = (BlockInventoryHolder) event.getInventory().getHolder();
+                InventoryHolder rawHolder = event.getInventory().getHolder();
+                if (rawHolder instanceof Entity entity && isProtectedInventoryEntity(entity)) {
+                    handleEntityInventoryClick(event, player, entity);
+                    return;
+                }
+                BlockInventoryHolder blockHolder = (BlockInventoryHolder) rawHolder;
                 Block block = blockHolder.getBlock();
                 if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
                     BlockNBTHandler handler = new BlockNBTHandler(block);
@@ -172,6 +183,36 @@ public class InventoryEventListener implements Listener {
         String playerUuid = event.getPlayer().getUniqueId().toString();
         InventoryHolder holder = event.getInventory().getHolder();
 
+        if (event.isCancelled()) {
+            if (event.getPlayer() instanceof Player player) {
+                if (holder instanceof Entity entity && isProtectedInventoryEntity(entity)) {
+                    EntityNBTHandler handler = new EntityNBTHandler(entity);
+                    if (handler.isProtected()) {
+                        AuditLogger audit = BlockProt.getAuditLogger();
+                        if (audit != null) {
+                            audit.log(player.getUniqueId(), player.getName(), entity.getLocation(), AuditLogger.Action.ACCESS_DENIED);
+                        }
+                        BlockProtLogger.log("entity-protection", "ACCESS_DENIED (already cancelled) inventory open: "
+                            + entity.getType().name() + " entity=" + entity.getUniqueId() + " player=" + player.getName());
+                    }
+                } else if (holder instanceof Container || holder instanceof DoubleChest) {
+                    Block block = holder instanceof Container container ? container.getBlock() : ((DoubleChest) holder).getLocation().getBlock();
+                    if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
+                        BlockNBTHandler handler = new BlockNBTHandler(block);
+                        if (handler.isProtected()) {
+                            AuditLogger audit = BlockProt.getAuditLogger();
+                            if (audit != null) {
+                                audit.log(player.getUniqueId(), player.getName(), block.getLocation(), AuditLogger.Action.ACCESS_DENIED);
+                            }
+                            BlockProtLogger.log("audit", "ACCESS_DENIED (already cancelled) block open: "
+                                + block.getType().name() + " location=" + block.getLocation() + " player=" + player.getName());
+                        }
+                    }
+                }
+            }
+            return;
+        }
+
         if (holder instanceof BlockProtInventory) {
             InventoryState state = InventoryState.get(playerUuid);
             if (state == null || state.getBlock() == null) return;
@@ -186,6 +227,29 @@ public class InventoryEventListener implements Listener {
                     sendMessage(event.getPlayer(), Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
                 }
             } catch (RuntimeException ignored) {}
+
+        } else if (holder instanceof Entity entity && isProtectedInventoryEntity(entity)
+                && event.getPlayer() instanceof Player player) {
+            EntityNBTHandler handler = new EntityNBTHandler(entity);
+            if (!handler.isProtected()) return;
+
+            if (!(handler.canAccess(playerUuid) || player.hasPermission(Permissions.USER_ADMIN.key()))) {
+                event.setCancelled(true);
+                sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+                AuditLogger audit = BlockProt.getAuditLogger();
+                if (audit != null) {
+                    audit.log(player.getUniqueId(), player.getName(), entity.getLocation(), AuditLogger.Action.ACCESS_DENIED);
+                }
+                BlockProtLogger.log("entity-protection", "ACCESS_DENIED inventory open: "
+                    + entity.getType().name() + " entity=" + entity.getUniqueId() + " player=" + player.getName());
+            } else {
+                AuditLogger audit = BlockProt.getAuditLogger();
+                if (audit != null) {
+                    audit.log(player.getUniqueId(), player.getName(), entity.getLocation(), AuditLogger.Action.OPENED);
+                }
+                BlockProtLogger.log("entity-protection", "OPENED inventory: "
+                    + entity.getType().name() + " entity=" + entity.getUniqueId() + " player=" + player.getName());
+            }
 
         } else if ((holder instanceof Container || holder instanceof DoubleChest)
                 && event.getPlayer() instanceof Player player) {
@@ -203,6 +267,13 @@ public class InventoryEventListener implements Listener {
                 if (accessEvent.isCancelled()) {
                     event.setCancelled(true);
                     sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+                    BlockNBTHandler handler = new BlockNBTHandler(block);
+                    if (handler.isProtected()) {
+                        AuditLogger audit = BlockProt.getAuditLogger();
+                        if (audit != null) {
+                            audit.log(player.getUniqueId(), player.getName(), block.getLocation(), AuditLogger.Action.ACCESS_DENIED);
+                        }
+                    }
                 } else {
                     BlockNBTHandler handler = new BlockNBTHandler(block);
                     if (!accessEvent.shouldBypassProtections()
@@ -231,6 +302,47 @@ public class InventoryEventListener implements Listener {
                 }
             }
         }
+    }
+
+    private static void handleEntityInventoryClick(@NotNull InventoryClickEvent event,
+                                                   @NotNull Player player,
+                                                   @NotNull Entity entity) {
+        EntityNBTHandler handler = new EntityNBTHandler(entity);
+        if (!handler.isProtected()) return;
+        String playerUuid = player.getUniqueId().toString();
+        if (handler.canAccess(playerUuid) || player.hasPermission(Permissions.USER_ADMIN.key())) {
+            if (event.getClickedInventory() != null && event.getClickedInventory().equals(event.getInventory())) {
+                AuditLogger.Action act = TAKE_ACTIONS.contains(event.getAction())
+                    ? AuditLogger.Action.ITEM_TAKEN
+                    : (PLACE_ACTIONS.contains(event.getAction()) ? AuditLogger.Action.ITEM_PLACED : null);
+                AuditLogger audit = BlockProt.getAuditLogger();
+                if (audit != null && act != null) {
+                    audit.log(player.getUniqueId(), player.getName(), entity.getLocation(), act);
+                }
+            }
+            return;
+        }
+
+        event.setCancelled(true);
+        player.closeInventory();
+        AuditLogger audit = BlockProt.getAuditLogger();
+        if (audit != null) {
+            audit.log(player.getUniqueId(), player.getName(), entity.getLocation(), AuditLogger.Action.ACCESS_DENIED);
+        }
+        BlockProtLogger.log("entity-protection", "ACCESS_DENIED inventory click: "
+            + entity.getType().name() + " entity=" + entity.getUniqueId() + " player=" + player.getName());
+    }
+
+    private static boolean isProtectedInventoryEntity(@NotNull Entity entity) {
+        return entity instanceof StorageMinecart
+            || entity instanceof HopperMinecart
+            || (CHEST_BOAT_CLASS != null && CHEST_BOAT_CLASS.isInstance(entity));
+    }
+
+    private static Class<?> resolveChestBoatClass() {
+        try { return Class.forName("org.bukkit.entity.boat.ChestBoat"); } catch (ClassNotFoundException ignored) {}
+        try { return Class.forName("org.bukkit.entity.ChestBoat"); } catch (ClassNotFoundException ignored) {}
+        return null;
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────

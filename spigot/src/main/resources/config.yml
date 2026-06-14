@@ -51,11 +51,13 @@ allow_break_protected_blocks: false
 respect_spawn_protection: true
 
 # ── 4. Pet Protection ────────────────────────────────────────────────────────
-# Master switch. Players with blockprot.user.admin always bypass.
-pet_protection:
+# Renamed from pet_protection. Old pet_protection values are still read as fallback.
+# Master switch for entity protection. Players with blockprot.user.admin always bypass.
+entity_protection:
   enabled: false
   auto_protect_on_tame: true
   menu_item: STICK
+  villager_locate_seconds: 6
 
 # ── 5. Effects ───────────────────────────────────────────────────────────────
 block_lock_effects: true

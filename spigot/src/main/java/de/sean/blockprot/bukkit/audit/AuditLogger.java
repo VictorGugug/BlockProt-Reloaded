@@ -36,6 +36,7 @@ public final class AuditLogger {
         OPENED,          // A player opened (accessed the inventory of) a protected block.
         ITEM_TAKEN,      // A player took an item from a protected block.
         ITEM_PLACED,     // A player placed an item into a protected block.
+        RAID_EXPLOSION,  // An explosion affected or attempted to affect a protected block.
         ADMIN_UNLOCK     // An admin remotely removed the protection from a block (kept for DB compatibility).
     }
 

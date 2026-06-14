@@ -118,6 +118,10 @@ public class BlockEventListener implements Listener {
         if (!isOwner && handler.isProtected()) {
             if (!isAdmin && !BlockProt.getDefaultConfig().shouldAllowBreakProtectedBlocks()) {
                 event.setCancelled(true);
+                de.sean.blockprot.bukkit.audit.AuditLogger audit = BlockProt.getAuditLogger();
+                if (audit != null) {
+                    audit.log(breaker.getUniqueId(), breaker.getName(), event.getBlock().getLocation(), de.sean.blockprot.bukkit.audit.AuditLogger.Action.ACCESS_DENIED);
+                }
             }
         }
 

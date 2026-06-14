@@ -92,14 +92,16 @@ inventories:
     action_opened: "§aOpened"
     action_item_taken: "§eTook item(s)"
     action_item_placed: "§2Placed item(s)"
+    action_raid_explosion: "§cRaid explosion"
     action_unknown: "§7Access"
   pet:
-    settings: "§dPet Settings"
-    protect: "§dPet protection"
+    settings: "§dEntity Settings"
+    protect: "§dEntity protection"
     no_damage: "§cBlock damage"
     no_interact: "§eBlock interaction"
     no_leash: "§6Block leash"
     no_pickup: "§bBlock pickup (parrot)"
+  locate_villager: "§aLocate Linked Villager"
   transfer:
     title: "Transfer: {player}"
     search_prompt: "Player name"

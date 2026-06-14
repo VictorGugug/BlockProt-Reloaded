@@ -21,44 +21,95 @@
 package de.sean.blockprot.bukkit.listeners;
 
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.listeners.HopperEventListener;
+import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ListIterator;
+import java.util.UUID;
 
+/**
+ * Prevents explosions from destroying protected blocks and writes RAID_EXPLOSION
+ * audit entries for every protected block hit by an explosion.
+ *
+ * <p>Detection and owner notifications are handled by {@link RaidDetectionListener},
+ * which runs at {@code LOWEST} priority before this listener removes blocks from the
+ * explosion list. Both listeners receive the same block list; removal here does not
+ * affect the detection pass because LOWEST fires first.</p>
+ */
 public class ExplodeEventListener implements Listener {
-    @EventHandler
+
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onBlockExplode(BlockExplodeEvent event) {
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
-        // BlockExplodeEvent happens *after* the block has exploded
-        checkBlocks(event.blockList().listIterator());
+        checkBlocks(event.blockList().listIterator(), null);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL)
     public void onEntityExplode(EntityExplodeEvent event) {
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getEntity().getWorld())) return;
-        checkBlocks(event.blockList().listIterator());
+        checkBlocks(event.blockList().listIterator(), event.getEntity());
     }
 
-    private void checkBlocks(ListIterator<Block> it) {
+    private void checkBlocks(ListIterator<Block> it, @Nullable Entity source) {
         if (!BlockProt.getDefaultConfig().shouldProtectLockedBlocksFromExplosions()) return;
+
+        String actorName = resolveActorName(source);
+        UUID actorUuid   = (source instanceof Player p) ? p.getUniqueId() : new UUID(0L, 0L);
+
         while (it.hasNext()) {
             Block b = it.next();
-            // Unified lockable check — avoids calling isLockableTileEntity and isLockableBlock separately.
-            if (BlockProt.getDefaultConfig().isLockable(b.getType())) {
-                final BlockNBTHandler handler = new BlockNBTHandler(b);
-                if (handler.isProtected()) {
-                    it.remove();
-                } else {
-                    // Block is lockable but unprotected and will be destroyed — evict cache.
-                    HopperEventListener.invalidate(b);
+            if (!BlockProt.getDefaultConfig().isLockable(b.getType())) continue;
+
+            BlockNBTHandler handler;
+            try {
+                handler = new BlockNBTHandler(b);
+            } catch (RuntimeException ignored) {
+                // Block has no tile entity (e.g. a door or fence gate) — safe to skip.
+                continue;
+            }
+
+            if (handler.isProtected()) {
+                // Remove from explosion list — block is preserved.
+                it.remove();
+
+                // Write audit entry for this block.
+                AuditLogger audit = BlockProt.getAuditLogger();
+                if (audit != null) {
+                    audit.log(actorUuid, actorName, b.getLocation(), AuditLogger.Action.RAID_EXPLOSION);
                 }
+
+                BlockProtLogger.log("raid-detection",
+                    "PROTECTED block saved from explosion: " + b.getType().name()
+                    + " at " + locString(b) + " actor=" + actorName);
+            } else {
+                // Lockable but unprotected — will be destroyed; evict cache.
+                HopperEventListener.invalidate(b);
+
+                BlockProtLogger.log("raid-detection",
+                    "UNPROTECTED lockable destroyed by explosion: " + b.getType().name()
+                    + " at " + locString(b) + " actor=" + actorName);
             }
         }
+    }
+
+    private static String resolveActorName(@Nullable Entity source) {
+        if (source == null) return "environment";
+        if (source instanceof Player p) return p.getName();
+        return source.getType().name();
+    }
+
+    private static String locString(Block b) {
+        String world = b.getWorld().getName();
+        return world + " [" + b.getX() + "," + b.getY() + "," + b.getZ() + "]";
     }
 }

@@ -19,9 +19,11 @@
 package de.sean.blockprot.bukkit.listeners;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.inventories.BlockLockInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
@@ -33,8 +35,14 @@ import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.projectiles.ProjectileSource;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Handles protection for chest boats and storage / hopper minecarts.
@@ -43,8 +51,11 @@ import org.jetbrains.annotations.NotNull;
  * hand the BlockProt protection menu opens (identical UX to blocks). Once
  * protected, the inventory is inaccessible to non-owners/friends.</p>
  *
- * <p>Entity destruction (killing the vehicle) by non-owners is blocked via
- * {@link EntityEventListener}.</p>
+ * <p>Entity destruction (killing the vehicle) by non-owners is blocked.</p>
+ *
+ * <p>Hopper-pipeline extraction is also blocked: when a hopper or hopper minecart
+ * attempts to pull items from a protected storage/hopper minecart or chest boat,
+ * the {@link InventoryMoveItemEvent} is cancelled.</p>
  */
 public final class VehicleProtectionListener implements Listener {
 
@@ -75,7 +86,6 @@ public final class VehicleProtectionListener implements Listener {
     public void onVehicleInteract(@NotNull PlayerInteractEntityEvent event) {
         Entity entity = event.getRightClicked();
 
-        // Only handle chest boats, storage minecarts, and hopper minecarts.
         boolean isChestBoat    = CHEST_BOAT_CLASS != null && CHEST_BOAT_CLASS.isInstance(entity);
         boolean isStorageCart  = entity instanceof StorageMinecart;
         boolean isHopperCart   = entity instanceof HopperMinecart;
@@ -87,7 +97,6 @@ public final class VehicleProtectionListener implements Listener {
         EntityNBTHandler handler = new EntityNBTHandler(entity);
 
         if (player.isSneaking()) {
-            // Sneaking + empty main hand → open protection menu.
             var mainHand = player.getInventory().getItemInMainHand();
             if (!mainHand.getType().isAir()) return;
 
@@ -107,14 +116,134 @@ public final class VehicleProtectionListener implements Listener {
                 return;
             }
             player.openInventory(inv);
+            BlockProtLogger.log("entity-protection", "OPENED protection menu for: "
+                + entity.getType().name() + " entity=" + entity.getUniqueId() + " player=" + player.getName());
         } else {
-            // Normal right-click → block inventory open if protected and no access.
             if (!handler.isProtected()) return;
             if (handler.canAccess(player.getUniqueId().toString())
                     || player.hasPermission(Permissions.USER_ADMIN.key())) return;
             event.setCancelled(true);
             sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            AuditLogger audit = BlockProt.getAuditLogger();
+            if (audit != null) {
+                audit.log(player.getUniqueId(), player.getName(), entity.getLocation(), AuditLogger.Action.ACCESS_DENIED);
+            }
+            BlockProtLogger.log("entity-protection", "ACCESS_DENIED interact: "
+                + entity.getType().name() + " entity=" + entity.getUniqueId() + " player=" + player.getName());
         }
+    }
+
+    /**
+     * Blocks hopper pipelines from extracting items out of protected storage vehicles.
+     *
+     * <p>Hoppers and hopper minecarts can pull items from the inventory of a
+     * StorageMinecart, HopperMinecart, or ChestBoat via {@link InventoryMoveItemEvent}
+     * without triggering {@link PlayerInteractEntityEvent}. This handler intercepts
+     * that pipeline and cancels it when the source entity is protected.</p>
+     *
+     * <p>Note: the source inventory holder for an entity-backed inventory is the entity
+     * itself (which implements InventoryHolder). We retrieve it and check NBT.</p>
+     */
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onHopperPullFromVehicle(@NotNull InventoryMoveItemEvent event) {
+        InventoryHolder sourceHolder = event.getSource().getHolder();
+        if (sourceHolder == null) return;
+
+        // Only care if the source is a protected vehicle type.
+        if (!(sourceHolder instanceof Entity entity)) return;
+        if (!isProtectedVehicleType(entity)) return;
+
+        if (entity.getWorld() != null && BlockProt.getDefaultConfig().isWorldExcluded(entity.getWorld())) return;
+
+        EntityNBTHandler handler;
+        try {
+            handler = new EntityNBTHandler(entity);
+        } catch (Exception ignored) {
+            return;
+        }
+
+        if (!handler.isProtected()) return;
+
+        // Block all hopper/minecart pipeline extraction from protected vehicles.
+        event.setCancelled(true);
+        BlockProtLogger.log("entity-protection", "BLOCKED hopper pipeline extraction from "
+            + entity.getType().name() + " entity=" + entity.getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onVehicleDamage(@NotNull VehicleDamageEvent event) {
+        Entity vehicle = event.getVehicle();
+        if (!isProtectedVehicleType(vehicle)) return;
+
+        EntityNBTHandler handler = new EntityNBTHandler(vehicle);
+        if (!handler.isProtected()) return;
+
+        Entity attacker = event.getAttacker();
+        if (!canModifyVehicle(attacker, vehicle, handler)) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onVehicleDestroy(@NotNull VehicleDestroyEvent event) {
+        Entity vehicle = event.getVehicle();
+        if (!isProtectedVehicleType(vehicle)) return;
+
+        EntityNBTHandler handler = new EntityNBTHandler(vehicle);
+        if (!handler.isProtected()) return;
+
+        Entity attacker = event.getAttacker();
+        if (!canModifyVehicle(attacker, vehicle, handler)) {
+            event.setCancelled(true);
+        }
+    }
+
+    private boolean isProtectedVehicleType(@NotNull Entity entity) {
+        boolean isChestBoat    = CHEST_BOAT_CLASS != null && CHEST_BOAT_CLASS.isInstance(entity);
+        boolean isStorageCart  = entity instanceof StorageMinecart;
+        boolean isHopperCart   = entity instanceof HopperMinecart;
+        return isChestBoat || isStorageCart || isHopperCart;
+    }
+
+    private boolean canModifyVehicle(@Nullable Entity attacker, @NotNull Entity vehicle, @NotNull EntityNBTHandler handler) {
+        if (attacker == null) {
+            BlockProtLogger.log("entity-protection", "BLOCKED non-entity modification: "
+                + vehicle.getType().name() + " entity=" + vehicle.getUniqueId());
+            return false;
+        }
+
+        Player player = resolvePlayer(attacker);
+        if (player == null) {
+            BlockProtLogger.log("entity-protection", "BLOCKED non-player modification by " + attacker.getType().name()
+                + " on " + vehicle.getType().name() + " entity=" + vehicle.getUniqueId());
+            return false;
+        }
+
+        String playerUuid = player.getUniqueId().toString();
+        if (handler.isOwner(playerUuid) || player.hasPermission(Permissions.USER_ADMIN.key())) {
+            BlockProtLogger.log("entity-protection", "ALLOWED modification by owner/admin " + player.getName()
+                + " on " + vehicle.getType().name() + " entity=" + vehicle.getUniqueId());
+            return true;
+        }
+
+        sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+        AuditLogger audit = BlockProt.getAuditLogger();
+        if (audit != null) {
+            audit.log(player.getUniqueId(), player.getName(), vehicle.getLocation(), AuditLogger.Action.ACCESS_DENIED);
+        }
+        BlockProtLogger.log("entity-protection", "ACCESS_DENIED break/damage by " + player.getName()
+            + " on " + vehicle.getType().name() + " entity=" + vehicle.getUniqueId());
+        return false;
+    }
+
+    @Nullable
+    private Player resolvePlayer(@NotNull Entity attacker) {
+        if (attacker instanceof Player p) return p;
+        if (attacker instanceof org.bukkit.entity.Projectile projectile) {
+            ProjectileSource source = projectile.getShooter();
+            if (source instanceof Player p) return p;
+        }
+        return null;
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String text) {

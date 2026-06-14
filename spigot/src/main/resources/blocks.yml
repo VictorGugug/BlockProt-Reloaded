@@ -21,6 +21,7 @@
 #   lockable_shulker_boxes : SHULKERS
 #   lockable_blocks        : ANVIL, CAULDRON, WORKSTATION, TRAPDOOR, FENCE_GATE
 #   lockable_doors         : DOORS
+#   lockable_entities      : CHEST_BOATS, CHEST_MINECARTS, HOPPER_MINECARTS, ITEM_FRAMES
 #   auto_drop_to_inventory : uses ALL families — tokens like -*SHULKERS are resolved
 #                            against SHULKER_BOXES; [*] expands across all families.
 #                            To disable shulker auto-drop entirely, remove their entries
@@ -184,21 +185,57 @@ lockable_doors:
   - WAXED_WEATHERED_COPPER_DOOR
   - WAXED_OXIDIZED_COPPER_DOOR
 
-# lockable_entities — chest boats, minecarts, and item frames.
-# Item frames (ITEM_FRAME, GLOW_ITEM_FRAME) are virtual — they are entities,
-# not blocks, and do not appear as Materials. Protection is handled separately
-# by ItemFrameListener using EntityNBTHandler. The entries below control only
-# the block-based entity types (minecarts, boats) for /bp lockables display.
+# lockable_entities — storage vehicles and item frames.
+# ALL entity types are DISABLED by default. This list ships empty.
+# Add material names or family expressions below to enable protection.
 #
-# To enable chest boat and minecart protection:
+# Supported types and their sub-families:
+#   ITEM_FRAMES  : ITEM_FRAME, GLOW_ITEM_FRAME
+#   CHEST_MINECARTS  : CHEST_MINECART
+#   HOPPER_MINECARTS : HOPPER_MINECART
+#   CHEST_BOATS      : CHEST_BOAT, OAK_CHEST_BOAT, SPRUCE_CHEST_BOAT,
+#                      BIRCH_CHEST_BOAT, JUNGLE_CHEST_BOAT, ACACIA_CHEST_BOAT,
+#                      DARK_OAK_CHEST_BOAT, MANGROVE_CHEST_BOAT,
+#                      CHERRY_CHEST_BOAT, BAMBOO_CHEST_BOAT
+#
+# Entity protection is stored in the entity's Persistent Data Container (PDC).
+# Protection survives chunk reloads and server restarts but is lost permanently
+# when the entity is killed (entity ceases to exist; no block to attach NBT to).
+#
+# Item frame protection:
+#   When ITEM_FRAME or GLOW_ITEM_FRAME is listed here, players can sneak +
+#   right-click a frame with an empty hand to open the BlockProt protection menu.
+#   Once protected, non-owners cannot rotate, replace, or break the frame.
+#   Players with blockprot.user.admin always bypass frame protection.
+#   Item frames appear in /bp lockables under the ENTITIES family (INACTIVE by default).
+#
+# Vehicle protection:
+#   Chest minecarts and chest boats with a listed material are protected against
+#   player inventory access AND hopper-pipeline extraction.
+#   Hopper minecarts are protected against player access; their item-collection
+#   behavior from the ground is not affected.
+#
+# Migration note: existing servers that do not have this key in their blocks.yml
+#   will have it patched in automatically (empty list) on next startup.
+#   All existing protections are preserved; no data loss occurs.
+#
+# Enable all entity types:
+#   lockable_entities:
+#     - '[*]'
+#
+# Enable only storage vehicles:
+#   lockable_entities:
+#     - '[*-CHEST_BOATS *-CHEST_MINECARTS *-HOPPER_MINECARTS]'
+#
+# Enable only item frames:
+#   lockable_entities:
+#     - '[*-ITEM_FRAMES]'
+#
+# Enable specific materials only:
 #   lockable_entities:
 #     - CHEST_MINECART
-#     - HOPPER_MINECART
-#     - OAK_CHEST_BOAT
-#     - '[*-CHEST_BOATS]'      # all chest boat variants
-#
-# Item frame protection is always active via ItemFrameListener.
-# Leave empty or commented out to disable minecart/boat entity protection.
+#     - ITEM_FRAME
+#     - GLOW_ITEM_FRAME
 lockable_entities: []
 
 # Auto-drop shulker boxes directly to the breaker's inventory on break.

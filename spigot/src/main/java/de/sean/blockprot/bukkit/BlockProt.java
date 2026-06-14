@@ -275,6 +275,7 @@ public final class BlockProt extends JavaPlugin {
         // immediately when disabled, adding zero overhead when the feature is off.
         registerEvent(pm, new PetProtectionListener());
         registerEvent(pm, new PetMenuOpenListener());
+        registerEvent(pm, new VillagerWorkstationProtectionListener());
         // ── Entity protection listeners (item frames, chest boats, minecarts) ──
         registerEvent(pm, new ItemFrameListener());
         registerEvent(pm, new VehicleProtectionListener());
@@ -456,6 +457,17 @@ public final class BlockProt extends JavaPlugin {
             userValues.set("per_worlds_config", userValues.getBoolean("worlds_config_enabled", false));
             userValues.set("worlds_config_enabled", null);
             BlockProtLogger.log("config-migrate", "Migrated 'worlds_config_enabled' -> 'per_worlds_config'");
+        }
+        if (userValues.contains("pet_protection") && !userValues.contains("entity_protection")) {
+            userValues.set("entity_protection.enabled", userValues.getBoolean("pet_protection.enabled", false));
+            userValues.set("entity_protection.auto_protect_on_tame",
+                userValues.getBoolean("pet_protection.auto_protect_on_tame", true));
+            userValues.set("entity_protection.menu_item",
+                userValues.getString("pet_protection.menu_item", "STICK"));
+            userValues.set("entity_protection.villager_locate_seconds",
+                userValues.getInt("pet_protection.villager_locate_seconds", 6));
+            userValues.set("pet_protection", null);
+            BlockProtLogger.log("config-migrate", "Migrated 'pet_protection' -> 'entity_protection'");
         }
 
         int added = 0;
