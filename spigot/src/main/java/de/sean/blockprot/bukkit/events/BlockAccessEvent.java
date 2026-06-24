@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -31,8 +31,6 @@ import org.jetbrains.annotations.NotNull;
  * Called when a player is trying to access a block and its contents.
  * This event implements {@link Cancellable} and if cancelled, the
  * access to the block is blocked.
- *
- * @since 0.4.0
  */
 public final class BlockAccessEvent extends BlockEvent implements Cancellable {
     private static final HandlerList HANDLERS = new HandlerList();
@@ -43,12 +41,6 @@ public final class BlockAccessEvent extends BlockEvent implements Cancellable {
     private boolean isCancelled;
     private boolean bypassProtections;
 
-    /**
-     * @param block  The block that was placed.
-     * @param player The player that placed the block.
-     * @see BlockAccessEvent
-     * @since 0.4.0
-     */
     public BlockAccessEvent(@NotNull final Block block,
                             @NotNull final Player player) {
         super(block);
@@ -64,51 +56,25 @@ public final class BlockAccessEvent extends BlockEvent implements Cancellable {
         return HANDLERS;
     }
 
-    /**
-     * The player that is trying to access this block.
-     *
-     * @return The Bukkit player.
-     * @since 0.4.0
-     */
     @NotNull
     public Player getPlayer() {
         return player;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isCancelled() {
         return this.isCancelled;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setCancelled(final boolean cancel) {
         this.isCancelled = cancel;
     }
 
-    /**
-     * Whether the plugin should still check if the requesting player
-     * actually owns this block, or that the player has some privileges
-     * to be able to ignore any protections.
-     * 
-     * @since 1.0.0
-     */
     public boolean shouldBypassProtections() {
         return this.bypassProtections;
     }
 
-    /**
-     * Set whether the player can bypass protections. Use this with caution,
-     * as some shady plugin might allow specific players to bypass any protections.
-     * 
-     * @see #shouldBypassProtections()
-     * @since 1.0.0
-     */
     public void setBypassProtections(final boolean bypass) {
         this.bypassProtections = bypass;
     }

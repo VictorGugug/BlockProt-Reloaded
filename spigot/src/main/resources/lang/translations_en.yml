@@ -36,12 +36,15 @@ inventories:
   block_lock_expiry_unset: "§7No expiry set"
   block_lock_expiry_set: "§aExpiry active"
   redstone:
-    settings: "Redstone Settings"
+    settings: "Block Settings"
     redstone_protection: "Redstone protection"
     piston_protection: "Piston protection"
     hopper_protection: "Hopper protection"
     enable_all: "Enable all"
     disable_all: "Disable all"
+  block_settings:
+    title: "Block Settings"
+    owner_only_movement: "Owner-only movement"
   friends:
     manage: "Manage Friends"
     edit: "Edit Friend"
@@ -94,7 +97,7 @@ inventories:
     action_item_placed: "§2Placed item(s)"
     action_raid_explosion: "§cRaid explosion"
     action_unknown: "§7Access"
-  pet:
+  entity_settings:
     settings: "§dEntity Settings"
     protect: "§dEntity protection"
     no_damage: "§cBlock damage"
@@ -102,6 +105,9 @@ inventories:
     no_leash: "§6Block leash"
     no_pickup: "§bBlock pickup (parrot)"
   locate_villager: "§aLocate Linked Villager"
+  entity:
+    inspect_contents: "Inspect contents"
+    transfer_not_available: "§7Transfer is not available for this entity type."
   transfer:
     title: "Transfer: {player}"
     search_prompt: "Player name"
@@ -188,7 +194,7 @@ messages:
   unlocked: "Unlocked."
   no_permission: "No permission."
   error_prefix: "§c[BlockProt]: "
-  pet_death_notification: "§c§l[BlockProt] §r§cYour pet §e{pet_name}§c has died."
+  entity_death_notification: "§c§l[BlockProt] §r§cYour pet §e{pet_name}§c has died."
   friend_added: "Friend added."
   friend_removed: "Friend removed."
   friend_already_added: "Friend already added."
@@ -205,7 +211,7 @@ messages:
   chat_input_prompt: "§eType the player name §7(§bTab§7 suggestions · §aEnter§7 confirm · §c{cancel}§7 cancel):"
   chat_input_cancel_word: "cancel"
   chat_input_cancelled: "§cSearch cancelled."
-  pet_denied: "§c[BlockProt] §rYou do not have permission to interact with this pet."
+  entity_denied: "§c[BlockProt] §rYou do not have permission to interact with this pet."
   lock_on_place_success: "§aBlock protected!"
   friends_searching: "§eSearching for §f{player}§e..."
   friends_addall_success: "§aAdded §f{player}§a as friend in §f{count}§a block(s)."
@@ -359,6 +365,8 @@ console:
   craftbukkit_unsupported: "This plugin does not support CraftBukkit. Please use Spigot or Paper."
   integration_enabled: "Integration enabled: {name}"
   startup_complete: "BlockProt v{version} enabled."
+  auto_reload_disabled: "Auto-reload is disabled (auto_reload_configs: false). Configuration will NOT reload on its own — use /bp reload after every edit."
+  modern_blocks_converted: "blocks.yml converted to modern family expression format (modern_family_blocks: true). Manual edits from now on must use expression syntax."
 
 worlds:
   scan_start: "Scanning worlds... ({count} loaded)"

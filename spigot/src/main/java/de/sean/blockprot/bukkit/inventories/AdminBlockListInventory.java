@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.Permissions;
@@ -33,8 +53,6 @@ public final class AdminBlockListInventory extends BlockProtInventory {
     private @NotNull  String targetName = "?";
 
     public AdminBlockListInventory() {
-        // Defer inventory creation to fill() so targetName is set before
-        // getTranslatedInventoryName() is called.
         super(false);
     }
 
@@ -46,8 +64,6 @@ public final class AdminBlockListInventory extends BlockProtInventory {
         if (title == null || title.isBlank()) title = "Blocks: {player}";
         return title.replace("{player}", targetName);
     }
-
-    // ── click ──────────────────────────────────────────────────────────────
 
     @Override
     public void onClick(@NotNull InventoryClickEvent event, @NotNull InventoryState state) {
@@ -97,16 +113,6 @@ public final class AdminBlockListInventory extends BlockProtInventory {
     @Override
     public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {}
 
-    // ── fill ───────────────────────────────────────────────────────────────
-
-    /**
-     * Populates the inventory.
-     *
-     * @param admin      the admin player who opened this inventory
-     * @param targetName display name of the target player; {@code null} to reuse cached value
-     * @param stat       pre-loaded statistic; {@code null} to reuse cached value
-     * @return the populated {@link Inventory}
-     */
     public Inventory fill(@NotNull Player admin,
                           @Nullable String targetName,
                           @Nullable PlayerBlocksStatistic stat) {
@@ -121,7 +127,7 @@ public final class AdminBlockListInventory extends BlockProtInventory {
         if (state == null) return inventory;
 
         List<LocationListEntry> list   = filteredList();
-        final int               max    = getSize() - 3;   // 51 item slots
+        final int               max    = getSize() - 3;
         int                     offset = max * state.currentPageIndex;
 
         boolean canTp  = admin.hasPermission(Permissions.BLOCKS_TP.key());
@@ -130,7 +136,6 @@ public final class AdminBlockListInventory extends BlockProtInventory {
                 : TranslationKey.INVENTORIES__STATS__LORE_NO_TP);
 
         if (list.isEmpty()) {
-            // Centre slot placeholder
             ItemStack paper = new ItemStack(Material.PAPER);
             ItemMeta  m     = paper.getItemMeta();
             if (m != null) {
@@ -147,7 +152,6 @@ public final class AdminBlockListInventory extends BlockProtInventory {
             }
         }
 
-        // Pagination
         if (state.currentPageIndex > 0) {
             setItemStack(max,     Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
         }
@@ -155,24 +159,10 @@ public final class AdminBlockListInventory extends BlockProtInventory {
             setItemStack(max + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         }
 
-        // Back (always slot 53)
         setItemStack(max + 2, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
         return inventory;
     }
 
-    // ── helpers ────────────────────────────────────────────────────────────
-
-    /**
-     * Returns all stat entries for this player.
-     *
-     * <p>The previous implementation called {@link org.bukkit.block.Block#getType()} on every
-     * entry to filter out AIR blocks, which triggered synchronous chunk loads for unloaded chunks
-     * and silently discarded entries whose chunks were not resident in memory.
-     *
-     * <p>This version shows all stored entries. The on-disk stat list is the authoritative source;
-     * stale entries (broken blocks) are cleaned up by the {@link de.sean.blockprot.bukkit.nbt.StatHandler}
-     * purge scan and should not be hidden by the GUI.
-     */
     private List<LocationListEntry> filteredList() {
         if (statistic == null) return List.of();
         return statistic.get();

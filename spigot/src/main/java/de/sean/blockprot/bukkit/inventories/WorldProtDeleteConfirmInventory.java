@@ -1,12 +1,21 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
- * This file is part of BlockProt Reloaded.
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
  * BlockProt is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package de.sean.blockprot.bukkit.inventories;
@@ -60,16 +69,10 @@ import java.util.stream.Collectors;
  */
 public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
 
-    /** Blocks processed per tick in the chunk-scan fallback to avoid stalling. */
     private static final int BATCH_PER_TICK = 20;
 
-    /**
-     * Per-admin undo snapshot: maps admin UUID → list of snapshots.
-     * Only the most recent deletion per admin is kept.
-     */
     static final Map<UUID, List<ProtectionSnapshot>> UNDO_SNAPSHOTS = new HashMap<>();
 
-    /** Minimum data needed to restore a single block protection. */
     public record ProtectionSnapshot(
         @NotNull Location location,
         @NotNull String ownerUuid,
@@ -82,8 +85,6 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
         super(false);
     }
 
-    // ── BlockProtInventory ─────────────────────────────────────────────────────
-
     @Override
     int getSize() { return 27; }
 
@@ -93,8 +94,6 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
         if (t == null || t.isBlank()) t = "{world}";
         return t.replace("{world}", worldName);
     }
-
-    // ── Click ──────────────────────────────────────────────────────────────────
 
     @Override
     public void onClick(@NotNull InventoryClickEvent event, @NotNull InventoryState state) {
@@ -113,8 +112,6 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
     @Override
     public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {}
 
-    // ── Fill ───────────────────────────────────────────────────────────────────
-
     public Inventory fill(@NotNull Player player, @NotNull String worldName) {
         this.worldName = worldName;
         InventoryState state = InventoryState.builder().build();
@@ -123,8 +120,6 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
         renderSlots(player);
         return inventory;
     }
-
-    // ── Render ─────────────────────────────────────────────────────────────────
 
     private void renderSlots(@NotNull Player player) {
         inventory.clear();
@@ -154,13 +149,6 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
         setItemStack(15, Material.BARRIER, cancelText);
     }
 
-    // ── Execute delete ─────────────────────────────────────────────────────────
-
-    /**
-     * Starts the deletion process entirely on the main thread.
-     * Uses the MySQL index when available (synchronous location list + batched NBT clear).
-     * Falls back to chunk scan with a per-tick batch to avoid stalls.
-     */
     private void executeDelete(@NotNull Player player) {
         World world = Bukkit.getWorld(worldName);
         if (world == null) {
@@ -177,16 +165,13 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
 
         HybridDatabase db = BlockProt.getHybridDatabase();
         if (db != null && db.isEnabled()) {
-            // Database path: get locations async, then clear on main thread in batches
             Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
                 List<Location> locations = db.getBlockIndexByWorld(world.getName());
                 Bukkit.getScheduler().runTask(BlockProt.getInstance(),
                     () -> clearLocationsBatched(player, locations));
             });
         } else {
-            // Chunk-scan fallback: gather tile entities on the main thread in batches
             Chunk[] chunks = world.getLoadedChunks();
-            // Collect all tile-entity locations first (main thread, safe)
             List<Location> locations = new ArrayList<>();
             for (Chunk chunk : chunks) {
                 for (BlockState state : chunk.getTileEntities()) {
@@ -197,13 +182,9 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
         }
     }
 
-    /**
-     * Processes {@code locations} in batches of {@link #BATCH_PER_TICK} per tick,
-     * all on the main thread. Sends the result message when done.
-     */
     private void clearLocationsBatched(@NotNull Player player, @NotNull List<Location> locations) {
         List<ProtectionSnapshot> snapshots = new ArrayList<>();
-        int[] counter = {0}; // cleared count, wrapped for lambda capture
+        int[] counter = {0};
         int[] index   = {0};
 
         new BukkitRunnable() {
@@ -227,7 +208,6 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
                 }
 
                 if (index[0] >= locations.size()) {
-                    // Done
                     cancel();
                     UNDO_SNAPSHOTS.put(player.getUniqueId(), snapshots);
                     int count = counter[0];
@@ -242,8 +222,6 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
             }
         }.runTaskTimer(BlockProt.getInstance(), 0L, 1L);
     }
-
-    // ── Execute undo ───────────────────────────────────────────────────────────
 
     private void executeUndo(@NotNull Player player) {
         List<ProtectionSnapshot> snapshots = UNDO_SNAPSHOTS.remove(player.getUniqueId());
@@ -291,8 +269,6 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
             }
         }.runTaskTimer(BlockProt.getInstance(), 0L, 1L);
     }
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
 
     private void goBackToSelector(@NotNull Player player) {
         InventoryState.remove(player.getUniqueId());

@@ -3,7 +3,7 @@
 **Fork of [BlockProt](https://github.com/spnda/BlockProt) created and maintained by [Zar](https://github.com/VictorGugug).**
 
 Players lock chests, furnaces, and other blocks through a modern GUI — no commands to memorize.
-This fork extends the original NBT core with production-grade features for large or long-running servers.
+This fork extends the original NBT core with stability fixes and additional features for large or long-running servers.
 
 ![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/main_menu.png)
 ![](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/friend_settings.png)
@@ -45,7 +45,7 @@ All additions are **disabled by default**. The upstream NBT core is untouched un
 
 **Config file watcher** — auto-reloads `config.yml`, `worlds.yml`, and lang files on disk change (2 s debounce).
 
-**Hardened security options** — explosion protection, piston blocking, spawn-protection respect, shulker-break NBT clearing.
+**Security options** — explosion protection, piston blocking, spawn-protection respect, shulker-break NBT clearing.
 
 **`/bp help`** — lists all subcommands with short descriptions; aliased as `/bp ayuda`.
 
@@ -53,7 +53,7 @@ All additions are **disabled by default**. The upstream NBT core is untouched un
 
 **Floodgate / Geyser support** — resolves Bedrock player names with configurable username prefixes.
 
-**Self-repair / config key merging** — missing config and lang keys are added from the JAR bundle on every startup; no existing values are overwritten.
+**Config key merging** — missing config and lang keys are added from the JAR bundle on every startup; no existing values are overwritten.
 
 **ClaimChunk integration** — prevents locking in chunks you don't own; optional chunk-owner-only access for unprotected containers.
 

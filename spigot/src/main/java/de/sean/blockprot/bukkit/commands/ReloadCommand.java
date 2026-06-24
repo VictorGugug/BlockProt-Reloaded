@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * This file is part of BlockProt <https://github.com/spnda/BlockProt>.
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
  * BlockProt is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,12 +32,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
+/**
+ * Reloads config, translations, and caches.
+ */
 public class ReloadCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (canUseCommand(sender)) {
-            // Run backup synchronously on the main thread so it finishes before
-            // reloadConfigAndTranslations() has a chance to repair/overwrite any file.
+            // Run backup before reload to preserve the current state.
             new de.sean.blockprot.bukkit.tasks.BackupTask(BlockProt.getInstance().getDataFolder(), true).run();
             BlockProt.getInstance().reloadConfigAndTranslations();
             BlockEventListener.invalidateAllSettings();

@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit.config;
 
 import de.sean.blockprot.bukkit.BlockProtLogger;
@@ -37,10 +57,6 @@ public final class WorldsConfig {
 
     private final Map<String, WorldEntry> worlds = new HashMap<>();
 
-    // -------------------------------------------------------------------------
-    // Build from YamlConfiguration (already loaded from disk)
-    // -------------------------------------------------------------------------
-
     public WorldsConfig(@NotNull YamlConfiguration config) {
         ConfigurationSection section = config.getConfigurationSection("worlds");
         if (section == null) return;
@@ -71,10 +87,6 @@ public final class WorldsConfig {
             worlds.putIfAbsent(namespacedAlias, entry);
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Scan and auto-populate (non-destructive)
-    // -------------------------------------------------------------------------
 
     /**
      * Keys that every world entry must have, in canonical order.
@@ -159,7 +171,6 @@ public final class WorldsConfig {
             String key = "worlds." + world.getName();
 
             if (!disk.contains(key)) {
-                // ── New world: write every required key ───────────────────────
                 disk.set(key + ".enabled", true);
                 disk.set(key + ".auto_drop_to_inventory_enabled", true);
                 if (defaultConfig != null) {
@@ -177,13 +188,12 @@ public final class WorldsConfig {
                     "  + '" + world.getName() + "' added (enabled: true, lists inherited from blocks.yml)");
                 added++;
             } else {
-                // ── Existing world: patch any missing keys only ───────────────
                 ConfigurationSection ws = disk.getConfigurationSection(key);
                 if (ws == null) continue;
 
                 boolean patching = false;
                 for (String required : REQUIRED_WORLD_KEYS) {
-                    if (ws.contains(required)) continue; // already set — do not touch
+                    if (ws.contains(required)) continue;
 
                     patching = true;
                     if (required.equals("enabled")) {
@@ -191,7 +201,6 @@ public final class WorldsConfig {
                     } else if (required.equals("auto_drop_to_inventory_enabled")) {
                         disk.set(key + ".auto_drop_to_inventory_enabled", true);
                     } else {
-                        // Block-list key
                         if (defaultConfig != null) {
                             copyFromBlocksConfig(disk, key, required, defaultConfig, globalConfig);
                         } else {
@@ -254,10 +263,6 @@ public final class WorldsConfig {
         target.set(worldKey + "." + listKey, list != null ? list : Collections.emptyList());
     }
 
-    // -------------------------------------------------------------------------
-    // Materials
-    // -------------------------------------------------------------------------
-
     private Set<Material> loadMaterials(@NotNull ConfigurationSection section, @NotNull String key,
                                         @NotNull BlockFamilyParser.Family family) {
         Set<Material> result = new HashSet<>();
@@ -266,10 +271,6 @@ public final class WorldsConfig {
         result.addAll(BlockFamilyParser.parse(raw, family));
         return result;
     }
-
-    // -------------------------------------------------------------------------
-    // Public queries
-    // -------------------------------------------------------------------------
 
     /**
      * Resolves a consistent lookup key for a World that works on both classic (1.x)
@@ -348,10 +349,6 @@ public final class WorldsConfig {
         WorldEntry e = resolveEntry(world);
         return e == null || e.autoDropEnabled();
     }
-
-    // -------------------------------------------------------------------------
-    // Internal repair helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Saves a copy of a broken config file next to itself with a timestamp suffix

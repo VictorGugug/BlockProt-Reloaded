@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
  * BlockProt is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -110,13 +112,11 @@ public final class RaidDetectionListener implements Listener {
                 continue;
             }
 
-            // Detect any lockable block near an explosion — protected or not.
             Location loc  = block.getLocation();
             String world  = loc.getWorld() != null ? loc.getWorld().getName() : "unknown";
             int x = loc.getBlockX(), y = loc.getBlockY(), z = loc.getBlockZ();
             String material = block.getType().name();
 
-            // Resolve the actor string for the log.
             String actorDisplay = resolveActor(source);
 
             String logLine = String.format(
@@ -144,7 +144,6 @@ public final class RaidDetectionListener implements Listener {
                 continue;
             }
 
-            // Build the notification strings using translation keys.
             String alertMsg = Translator.get(TranslationKey.MESSAGES__RAID_ALERT)
                 .replace("{block}", material)
                 .replace("{world}", world)
@@ -167,33 +166,22 @@ public final class RaidDetectionListener implements Listener {
             if (onlineOwner != null) {
                 sendAlertToOnline(onlineOwner, alertMsg, coordsMsg, loc);
             } else {
-                // Queue for delivery on join.
                 pendingAlerts.computeIfAbsent(ownerId, k -> new java.util.ArrayList<>())
                     .add(coordsMsg);
             }
         }
     }
 
-    /**
-     * Sends an immediate action-bar alert and a chat message to an online owner.
-     * Includes a TP click link if the player has {@code blockprot.blocks.tp}.
-     */
     private void sendAlertToOnline(@NotNull Player player, @NotNull String alertMsg,
                                    @NotNull String coordsMsg, @NotNull Location loc) {
-        // Action bar — short immediate notification.
         player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(alertMsg));
 
-        // Chat — full coordinates + optional teleport link.
+
         boolean hasTp = player.hasPermission(Permissions.BLOCKS_TP.key());
         Component chat = buildChatComponent(coordsMsg, hasTp, loc);
         player.sendMessage(chat);
     }
 
-    /**
-     * Builds the chat component for the raid alert.
-     * When {@code hasTp} is true, a clickable TP link is appended.
-     * When false, a plain coordinates-only message is sent.
-     */
     @NotNull
     private Component buildChatComponent(@NotNull String coordsMsg, boolean hasTp, @NotNull Location loc) {
         Component base = LegacyComponentSerializer.legacySection().deserialize(coordsMsg);
@@ -208,11 +196,6 @@ public final class RaidDetectionListener implements Listener {
         return base.append(Component.space()).append(tpLink);
     }
 
-    /**
-     * Returns a human-readable string identifying the explosion source.
-     * Returns the player name when the source is a player, the entity type otherwise,
-     * and "environment" when no source entity is available.
-     */
     @NotNull
     private String resolveActor(@Nullable Entity source) {
         if (source == null) return "environment";

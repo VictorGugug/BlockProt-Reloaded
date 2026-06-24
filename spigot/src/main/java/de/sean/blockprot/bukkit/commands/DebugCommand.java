@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
@@ -32,36 +52,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * /blockprot debug — diagnostics and manual test-bench.
- *
- * <p>Subcommands:
- * <ul>
- *   <li>{@code run}                — full automated diagnostic suite</li>
- *   <li>{@code placeDebugChest}    — places a chest owned by Notch at player location</li>
- *   <li>{@code placeDebugShulker}  — places a shulker box owned by Notch at player location</li>
- *   <li>{@code clearSearchHistory} — clears the calling player's friend-search history</li>
- * </ul>
- *
- * <p>The "run" suite now covers:
- * <ol>
- *   <li>Config</li>
- *   <li>BukkitCompat</li>
- *   <li>Translations</li>
- *   <li>Lockable materials (blocks)</li>
- *   <li>Lockable entities (item frames, storage/hopper carts, chest boats)</li>
- *   <li>Item frame protection</li>
- *   <li>Raid detection config</li>
- *   <li>Integration status (ViaVersion + companions, PlaceholderAPI, Towny)</li>
- *   <li>ProfileService</li>
- *   <li>SkinsRestorer</li>
- *   <li>AuditLogger</li>
- *   <li>Online players</li>
- *   <li>NBT write/read (main thread)</li>
- *   <li>Entity NBT write/read (main thread)</li>
- *   <li>PlayerSettings</li>
- *   <li>Inventory creation</li>
- *   <li>All inventories</li>
- *   <li>Action-bar / chat message keys</li>
- * </ol>
  */
 public class DebugCommand implements CommandExecutor {
 
@@ -109,10 +99,6 @@ public class DebugCommand implements CommandExecutor {
         return false;
     }
 
-    // =========================================================================
-    //  Helpers
-    // =========================================================================
-
     private static void ab(@NotNull Player p, @NotNull String msg) {
         p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(msg));
     }
@@ -120,10 +106,6 @@ public class DebugCommand implements CommandExecutor {
     private static void chat(@NotNull Player p, @NotNull String msg) {
         p.sendMessage(LegacyComponentSerializer.legacySection().deserialize(msg));
     }
-
-    // =========================================================================
-    //  Full diagnostic suite
-    // =========================================================================
 
     private void runDiagnostics(@NotNull Player player) {
         AtomicInteger passed = new AtomicInteger(0);
@@ -141,7 +123,6 @@ public class DebugCommand implements CommandExecutor {
         chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS));
         chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RESULTS_GO_TO_LOG));
 
-        // Async checks (no world access)
         runGroup(player, passed, failed, "1.  Config",              () -> checkConfig(player, passed, failed));
         runGroup(player, passed, failed, "2.  BukkitCompat",       () -> checkBukkitCompat(player, passed, failed));
         runGroup(player, passed, failed, "3.  Translations",       () -> checkTranslations(player, passed, failed));
@@ -149,13 +130,13 @@ public class DebugCommand implements CommandExecutor {
         runGroup(player, passed, failed, "5.  Lockable entities",  () -> checkLockableEntities(player, passed, failed));
         runGroup(player, passed, failed, "6.  Item frame protect", () -> checkItemFrameProtection(player, passed, failed));
         runGroup(player, passed, failed, "7.  Raid detection",     () -> checkRaidDetection(player, passed, failed));
+        runGroup(player, passed, failed, "7b. Villager workstation", () -> checkVillagerWorkstationProtection(player, passed, failed));
         runGroup(player, passed, failed, "8.  Integrations",       () -> checkIntegrations(player, passed, failed));
         runGroup(player, passed, failed, "9.  ProfileService",     () -> checkProfileService(player, passed, failed));
         runGroup(player, passed, failed, "10. SkinsRestorer",      () -> checkSkinsRestorer(player, passed, failed));
         runGroup(player, passed, failed, "11. AuditLogger",        () -> checkAuditLogger(player, passed, failed));
         runGroup(player, passed, failed, "12. OnlinePlayers",      () -> checkOnlinePlayers(player, passed, failed));
 
-        // Main-thread checks (world/inventory access)
         Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
             runGroup(player, passed, failed, "13. NBT block write/read",  () -> checkNbt(player, passed, failed));
             runGroup(player, passed, failed, "14. NBT entity write/read", () -> checkEntityNbt(player, passed, failed));
@@ -201,10 +182,6 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    // =========================================================================
-    //  Check groups
-    // =========================================================================
-
     private void checkConfig(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var cfg = BlockProt.getDefaultConfig();
@@ -212,7 +189,7 @@ public class DebugCommand implements CommandExecutor {
                 + " maxBlocks=" + cfg.getMaxLockedBlockCount()
                 + " lockEffects=" + cfg.isLockEffectEnabled()
                 + " lockSound=" + cfg.isLockSoundEnabled()
-                + " entityProtection=" + cfg.isPetProtectionEnabled()
+                + " entityProtection=" + cfg.isEntityProtectionEnabled()
                 + " raidDetection=" + BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", true));
             p.incrementAndGet();
         } catch (Exception e) {
@@ -220,12 +197,9 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    /** Reads a raw boolean from the underlying config YAML via reflection-free delegation. */
     private boolean cfgBoolean(String key, boolean def) {
         try {
             var cfg = BlockProt.getDefaultConfig();
-            // DefaultConfig extends BlockProtConfig which exposes the underlying FileConfiguration
-            // through a protected field. We reach it via the accessor available on the class.
             var method = cfg.getClass().getSuperclass().getDeclaredMethod("getBoolean", String.class, boolean.class);
             method.setAccessible(true);
             return (boolean) method.invoke(cfg, key, def);
@@ -295,30 +269,38 @@ public class DebugCommand implements CommandExecutor {
     private void checkLockableEntities(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             DefaultConfig cfg = BlockProt.getDefaultConfig();
-
-            // Check all materials in the ENTITIES family for their active/inactive status.
             Set<Material> entityFamily = BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.ENTITIES);
             if (entityFamily.isEmpty()) {
                 BlockProtLogger.warn("Lockable entities: ENTITIES family is empty (no entity materials registered)");
                 f.incrementAndGet();
                 return;
             }
-            StringBuilder active = new StringBuilder();
-            StringBuilder inactive = new StringBuilder();
+
+            List<Material> active   = new ArrayList<>();
+            List<Material> inactive = new ArrayList<>();
             for (Material m : entityFamily) {
-                if (cfg.isLockableEntity(m)) active.append(m.name()).append(" ");
-                else inactive.append(m.name()).append(" ");
+                if (cfg.isLockableEntity(m)) active.add(m);
+                else inactive.add(m);
             }
-            BlockProtLogger.pass("Lockable entities: active=[" + active.toString().trim()
-                + "] inactive=[" + inactive.toString().trim() + "]");
 
-            // Verify vehicle listener is registered.
-            boolean vehicleListenerActive = Bukkit.getServicesManager().isProvidedFor(
-                de.sean.blockprot.bukkit.listeners.VehicleProtectionListener.class);
-            // Note: listeners don't register as services — check via plugin event listeners count instead.
-            BlockProtLogger.log("  EntityNBTHandler: verifying PDC access via Bukkit.createEntity is not available in debug; PDC is validated in NBT check");
-
-            p.incrementAndGet();
+            boolean configEmpty = active.isEmpty();
+            if (configEmpty) {
+                BlockProtLogger.pass("Lockable entities: EMPTY — vehicle/frame protection disabled (correct per blocks.yml)");
+                if (cfg.isLockableEntity(Material.CHEST_MINECART)) {
+                    BlockProtLogger.fail("Lockable entities", "CHEST_MINECART reports lockable but lockable_entities is empty");
+                    f.incrementAndGet();
+                } else {
+                    BlockProtLogger.pass("Spot-check CHEST_MINECART: correctly NOT lockable");
+                    p.incrementAndGet();
+                }
+            } else {
+                StringBuilder sb = new StringBuilder();
+                for (Material m : active) sb.append(m.name()).append(" ");
+                BlockProtLogger.pass("Lockable entities active=[" + sb.toString().trim() + "] count=" + active.size());
+                BlockProtLogger.log("  inactive=[" + inactive.stream()
+                    .map(Material::name).reduce("", (a, b) -> a.isBlank() ? b : a + " " + b) + "]");
+                p.incrementAndGet();
+            }
         } catch (Exception e) {
             BlockProtLogger.fail("Lockable entities", e.getMessage()); f.incrementAndGet();
         }
@@ -330,7 +312,6 @@ public class DebugCommand implements CommandExecutor {
             boolean frameActive = cfg.isLockableEntity(Material.ITEM_FRAME);
             boolean glowActive  = cfg.isLockableEntity(Material.GLOW_ITEM_FRAME);
 
-            // Item frames are disabled by default; that is the intended state.
             BlockProtLogger.log("  Item frame protection: ITEM_FRAME=" + (frameActive ? "ACTIVE" : "INACTIVE (default)")
                 + " GLOW_ITEM_FRAME=" + (glowActive ? "ACTIVE" : "INACTIVE (default)"));
             BlockProtLogger.pass("Item frame protection: config readable, frames="
@@ -338,6 +319,32 @@ public class DebugCommand implements CommandExecutor {
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("Item frame protection", e.getMessage()); f.incrementAndGet();
+        }
+    }
+
+    private void checkVillagerWorkstationProtection(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            DefaultConfig cfg = BlockProt.getDefaultConfig();
+            boolean enabled  = cfg.isVillagerWorkstationProtectionEnabled();
+            int radius       = cfg.getVillagerWorkstationProtectionRadius();
+            int vRadius      = cfg.getVillagerWorkstationProtectionVerticalRadius();
+
+            boolean radiusInBounds  = radius  >= 0 && radius  <= 8;
+            boolean vRadiusInBounds = vRadius >= 0 && vRadius <= 4;
+
+            if (!radiusInBounds || !vRadiusInBounds) {
+                BlockProtLogger.fail("Villager workstation protection",
+                    "radius/vertical_radius out of documented bounds: radius=" + radius + " vRadius=" + vRadius);
+                f.incrementAndGet();
+                return;
+            }
+
+            BlockProtLogger.pass("Villager workstation protection: enabled=" + enabled
+                + " radius=" + radius + " verticalRadius=" + vRadius
+                + " (independent toggle from entity_protection.enabled=" + cfg.isEntityProtectionEnabled() + ")");
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("Villager workstation protection", e.getMessage()); f.incrementAndGet();
         }
     }
 
@@ -372,7 +379,6 @@ public class DebugCommand implements CommandExecutor {
                 if (enabled) active++;
 
                 if (integration instanceof ViaVersionIntegration via) {
-                    // Full Via status including ViaBackwards/ViaRewind
                     BlockProtLogger.log("  " + name + ": " + via.getDetailedStatus());
                 } else {
                     org.bukkit.plugin.Plugin plugin = integration.getPlugin();
@@ -435,8 +441,6 @@ public class DebugCommand implements CommandExecutor {
         p.incrementAndGet();
     }
 
-    // ── Main-thread checks ────────────────────────────────────────────────────
-
     private void checkNbt(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var loc   = player.getLocation().clone();
@@ -462,22 +466,19 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    /**
-     * Verifies that EntityNBTHandler can write and read owner data via PDC.
-     * Uses a short-lived ArmorStand as the test entity; it is removed immediately after.
-     */
     private void checkEntityNbt(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var loc = player.getLocation().clone();
             var world = player.getWorld();
-            // ArmorStand is available on all supported versions (1.8+).
-            var entity = world.spawn(loc, org.bukkit.entity.ArmorStand.class);
-            entity.setGravity(false);
-            entity.setVisible(false);
-            entity.setSilent(true);
+            var entity = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
+                stand.setGravity(false);
+                stand.setVisible(false);
+                stand.setSilent(true);
+            });
 
             var handler = new EntityNBTHandler(entity);
             handler.setOwner(NOTCH_UUID);
+
             String readBack = handler.getOwner();
 
             entity.remove();
@@ -625,7 +626,7 @@ public class DebugCommand implements CommandExecutor {
             return result;
         });
 
-        BlockProtLogger.log("Inventory skipped: PetSettingsInventory (requires live Entity, not testable without one)");
+        BlockProtLogger.log("Inventory skipped: EntitySettingsInventory (requires live Entity, not testable without one)");
         p.incrementAndGet();
 
         inv(p, f, "FriendSearchHistoryInventory", () -> {
@@ -637,7 +638,6 @@ public class DebugCommand implements CommandExecutor {
 
         InventoryState.set(player.getUniqueId(), base);
 
-        // ── Inventory title translation coverage ──────────────────────────────
         BlockProtLogger.separator();
         BlockProtLogger.log("--- Inventory title translation coverage ---");
         TranslationKey[] titleKeys = {
@@ -654,7 +654,7 @@ public class DebugCommand implements CommandExecutor {
             TranslationKey.INVENTORIES__STATISTICS__STATISTICS,
             TranslationKey.INVENTORIES__AUDIT__TITLE,
             TranslationKey.INVENTORIES__TRANSFER__TITLE,
-            TranslationKey.INVENTORIES__PET__SETTINGS,
+            TranslationKey.INVENTORIES__ENTITY_SETTINGS__SETTINGS,
         };
         for (TranslationKey k : titleKeys) {
             String v = Translator.get(k);
@@ -703,10 +703,6 @@ public class DebugCommand implements CommandExecutor {
         if (bad == 0) { BlockProtLogger.pass("All message keys present"); p.incrementAndGet(); }
         else f.incrementAndGet();
     }
-
-    // =========================================================================
-    //  Helpers
-    // =========================================================================
 
     private void inv(@NotNull AtomicInteger p, @NotNull AtomicInteger f,
                      @NotNull String name,

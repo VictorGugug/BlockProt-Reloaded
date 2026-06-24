@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
@@ -6,11 +26,13 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.audit.AuditLogger.AuditEntry;
+import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -31,19 +53,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-// GUI that shows the access history for a protected block.
-// Owners see denied attempts. Admins also get a teleport button.
+/**
+ * GUI that shows the access history for a protected block or entity.
+ * Owners see denied attempts. Admins also get a teleport button.
+ */
 public final class AuditInventory extends BlockProtInventory {
 
     public AuditInventory() { super(true); }
 
-    private static final int PAGE_SIZE = 45; // Five rows for entries, last row for controls.
+    private static final int PAGE_SIZE = 45;
     private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("dd/MM HH:mm");
 
     private List<AuditEntry> entries = new ArrayList<>();
     private String blockWorld;
     private int blockX, blockY, blockZ;
     private String selectedPlayerUuid;
+
+    private Entity entitySource = null;
 
     private static final int GROUP_PAGE_SIZE = PAGE_SIZE;
 
@@ -68,14 +94,18 @@ public final class AuditInventory extends BlockProtInventory {
         switch (item.getType()) {
             case BLACK_STAINED_GLASS_PANE -> {
                 if (selectedPlayerUuid != null) {
-                    // Back to grouped player view.
                     selectedPlayerUuid = null;
                     state.currentPageIndex = 0;
                     closeAndOpen(player, fill(player));
                     break;
                 }
 
-                // Return to the block menu.
+                if (entitySource != null) {
+                    EntityNBTHandler eHandler = new EntityNBTHandler(entitySource);
+                    closeAndOpen(player, new BlockLockInventory().fillForEntity(player, entitySource, eHandler));
+                    break;
+                }
+
                 if (state.getBlock() != null) {
                     var handler = getNbtHandlerOrNull(state.getBlock());
                     closeAndOpen(player, handler == null ? null
@@ -98,7 +128,6 @@ public final class AuditInventory extends BlockProtInventory {
                 }
             }
             case COMPASS -> {
-                // Teleport to the block. Admins only.
                 if (player.hasPermission(Permissions.USER_ADMIN.key())) {
                     var world = Bukkit.getWorld(blockWorld);
                     if (world != null) {
@@ -136,18 +165,18 @@ public final class AuditInventory extends BlockProtInventory {
 
         inventory.clear();
 
-        if (audit == null || block == null) {
+        if (audit == null || (block == null && entitySource == null)) {
             setItemStack(22, Material.BARRIER, Translator.get(TranslationKey.INVENTORIES__AUDIT__NO_ENTRIES));
             setBackButton();
             return inventory;
         }
 
-        blockWorld = block.getWorld().getName();
-        blockX = block.getX();
-        blockY = block.getY();
-        blockZ = block.getZ();
-
-        // Load entries once; page changes reuse the cached list.
+        if (block != null) {
+            blockWorld = block.getWorld().getName();
+            blockX = block.getX();
+            blockY = block.getY();
+            blockZ = block.getZ();
+        }
         if (entries.isEmpty()) {
             entries = audit.getEntriesForBlock(blockWorld, blockX, blockY, blockZ, 500);
         }
@@ -158,7 +187,6 @@ public final class AuditInventory extends BlockProtInventory {
             return inventory;
         }
 
-        // Group entries by player for the overview page.
         Map<String, List<AuditEntry>> groupedEntries = new LinkedHashMap<>();
         for (AuditEntry entry : entries) {
             groupedEntries.computeIfAbsent(entry.playerUuid(), k -> new ArrayList<>()).add(entry);
@@ -235,6 +263,17 @@ public final class AuditInventory extends BlockProtInventory {
         return inventory;
     }
 
+    @Nullable
+    public Inventory fillForEntity(@NotNull Player player, @NotNull Entity entity) {
+        this.entitySource = entity;
+        var loc = entity.getLocation();
+        this.blockWorld = loc.getWorld() != null ? loc.getWorld().getName() : "";
+        this.blockX = loc.getBlockX();
+        this.blockY = loc.getBlockY();
+        this.blockZ = loc.getBlockZ();
+        return fill(player);
+    }
+
     /** Returns a human-readable label for each audit action type. */
     private static String actionLabel(@NotNull AuditLogger.Action action) {
         return switch (action) {
@@ -247,7 +286,6 @@ public final class AuditInventory extends BlockProtInventory {
         };
     }
 
-    /** Applies the player profile to a SkullMeta. Isolated to suppress the deprecation warning in one place. */
     @SuppressWarnings("deprecation")
     private static void applyOwnerProfile(
             @NotNull org.bukkit.inventory.meta.SkullMeta meta,

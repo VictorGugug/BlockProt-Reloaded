@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -26,11 +26,13 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockRedstoneEvent;
 
+/**
+ * Blocks redstone current from affecting protected blocks when the redstone protection toggle is on.
+ */
 public class RedstoneEventListener implements Listener {
     @EventHandler
     public void onRedstone(BlockRedstoneEvent event) {
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
-        // If this is a lockable block and the redstone protection is activated, set the redstone current to 0
         if (!BlockProt.getDefaultConfig().isLockableBlock(event.getBlock().getType())) return;
         final BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
         if (handler.isProtected() && handler.getRedstoneHandler().getCurrentProtection()) {

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -242,7 +242,9 @@ public class InventoryEventListener implements Listener {
                 }
                 BlockProtLogger.log("entity-protection", "ACCESS_DENIED inventory open: "
                     + entity.getType().name() + " entity=" + entity.getUniqueId() + " player=" + player.getName());
-            } else {
+            } else if (!handler.isOwner(playerUuid)) {
+                // Log OPENED only for non-owner access (friends/admins) — routine
+                // access by the owner is not a security-relevant event.
                 AuditLogger audit = BlockProt.getAuditLogger();
                 if (audit != null) {
                     audit.log(player.getUniqueId(), player.getName(), entity.getLocation(), AuditLogger.Action.OPENED);
@@ -407,12 +409,26 @@ public class InventoryEventListener implements Listener {
         }
     }
 
-    /** "OAK_CHEST" → "Oak Chest" */
+    /**
+     * Converts a block's material name to a human-readable title-cased string.
+     * Delegates to {@link #friendlyMaterialName(String)}.
+     *
+     * @param block The block whose type name to format.
+     * @return The formatted display name, e.g. {@code "Oak Chest"}.
+     */
     @NotNull
     private static String friendlyBlockName(@NotNull Block block) {
         return friendlyMaterialName(block.getType().name());
     }
 
+    /**
+     * Converts a material name string to a human-readable title-cased display name.
+     * Underscores are replaced with spaces and each word is capitalised.
+     * Example: {@code "OAK_CHEST"} → {@code "Oak Chest"}.
+     *
+     * @param name The raw material name (e.g. from {@link org.bukkit.Material#name()}).
+     * @return The formatted display name.
+     */
     @NotNull
     private static String friendlyMaterialName(@NotNull String name) {
         String[] words = name.toLowerCase().split("_");

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -102,7 +102,6 @@ public final class FriendDetailInventory extends BlockProtInventory {
         final var uuid = state.currentFriend;
         if (uuid == null) return inventory;
 
-        // Slot 0: player skull
         if (!uuid.equals(FriendSupportingHandler.publicUuid)) {
             try {
                 final var profile = BlockProt.getProfileService().findByUuid(uuid);
@@ -118,11 +117,8 @@ public final class FriendDetailInventory extends BlockProtInventory {
                 List.of(Translator.get(TranslationKey.INVENTORIES__FRIENDS__THE_PUBLIC_DESC)));
         }
 
-        // Slot 1: remove button
         setItemStack(1, Material.RED_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__FRIENDS__REMOVE);
 
-
-        // Resolve friend handler
         final @Nullable FriendSupportingHandler<NBTCompound> handler =
             getFriendSupportingHandler(state.friendSearchState, player, state.getBlock());
         if (handler == null) return null;

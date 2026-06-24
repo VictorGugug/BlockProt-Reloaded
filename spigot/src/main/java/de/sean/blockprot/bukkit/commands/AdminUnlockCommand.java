@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -52,21 +52,18 @@ public final class AdminUnlockCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
-        // Only in-game players can open a GUI
         if (!(sender instanceof Player player)) {
             sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS)));
             return true;
         }
 
-        // Permission check
         if (!player.hasPermission(Permissions.USER_ADMIN.key()) && !player.isOp()) {
             player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
             return true;
         }
 
-        // Require exactly one argument: the target player name
         if (args.length < 2) {
             player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_USAGE)));
@@ -75,7 +72,6 @@ public final class AdminUnlockCommand implements CommandExecutor {
 
         String targetName = args[1];
 
-        // Resolve the target player (supports offline players)
         @SuppressWarnings("deprecation")
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
         if (target == null || target.getName() == null) {
@@ -87,7 +83,6 @@ public final class AdminUnlockCommand implements CommandExecutor {
 
         String resolvedName = target.getName() != null ? target.getName() : targetName;
 
-        // Load blocks owned by the target player
         PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
         StatHandler.getStatisticByUuid(stat, target.getUniqueId());
 
@@ -98,7 +93,6 @@ public final class AdminUnlockCommand implements CommandExecutor {
             return true;
         }
 
-        // Set up inventory state and open the GUI
         InventoryState state = InventoryState.builder().build();
         InventoryState.set(player.getUniqueId(), state);
 

@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * This file is part of BlockProt <https://github.com/spnda/BlockProt>.
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
  * BlockProt is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,6 +37,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.UUID;
 
+/**
+ * Inventory showing block info: owner, friends, redstone settings, and linked item frame.
+ */
 public class BlockInfoInventory extends BlockProtInventory {
     public BlockInfoInventory() { super(true); }
     private final int maxSkulls = getSize() - InventoryConstants.lineLength;
@@ -86,7 +91,6 @@ public class BlockInfoInventory extends BlockProtInventory {
                 if (state.getBlock() == null) break;
                 final ItemStack lastFriendInInventory = inventory.getItem(maxSkulls - 1);
                 if (lastFriendInInventory != null && lastFriendInInventory.getAmount() != 0) {
-                    // There's an item in the last slot => The page is fully filled up, meaning we should go to the next page.
                     state.currentPageIndex++;
 
                     BlockNBTHandler handler = getNbtHandlerOrNull(state.getBlock());
@@ -118,7 +122,6 @@ public class BlockInfoInventory extends BlockProtInventory {
         state.friendResultCache.clear();
         this.inventory.clear();
 
-        // Exclude the owner from the friends list — the owner is already displayed in slot 0.
         var filteredFriends = friends.stream()
             .filter(f -> !f.getName().equals(owner))
             .toList();
@@ -172,6 +175,34 @@ public class BlockInfoInventory extends BlockProtInventory {
             handler.getName().replaceAll("[§&][0-9a-fk-orx]", "")
         );
 
+        String linkedFrameUuid = handler.getLinkedItemFrameUuid();
+        if (!linkedFrameUuid.isEmpty()) {
+            org.bukkit.entity.Entity frameEntity = null;
+            try { frameEntity = org.bukkit.Bukkit.getEntity(java.util.UUID.fromString(linkedFrameUuid)); } catch (Exception ignored) {}
+            String frameLore;
+            if (frameEntity instanceof org.bukkit.entity.ItemFrame frame) {
+                org.bukkit.inventory.ItemStack frameItem = frame.getItem();
+                String itemName = frameItem.getType() == Material.AIR
+                    ? "(empty)"
+                    : frameItem.getType().name().toLowerCase().replace('_', ' ');
+                frameLore = "\u00a77Linked Item Frame: " + itemName;
+            } else {
+                frameLore = "\u00a77Linked Item Frame: " + linkedFrameUuid.substring(0, 8) + "...";
+            }
+            ItemStack signSlot = new ItemStack(Material.OAK_SIGN, 1);
+            org.bukkit.inventory.meta.ItemMeta signMeta = signSlot.getItemMeta();
+            if (signMeta != null) {
+                signMeta.displayName(net.kyori.adventure.text.Component.text(
+                    handler.getName().replaceAll("[§&][0-9a-fk-orx]", "")));
+                signMeta.lore(java.util.List.of(
+                    net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                        .legacySection().deserialize(frameLore)
+                ));
+                signSlot.setItemMeta(signMeta);
+            }
+            inventory.setItem(1, signSlot);
+        }
+
         setItemStack(
             InventoryConstants.lineLength - 3,
             Material.CYAN_STAINED_GLASS_PANE,
@@ -210,11 +241,9 @@ public class BlockInfoInventory extends BlockProtInventory {
                 try {
                     final var profiles = BlockProt.getProfileService().findAllByUuid(state.friendResultCache);
 
-                    // Offset by 1 when the public UUID is in the list (it occupies a slot already).
                     var offset = state.friendResultCache.contains(FriendSupportingHandler.publicUuid) ? 1 : 0;
                     int i = 0;
                     for (var profile : profiles) {
-                        // Skip the public-access placeholder — it is already rendered as a named PLAYER_HEAD.
                         if (profile.getUniqueId().equals(FriendSupportingHandler.publicUuid)) continue;
                         if (i >= maxSkulls) break;
                         setPlayerSkull(InventoryConstants.lineLength + offset + i,

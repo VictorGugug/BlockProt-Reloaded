@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -46,6 +46,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.UUID;
 
+/**
+ * Towny integration that restricts block protections to town residents and handles
+ * cleanup of protections on unclaim/ruin events.
+ */
 public final class TownyIntegration extends PluginIntegration implements Listener {
     private static final String CLEANUP_PLOTS_AFTER_UNCLAIM = "cleanup_plots_after_unclaim";
 
@@ -86,16 +90,10 @@ public final class TownyIntegration extends PluginIntegration implements Listene
         enabled = true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public Plugin getPlugin() {
         return BlockProt.getInstance().getPlugin("Towny");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @SuppressWarnings("deprecation")
     @Override
     protected void filterFriendsInternal(@NotNull final ArrayList<OfflinePlayer> friends,
@@ -121,9 +119,6 @@ public final class TownyIntegration extends PluginIntegration implements Listene
     }
 
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     protected boolean filterFriendByUuid(@NotNull final UUID friend,
                                          @NotNull final Player player,

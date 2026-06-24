@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -42,19 +42,12 @@ public final class VersionValidator {
 
     private VersionValidator() {}
 
-    /**
-     * Run all startup validation checks. Call from {@link BlockProt#onEnable()}.
-     *
-     * <p>Warnings are logged via Bukkit's logger and BlockProtLogger.
-     * A single summary line is written to the session log on the happy path.</p>
-     */
     public static void validateStartup() {
         String javaVersion = System.getProperty("java.version");
         int javaMajor = extractMajorVersion(javaVersion);
         boolean isPaper = VersionCompat.isPaper();
         boolean hasTypedViews = VersionCompat.hasTypedInventoryViews();
 
-        // ── Warnings ─────────────────────────────────────────────────────────
         if (javaMajor < 21) {
             warn(Translator.get(TranslationKey.CONSOLE__JAVA_TOO_OLD)
                 .replace("{version}", javaVersion));
@@ -72,7 +65,6 @@ public final class VersionValidator {
             BlockProtLogger.warn("Typed inventory views unavailable (1.21.0–1.21.3). Using fallback methods.");
         }
 
-        // ── Happy-path summary (session log only, no console noise) ──────────
         if (javaMajor >= 21 && isPaper && (hasTypedViews || !VersionCompat.isAtLeast(1, 20, 0))) {
             BlockProtLogger.log("startup-checks",
                 "Java " + javaVersion + " OK | Paper OK | TypedViews " + (hasTypedViews ? "OK" : "N/A"));

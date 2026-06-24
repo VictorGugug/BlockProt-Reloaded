@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit.listeners;
 
 import de.sean.blockprot.bukkit.BlockProt;
@@ -33,7 +53,7 @@ public final class VillagerWorkstationProtectionListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onVillagerDamage(@NotNull EntityDamageByEntityEvent event) {
-        if (!BlockProt.getDefaultConfig().isPetProtectionEnabled()) return;
+        if (!BlockProt.getDefaultConfig().isVillagerWorkstationProtectionEnabled()) return;
         if (!(event.getEntity() instanceof Villager villager)) return;
         Player attacker = resolvePlayer(event.getDamager());
         if (attacker == null || attacker.hasPermission(Permissions.USER_ADMIN.key())) return;
@@ -52,7 +72,7 @@ public final class VillagerWorkstationProtectionListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onVillagerInteract(@NotNull PlayerInteractEntityEvent event) {
-        if (!BlockProt.getDefaultConfig().isPetProtectionEnabled()) return;
+        if (!BlockProt.getDefaultConfig().isVillagerWorkstationProtectionEnabled()) return;
         if (!(event.getRightClicked() instanceof Villager villager)) return;
         Player player = event.getPlayer();
         if (player.hasPermission(Permissions.USER_ADMIN.key())) return;
@@ -71,7 +91,7 @@ public final class VillagerWorkstationProtectionListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockBreakNearWorkstation(@NotNull BlockBreakEvent event) {
-        if (!BlockProt.getDefaultConfig().isPetProtectionEnabled()) return;
+        if (!BlockProt.getDefaultConfig().isVillagerWorkstationProtectionEnabled()) return;
         Player player = event.getPlayer();
         if (player.hasPermission(Permissions.USER_ADMIN.key())) return;
 
@@ -90,7 +110,7 @@ public final class VillagerWorkstationProtectionListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onBlockInteractNearWorkstation(@NotNull PlayerInteractEvent event) {
-        if (!BlockProt.getDefaultConfig().isPetProtectionEnabled()) return;
+        if (!BlockProt.getDefaultConfig().isVillagerWorkstationProtectionEnabled()) return;
         if (event.getClickedBlock() == null) return;
         Player player = event.getPlayer();
         if (player.hasPermission(Permissions.USER_ADMIN.key())) return;
@@ -112,9 +132,11 @@ public final class VillagerWorkstationProtectionListener implements Listener {
 
     @Nullable
     private static Block findNearbyProtectedWorkstation(@NotNull Block block) {
-        for (int dx = -2; dx <= 2; dx++) {
-            for (int dz = -2; dz <= 2; dz++) {
-                for (int dy = -1; dy <= 1; dy++) {
+        int radius   = BlockProt.getDefaultConfig().getVillagerWorkstationProtectionRadius();
+        int vRadius  = BlockProt.getDefaultConfig().getVillagerWorkstationProtectionVerticalRadius();
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
+                for (int dy = -vRadius; dy <= vRadius; dy++) {
                     Block b = block.getRelative(dx, dy, dz);
                     if (isWorkstation(b.getType())) {
                         try {
@@ -180,9 +202,11 @@ public final class VillagerWorkstationProtectionListener implements Listener {
     private static boolean isWithinProtectedArea(@NotNull Location villager, @NotNull Location workstation) {
         if (villager.getWorld() == null || workstation.getWorld() == null
                 || !villager.getWorld().equals(workstation.getWorld())) return false;
-        return Math.abs(villager.getBlockX() - workstation.getBlockX()) <= 2
-            && Math.abs(villager.getBlockZ() - workstation.getBlockZ()) <= 2
-            && Math.abs(villager.getBlockY() - workstation.getBlockY()) <= 1;
+        int radius  = BlockProt.getDefaultConfig().getVillagerWorkstationProtectionRadius();
+        int vRadius = BlockProt.getDefaultConfig().getVillagerWorkstationProtectionVerticalRadius();
+        return Math.abs(villager.getBlockX() - workstation.getBlockX()) <= radius
+            && Math.abs(villager.getBlockZ() - workstation.getBlockZ()) <= radius
+            && Math.abs(villager.getBlockY() - workstation.getBlockY()) <= vRadius;
     }
 
     private static boolean isWorkstation(@NotNull Material material) {

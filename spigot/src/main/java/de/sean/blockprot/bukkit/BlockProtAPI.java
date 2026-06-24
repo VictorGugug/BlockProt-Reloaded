@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -58,89 +58,35 @@ public final class BlockProtAPI {
         instance = this;
     }
 
-    /**
-     * Get the current instance of this API. Remember to
-     * softdepend this plugin, otherwise this API will not be
-     * initialized and this will return null.
-     *
-     * @return The instance or null if not initialized
-     * @since 0.4.7
-     */
     @Nullable
     public static BlockProtAPI getInstance() {
         return instance;
     }
 
-    /**
-     * Registers a integration. This automatically calls {@link PluginIntegration#enable()}
-     * to load the plugin and also adds them to a internal list (accessible through
-     * {@link #getIntegrations()}) which is used for friend handling. This does not ensure
-     * that there are no duplicates of a integration, so please beware to only register your
-     * integration once.
-     *
-     * @param integration The integration to register.
-     * @since 0.4.7
-     */
     public void registerIntegration(@NotNull final PluginIntegration integration) {
         this.blockProt.registerIntegration(integration);
     }
 
-    /**
-     * Get a list of all integrations that have been registered using
-     * {@link #registerIntegration(PluginIntegration)}. There might possibly
-     * be duplicates of some integrations, if the author of those registered them
-     * more than once.
-     *
-     * @return A unmodifiable list of all registered integrations.
-     * @since 0.4.7
-     */
     @NotNull
     public List<PluginIntegration> getIntegrations() {
         return this.blockProt.getIntegrations();
     }
 
-    /**
-     * Get the handler for given blocks. This is used to get information
-     * about the owner, the friends and the redstone protection.
-     *
-     * @param block The block to get the handler for.
-     * @return The {@link BlockNBTHandler} for the given block.
-     * @since 0.4.7
-     */
     @NotNull
     public BlockNBTHandler getBlockHandler(@NotNull final Block block) {
         return new BlockNBTHandler(block);
     }
 
-    /**
-     * Get the player settings handler for given player. This is used
-     * to retrieve default friends or other globally applicable settings
-     * for the player.
-     *
-     * @param player The player.
-     * @return The {@link PlayerSettingsHandler} for the given player.
-     * @since 0.4.7
-     */
     @NotNull
     public PlayerSettingsHandler getPlayerSettings(@NotNull final Player player) {
         return new PlayerSettingsHandler(player);
     }
 
-    /**
-     * Locks a block through the public API and fires {@link BlockProtLockEvent}.
-     *
-     * @since SP26
-     */
     @NotNull
     public LockReturnValue lockBlock(@NotNull final Block block, @NotNull final Player player) {
         return new BlockNBTHandler(block).lockBlock(player, BlockProtLockEvent.Cause.API);
     }
 
-    /**
-     * Unlocks a block through the public API and fires {@link BlockProtUnlockEvent}.
-     *
-     * @since SP26
-     */
     public boolean unlockBlock(@NotNull final Block block, @NotNull final Player player) {
         BlockNBTHandler handler = new BlockNBTHandler(block);
         if (handler.isNotProtected()) return true;
@@ -155,18 +101,6 @@ public final class BlockProtAPI {
         return true;
     }
 
-    /**
-     * Get the lock inventory for given block and player. This call
-     * triggers the {@link BlockAccessMenuEvent} event and checks
-     * if it succeeded and what permissions the player has and bases the
-     * inventory on that information.
-     *
-     * @param block  The block the {@code player} is trying to access.
-     * @param player The player.
-     * @return The inventory or null, if the request was denied, possibly
-     * due to permissions.
-     * @since 0.4.7
-     */
     @Nullable
     public Inventory getLockInventoryForBlock(@NotNull final Block block, @NotNull final Player player) {
         final BlockAccessMenuEvent event = new BlockAccessMenuEvent(block, player);
@@ -193,7 +127,6 @@ public final class BlockProtAPI {
             event.addPermission(BlockAccessMenuEvent.MenuPermission.MANAGER);
         }
 
-        // Call the event and let the listeners remove/add more permissions.
         Bukkit.getPluginManager().callEvent(event);
 
         if (event.isCancelled() || event.getPermissions().isEmpty()) {

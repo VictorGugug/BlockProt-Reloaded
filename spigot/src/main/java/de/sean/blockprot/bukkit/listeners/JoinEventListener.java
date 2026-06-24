@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -39,6 +39,9 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Handles player join events: skin pre-fetch, update checks, raid alert delivery.
+ */
 public class JoinEventListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
@@ -68,8 +71,6 @@ public class JoinEventListener implements Listener {
             for (String alertLine : pending) {
                 Component msg = LegacyComponentSerializer.legacySection().deserialize(alertLine);
                 if (hasTp) {
-                    // Parse coords from the pre-built string — re-use the full pending message as TP command source.
-                    // The TP label is appended as a clickable component.
                     String tpLabel = Translator.get(TranslationKey.MESSAGES__RAID_TP_LABEL);
                     Component tpLink = LegacyComponentSerializer.legacySection().deserialize(tpLabel)
                         .clickEvent(ClickEvent.suggestCommand("/tp " + extractCoordsHint(alertLine)));
@@ -80,12 +81,6 @@ public class JoinEventListener implements Listener {
         }
     }
 
-    /**
-     * Extracts a rough coordinate hint from a pre-built raid alert string for
-     * suggesting a /tp command to the player. Parses the first bracket-enclosed
-     * group in the message and returns it as "x y z".
-     * Falls back to an empty string when parsing fails.
-     */
     private String extractCoordsHint(String line) {
         int open  = line.indexOf('[');
         int close = line.indexOf(']', open);

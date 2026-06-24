@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -40,53 +40,29 @@ public class RedstoneSettingsHandler extends NBTHandler<NBTCompound> {
         this.container = compound;
     }
 
-    /**
-     * If the redstone current protection is active or not.
-     * @since 0.4.13
-     */
     public boolean getCurrentProtection() {
         if (!container.hasTag(CURRENT_PROTECTION_ATTRIBUTE)) return DEFAULT_PROTECTION_VALUE;
         return container.getBoolean(CURRENT_PROTECTION_ATTRIBUTE);
     }
 
-    /**
-     * Set the redstone current protection to enabled (true) or disabled (false).
-     * @since 0.4.13
-     */
     public void setCurrentProtection(final boolean value) {
         container.setBoolean(CURRENT_PROTECTION_ATTRIBUTE, value);
     }
 
-    /**
-     * If the piston protection is active or not.
-     * @since 0.4.13
-     */
     public boolean getPistonProtection() {
         if (!container.hasTag(PISTON_PROTECTION_ATTRIBUTE)) return DEFAULT_PROTECTION_VALUE;
         return container.getBoolean(PISTON_PROTECTION_ATTRIBUTE);
     }
 
-    /**
-     * Set the piston protection to enabled (true) or disabled (false).
-     * @since 0.4.13
-     */
     public void setPistonProtection(final boolean value) {
         container.setBoolean(PISTON_PROTECTION_ATTRIBUTE, value);
     }
 
-    /**
-     * If the hopper protection is active or not.
-     * @since 0.4.13
-     */
     public boolean getHopperProtection() {
         if (!container.hasTag(HOPPER_PROTECTION_ATTRIBUTE)) return DEFAULT_PROTECTION_VALUE;
         return container.getBoolean(HOPPER_PROTECTION_ATTRIBUTE);
     }
 
-    /**
-     * Set the hopper protection to enabled (true) or disabled (false).
-     * @since 0.4.13
-     */
     public void setHopperProtection(final boolean value) {
         this.container.setBoolean(HOPPER_PROTECTION_ATTRIBUTE, value);
     }

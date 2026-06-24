@@ -1,12 +1,21 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
- * This file is part of BlockProt Reloaded.
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
  * BlockProt is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package de.sean.blockprot.bukkit.inventories;
@@ -54,8 +63,6 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
         super(false);
     }
 
-    // ── BlockProtInventory ─────────────────────────────────────────────────────
-
     @Override
     int getSize() { return InventoryConstants.sextupletLine; }
 
@@ -64,8 +71,6 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
         String title = Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__TITLE);
         return (title == null || title.isBlank()) ? "Delete World Protections" : title;
     }
-
-    // ── Click ──────────────────────────────────────────────────────────────────
 
     @Override
     public void onClick(@NotNull InventoryClickEvent event, @NotNull InventoryState state) {
@@ -76,16 +81,15 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
 
         int slot = event.getSlot();
 
-        // Navigation / control buttons
         switch (slot) {
-            case PAGE_SIZE -> {           // prev
+            case PAGE_SIZE -> {
                 if (state.currentPageIndex > 0) {
                     state.currentPageIndex--;
                     refill(player, state);
                 }
                 return;
             }
-            case PAGE_SIZE + 1 -> {       // next
+            case PAGE_SIZE + 1 -> {
                 List<World> worlds = filteredWorlds();
                 if ((long) (state.currentPageIndex + 1) * PAGE_SIZE < worlds.size()) {
                     state.currentPageIndex++;
@@ -93,14 +97,13 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
                 }
                 return;
             }
-            case PAGE_SIZE + 2 -> {       // close
+            case PAGE_SIZE + 2 -> {
                 player.closeInventory();
                 InventoryState.remove(player.getUniqueId());
                 return;
             }
         }
 
-        // World selection
         List<World> worlds = filteredWorlds();
         int idx = state.currentPageIndex * PAGE_SIZE + slot;
         if (idx < 0 || idx >= worlds.size()) return;
@@ -116,8 +119,6 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
     @Override
     public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {}
 
-    // ── Fill ───────────────────────────────────────────────────────────────────
-
     /** Opens the world-selector for the given player. */
     public Inventory fill(@NotNull Player player, @Nullable String searchFilter) {
         this.filter = searchFilter;
@@ -129,8 +130,6 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
         inventory = createInventory();
         return populateInventory(player, state);
     }
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
 
     private void refill(@NotNull Player player, @NotNull InventoryState state) {
         inventory = createInventory();
@@ -162,15 +161,12 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
             inventory.setItem(i, item);
         }
 
-        // Prev
         if (state.currentPageIndex > 0) {
             setItemStack(PAGE_SIZE, Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
         }
-        // Next
         if (worlds.size() - offset > PAGE_SIZE) {
             setItemStack(PAGE_SIZE + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         }
-        // Close
         setItemStack(PAGE_SIZE + 2, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
 
         return inventory;
@@ -185,7 +181,6 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
             .collect(Collectors.toList());
     }
 
-    /** Chooses a representative material based on world environment. */
     private static Material worldMaterial(@NotNull World world) {
         return switch (world.getEnvironment()) {
             case NETHER -> Material.NETHERRACK;

@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
@@ -46,24 +66,18 @@ public final class PlayerListInventory extends BlockProtInventory {
         }
     }
 
-    // ── layout ────────────────────────────────────────────────────────────────
-    // 6 rows: rows 0-4 (45 slots) = player heads; row 5 (slots 45-53) = controls
     private static final int PLAYER_SLOTS = 45;
     private static final int SLOT_PREV    = 45;
     private static final int SLOT_NEXT    = 46;
     private static final int SLOT_SORT    = 49;
     private static final int SLOT_BACK    = 53;
 
-    // ── state ─────────────────────────────────────────────────────────────────
     private SortMode sortMode = SortMode.NAME_ASC;
     private List<PlayerEntry> entries = null;
 
     @Nullable private BukkitTask loadTask = null;
 
-    // ── record ────────────────────────────────────────────────────────────────
     private record PlayerEntry(OfflinePlayer player, String name, int blockCount) {}
-
-    // ── constructor ───────────────────────────────────────────────────────────
 
     public PlayerListInventory() { super(false); }
 
@@ -73,8 +87,6 @@ public final class PlayerListInventory extends BlockProtInventory {
     @NotNull String getTranslatedInventoryName() {
         return Translator.get(TranslationKey.INVENTORIES__PLAYER_LIST__TITLE);
     }
-
-    // ── open ──────────────────────────────────────────────────────────────────
 
     /**
      * Begins async loading of all players, then opens the GUI.
@@ -105,8 +117,6 @@ public final class PlayerListInventory extends BlockProtInventory {
         return inventory;
     }
 
-    // ── click ──────────────────────────────────────────────────────────────────
-
     @Override
     public void onClick(@NotNull InventoryClickEvent event, @NotNull InventoryState state) {
         event.setCancelled(true);
@@ -114,7 +124,6 @@ public final class PlayerListInventory extends BlockProtInventory {
         int slot = event.getRawSlot();
 
         if (slot < PLAYER_SLOTS) {
-            // Click on a player skull
             if (entries == null) return;
             int idx = state.currentPageIndex * PLAYER_SLOTS + slot;
             if (idx >= entries.size()) return;
@@ -163,8 +172,6 @@ public final class PlayerListInventory extends BlockProtInventory {
         cancelLoad();
     }
 
-    // ── rendering ─────────────────────────────────────────────────────────────
-
     private void fillLoading() {
         inventory.clear();
         for (int i = 0; i < PLAYER_SLOTS; i++) {
@@ -192,7 +199,6 @@ public final class PlayerListInventory extends BlockProtInventory {
 
         renderControls(state);
 
-        // Async skull texture update for this page
         List<PlayerEntry> page = entries.subList(offset, offset + max);
         Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
             for (int i = 0; i < page.size(); i++) {
@@ -234,14 +240,12 @@ public final class PlayerListInventory extends BlockProtInventory {
     }
 
     private void renderControls(@Nullable InventoryState state) {
-        // Prev
         if (state != null && state.currentPageIndex > 0) {
             setItemStack(SLOT_PREV, Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
         } else {
             inventory.setItem(SLOT_PREV, null);
         }
 
-        // Next
         boolean hasNext = state != null && entries != null
             && (state.currentPageIndex + 1) * PLAYER_SLOTS < entries.size();
         if (hasNext) {
@@ -250,11 +254,9 @@ public final class PlayerListInventory extends BlockProtInventory {
             inventory.setItem(SLOT_NEXT, null);
         }
 
-        // Sort button
         String sortLabel = Translator.get(sortModeKey());
         setItemStack(SLOT_SORT, Material.COMPARATOR, sortLabel);
 
-        // Back
         setItemStack(SLOT_BACK, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
     }
 
@@ -267,9 +269,6 @@ public final class PlayerListInventory extends BlockProtInventory {
         };
     }
 
-    // ── data loading ──────────────────────────────────────────────────────────
-
-    /** Loads all offline players with their block counts. Runs async. */
     private List<PlayerEntry> loadEntries() {
         OfflinePlayer[] all = Bukkit.getOfflinePlayers();
         List<PlayerEntry> result = new ArrayList<>(all.length);

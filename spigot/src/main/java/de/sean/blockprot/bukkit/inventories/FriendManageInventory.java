@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -26,11 +26,13 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.inventories.InventoryState.FriendSearchState;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.FriendSupportingHandler;
 import de.sean.blockprot.nbt.LockReturnValue;
 import de.tr7zw.changeme.nbtapi.NBTCompound;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -42,13 +44,16 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Inventory for managing friends (add, remove, search) on a block or entity.
+ */
 public final class FriendManageInventory extends BlockProtInventory {
     public FriendManageInventory() { super(true); }
     private final int maxSkulls = getSize() - InventoryConstants.lineLength;
 
     @Override
     public int getSize() {
-        return InventoryConstants.sextupletLine; // 6 Lines of inventory go brr
+        return InventoryConstants.sextupletLine;
     }
 
     @NotNull
@@ -57,24 +62,25 @@ public final class FriendManageInventory extends BlockProtInventory {
         return Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE);
     }
 
-    /**
-     * Exits this inventory depending on {@code state}'s {@link FriendSearchState} back to the {@link BlockLockInventory}
-     * or the {@link UserSettingsInventory} respectively.
-     *
-     * @param player The player to open/close the inventory for.
-     * @param state  The {@code player}'s state.
-     */
     public void exitModifyInventory(@NotNull final Player player, @NotNull final InventoryState state) {
         switch (state.friendSearchState) {
             case FRIEND_SEARCH -> {
-                // Came from a block — return to BlockLockInventory.
+                if (state.getBlock() == null && state.entityUUID != null) {
+                    Entity entity = player.getServer().getEntity(state.entityUUID);
+                    if (entity != null) {
+                        EntityNBTHandler eHandler = new EntityNBTHandler(entity);
+                        closeAndOpen(player, new BlockLockInventory().fillForEntity(player, eHandler));
+                    } else {
+                        closeAndOpen(player, null);
+                    }
+                    return;
+                }
                 if (state.getBlock() == null) return;
                 BlockNBTHandler handler = getNbtHandlerOrNull(state.getBlock());
                 closeAndOpen(player, handler == null ? null
                     : new BlockLockInventory().fill(player, state.getBlock().getState().getType(), handler));
             }
             case DEFAULT_FRIEND_SEARCH -> {
-                // Use origin to know exactly which menu to return to.
                 goBack(player, state);
             }
             default -> closeAndOpen(player, null);
@@ -88,7 +94,6 @@ public final class FriendManageInventory extends BlockProtInventory {
         if (item == null) return;
         switch (item.getType()) {
             case BLACK_STAINED_GLASS_PANE -> {
-                // Exit the friend modify inventory and return to the base lock inventory.
                 state.currentPageIndex = 0;
                 exitModifyInventory(player, state);
             }
@@ -102,8 +107,6 @@ public final class FriendManageInventory extends BlockProtInventory {
             case BLUE_STAINED_GLASS_PANE -> {
                 ItemStack lastFriendInInventory = event.getInventory().getItem(maxSkulls - 1);
                 if (lastFriendInInventory != null && lastFriendInInventory.getAmount() != 0) {
-                    // There's an item in the last slot => The page is fully filled up, meaning
-                    // we should go to the next page.
                     state.currentPageIndex++;
 
                     closeAndOpen(player, fill(player));
@@ -129,9 +132,9 @@ public final class FriendManageInventory extends BlockProtInventory {
                     },
                     FriendSupportingHandler::addEveryoneAsFriend
                 );
-                closeAndOpen(player, fill(player)); // Recarga y reabre el inventario con la lista actualizada
+                closeAndOpen(player, fill(player));
             }
-            default -> closeAndOpen(player, null); // Unexpected, exit the inventory.
+            default -> closeAndOpen(player, null);
         }
         event.setCancelled(true);
     }
@@ -152,8 +155,6 @@ public final class FriendManageInventory extends BlockProtInventory {
 
         var friends = handler.getFriends();
 
-        // Fill the first page inventory with skeleton skulls.
-        // We call fill() with the page buttons on this same holder. Clear the inventory too.
         state.friendResultCache.clear();
         this.inventory.clear();
 
@@ -211,7 +212,6 @@ public final class FriendManageInventory extends BlockProtInventory {
                     int i = 0;
                     while (i < Math.min(maxSkulls, profiles.size())) {
                         final var profile = profiles.get(i);
-                        // The profiles array doesn't necessarily have the same order as the friendResultCache.
                         final var index = Iterables.indexOf(state.friendResultCache, f -> f.equals(profile.getUniqueId()));
 
                         if (!profile.getUniqueId().equals(FriendSupportingHandler.publicUuid)) {

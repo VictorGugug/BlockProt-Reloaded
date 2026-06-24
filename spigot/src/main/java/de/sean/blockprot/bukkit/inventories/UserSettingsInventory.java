@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -110,7 +110,6 @@ public class UserSettingsInventory extends BlockProtInventory {
     public Inventory fill(Player player) {
         PlayerSettingsHandler settings = new PlayerSettingsHandler(player);
 
-        // Slot 0: Lock on place
         setEnchantedOptionItemStack(
             SLOT_LOCK_ON_PLACE,
             Material.BARRIER,
@@ -118,7 +117,6 @@ public class UserSettingsInventory extends BlockProtInventory {
             settings.getLockOnPlace()
         );
 
-        // Slot 1: Hints toggle
         boolean hintsEnabled = !settings.hasPlayerInteractedWithMenu();
         setEnchantedOptionItemStack(
             SLOT_HINTS,
@@ -127,7 +125,6 @@ public class UserSettingsInventory extends BlockProtInventory {
             hintsEnabled
         );
 
-        // Slot 2: Notifications toggle
         setEnchantedOptionItemStack(
             SLOT_NOTIFICATIONS,
             Material.BELL,
@@ -135,7 +132,6 @@ public class UserSettingsInventory extends BlockProtInventory {
             settings.getNotificationsEnabled()
         );
 
-        // Slot 3: Friends skull
         if (!BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {
             setItemStack(
                 SLOT_FRIENDS,
@@ -170,7 +166,7 @@ public class UserSettingsInventory extends BlockProtInventory {
             );
         }
 
-        setBackButton(); // slot 8
+        setBackButton();
         return inventory;
     }
 }

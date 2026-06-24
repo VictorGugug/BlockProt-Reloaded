@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -112,12 +112,6 @@ public final class BlockUtil {
         return n.replaceAll("_", " ");
     }
 
-    /**
-     * Gets the human-readable name of the given {@code material}. Note that this is not
-     * translated and is merely based of the material enum name.
-     * @return A human-readable name.
-     * @since 1.1.0
-     */
     public static @NotNull String getHumanReadableBlockName(@NotNull Material material) {
         return capitalizeFirstLetters(material.name());
     }

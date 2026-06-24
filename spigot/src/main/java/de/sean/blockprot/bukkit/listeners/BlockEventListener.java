@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -63,6 +63,9 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Handles block-related events: break, place, burn, physics, dispense, and signs.
+ */
 public class BlockEventListener implements Listener {
     private final BlockProt blockProt;
 
@@ -198,7 +201,6 @@ public class BlockEventListener implements Listener {
                 ? true
                 : BlockProt.getDefaultConfig().shouldClearProtectionOnShulkerBreak();
             // Respect both the global feature flag AND the per-material list.
-            // isAutoDropToInventory(type) checks both: enabled flag + material in blocks list.
             boolean autoDropEnabled = BlockProt.getDefaultConfig().isAutoDropToInventoryEnabled(event.getBlock().getWorld())
                 && BlockProt.getDefaultConfig().isAutoDropToInventory(event.getBlock().getType());
 

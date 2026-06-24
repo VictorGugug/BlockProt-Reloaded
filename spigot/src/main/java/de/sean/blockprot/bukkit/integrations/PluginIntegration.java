@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -118,8 +118,8 @@ public abstract class PluginIntegration {
     @CheckReturnValue
     @Deprecated
     public static @NotNull ArrayList<OfflinePlayer> filterFriends(@NotNull final ArrayList<OfflinePlayer> friendsInput,
-                                                                  @NotNull final Player player,
-                                                                  @NotNull final Block block) {
+                                                                   @NotNull final Player player,
+                                                                   @NotNull final Block block) {
         var friends = new ArrayList<>(friendsInput); // Copy
 
         for (var integration : BlockProt.getInstance().getIntegrations()) {
@@ -174,30 +174,12 @@ public abstract class PluginIntegration {
         return true;
     }
 
-    /**
-     * Checks whether or not this plugin integration is currently enabled.
-     *
-     * @return Boolean if this integration is enabled.
-     * @since 0.4.0
-     */
     public abstract boolean isEnabled();
 
-    /**
-     * Load and setup basic values for this plugin integration. No other
-     * plugins (including BlockProt) are enabled at this point.
-     * 
-     * @since 1.0.0
-     */
     public void load() {
 
     }
 
-    /**
-     * Load and setup this plugin integration. Should only be called
-     * once.
-     * 
-     * @since 1.0.0
-     */
     public abstract void enable();
 
     /**
@@ -210,13 +192,6 @@ public abstract class PluginIntegration {
             BlockProt.getInstance().saveAndLoadConfigFile("integrations/", name + ".yml", false);
     }
 
-    /**
-     * Get the plugin this integration depends on. Can be null,
-     * if the dependency is not loaded.
-     *
-     * @return The plugin this integration depends on.
-     * @since 0.4.12
-     */
     @Nullable
     public abstract Plugin getPlugin();
 
@@ -254,12 +229,6 @@ public abstract class PluginIntegration {
         return true;
     }
 
-    /**
-     * Register any Bukkit event listener.
-     *
-     * @param listener The listener we want to register.
-     * @since 0.4.0
-     */
     protected void registerListener(@NotNull final Listener listener) {
         pluginManager.registerEvents(listener, BlockProt.getInstance());
     }

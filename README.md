@@ -14,7 +14,7 @@ Java 25 · Paper 1.21.1 through 26.x · MySQL index · per-world config · acces
 
 </div>
 
-Block protection plugin for Paper and Spigot servers. Players lock chests, furnaces, doors, and other blocks through a GUI — no commands to memorize. This fork extends the original NBT core with production-grade stability fixes and new features designed for large or long-running servers.
+Block protection plugin for Paper and Spigot servers. Players lock chests, furnaces, doors, and other blocks through a GUI — no commands required. This fork extends the original NBT core with stability fixes, performance improvements, and new features not present in upstream.
 
 
 ## Screenshots
@@ -132,9 +132,10 @@ Opened by sneaking and right-clicking any lockable block. Two-row inventory.
 | 2 | Player Head | Manage friends |
 | 3 | Name Tag | Set a custom block name |
 | 4 | Ender Pearl | Transfer block ownership |
-| 5 | Hopper or Lime Dye | Protection expiry *(only when enabled in config)* |
+| 5 | Emerald | Locate the villager linked to this workstation *(workstation blocks only)* |
+| 6 | Hopper or Lime Dye | Protection expiry *(storage blocks only, and only when enabled in config)* |
 
-The redstone button is not shown for display-only blocks such as signs, lecterns, and workstations, because those have no hopper or redstone interaction to gate.
+The redstone button is not shown for display-only blocks such as signs, lecterns, and workstations, because those have no hopper or redstone interaction to gate. Every button above lives in a fixed slot regardless of block type — a slot that does not apply to the current block is simply left empty, so the remaining buttons never shift position.
 
 **Bottom row — utility buttons:**
 
@@ -255,6 +256,8 @@ Compiles against the Paper 1.21.1 API and runs on every version from 1.21.1 thro
 
 Item frames and glowing item frames can be protected with the same sneak-and-right-click flow used for blocks. Once protected, non-owners cannot rotate or swap the displayed item and cannot break or shoot the frame. The ImageFrame plugin is supported: frames carrying an ImageFrame creator tag are automatically treated as owned by the creator, protecting multi-map image displays without any extra configuration. Protection data is stored in the entity's persistent NBT and survives chunk reloads and server restarts.
 
+A frame mounted on a lockable block (a chest, a door, etc.) is automatically linked to that block on placement instead of becoming an independent protection unit. A linked frame has no owner of its own: it shares the underlying block's owner, friends, and lock state exactly, and interacting with it opens that block's lock menu directly. This avoids having to separately protect a decorative frame placed next to a chest you already protected, and stops griefers from placing a frame on someone else's storage block to interfere with it. Frames not mounted on a lockable block keep the standalone entity-protection flow described above.
+
 ### Chest Boat and Minecart Protection
 
 Chest boats, storage minecarts, and hopper minecarts can be protected the same way. Once protected, right-clicking the vehicle without sneaking is blocked for non-owners and non-friends, preventing inventory access. The protection menu shows only lock/unlock and friend management, since redstone settings and expiry do not apply to mobile entities.
@@ -262,6 +265,10 @@ Chest boats, storage minecarts, and hopper minecarts can be protected the same w
 ### Contextual Lock Menu
 
 The lock menu adapts its available options based on the type of block being protected. Storage blocks such as chests, barrels, hoppers, and furnaces show the full set of options including redstone settings and expiry. Traversal blocks such as doors, trapdoors, and fence gates show redstone settings but not expiry. Display blocks such as signs, lecterns, and beehives show only friends, name, and transfer. Workstations and other interactive blocks show the same reduced set.
+
+### Villager Workstation Protection
+
+A villager whose job-site memory points to a protected workstation block inherits that block's protection. Non-owners cannot damage or trade with the linked villager, and cannot break or interact with blocks in a configurable area around the workstation (default: 2 blocks horizontal, 1 block vertical). The protection menu for a linked workstation shows an Emerald button that starts a short particle effect on the villager's location, visible only to the player who clicked it, to help find which villager is linked. The horizontal and vertical search radius and the feature itself are independently configurable in `config.yml` under `villager_workstation_protection`.
 
 ### StatHandler Stability Fixes
 
@@ -290,7 +297,7 @@ Full syntax reference: [`docs/BLOCK_FAMILY_SYNTAX.md`](docs/BLOCK_FAMILY_SYNTAX.
 
 ### Config and Blocks Auto-Merge
 
-On every startup and on `/bp reload`, all config files are automatically updated. Missing keys are added from JAR defaults. Renamed keys are migrated. New blocks added in plugin updates are appended to your `blocks.yml` automatically in legacy flat-list mode. Nothing you have configured is ever overwritten.
+On every startup and on `/bp reload`, all config files are updated. Missing keys are added from JAR defaults, renamed keys are migrated, and new blocks are appended to `blocks.yml` in legacy flat-list mode. No existing values are overwritten.
 
 ### Per-World Configuration
 
@@ -306,7 +313,7 @@ The `blockprot_usercache.sqlite` file is now stored inside the plugin's data fol
 
 ### Persistent Session Logging
 
-One log file (`blockprot-current.log`) is shared across restarts. After 24 hours it is rotated to a dated archive and a new file is started. This keeps the console clean while preserving a full history on disk.
+One log file (`blockprot-current.log`) is shared across restarts. After 24 hours it is rotated to a dated archive and a new file is started.
 
 ### Hybrid MySQL / NBT Backend
 
@@ -342,9 +349,9 @@ Automatically locks unprotected blocks near a WorldEdit paste origin. Disabled b
 
 Block owners can set an optional expiry date on their lock. When the timer elapses the block auto-unlocks. Open the Block Lock menu, click the Hopper slot, and type a duration such as `7d`, `1mo`, or `2d12h`. A green dye replaces the hopper when an expiry is already active — click it to clear. Disabled by default.
 
-### Pet Protection
+### Entity Protection (Tamed Animals)
 
-Protects tamed animals including wolves, cats, parrots, horses, and llamas. Right-click your pet while holding the configured menu item (default: Stick) to open the settings GUI. Disabled by default.
+Protects tamed animals including wolves, cats, parrots, horses, and llamas. Right-click your pet while holding the configured menu item (default: Stick) to open the settings GUI. Disabled by default. This feature was renamed from `pet_protection` to `entity_protection` in `config.yml`; the old key name is still read automatically for servers upgrading from an earlier version, so no manual edit is required.
 
 ### Colored Particle Effects and Sounds
 
@@ -425,11 +432,18 @@ owner_notifications:
   notify_on_take: true
   notify_on_place: true
 
-# Pet protection
-pet_protection:
+# Pet protection (legacy key name, still read automatically)
+entity_protection:
   enabled: false
   auto_protect_on_tame: true
   menu_item: STICK
+  villager_locate_seconds: 6
+
+# Villager workstation protection
+villager_workstation_protection:
+  enabled: true
+  radius: 2            # horizontal search radius in blocks
+  vertical_radius: 1   # vertical search radius in blocks
 
 # Effects
 block_lock_effects: true
@@ -510,6 +524,12 @@ Language files are in `spigot/src/main/resources/lang/`. Both legacy color codes
 | [#298](https://github.com/spnda/BlockProt/issues/298) | ClaimChunk integration | ✅ Implemented |
 | [#295](https://github.com/spnda/BlockProt/issues/295) | Lock trapdoors and iron doors | ✅ Implemented |
 | [#282](https://github.com/spnda/BlockProt/issues/282) | MySQL support | ✅ Implemented |
+| — | Filter `/bp lockables` material list by client protocol version when ViaVersion is active | Pending |
+
+
+## Documentation policy from 1.3.4 onward
+
+1.3.3 is the last release where this README is updated feature-by-feature in full detail. Starting with 1.3.4, this README will be condensed into a short summary of all current features, and `docs/RELEASE_NOTES.md` becomes the single place where what changed between versions is recorded in detail. This keeps documentation effort proportional to development time as the plugin grows. Check `docs/RELEASE_NOTES.md` for the complete version-by-version history going forward.
 
 
 ## Contact and Support

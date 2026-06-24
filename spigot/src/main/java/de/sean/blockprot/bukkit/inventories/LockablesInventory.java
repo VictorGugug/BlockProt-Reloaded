@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
@@ -23,37 +43,7 @@ import java.util.*;
 
 /**
  * Paged inventory listing every lockable material known to the plugin.
- *
- * Shows ALL blocks that CAN be locked (active) and ALL blocks that EXIST in the
- * family but are currently DISABLED — always, without filtering. Active blocks
- * appear with their normal colour; disabled blocks appear in gray with a [OFF] tag.
- *
- * Each block's icon is resolved semantically by sub-family:
- *   - Chests       → the real material (CHEST, TRAPPED_CHEST, etc.)
- *   - Shulkers     → the real coloured shulker box material
- *   - Furnaces     → the real material (FURNACE, SMOKER, BLAST_FURNACE)
- *   - Shelves      → the real wood shelf material
- *   - Transport    → the real material (HOPPER, DISPENSER, DROPPER)
- *   - Misc storage → the real material (BARREL, BREWING_STAND, etc.)
- *   - Signs        → floor sign form of the same wood type (wall variants have no item)
- *   - Doors        → the real door material
- *   - Trapdoors    → the real trapdoor material
- *   - Fence gates  → the real fence gate material
- *   - Workstations → the real material (GRINDSTONE, ENCHANTING_TABLE, etc.)
- *   - Interactive  → the real material (DRAGON_EGG, COMPOSTER, etc.)
- *   - Cauldrons    → CAULDRON (water/lava/snow variants have no distinct item form)
- *   - Entities     → representative item icon (CHEST_MINECART, OAK_BOAT, etc.)
- *
- * Layout (54 slots):
- *   0-44  — block items
- *   45    — version info book
- *   47    — prev page arrow
- *   49    — next page arrow
- *   53    — back button
- *
- * Click on a block item:
- *   Left-click  → copies MATERIAL_NAME to clipboard (green — include)
- *   Right-click → copies -MATERIAL_NAME to clipboard (red — exclude)
+ * Left-click copies the material name; right-click copies -material name.
  */
 public final class LockablesInventory extends BlockProtInventory {
 
@@ -174,8 +164,6 @@ public final class LockablesInventory extends BlockProtInventory {
                     boolean right = event.getClick() == ClickType.RIGHT
                         || event.getClick() == ClickType.SHIFT_RIGHT;
                     String token = right ? "-" + e.material().name() : e.material().name();
-                    // COPY_TO_CLIPBOARD tells the Minecraft client to write the token
-                    // to the system clipboard when the player clicks the chat message.
                     net.kyori.adventure.text.event.ClickEvent copyEvent =
                         net.kyori.adventure.text.event.ClickEvent.copyToClipboard(token);
                     net.kyori.adventure.text.event.HoverEvent<?> hoverEvent =
@@ -195,8 +183,6 @@ public final class LockablesInventory extends BlockProtInventory {
     @Override
     public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {}
 
-    // ── Build the full list from the family parser ────────────────────────────
-
     @NotNull
     private static List<Entry> buildAllEntries() {
         DefaultConfig cfg = BlockProt.getDefaultConfig();
@@ -204,17 +190,14 @@ public final class LockablesInventory extends BlockProtInventory {
         Map<Category, List<Entry>> grouped = new LinkedHashMap<>();
         for (Category c : Category.values()) grouped.put(c, new ArrayList<>());
 
-        // Block families (tile entities, shulkers, blocks, doors)
         for (BlockFamilyParser.Family family : BlockFamilyParser.Family.values()) {
-            if (family == BlockFamilyParser.Family.ENTITIES) continue; // entities handled separately
+            if (family == BlockFamilyParser.Family.ENTITIES) continue;
             for (Material m : BlockFamilyParser.getFamilyMembers(family)) {
                 boolean active = cfg.isLockable(m);
                 grouped.get(classify(m, cfg)).add(Entry.block(m, active));
             }
         }
 
-        // Entity family: always include supported entities, including inactive ones.
-        // This keeps /bp lockables useful when entity protection is disabled by default.
         List<Entry> entityEntries = new ArrayList<>();
         for (Material m : BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.ENTITIES)) {
             boolean active = cfg.isLockableEntity(m);
@@ -227,7 +210,6 @@ public final class LockablesInventory extends BlockProtInventory {
             grouped.get(Category.ENTITIES).addAll(entityEntries);
         }
 
-        // Sort each category: active first, then alphabetical
         for (List<Entry> list : grouped.values()) {
             list.sort(Comparator
                 .<Entry, Boolean>comparing(e -> !e.active())
@@ -270,8 +252,6 @@ public final class LockablesInventory extends BlockProtInventory {
         return Category.INTERACTIVE;
     }
 
-    // ── Item builders ─────────────────────────────────────────────────────────
-
     @NotNull
     private static ItemStack separatorItem(@NotNull String label) {
         ItemStack sep = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
@@ -311,34 +291,22 @@ public final class LockablesInventory extends BlockProtInventory {
         return stack;
     }
 
-    /**
-     * Resolves the best item-form Material for display in an inventory slot.
-     *
-     * Rules by sub-family:
-     *   Signs (wall / wall-hanging) → use the placeable floor/hanging form; wall variants have no item.
-     *   Cauldrons (water/lava/snow) → use plain CAULDRON; the filled variants are block-only states.
-     *   Everything else             → use the material directly (it has an item form on all versions).
-     */
     @NotNull
     private static Material resolveDisplayMaterial(@NotNull Material mat) {
         String name = mat.name();
 
-        // Wall sign → floor sign of same wood
         if (name.endsWith("_WALL_SIGN") && !name.endsWith("_HANGING_SIGN")) {
             Material m = Material.matchMaterial(name.replace("_WALL_SIGN", "_SIGN"));
             return m != null ? m : Material.OAK_SIGN;
         }
-        // Wall hanging sign → hanging sign of same wood
         if (name.endsWith("_WALL_HANGING_SIGN")) {
             Material m = Material.matchMaterial(name.replace("_WALL_HANGING_SIGN", "_HANGING_SIGN"));
             return m != null ? m : Material.OAK_HANGING_SIGN;
         }
-        // Filled cauldrons are block states, not items
         if (name.equals("WATER_CAULDRON") || name.equals("LAVA_CAULDRON")
                 || name.equals("POWDER_SNOW_CAULDRON")) {
             return Material.CAULDRON;
         }
-        // Chest boats: use OAK_CHEST_BOAT as fallback if the specific variant doesn't exist
         if (name.contains("CHEST_BOAT")) {
             Material m = Material.matchMaterial(name);
             if (m != null) return m;
@@ -348,8 +316,6 @@ public final class LockablesInventory extends BlockProtInventory {
         if (name.equals("ITEM_FRAME") || name.equals("GLOW_ITEM_FRAME")) return mat;
         return mat;
     }
-
-    // ── Utilities ─────────────────────────────────────────────────────────────
 
     @NotNull
     private static String resolveClientVersion(@NotNull Player player) {
@@ -362,6 +328,14 @@ public final class LockablesInventory extends BlockProtInventory {
         return VersionCompat.getVersionString();
     }
 
+    /**
+     * Builds the inventory title string including server/client version and pagination info.
+     *
+     * @param player The player the inventory is being shown to (used to resolve client version).
+     * @param page   The zero-based current page index.
+     * @param total  The total number of pages.
+     * @return The composed title string.
+     */
     @NotNull
     private static String buildTitle(@NotNull Player player, int page, int total) {
         String client = resolveClientVersion(player);
@@ -370,6 +344,14 @@ public final class LockablesInventory extends BlockProtInventory {
         return "Lockables [" + suffix + "]" + (page > 0 ? " p" + (page + 1) + "/" + total : "");
     }
 
+    /**
+     * Converts a {@link Material} name to a human-readable title-cased string.
+     * Underscores are replaced with spaces and each word is capitalised.
+     * Example: {@code OAK_CHEST} → {@code "Oak Chest"}.
+     *
+     * @param mat The material whose name to format.
+     * @return The formatted display name.
+     */
     @NotNull
     private static String friendlyName(@NotNull Material mat) {
         String[] words = mat.name().toLowerCase().split("_");

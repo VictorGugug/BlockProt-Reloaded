@@ -1,47 +1,7 @@
 # BlockProt Reloaded — blocks.yml
-#
-# Default format: legacy flat material list (modern_family_blocks: false in config.yml).
-#
-# ── Family expression syntax ──────────────────────────────────────────────────
-#
-# Family expressions are always parsed regardless of the modern_family_blocks flag.
-# That flag only controls whether flat lists are auto-converted to expressions on startup.
-#
-# Syntax:
-#   [*]                   — all members of the family
-#   [*-TAG]               — only the TAG sub-family (e.g. [*-CHEST], [*-SHULKERS])
-#   [-*TAG]               — nothing from this family minus TAG sub-family
-#                           (no base inclusion = empty result, i.e. disables that sub-family)
-#   [* -*TAG]             — all members except the TAG sub-family
-#   [* -NAME]             — all members except one specific material
-#   [NAME1 NAME2]         — only these specific materials
-#
-# Sub-families per key:
-#   lockable_tile_entities : CHEST, FURNACE, SHELF, TRANSPORT, MISC, SIGN
-#   lockable_shulker_boxes : SHULKERS
-#   lockable_blocks        : ANVIL, CAULDRON, WORKSTATION, TRAPDOOR, FENCE_GATE
-#   lockable_doors         : DOORS
-#   lockable_entities      : CHEST_BOATS, CHEST_MINECARTS, HOPPER_MINECARTS, ITEM_FRAMES
-#   auto_drop_to_inventory : uses ALL families — tokens like -*SHULKERS are resolved
-#                            against SHULKER_BOXES; [*] expands across all families.
-#                            To disable shulker auto-drop entirely, remove their entries
-#                            or use an expression that excludes them (e.g. do not include
-#                            [*-SHULKERS] in the blocks list).
-#
-# Examples:
-#   lockable_tile_entities:
-#     - '[*-FURNACE *-CHEST]'           # only furnaces and chests
-#     - '[* -*SIGN]'                    # all tile entities except signs
-#
-#   auto_drop_to_inventory:
-#     enabled: true
-#     blocks:
-#       - '[*-SHULKERS]'               # shulkers auto-drop to inventory
-#       - '[*-SHULKERS -RED_SHULKER_BOX]' # all shulkers except red
-#
-# To restore these defaults, delete this file and restart the server.
-# The plugin will regenerate it from the JAR on next startup.
-# ─────────────────────────────────────────────────────────────────────────────
+# Block list and entity configuration.
+# For family expression syntax and sub-family reference, see docs/BLOCK_FAMILY_SYNTAX.md.
+# To restore defaults, delete this file and restart the server.
 
 lockable_tile_entities:
   - CHEST
@@ -124,6 +84,7 @@ lockable_blocks:
   - CARTOGRAPHY_TABLE
   - SMITHING_TABLE
   - ENCHANTING_TABLE
+  - FLETCHING_TABLE
   - OAK_FENCE_GATE
   - SPRUCE_FENCE_GATE
   - BIRCH_FENCE_GATE
@@ -185,75 +146,12 @@ lockable_doors:
   - WAXED_WEATHERED_COPPER_DOOR
   - WAXED_OXIDIZED_COPPER_DOOR
 
-# lockable_entities — storage vehicles and item frames.
-# ALL entity types are DISABLED by default. This list ships empty.
-# Add material names or family expressions below to enable protection.
-#
-# Supported types and their sub-families:
-#   ITEM_FRAMES  : ITEM_FRAME, GLOW_ITEM_FRAME
-#   CHEST_MINECARTS  : CHEST_MINECART
-#   HOPPER_MINECARTS : HOPPER_MINECART
-#   CHEST_BOATS      : CHEST_BOAT, OAK_CHEST_BOAT, SPRUCE_CHEST_BOAT,
-#                      BIRCH_CHEST_BOAT, JUNGLE_CHEST_BOAT, ACACIA_CHEST_BOAT,
-#                      DARK_OAK_CHEST_BOAT, MANGROVE_CHEST_BOAT,
-#                      CHERRY_CHEST_BOAT, BAMBOO_CHEST_BOAT
-#
-# Entity protection is stored in the entity's Persistent Data Container (PDC).
-# Protection survives chunk reloads and server restarts but is lost permanently
-# when the entity is killed (entity ceases to exist; no block to attach NBT to).
-#
-# Item frame protection:
-#   When ITEM_FRAME or GLOW_ITEM_FRAME is listed here, players can sneak +
-#   right-click a frame with an empty hand to open the BlockProt protection menu.
-#   Once protected, non-owners cannot rotate, replace, or break the frame.
-#   Players with blockprot.user.admin always bypass frame protection.
-#   Item frames appear in /bp lockables under the ENTITIES family (INACTIVE by default).
-#
-# Vehicle protection:
-#   Chest minecarts and chest boats with a listed material are protected against
-#   player inventory access AND hopper-pipeline extraction.
-#   Hopper minecarts are protected against player access; their item-collection
-#   behavior from the ground is not affected.
-#
-# Migration note: existing servers that do not have this key in their blocks.yml
-#   will have it patched in automatically (empty list) on next startup.
-#   All existing protections are preserved; no data loss occurs.
-#
-# Enable all entity types:
-#   lockable_entities:
-#     - '[*]'
-#
-# Enable only storage vehicles:
-#   lockable_entities:
-#     - '[*-CHEST_BOATS *-CHEST_MINECARTS *-HOPPER_MINECARTS]'
-#
-# Enable only item frames:
-#   lockable_entities:
-#     - '[*-ITEM_FRAMES]'
-#
-# Enable specific materials only:
-#   lockable_entities:
-#     - CHEST_MINECART
-#     - ITEM_FRAME
-#     - GLOW_ITEM_FRAME
+# Entity protection — all types disabled by default.
+# Add material names or family expressions to enable. See docs/BLOCK_FAMILY_SYNTAX.md.
 lockable_entities: []
 
-# Auto-drop shulker boxes directly to the breaker's inventory on break.
-# The 'blocks' list controls WHICH materials trigger auto-drop.
-# Uses all family expression syntax. Only shulker-type materials are relevant here
-# unless you also want other lockable blocks (chests, etc.) to auto-drop.
-#
-# To enable auto-drop for all shulkers:
-#   blocks:
-#     - '[*-SHULKERS]'
-#
-# To enable for all shulkers except red:
-#   blocks:
-#     - '[*-SHULKERS -RED_SHULKER_BOX]'
-#
-# To disable shulker auto-drop entirely:
-#   enabled: false
-#   (or simply remove all entries from blocks)
+# Auto-drop shulker boxes to the breaker's inventory on break.
+# Set enabled: false or clear the blocks list to disable.
 auto_drop_to_inventory:
   enabled: true
   blocks:

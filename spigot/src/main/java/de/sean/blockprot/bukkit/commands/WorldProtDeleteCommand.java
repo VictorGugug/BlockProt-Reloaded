@@ -1,12 +1,21 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
- * This file is part of BlockProt Reloaded.
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
  * BlockProt is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package de.sean.blockprot.bukkit.commands;
@@ -30,12 +39,7 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
- * /bp protdel [world]
- *
- * <p>Without argument: opens the world-selector GUI.
- * <p>With argument: skips the selector and goes directly to the confirmation GUI for that world.
- *
- * <p>Requires {@code blockprot.user.admin}.
+ * /bp protdel [world] — world protection deletion tool.
  */
 public final class WorldProtDeleteCommand implements CommandExecutor {
 
@@ -59,7 +63,6 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
             return true;
         }
 
-        // /bp protdell <world> — direct confirmation
         if (args.length >= 2) {
             String worldName = args[1];
             World world = Bukkit.getWorld(worldName);
@@ -75,7 +78,6 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
             return true;
         }
 
-        // /bp protdell — open world selector GUI
         InventoryState.remove(player.getUniqueId());
         WorldProtDeleteInventory selector = new WorldProtDeleteInventory();
         player.openInventory(selector.fill(player, null));
@@ -84,7 +86,7 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
 
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
-                                               @NotNull String alias, @NotNull String[] args) {
+                                                @NotNull String alias, @NotNull String[] args) {
         if (args.length == 2) {
             String partial = args[1].toLowerCase(Locale.ROOT);
             return Bukkit.getWorlds().stream()

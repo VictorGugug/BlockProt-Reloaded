@@ -1,12 +1,21 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
  * BlockProt is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package de.sean.blockprot.bukkit.inventories;
@@ -57,8 +66,6 @@ public final class BpUnlockInventory extends BlockProtInventory {
         super(false);
     }
 
-    // ── BlockProtInventory contract ────────────────────────────────────────────
-
     @Override
     int getSize() { return InventoryConstants.sextupletLine; }
 
@@ -68,8 +75,6 @@ public final class BpUnlockInventory extends BlockProtInventory {
         if (title == null || title.isBlank()) title = "[Admin] Unlock: {player}";
         return title.replace("{player}", targetName);
     }
-
-    // ── Click handler ──────────────────────────────────────────────────────────
 
     @Override
     public void onClick(@NotNull InventoryClickEvent event, @NotNull InventoryState state) {
@@ -100,9 +105,9 @@ public final class BpUnlockInventory extends BlockProtInventory {
     }
 
     private void handleBlockClick(@NotNull InventoryClickEvent event,
-                                  @NotNull Player player,
-                                  @NotNull InventoryState state,
-                                  int max) {
+                                   @NotNull Player player,
+                                   @NotNull InventoryState state,
+                                   int max) {
         List<LocationListEntry> list = filteredList();
         int offset = max * state.currentPageIndex;
         int idx    = offset + event.getSlot();
@@ -113,7 +118,6 @@ public final class BpUnlockInventory extends BlockProtInventory {
         Block block = loc.getBlock();
 
         if (event.getClick() == ClickType.LEFT || event.getClick() == ClickType.SHIFT_LEFT) {
-            // ── View contents (read-only) ─────────────────────────────────────
             if (!(block.getState() instanceof InventoryHolder)) return;
             try {
                 InventoryState blockState = InventoryState.builder()
@@ -124,11 +128,9 @@ public final class BpUnlockInventory extends BlockProtInventory {
                 BlockInspectContentsInventory viewer = new BlockInspectContentsInventory(player);
                 player.openInventory(viewer.fill());
             } catch (RuntimeException ignored) {
-                // Block may have been destroyed or changed type — silently skip
             }
 
         } else if (event.getClick() == ClickType.RIGHT || event.getClick() == ClickType.SHIFT_RIGHT) {
-            // ── Remove protection ─────────────────────────────────────────────
             BlockNBTHandler handler;
             try {
                 handler = new BlockNBTHandler(block);
@@ -137,7 +139,6 @@ public final class BpUnlockInventory extends BlockProtInventory {
             }
             if (!handler.isProtected()) return;
 
-            // Capture name before clearing
             String blockName = handler.getName();
 
             handler.clear();
@@ -151,15 +152,12 @@ public final class BpUnlockInventory extends BlockProtInventory {
                 .replace("{z}",      String.valueOf(block.getZ()));
             player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(msg));
 
-            // Reload the inventory to reflect the change
             refill(player, state);
         }
     }
 
     @Override
     public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {}
-
-    // ── Fill ───────────────────────────────────────────────────────────────────
 
     /**
      * Populates the inventory.
@@ -185,8 +183,6 @@ public final class BpUnlockInventory extends BlockProtInventory {
         inventory = createInventory();
         return populateInventory(admin, state);
     }
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
 
     private void refill(@NotNull Player player, @NotNull InventoryState state) {
         inventory = createInventory();
@@ -221,7 +217,6 @@ public final class BpUnlockInventory extends BlockProtInventory {
             }
         }
 
-        // Pagination
         if (state.currentPageIndex > 0) {
             setItemStack(max,     Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
         }
@@ -229,7 +224,6 @@ public final class BpUnlockInventory extends BlockProtInventory {
             setItemStack(max + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         }
 
-        // Back button — always slot 53
         setItemStack(max + 2, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
         return inventory;
     }

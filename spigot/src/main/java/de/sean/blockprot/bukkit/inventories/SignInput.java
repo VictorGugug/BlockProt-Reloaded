@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -67,8 +67,6 @@ public final class SignInput implements Listener {
         }
     }
 
-    // -------------------------------------------------------------------------
-
     private final UUID playerUuid;
     private final Location fakeSignLocation;
     private final Material originalType;
@@ -84,15 +82,12 @@ public final class SignInput implements Listener {
         this.playerUuid = player.getUniqueId();
         this.onConfirm  = onConfirm;
 
-        // Use a location 2 blocks above the player's feet.
-        // This is almost always safe air, keeping the server-side mutation brief.
         Location feet = player.getLocation().getBlock().getLocation();
         this.fakeSignLocation = feet.clone().add(0, 2, 0);
 
         Block block = fakeSignLocation.getBlock();
         this.originalType = block.getType();
 
-        // Temporarily place a real sign so we can get a valid Sign state.
         block.setType(Material.OAK_WALL_SIGN, false);
 
         try {
@@ -106,14 +101,11 @@ public final class SignInput implements Listener {
             Bukkit.getPluginManager().registerEvents(this, plugin);
             player.openSign(sign, Side.FRONT);
         } catch (Exception e) {
-            // Registration failed or openSign threw — restore and bail.
             block.setType(originalType, false);
             HandlerList.unregisterAll(this);
             return;
         }
 
-        // Restore the block server-side immediately.
-        // The client keeps the sign GUI open; we only needed a momentary real block state.
         block.setType(originalType, false);
     }
 
@@ -134,8 +126,6 @@ public final class SignInput implements Listener {
         new SignInput(player, plugin, prompt, onConfirm);
     }
 
-    // -------------------------------------------------------------------------
-
     @EventHandler(priority = EventPriority.LOWEST)
     public void onSignChange(@NotNull SignChangeEvent event) {
         if (!event.getPlayer().getUniqueId().equals(playerUuid)) return;
@@ -147,14 +137,11 @@ public final class SignInput implements Listener {
         String result = lineComp != null
             ? LegacyComponentSerializer.legacySection().serialize(lineComp).trim()
             : "";
-        // Strip any trailing legacy reset codes the Adventure serializer may append.
         result = result.replaceAll("\u00a7r$", "").trim();
 
         unregister();
         if (onConfirm != null) onConfirm.accept(result);
     }
-
-    // -------------------------------------------------------------------------
 
     private void unregister() {
         if (!consumed) {

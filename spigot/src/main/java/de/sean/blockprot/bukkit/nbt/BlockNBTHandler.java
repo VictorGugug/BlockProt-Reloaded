@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -62,6 +62,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
     static final String NAME_ATTRIBUTE = "blockprot_name";
     static final String LOCKED_AT_ATTRIBUTE = "blockprot_locked_at";
     static final String EXPIRY_ATTRIBUTE = "blockprot_expires_at";
+    static final String LINKED_ITEM_FRAME_ATTRIBUTE = "blockprot_linked_item_frame";
 
     /**
      * The backing block this handler handles.
@@ -243,6 +244,42 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
         return exp > 0 && System.currentTimeMillis() > exp;
     }
 
+    // ── Item frame link (inverse of EntityNBTHandler#getLinkedBlock) ────────────
+
+    /**
+     * Returns the UUID string of the item frame linked to this block (e.g. an
+     * item frame mounted on this chest), or an empty string if none is linked.
+     * A chest with a linked frame is treated as a single protection unit — the
+     * frame has no separate lock/friends UI, it shares this block's.
+     */
+    @NotNull
+    public String getLinkedItemFrameUuid() {
+        if (!container.hasTag(LINKED_ITEM_FRAME_ATTRIBUTE)) return "";
+        return container.getString(LINKED_ITEM_FRAME_ATTRIBUTE);
+    }
+
+    public void setLinkedItemFrameUuid(@NotNull String uuid) {
+        if (isTileEntity) {
+            NBT.modify(block.getState(true), nbt -> {
+                nbt.setString(LINKED_ITEM_FRAME_ATTRIBUTE, uuid);
+            });
+        }
+        container.setString(LINKED_ITEM_FRAME_ATTRIBUTE, uuid);
+    }
+
+    public void clearLinkedItemFrameUuid() {
+        if (isTileEntity) {
+            NBT.modify(block.getState(true), nbt -> {
+                nbt.removeKey(LINKED_ITEM_FRAME_ATTRIBUTE);
+            });
+        }
+        container.removeKey(LINKED_ITEM_FRAME_ATTRIBUTE);
+    }
+
+    public boolean hasLinkedItemFrame() {
+        return !getLinkedItemFrameUuid().isEmpty();
+    }
+
     /**
      * Checks whether given {@code player} can access this block. If possible, it's
      * always recommended to use {@link #canAccess(FriendHandler)}.
@@ -262,8 +299,8 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
      * guarantee that the {@code friend} is also allowed to manage the block
      * or take items from it.
      *
-     * @param friend The friend to check for.
-     * @return True, if {@code player} is allowed to access this block.
+     * @param friend The {@link FriendHandler} to evaluate.
+     * @return {@code true} if the block is unprotected or {@code friend} has read permission.
      */
     public boolean canAccess(@NotNull final FriendHandler friend) {
         return isNotProtected() || friend.canRead();
@@ -534,6 +571,27 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
         this.setOwner("");
         this.setFriends(Collections.emptyList());
         this.getRedstoneHandler().reset();
+        unlinkItemFrameIfPresent();
+    }
+
+    /**
+     * If this block has a linked item frame, clears that frame's own owner/friends
+     * (it was sharing this block's protection) and removes the link from both sides.
+     * Called whenever this block is unlocked, so the frame never ends up silently
+     * still "protected" by a block that no longer exists as a protection unit.
+     */
+    private void unlinkItemFrameIfPresent() {
+        String frameUuid = getLinkedItemFrameUuid();
+        if (frameUuid.isEmpty()) return;
+        try {
+            org.bukkit.entity.Entity frame = org.bukkit.Bukkit.getEntity(java.util.UUID.fromString(frameUuid));
+            if (frame != null) {
+                de.sean.blockprot.bukkit.nbt.EntityNBTHandler frameHandler = new de.sean.blockprot.bukkit.nbt.EntityNBTHandler(frame);
+                frameHandler.clearOwner();
+                frameHandler.clearLinkedBlock();
+            }
+        } catch (IllegalArgumentException ignored) {}
+        clearLinkedItemFrameUuid();
     }
 
     /**

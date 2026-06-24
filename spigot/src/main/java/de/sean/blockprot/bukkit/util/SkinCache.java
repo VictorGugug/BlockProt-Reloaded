@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -141,10 +141,6 @@ public final class SkinCache {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
-
     private static void fetchAndCache(@NotNull String key, @NotNull String name, @NotNull UUID fallbackUuid) {
         try {
             // 1. Try SkinsRestorer first (already async-safe here).
@@ -183,7 +179,6 @@ public final class SkinCache {
         }
     }
 
-    /** Returns the raw Mojang UUID string (no hyphens) or null on failure. */
     @Nullable
     private static String fetchMojangUuid(@NotNull String name) throws Exception {
         HttpRequest req = HttpRequest.newBuilder()
@@ -201,7 +196,6 @@ public final class SkinCache {
         return obj.has("id") ? obj.get("id").getAsString() : null;
     }
 
-    /** Fetches the full session-server profile JSON or null on failure. */
     @Nullable
     private static String fetchProfileJson(@NotNull UUID mojangUuid) throws Exception {
         String uuidNoDashes = mojangUuid.toString().replace("-", "");
@@ -217,10 +211,6 @@ public final class SkinCache {
         return resp.body();
     }
 
-    /**
-     * Parses the Mojang session-server JSON and returns a {@link PlayerProfile}
-     * with the skin texture URL applied.
-     */
     @NotNull
     private static PlayerProfile buildProfileFromJson(
             @NotNull UUID uuid, @NotNull String name, @NotNull String json) {
@@ -253,7 +243,6 @@ public final class SkinCache {
         return profile;
     }
 
-    /** Parses a UUID string with or without hyphens. */
     @Nullable
     private static UUID parseUuid(@NotNull String raw) {
         try {

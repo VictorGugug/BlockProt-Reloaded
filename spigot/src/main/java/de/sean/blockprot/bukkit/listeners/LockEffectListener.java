@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -58,17 +58,11 @@ public final class LockEffectListener implements Listener {
     private static final int PARTICLE_COUNT = 24;
     private static final double RADIUS = 0.65;
 
-    /** Setting types used by external callers (e.g. RedstoneSettingsInventory). */
     public enum Setting { REDSTONE, HOPPER, PISTON }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // Bukkit event handlers
-    // ──────────────────────────────────────────────────────────────────────────
 
     @EventHandler
     public void onLock(@NotNull BlockProtLockEvent event) {
         if (!BlockProt.getDefaultConfig().isLockEffectEnabled()) return;
-        // Green ring
         Particle.DustOptions green = new Particle.DustOptions(Color.fromRGB(0, 220, 80), 1.2f);
         spawnRingsForBlock(event.getBlock(), green);
         playChestSound(centroid(event.getBlock()), true);
@@ -77,36 +71,21 @@ public final class LockEffectListener implements Listener {
     @EventHandler
     public void onUnlock(@NotNull BlockProtUnlockEvent event) {
         if (!BlockProt.getDefaultConfig().isLockEffectEnabled()) return;
-        // Red ring
         Particle.DustOptions red = new Particle.DustOptions(Color.fromRGB(220, 50, 50), 1.2f);
         spawnRingsForBlock(event.getBlock(), red);
         playChestSound(centroid(event.getBlock()), false);
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Static API — called from RedstoneSettingsInventory when a setting changes
-    // ──────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Plays the particle effect for a redstone/hopper/piston setting toggle.
-     *
-     * @param block   The protected block (may be one half of a double chest).
-     * @param setting Which setting was toggled.
-     * @param enabled The new value after the toggle.
-     */
     public static void playSettingEffect(@NotNull Block block, @NotNull Setting setting, boolean enabled) {
         if (!BlockProt.getDefaultConfig().isLockEffectEnabled()) return;
 
         Particle.DustTransition transition = switch (setting) {
-            // Redstone: red ↔ white
             case REDSTONE -> enabled
                 ? new Particle.DustTransition(Color.fromRGB(220, 40, 40), Color.fromRGB(255, 255, 255), 1.1f)
                 : new Particle.DustTransition(Color.fromRGB(255, 255, 255), Color.fromRGB(180, 30, 30), 1.1f);
-            // Hopper: light-gray ↔ dark-gray
             case HOPPER -> enabled
                 ? new Particle.DustTransition(Color.fromRGB(200, 200, 200), Color.fromRGB(80, 80, 80), 1.1f)
                 : new Particle.DustTransition(Color.fromRGB(80, 80, 80), Color.fromRGB(200, 200, 200), 1.1f);
-            // Piston: brown ↔ gray
             case PISTON -> enabled
                 ? new Particle.DustTransition(Color.fromRGB(139, 90, 43), Color.fromRGB(150, 150, 150), 1.1f)
                 : new Particle.DustTransition(Color.fromRGB(150, 150, 150), Color.fromRGB(100, 60, 20), 1.1f);
@@ -119,21 +98,12 @@ public final class LockEffectListener implements Listener {
         }
     }
 
-    // ──────────────────────────────────────────────────────────────────────────
-    // Private helpers
-    // ──────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Spawns DUST rings around every block center that belongs to the given block
-     * (1 center for normal blocks, 2 for double chests).
-     */
     private static void spawnRingsForBlock(@NotNull Block block, @NotNull Particle.DustOptions dust) {
         for (Location center : getCenters(block)) {
             spawnDustRing(center, dust);
         }
     }
 
-    /** Same as {@link #spawnRingsForBlock} but with a color-transition dust. */
     private static void spawnTransitionRingsForBlock(
             @NotNull Block block,
             @NotNull Particle.DustTransition transition) {
@@ -142,30 +112,22 @@ public final class LockEffectListener implements Listener {
         }
     }
 
-    /**
-     * Returns the center location(s) for the block.
-     * If the block is part of a double chest, returns both halves' centers.
-     */
     private static List<Location> getCenters(@NotNull Block block) {
         List<Location> centers = new ArrayList<>();
         centers.add(centroid(block));
 
-        // Double chest: detect the other half and add its center too.
         BlockState state = block.getState();
         if (state instanceof Chest) {
             var inv = ((Chest) state).getInventory();
             if (inv instanceof DoubleChestInventory dci) {
                 var dc = dci.getHolder();
                 if (dc != null) {
-                    // The double chest's getLocation() is the midpoint between the two halves.
                     Location mid = dc.getLocation();
                     if (mid != null && mid.getWorld() != null) {
-                        // Compute the other half's block position.
                         double bx = block.getX();
                         double bz = block.getZ();
                         double mx = mid.getX();
                         double mz = mid.getZ();
-                        // The other half is on the opposite side of the midpoint.
                         double ox = 2 * mx - bx;
                         double oz = 2 * mz - bz;
                         Location otherCenter = new Location(
@@ -174,7 +136,6 @@ public final class LockEffectListener implements Listener {
                             block.getY() + 0.5,
                             Math.floor(oz) + 0.5
                         );
-                        // Only add if it's actually a different position.
                         if ((int) Math.floor(ox) != block.getX() || (int) Math.floor(oz) != block.getZ()) {
                             centers.add(otherCenter);
                         }

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -71,7 +71,6 @@ public final class TransferCommand implements CommandExecutor {
         return true;
     }
 
-    /** Transfers ALL blocks owned by the player to the target. Runs async to avoid blocking. */
     private void handleTransferAll(@NotNull Player player, @NotNull String targetName) {
         resolvePlayer(player, targetName, newOwner -> {
             if (newOwner.getUniqueId().equals(player.getUniqueId())) {
@@ -80,7 +79,6 @@ public final class TransferCommand implements CommandExecutor {
                 return;
             }
 
-            // Load the caller's block list from statistics.
             PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
             StatHandler.getStatistic(stat, player);
             List<LocationListEntry> entries = stat.get();
@@ -92,7 +90,6 @@ public final class TransferCommand implements CommandExecutor {
             }
 
             final OfflinePlayer finalNewOwner = newOwner;
-            // Run block mutations on the main thread (NBT API requirement).
             Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
                 int transferred = 0;
                 for (LocationListEntry entry : entries) {
@@ -127,10 +124,6 @@ public final class TransferCommand implements CommandExecutor {
         });
     }
 
-    /**
-     * Resolves a player by name asynchronously, then calls {@code callback} on the main thread.
-     * Sends an error message if the player is not found.
-     */
     private void resolvePlayer(@NotNull Player player, @NotNull String name,
                                 @NotNull java.util.function.Consumer<OfflinePlayer> callback) {
         Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {

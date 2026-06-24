@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -84,15 +84,15 @@ public abstract class FriendSupportingHandler<T extends NBTCompound> extends NBT
             .sorted((a, b) -> a.doesRepresentPublic() ? -1 : 1);
     }
 
-    /**
-     * Gets a {@link List} of {@link FriendHandler} for this block.
-     */
     public List<FriendHandler> getFriends() {
         return this.getFriendsStream().collect(Collectors.toList());
     }
 
     /**
      * Set a new list of FriendHandler for the friends list.
+     * Replaces any existing friends entirely.
+     *
+     * @param friends The new friend list. Passing an empty list clears all friends.
      */
     public void setFriends(@NotNull final List<FriendHandler> friends) {
         container.removeKey(friendNbtKey);
@@ -118,9 +118,6 @@ public abstract class FriendSupportingHandler<T extends NBTCompound> extends NBT
             .min((a, b) -> a.doesRepresentPublic() ? 1 : -1);
     }
 
-    /**
-     * Adds a new friend to the NBT.
-     */
     public void addFriend(@NotNull final String friend) {
         compound().addCompound(friend).setString("id", friend);
         onFriendsMutated();
@@ -139,18 +136,11 @@ public abstract class FriendSupportingHandler<T extends NBTCompound> extends NBT
         addFriend(publicUuid.toString());
     }
 
-    /**
-     * Removes a friend from the NBT.
-     */
     public void removeFriend(@NotNull final String friend) {
         compound().removeKey(friend);
         onFriendsMutated();
     }
 
-    /**
-     * Checks whether this blocks friends contain given {@code friendUuid}.
-     * @see #containsFriend(Stream, String) 
-     */
     public boolean containsFriend(@NotNull final String friendUuid) {
         return containsFriend(getFriendsStream(), friendUuid);
     }

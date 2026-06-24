@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -39,21 +39,14 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class VersionCompat {
 
-    // -------------------------------------------------------------------------
-    // Parsed version fields, set once at class-load time.
-    // -------------------------------------------------------------------------
-
     /**
      * Returns true if the server is running the new year-based version scheme (26.x, 27.x, …).
      * Under the new scheme the first segment is a two-digit year (≥ 26), not "1".
      */
     public static final boolean NEW_SCHEME;
 
-    /** Major segment of the version (1 for 1.21.x, 26 for 26.1.x, 27 for 27.x.x). */
     public static final int MAJOR;
-    /** Minor segment (21 for 1.21.x, 1 for 26.1.x). */
     public static final int MINOR;
-    /** Patch / hotfix segment (4 for 1.21.4, 2 for 26.1.2). 0 if absent. */
     public static final int PATCH;
 
     static {
@@ -77,38 +70,16 @@ public final class VersionCompat {
 
     private VersionCompat() {}
 
-    // -------------------------------------------------------------------------
-    // Comparison helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Returns true if the running server version is at least {@code major.minor.patch}.
-     *
-     * <p>For year-based versions (26.x) the comparison still works correctly
-     * because MAJOR will be 26, which is greater than any 1.x MAJOR.
-     *
-     * <p>Examples:
-     * <ul>
-     *   <li>{@code isAtLeast(1, 21, 0)} → true on 1.21, 1.21.4, 26.1, …
-     *   <li>{@code isAtLeast(1, 21, 4)} → true on 1.21.4, 26.1, …; false on 1.21.1
-     *   <li>{@code isAtLeast(26, 1, 0)} → true only on 26.1 and later
-     * </ul>
-     */
     public static boolean isAtLeast(int major, int minor, int patch) {
         if (MAJOR != major) return MAJOR > major;
         if (MINOR != minor) return MINOR > minor;
         return PATCH >= patch;
     }
 
-    /** Convenience: at least major.minor, ignoring patch. */
     public static boolean isAtLeast(int major, int minor) {
         return isAtLeast(major, minor, 0);
     }
 
-    /**
-     * Returns true if the server is running the 26.x version family
-     * (Minecraft 26.1 "Tiny Takeover" and later year-based releases).
-     */
     public static boolean is26Family() {
         return NEW_SCHEME;
     }
@@ -119,14 +90,9 @@ public final class VersionCompat {
      * and introduced typed inventory views ({@code InventoryView} became an interface).
      */
     public static boolean hasTypedInventoryViews() {
-        // Typed inventory views: 1.21.4+ (classic) or any 26.x build.
         return isAtLeast(1, 21, 4);
     }
 
-    /**
-     * Returns true if the running server reports it is a Paper build.
-     * Falls back to false if the Paper-specific class is not on the classpath.
-     */
     public static boolean isPaper() {
         try {
             Class.forName("io.papermc.paper.event.player.AsyncChatEvent");
@@ -136,22 +102,11 @@ public final class VersionCompat {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // String helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Returns a human-readable version string, e.g. "1.21.4" or "26.1.2".
-     */
     @NotNull
     public static String getVersionString() {
         return Bukkit.getMinecraftVersion();
     }
 
-    /**
-     * Returns a one-line diagnostic string suitable for logging.
-     * Example: "MC 26.1.2 (year-based 26.x, Paper)"
-     */
     @NotNull
     public static String getDiagnosticString() {
         return String.format("MC %s (%s, %s)",

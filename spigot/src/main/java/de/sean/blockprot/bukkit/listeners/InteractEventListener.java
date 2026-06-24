@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -42,6 +42,10 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+/**
+ * Handles player block interactions: access control, lock-on-place bypass,
+ * lectern write restrictions, and lock hint messages.
+ */
 public class InteractEventListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -92,7 +96,6 @@ public class InteractEventListener implements Listener {
                 if (!(handler.canAccess(player.getUniqueId().toString()) || player.hasPermission(Permissions.USER_ADMIN.key()))) {
                     event.setCancelled(true);
                     sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
-                    // Registrar intento fallido en el audit log
                     de.sean.blockprot.bukkit.audit.AuditLogger audit = BlockProt.getAuditLogger();
                     if (audit != null) {
                         audit.log(player.getUniqueId(), player.getName(), event.getClickedBlock().getLocation(),
@@ -110,16 +113,13 @@ public class InteractEventListener implements Listener {
                         if (!lectern.hasBook()) {
                             final var friend = handler.getFriend(player.getUniqueId().toString());
                             if (friend.isEmpty() || !friend.get().canWrite()) {
-                                // The player cannot write and therefore is not allowed to place books into the Lectern.
                                 event.setCancelled(true);
                                 sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
                             }
                         }
                     } else if (!(new PlayerSettingsHandler(player).hasPlayerInteractedWithMenu())) {
                         Long timestamp = LockHintMessageCooldown.getTimestamp(player);
-                        if (timestamp == null || timestamp < System.currentTimeMillis() - (BlockProt.getDefaultConfig().getLockHintCooldown() * 1000)) { // 10 seconds in milliseconds
-                            // If they can access the block we'll notify them that they could
-                            // potentially lock their blocks.
+                        if (timestamp == null || timestamp < System.currentTimeMillis() - (BlockProt.getDefaultConfig().getLockHintCooldown() * 1000)) {
                             String message = Translator.get(TranslationKey.MESSAGES__LOCK_HINT);
                             if (!message.isEmpty()) {
                                 LockHintMessageCooldown.setTimestamp(player);
@@ -131,12 +131,12 @@ public class InteractEventListener implements Listener {
                     }
                 }
             } else {
-                // bypassProtections was set by an integration — always allow access
+                    // bypassProtections was set by an integration
                 event.setCancelled(false);
             }
         } else {
-            if (event.hasItem()) return; // Only enter the menu with an empty hand.
-            // Also skip if the off-hand holds a placeable block — the player is placing, not menu-opening.
+            if (event.hasItem()) return;
+            // Skip if the off-hand holds a placeable block — the player is placing, not menu-opening.
             var offHandItem = player.getInventory().getItemInOffHand();
             if (!offHandItem.getType().isAir() && offHandItem.getType().isBlock()) return;
             event.setCancelled(true);

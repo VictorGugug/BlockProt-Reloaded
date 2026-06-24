@@ -1,4 +1,4 @@
-![LOCKABLE BLOCKS REFERENCE](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/LOCKABLE%20BLOCKS%20REFERENCE.png)
+﻿![LOCKABLE BLOCKS REFERENCE](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/LOCKABLE%20BLOCKS%20REFERENCE.png)
 
 Complete list of every block and entity that can be locked, organized by family and sub-family.
 Covers all Minecraft versions up to 1.21.x / 26.1 (The Copper Age).
@@ -7,14 +7,13 @@ For the family expression syntax used in modern mode: see `BLOCK_FAMILY_SYNTAX.m
 For the in-game block browser and how to use it: see the `/bp lockables` section below.
 
 ---
-https://github.com/VictorGugug/BlockProt-Reloaded
 ## The /bp lockables command
 
 `/bp lockables` opens a paged GUI that shows every block the family system knows about,
 regardless of whether it is currently enabled or disabled on the server.
 
 **Who can use it:** any player with the `blockprot.user.admin` permission, or any server operator.
-Available in both menu mode and CLI mode — it is always accessible regardless of `use_menus`.
+Available in both menu mode and CLI mode - it is always accessible regardless of `use_menus`.
 
 **What it shows:**
 
@@ -27,8 +26,8 @@ Available in both menu mode and CLI mode — it is always accessible regardless 
 Clicking does not open anything or change any settings. It sends a clickable message to your chat.
 Click that message and the material name is copied to your clipboard, ready to paste into `blocks.yml`.
 
-- **Left-click** a block → copies `MATERIAL_NAME` (green) — paste directly as a flat entry or as an inclusion token in a family expression
-- **Right-click** a block → copies `-MATERIAL_NAME` (red) — the exclusion token to remove that material from an active sub-family
+- **Left-click** a block → copies `MATERIAL_NAME` (green) - paste directly as a flat entry or as an inclusion token in a family expression
+- **Right-click** a block → copies `-MATERIAL_NAME` (red) - the exclusion token to remove that material from an active sub-family
 
 The info book in slot 46 shows the server version, your client version (if ViaVersion is installed),
 and a count of how many blocks are currently active vs inactive.
@@ -46,7 +45,7 @@ and a count of how many blocks are currently active vs inactive.
 | `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES`            |
 
 `lockable_entities` uses entity NBT (persistent data container), not block NBT. Family expressions are fully supported.
-All entity sub-families are **disabled by default** — the `lockable_entities` list ships empty. Add entries to enable.
+All entity sub-families are **disabled by default** - the `lockable_entities` list ships empty. Add entries to enable.
 
 ---
 
@@ -144,17 +143,17 @@ Remaining tile entities with no dedicated sub-family.
 Token: `*-SIGN`
 
 All sign tile entities: floor signs, wall signs, hanging signs, and wall-mounted hanging signs.
-Locking prevents other players from editing the text. Not included in the default `blocks.yml` —
+Locking prevents other players from editing the text. Not included in the default `blocks.yml` -
 add `*-SIGN` explicitly to enable.
 
 Wood types covered: oak, spruce, birch, jungle, acacia, dark_oak, mangrove, cherry, bamboo, crimson, warped, pale_oak.
 
 | Pattern | MC version |
 |---|---|
-| `*_SIGN` | 1.0+ — floor-placed sign |
-| `*_WALL_SIGN` | 1.0+ — wall-mounted sign |
-| `*_HANGING_SIGN` | 1.20 — hanging sign |
-| `*_WALL_HANGING_SIGN` | 1.20 — wall-mounted hanging sign |
+| `*_SIGN` | 1.0+ - floor-placed sign |
+| `*_WALL_SIGN` | 1.0+ - wall-mounted sign |
+| `*_HANGING_SIGN` | 1.20 - hanging sign |
+| `*_WALL_HANGING_SIGN` | 1.20 - wall-mounted hanging sign |
 
 ---
 
@@ -210,7 +209,7 @@ Token: `*-CAULDRON`
 | Material | MC version | Notes |
 |---|---|---|
 | `CAULDRON` | 1.0 | Empty cauldron. Blocks filling and draining. |
-| `WATER_CAULDRON` | 1.17 | Contains water (1–3 levels). |
+| `WATER_CAULDRON` | 1.17 | Contains water (1-3 levels). |
 | `LAVA_CAULDRON` | 1.17 | Contains lava. |
 | `POWDER_SNOW_CAULDRON` | 1.17 | Contains powder snow. |
 
@@ -219,7 +218,7 @@ Token: `*-CAULDRON`
 Token: `*-WORKSTATION`
 
 Blocks non-owners from opening the GUI. A villager linked to a protected workstation is also
-protected — see the [Entity protection](#entity-protection) section below.
+protected - see the [Entity protection](#entity-protection) section below.
 
 | Material | MC version |
 |---|---|
@@ -229,6 +228,7 @@ protected — see the [Entity protection](#entity-protection) section below.
 | `CARTOGRAPHY_TABLE` | 1.14 |
 | `SMITHING_TABLE` | 1.14 |
 | `ENCHANTING_TABLE` | 1.0 |
+| `FLETCHING_TABLE` | 1.14 |
 
 ### Sub-family: FENCE_GATE
 
@@ -335,7 +335,7 @@ Storage entities and item frames. Protection is stored in the entity's persisten
 being killed (the entity ceases to exist; protection data goes with it).
 
 **Default state:** `lockable_entities` ships as an empty list. No entity type is protected until
-an admin adds it to `blocks.yml`. This is intentional — entity protection has a higher
+an admin adds it to `blocks.yml`. This is intentional - entity protection has a higher
 performance profile than block protection because entities are not indexed by chunk the same way.
 
 To enable all entity types:
@@ -354,7 +354,7 @@ Protects the inventory from player access and hopper-pipeline extraction.
 
 | Material | MC version |
 |---|---|
-| `CHEST_BOAT` | 1.19 — generic (oak) |
+| `CHEST_BOAT` | 1.19 - generic (oak) |
 | `OAK_CHEST_BOAT` | 1.19 |
 | `SPRUCE_CHEST_BOAT` | 1.19 |
 | `BIRCH_CHEST_BOAT` | 1.19 |
@@ -439,17 +439,17 @@ When `entity_protection.enabled: true`, owners can open the entity protection me
 by right-clicking their tamed pet with the configured menu item (default: stick).
 
 Protection flags per pet:
-- `no_damage` — blocks damage from non-owners (player attacks and projectiles)
-- `no_interact` — blocks right-click (feeding, naming, etc.)
-- `no_leash` — blocks leashing/unleashing by non-owners
-- `no_pickup` — blocks parrot-on-shoulder pickup by non-owners
+- `no_damage` - blocks damage from non-owners (player attacks and projectiles)
+- `no_interact` - blocks right-click (feeding, naming, etc.)
+- `no_leash` - blocks leashing/unleashing by non-owners
+- `no_pickup` - blocks parrot-on-shoulder pickup by non-owners
 
 Death notification: if the owner is online when a protected pet dies, they receive a chat message.
 
 ### Villagers linked to workstations
 
 When a villager's job site (stored in its memory) points to a protected workstation block, the
-villager inherits protection from the block owner. No explicit configuration is needed — it is
+villager inherits protection from the block owner. No explicit configuration is needed - it is
 automatic whenever the workstation block is locked.
 
 Protected actions:
@@ -469,7 +469,7 @@ If no villager is linked to the workstation, nothing happens.
 ## auto_drop_to_inventory
 
 Controls which blocks deliver their contents directly to the breaker's inventory instead of
-dropping items on the ground. Spans all families — a single expression resolves against the
+dropping items on the ground. Spans all families - a single expression resolves against the
 full lockable universe.
 
 In legacy mode, list material names explicitly. In modern mode, use family expressions.

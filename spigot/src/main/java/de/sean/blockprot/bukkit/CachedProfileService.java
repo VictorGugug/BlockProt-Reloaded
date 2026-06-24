@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -34,6 +34,10 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Predicate;
 
+/**
+ * Resolves player profiles using the server's own caches first (Bukkit/Paper),
+ * falling back to the Mojang endpoint, and writes every result into the local cache.
+ */
 public class CachedProfileService implements ProfileService, ProfileCache {
     private final ProfileService resolver;
     private final ProfileCache cache;
@@ -127,7 +131,6 @@ public class CachedProfileService implements ProfileService, ProfileCache {
         }
 
         if (!lookup.isEmpty()) {
-            // Start with the profiles we already have in cache (filter nulls defensively).
             final var profiles = new ArrayList<Profile>();
             for (final var p : map.values()) {
                 if (p != null) profiles.add(p);
@@ -147,7 +150,6 @@ public class CachedProfileService implements ProfileService, ProfileCache {
             return ImmutableList.copyOf(profiles);
         }
 
-        // All UUIDs were in cache — filter nulls before returning.
         return map.values().stream()
             .filter(Objects::nonNull)
             .collect(ImmutableList.toImmutableList());

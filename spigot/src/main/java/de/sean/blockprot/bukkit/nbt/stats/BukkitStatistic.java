@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -43,7 +43,6 @@ public abstract class BukkitStatistic<V> extends NBTHandler<NBTCompound> impleme
     public abstract @NotNull V get();
     public abstract void set(@NotNull V value);
 
-    /** Update the NBT container from which this statistic shall be read. */
     public void updateContainer(@NotNull NBTCompound container) {
         this.container = container;
     }
@@ -52,7 +51,6 @@ public abstract class BukkitStatistic<V> extends NBTHandler<NBTCompound> impleme
         return Material.DIRT;
     }
 
-    /** Get what should happen when the user clicks on this statistic. */
     public @NotNull StatisticOnClickAction getClickAction() {
         return StatisticOnClickAction.NONE;
     }

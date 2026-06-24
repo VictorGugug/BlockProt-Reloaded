@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -28,17 +28,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Opens a chat or sign input to search for a friend to add.
+ */
 public class FriendSearchInventory {
     public static void openChatInput(@NotNull final Player requestingPlayer) {
         if (VersionCompat.isPaper()) {
-            // Paper 1.19+ — native chat input with Tab auto-complete.
             ChatInput.open(
                 requestingPlayer,
                 BlockProt.getInstance(),
                 text -> handleResult(requestingPlayer, text)
             );
         } else {
-            // Spigot fallback — sign editor (1.20+) or anvil GUI.
             String prompt = Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH);
             if (SignInput.isSupported()) {
                 SignInput.open(

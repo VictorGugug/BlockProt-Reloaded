@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -113,15 +113,6 @@ public final class Translator {
 
     private Translator() {}
 
-    // ── Loading ───────────────────────────────────────────────────────────────
-
-    /**
-     * Initialize translations from configs and set the internal locale.
-     *
-     * @param defaultConfig Bundled English reference.
-     * @param config        Active language config.
-     * @since 0.4.6
-     */
     public static void loadFromConfigs(@NotNull final YamlConfiguration defaultConfig,
                                        @NotNull final YamlConfiguration config) {
         String localeStr = config.getString("locale");
@@ -184,20 +175,7 @@ public final class Translator {
         }
     }
 
-    // ── Detection ─────────────────────────────────────────────────────────────
-
-    /**
-     * Returns true only if the string contains at least one known MiniMessage tag.
-     *
-     * <p>Tokens like {@code <player>}, {@code <seconds>}, {@code <count>} are
-     * plugin placeholders — they are not in the MM whitelist and return false.</p>
-     *
-     * <p>Also returns false if the string already contains section-symbol ({@code §})
-     * formatting, meaning it was already processed or hardcoded in the lang file.
-     * Passing pre-formatted strings to MiniMessage causes a parsing exception.</p>
-     */
     private static boolean containsMiniMessage(@NotNull String text) {
-        // Already contains section-symbol codes — skip MM parsing entirely.
         if (text.indexOf('\u00A7') >= 0) return false;
 
         var matcher = TAG_NAME_PATTERN.matcher(text);
@@ -208,20 +186,8 @@ public final class Translator {
         return false;
     }
 
-    // ── Processing ────────────────────────────────────────────────────────────
-
-    /**
-     * Converts a raw lang-file string to a legacy section-symbol string.
-     *
-     * <ul>
-     *   <li>If it already contains {@code §} — returned as-is.</li>
-     *   <li>If it contains a known MM tag — parsed by MiniMessage, serialized to legacy.</li>
-     *   <li>Otherwise — {@code &} codes are translated to {@code §}.</li>
-     * </ul>
-     */
     @NotNull
     private static String process(@NotNull String raw) {
-        // Already has section-symbol formatting; no further processing needed.
         if (raw.indexOf('\u00A7') >= 0) return raw;
 
         if (containsMiniMessage(raw)) {
@@ -229,22 +195,9 @@ public final class Translator {
             return LEGACY_SERIALIZER.serialize(component);
         }
 
-        // Translate & color codes to § without using the deprecated ChatColor API.
-        // This is safe because: (a) containsMiniMessage() already returned false,
-        // meaning no Adventure tags are present, and (b) § section-sign is already
-        // handled by the early-return at the top of this method.
         return raw.replace('&', '\u00a7');
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
-
-    /**
-     * Get the translated string by key.
-     *
-     * @param key the translation key to search for.
-     * @return Translated string, or the key name if not found.
-     * @since 0.1.10
-     */
     @NotNull
     public static String get(@NotNull final TranslationKey key) {
         TranslationValue value = values.get(key);
@@ -252,11 +205,6 @@ public final class Translator {
         return process(raw);
     }
 
-    /**
-     * Gets the translation for a {@link LockReturnValue.Reason}.
-     *
-     * @since 1.0.3
-     */
     @NotNull
     public static String get(@NotNull final LockReturnValue.Reason reason) {
         return switch (reason) {
@@ -265,20 +213,11 @@ public final class Translator {
         };
     }
 
-    /**
-     * @return The locale of the currently loaded translations.
-     * @since 0.4.6
-     */
     @NotNull
     public static Locale getLocale() {
         return locale;
     }
 
-    /**
-     * Clears all loaded translations.
-     *
-     * @since 1.0.0
-     */
     public static void resetTranslations() {
         values.clear();
     }

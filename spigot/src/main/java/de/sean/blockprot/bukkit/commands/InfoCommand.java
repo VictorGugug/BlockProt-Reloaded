@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -72,7 +72,6 @@ public final class InfoCommand implements CommandExecutor {
             return true;
         }
 
-        // No argument: Player opens the full player-list GUI; console gets usage.
         if (args.length < 2) {
             if (sender instanceof Player player) {
                 InventoryState state = new InventoryState(null);
@@ -120,7 +119,6 @@ public final class InfoCommand implements CommandExecutor {
                     return;
                 }
 
-                // Console output
                 List<LocationListEntry> entries = stat.get();
                 if (entries.isEmpty()) {
                     sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
@@ -163,7 +161,6 @@ public final class InfoCommand implements CommandExecutor {
         if (!canUseCommand(sender)) return Collections.emptyList();
         if (args.length == 2) {
             String prefix = args[1].toLowerCase();
-            // Include all offline players that have played before for tab complete
             return java.util.Arrays.stream(Bukkit.getOfflinePlayers())
                 .filter(op -> op.getName() != null && op.getName().toLowerCase().startsWith(prefix))
                 .map(op -> op.getName())

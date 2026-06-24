@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -26,35 +26,11 @@ package de.sean.blockprot.bukkit.inventories;
  * @since 0.2.0
  */
 public final class InventoryConstants {
-    /**
-     * The length of a single inventory line
-     * in a normal inventory.
-     *
-     * @since 0.2.0
-     */
     public static final int lineLength = 9;
 
-    /**
-     * The length of two inventory line
-     * in a normal inventory.
-     *
-     * @since 0.2.0
-     */
     public static final int doubleLine = 9 * 2;
 
-    /**
-     * The length of three inventory line
-     * in a normal inventory.
-     *
-     * @since 0.2.0
-     */
     public static final int tripleLine = 9 * 3;
 
-    /**
-     * The length of a six line inventory, similar
-     * to a double chest.
-     * 
-     * @since 1.0.0
-     */
     public static final int sextupletLine = 9 * 6;
 }

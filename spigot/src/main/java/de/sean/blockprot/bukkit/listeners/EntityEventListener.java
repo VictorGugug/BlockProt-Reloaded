@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -36,6 +36,10 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.vehicle.VehicleEnterEvent;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Prevents entities (endermen, falling blocks, storage minecarts) from
+ * interacting with or bypassing protection on locked blocks.
+ */
 public final class EntityEventListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onEntityChangeBlock(@NotNull final EntityChangeBlockEvent event) {
@@ -72,7 +76,6 @@ public final class EntityEventListener implements Listener {
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onStorageMinecartEnter(@NotNull VehicleEnterEvent event) {
         if (!(event.getVehicle() instanceof StorageMinecart)) return;
-        // Check the block directly above the minecart location for a protected chest
         Block above = event.getVehicle().getLocation().getBlock().getRelative(0, 1, 0);
         if (BlockProt.getDefaultConfig().isLockableTileEntity(above.getType())) {
             BlockNBTHandler handler;

@@ -1,6 +1,8 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * This file is part of BlockProt <https://github.com/spnda/BlockProt>.
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
  * BlockProt is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -43,21 +45,15 @@ import java.util.*;
  */
 public final class BlockProtCommand implements TabExecutor {
 
-    /** GUI-mode commands: only shown when use_menus=true. */
     private static final Map<String, CommandExecutor> GUI_COMMANDS   = new LinkedHashMap<>();
-    /** CLI-mode commands: only shown when use_menus=false. */
     private static final Map<String, CommandExecutor> CLI_COMMANDS   = new LinkedHashMap<>();
-    /** Admin commands: accessible in BOTH modes (admin-only). */
     private static final Map<String, CommandExecutor> ADMIN_COMMANDS = new LinkedHashMap<>();
-    /** All commands by canonical name (union of all maps). */
     private static final Map<String, CommandExecutor> ALL_COMMANDS   = new LinkedHashMap<>();
 
     static {
-        // GUI commands (use_menus=true)
         gui("user",         new UserMenuCommand());
         gui("admin",        new AdminMenuCommand());
 
-        // CLI commands (use_menus=false)
         cli("help",         new HelpCommand());
         cli("settings",     new SettingsCommand());
         cli("friends",      new FriendsAddAllCommand());
@@ -96,29 +92,24 @@ public final class BlockProtCommand implements TabExecutor {
                              @NotNull String label, @NotNull String[] args) {
         boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
 
-        // /bp with no args
         if (args.length == 0) {
             if (menusEnabled) {
-                // Open admin or user GUI
                 CommandExecutor exec = (sender.isOp() || sender.hasPermission(Permissions.USER_ADMIN.key()))
                     ? GUI_COMMANDS.get("admin") : GUI_COMMANDS.get("user");
                 return exec != null && exec.onCommand(sender, command, label, args);
             }
-            // CLI mode: show help
             CommandExecutor help = CLI_COMMANDS.get("help");
             return help != null && help.onCommand(sender, command, label, args);
         }
 
         String sub = args[0].toLowerCase(Locale.ROOT);
 
-        // Admin commands work regardless of mode
         CommandExecutor adminExec = ADMIN_COMMANDS.get(sub);
         if (adminExec != null) {
             return adminExec.onCommand(sender, command, label, args);
         }
 
         if (menusEnabled) {
-            // Only GUI commands are accessible
             CommandExecutor exec = GUI_COMMANDS.get(sub);
             if (exec == null) {
                 sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
@@ -127,10 +118,8 @@ public final class BlockProtCommand implements TabExecutor {
             }
             return exec.onCommand(sender, command, label, args);
         } else {
-            // Only CLI commands are accessible
             CommandExecutor exec = CLI_COMMANDS.get(sub);
             if (exec == null) {
-                // unknown subcommand in CLI mode
                 CommandExecutor help = CLI_COMMANDS.get("help");
                 if (help != null) help.onCommand(sender, command, label, args);
                 return true;
@@ -143,7 +132,6 @@ public final class BlockProtCommand implements TabExecutor {
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                                @NotNull String alias, @NotNull String[] args) {
         if (args.length > 1) {
-            // Delegate to sub-executor if it provides its own completions
             CommandExecutor exec = ALL_COMMANDS.get(args[0].toLowerCase(Locale.ROOT));
             if (exec != null) {
                 List<String> sub = exec.onTabComplete(sender, command, alias, args);
@@ -154,7 +142,6 @@ public final class BlockProtCommand implements TabExecutor {
 
         boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
         Map<String, CommandExecutor> visible = menusEnabled ? GUI_COMMANDS : CLI_COMMANDS;
-        // Admin commands are always visible to admins in tab-complete
         Map<String, CommandExecutor> combined = new LinkedHashMap<>(visible);
         combined.putAll(ADMIN_COMMANDS);
 

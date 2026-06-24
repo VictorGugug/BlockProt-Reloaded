@@ -1,4 +1,4 @@
-![BLOCK FAMILY SYNTAX](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BLOCK%20FAMILY%20SYNTAX.png)
+﻿![BLOCK FAMILY SYNTAX](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BLOCK%20FAMILY%20SYNTAX.png)
 
 Family expressions are a compact syntax for `blocks.yml`, `worlds.yml`, and
 `auto_drop_to_inventory`. They are **always parsed** regardless of the `modern_family_blocks`
@@ -9,6 +9,55 @@ automatically converted to expressions on startup. It does not gate expression p
 
 They replace flat material lists with token-based expressions that resolve dynamically
 against the full family registry at startup and on `/bp reload`.
+
+---
+
+## Two valid formats — do not mix them on one line
+
+Every list key (`lockable_tile_entities`, `lockable_blocks`, `lockable_entities`, etc.)
+accepts a normal YAML list. Each line in that list is either:
+
+1. **A plain material name** — one block/entity per line, exactly like every other
+   list in `blocks.yml`:
+   ```yaml
+   lockable_entities:
+     - ITEM_FRAME
+     - ACACIA_CHEST_BOAT
+   ```
+2. **A family expression** — a single string wrapped in `[...]`, quoted, that can
+   stand for many materials at once:
+   ```yaml
+   lockable_entities:
+     - '[*-ITEM_FRAMES *-CHEST_BOATS]'
+   ```
+
+You can mix plain names and expressions across different lines of the same list.
+What you **cannot** do is put more than one plain name inside `[...]` without commas —
+that is not YAML list syntax, it is the family-expression bracket, and it only
+understands the tokens below (`*`, `*-TAG`, `-*TAG`, `NAME`, `-NAME`).
+
+```yaml
+# WRONG — square brackets are read as ONE family expression, not a list of two names.
+# "ITEM_FRAME" and "ACACIA_CHEST_BOAT" are not valid tokens, so this resolves to nothing
+# and silently enables zero entities. No warning is logged for this case.
+lockable_entities: [ITEM_FRAME ACACIA_CHEST_BOAT]
+
+# RIGHT — plain list, one entry per line
+lockable_entities:
+  - ITEM_FRAME
+  - ACACIA_CHEST_BOAT
+
+# ALSO RIGHT — YAML flow-list with a comma (now two real list entries)
+lockable_entities: [ITEM_FRAME, ACACIA_CHEST_BOAT]
+
+# ALSO RIGHT — family expression, quoted, as the list's only entry
+lockable_entities:
+  - '[*-ITEM_FRAMES *-CHEST_BOATS]'
+```
+
+If you only want one or two specific materials, the plain list format is simpler and
+clearer. Reach for a family expression when you want "all of a sub-family" or
+"everything except a few" — see the token reference below.
 
 ---
 
@@ -27,7 +76,7 @@ All expressions are wrapped in `[...]` and contain space-separated tokens.
 **Key rule**: the result set starts empty. `*` or `*-TAG` populate it first.
 `-*TAG` removes from it. `NAME` / `-NAME` add or remove individual materials.
 
-**Important**: `-*TAG` alone without a prior `*` or `*-TAG` produces an empty set —
+**Important**: `-*TAG` alone without a prior `*` or `*-TAG` produces an empty set -
 there is nothing to remove from. To disable a sub-family while keeping the rest:
 use `[* -*TAG]` (include all, then subtract).
 
@@ -40,11 +89,11 @@ A material that does not belong to the current family is rejected with a warning
 
 ```yaml
 # lockable_tile_entities belongs to the TILE_ENTITIES family.
-# COPPER_CHESTPLATE is armor — not a TILE_ENTITIES member — rejected.
+# COPPER_CHESTPLATE is armor - not a TILE_ENTITIES member - rejected.
 lockable_tile_entities:
   - "[*-CHEST -COPPER_CHESTPLATE]"   # ERROR: COPPER_CHESTPLATE not in TILE_ENTITIES -> discarded
 
-# COPPER_CHEST is a CHEST sub-family member — valid.
+# COPPER_CHEST is a CHEST sub-family member - valid.
 lockable_tile_entities:
   - "[*-CHEST -COPPER_CHEST]"        # OK: all chest variants except COPPER_CHEST
 ```
@@ -60,7 +109,7 @@ lockable_tile_entities:
 | `[*-CHEST]`                                  | Only the CHEST sub-family (all chest variants)                                  |
 | `[*-CHEST -COPPER_CHEST]`                    | Whole CHEST sub-family minus COPPER_CHEST                                       |
 | `[* -*CHEST]`                                | All family members except the CHEST sub-family                                  |
-| `[-*CHEST]`                                  | **Empty** — no base inclusion, nothing to remove from                           |
+| `[-*CHEST]`                                  | **Empty** - no base inclusion, nothing to remove from                           |
 | `[* -*CHEST COPPER_CHEST]`                   | All family except CHEST sub-family, but COPPER_CHEST re-included                |
 | `[*-FURNACE *-SHELF *-TRANSPORT *-MISC *-CHEST -COPPER_CHEST]` | All tile-entity sub-families, CHEST minus COPPER_CHEST |
 | `[CHEST BARREL]`                             | Only CHEST and BARREL (empty base, explicit inclusions)                         |
@@ -106,15 +155,15 @@ lockable_tile_entities:
 lockable_tile_entities:
   - "[*-FURNACE *-SHELF *-TRANSPORT *-MISC *-CHEST -COPPER_CHEST]"
 
-# Entity family — item frames only
+# Entity family - item frames only
 lockable_entities:
   - "[*-ITEM_FRAMES]"
 
-# Entity family — storage vehicles and item frames
+# Entity family - storage vehicles and item frames
 lockable_entities:
   - "[*-CHEST_BOATS *-CHEST_MINECARTS *-HOPPER_MINECARTS *-ITEM_FRAMES]"
 
-# worlds.yml — per-world example
+# worlds.yml - per-world example
 worlds:
   survival:
     enabled: true
@@ -153,9 +202,9 @@ auto_drop_to_inventory:
     - "[*-SHULKERS *-CHEST]"              # shulkers + all chest variants
 
 # To disable shulker auto-drop entirely:
-#   Option A — set enabled: false
-#   Option B — remove shulker entries from blocks list
-#   Option C — do not include [*-SHULKERS] or individual shulker names
+#   Option A - set enabled: false
+#   Option B - remove shulker entries from blocks list
+#   Option C - do not include [*-SHULKERS] or individual shulker names
 #
 # Note: [-*SHULKERS] alone produces an empty set (no base inclusion = nothing to remove from).
 # It will NOT disable shulkers that are listed via other entries in the same blocks list.

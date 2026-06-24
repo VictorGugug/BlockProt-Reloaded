@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -37,17 +37,9 @@ import java.util.Set;
  * data.
  */
 public abstract class BlockProtConfig {
-    /**
-     * The FileConfiguration backing this {@link BlockProtConfig} wrapper.
-     */
     @NotNull
     protected final FileConfiguration config;
 
-    /**
-     * Create a new config.
-     *
-     * @param config The {@link FileConfiguration} to use.
-     */
     public BlockProtConfig(@NotNull final FileConfiguration config) {
         this.config = config;
     }
@@ -91,8 +83,6 @@ public abstract class BlockProtConfig {
             }
         }
         if (!names.isEmpty()) {
-            // Route to session log only — these are blocks defined for a newer MC version
-            // than what is currently running, which is normal and expected.
             BlockProtLogger.log("blocks-compat",
                 "Skipped " + names.size() + " material(s) not present in MC "
                 + VersionCompat.getVersionString() + ": " + names);

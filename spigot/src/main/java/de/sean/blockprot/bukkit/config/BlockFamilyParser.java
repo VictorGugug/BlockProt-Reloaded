@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit.config;
 
 import de.sean.blockprot.bukkit.BlockProtLogger;
@@ -40,10 +60,6 @@ public final class BlockFamilyParser {
 
     private BlockFamilyParser() {}
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Sub-family definitions
-    // ─────────────────────────────────────────────────────────────────────────
-
     public enum SubFamily {
         CHEST("CHEST", Family.TILE_ENTITIES),
         FURNACE("FURNACE", Family.TILE_ENTITIES),
@@ -84,10 +100,6 @@ public final class BlockFamilyParser {
             return null;
         }
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Family definitions
-    // ─────────────────────────────────────────────────────────────────────────
 
     public enum Family {
         TILE_ENTITIES,
@@ -164,8 +176,6 @@ public final class BlockFamilyParser {
             SUBFAMILY_MEMBERS.put(sf, Collections.unmodifiableSet(sfAcc.get(sf)));
     }
 
-    // ── Material classifiers ──────────────────────────────────────────────────
-
     private static boolean isChestMaterial(@NotNull String n) {
         return n.equals("CHEST") || n.equals("TRAPPED_CHEST") || n.equals("ENDER_CHEST")
             || n.contains("COPPER_CHEST") || n.contains("COPPER_TRAPPED_CHEST");
@@ -221,10 +231,6 @@ public final class BlockFamilyParser {
         return false;
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Public accessors
-    // ─────────────────────────────────────────────────────────────────────────
-
     @NotNull
     public static Set<Material> getFamilyMembers(@NotNull Family family) {
         return FAMILY_MEMBERS.getOrDefault(family, Collections.emptySet());
@@ -234,10 +240,6 @@ public final class BlockFamilyParser {
     public static Set<Material> getSubFamilyMembers(@NotNull SubFamily subFamily) {
         return SUBFAMILY_MEMBERS.getOrDefault(subFamily, Collections.emptySet());
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Top-level parse entry point
-    // ─────────────────────────────────────────────────────────────────────────
 
     @NotNull
     public static Set<Material> parse(@Nullable Object raw, @NotNull Family family) {
@@ -270,17 +272,9 @@ public final class BlockFamilyParser {
         return Collections.emptySet();
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Expression helpers
-    // ─────────────────────────────────────────────────────────────────────────
-
     public static boolean isFamilyExpression(@NotNull String s) {
         return s.startsWith("[") && s.endsWith("]");
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Core expression parser
-    // ─────────────────────────────────────────────────────────────────────────
 
     /**
      * Parses a bracket expression and resolves it against the given family.
@@ -451,10 +445,6 @@ public final class BlockFamilyParser {
 
         return result;
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // Migration helper — flat list → compact expression
-    // ─────────────────────────────────────────────────────────────────────────
 
     /**
      * Converts a flat list of Materials into the most compact sub-family-aware

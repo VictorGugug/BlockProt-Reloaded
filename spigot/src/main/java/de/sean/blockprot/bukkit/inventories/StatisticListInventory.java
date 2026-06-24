@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -20,19 +20,26 @@
 
 package de.sean.blockprot.bukkit.inventories;
 
-import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.stats.BukkitListStatistic;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.nbt.stats.ListStatisticItem;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.GlowItemFrame;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.minecart.HopperMinecart;
+import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
@@ -42,6 +49,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Paginated inventory displaying a list of protected blocks and entities.
+ */
 public final class StatisticListInventory extends BlockProtInventory {
     public StatisticListInventory() { super(true); }
     private BukkitListStatistic<ListStatisticItem<?, Material>, ?> statistic;
@@ -74,24 +84,39 @@ public final class StatisticListInventory extends BlockProtInventory {
             }
             case BARRIER -> goBack(player, state);
             case BLACK_STAINED_GLASS_PANE -> goBack(player, state);
-            default -> handleBlockItemClick(event, player, state);
+            default -> handleItemClick(event, player, state);
         }
     }
 
-    private void handleBlockItemClick(@NotNull InventoryClickEvent event,
-                                      @NotNull Player player,
-                                      @NotNull InventoryState state) {
-        List<ListStatisticItem<?, Material>> fullList = getFilteredList();
+    private void handleItemClick(@NotNull InventoryClickEvent event,
+                                 @NotNull Player player,
+                                 @NotNull InventoryState state) {
+        List<ListStatisticItem<?, Material>> fullList = getMergedList(player);
         int offset = (this.getSize() - 3) * state.currentPageIndex;
         int idx = offset + event.getSlot();
         if (idx < 0 || idx >= fullList.size()) return;
 
         ListStatisticItem<?, Material> entry = fullList.get(idx);
+
+        if (entry instanceof EntityListEntry entityEntry) {
+            Entity entity = entityEntry.getEntity();
+            if (entity == null) return;
+            EntityNBTHandler handler = new EntityNBTHandler(entity);
+            if (!handler.isProtected()) return;
+            if (!handler.isOwner(player.getUniqueId().toString())
+                    && !player.hasPermission(Permissions.USER_ADMIN.key())) return;
+            player.closeInventory();
+            InventoryState newState = InventoryState.getOrCreate(player.getUniqueId());
+            newState.entityUUID = entity.getUniqueId();
+            var inv = new BlockLockInventory().fillForEntity(player, entity, handler);
+            if (inv != null) player.openInventory(inv);
+            return;
+        }
+
         if (!(entry instanceof LocationListEntry locEntry)) return;
         Location loc = locEntry.get();
         if (loc.getWorld() == null) return;
 
-        // Only TP is available (left OR right click)
         if (!player.hasPermission(Permissions.BLOCKS_TP.key())) {
             player.sendActionBar(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
                 .legacySection().deserialize(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION_TP)));
@@ -110,7 +135,7 @@ public final class StatisticListInventory extends BlockProtInventory {
         if (stat != null) this.statistic = stat;
         if (this.statistic == null) throw new RuntimeException("No cached statistic available.");
 
-        List<ListStatisticItem<?, Material>> list = getFilteredList();
+        List<ListStatisticItem<?, Material>> list = getMergedList(player);
         final InventoryState state = InventoryState.get(player.getUniqueId());
         if (state == null) return inventory;
 
@@ -123,9 +148,16 @@ public final class StatisticListInventory extends BlockProtInventory {
 
         for (int i = 0; i < Math.min(list.size() - offset, max); ++i) {
             final ListStatisticItem<?, Material> entry = list.get(offset + i);
-            String lockedAgo = (entry instanceof LocationListEntry loc) ? loc.getLockedAgoText() : "";
-            List<String> contents = (entry instanceof LocationListEntry loc) ? loc.getContentsLore() : List.of();
-            setItemStackWithLore(i, resolveDisplayMaterial(entry.getItemType()), entry.getTitle(), loreTP, lockedAgo, contents);
+            if (entry instanceof EntityListEntry entityEntry) {
+                setItemStackWithLore(i, entityEntry.getItemType(), entityEntry.getTitle(),
+                    "\u00a77Click to open", "", entityEntry.getContentsLore());
+            } else if (entry instanceof LocationListEntry loc) {
+                setItemStackWithLore(i, resolveDisplayMaterial(entry.getItemType()),
+                    entry.getTitle(), loreTP, loc.getLockedAgoText(), loc.getContentsLore());
+            } else {
+                setItemStackWithLore(i, resolveDisplayMaterial(entry.getItemType()),
+                    entry.getTitle(), loreTP, "", List.of());
+            }
         }
 
         if (list.size() - offset > max) {
@@ -136,10 +168,38 @@ public final class StatisticListInventory extends BlockProtInventory {
         return inventory;
     }
 
-    private List<ListStatisticItem<?, Material>> getFilteredList() {
+    private List<ListStatisticItem<?, Material>> getMergedList(@NotNull Player player) {
+        List<ListStatisticItem<?, Material>> result = new ArrayList<>(getFilteredBlockList());
+        String playerUuid = player.getUniqueId().toString();
+        for (org.bukkit.World world : Bukkit.getWorlds()) {
+            for (Entity entity : world.getEntities()) {
+                if (!isProtectableEntity(entity)) continue;
+                EntityNBTHandler h = new EntityNBTHandler(entity);
+                if (!h.isProtected()) continue;
+                if (!h.isOwner(playerUuid) && !player.hasPermission(Permissions.USER_ADMIN.key())) continue;
+                result.add(new EntityListEntry(entity));
+            }
+        }
+        return result;
+    }
+
+    private static boolean isProtectableEntity(@NotNull Entity entity) {
+        if (entity instanceof ItemFrame || entity instanceof GlowItemFrame) return true;
+        if (entity instanceof StorageMinecart || entity instanceof HopperMinecart) return true;
+        try {
+            Class<?> cb = Class.forName("org.bukkit.entity.boat.ChestBoat");
+            if (cb.isInstance(entity)) return true;
+        } catch (ClassNotFoundException ignored) {}
+        try {
+            Class<?> cb = Class.forName("org.bukkit.entity.ChestBoat");
+            if (cb.isInstance(entity)) return true;
+        } catch (ClassNotFoundException ignored) {}
+        return false;
+    }
+
+    private List<ListStatisticItem<?, Material>> getFilteredBlockList() {
         return statistic.get()
             .stream()
-            // Skip stale entries where the block no longer exists
             .filter(e -> {
                 if (e instanceof LocationListEntry loc) {
                     try { return loc.get().getBlock().getType() != Material.AIR; }
@@ -155,20 +215,20 @@ public final class StatisticListInventory extends BlockProtInventory {
         return raw;
     }
 
-    private void setItemStackWithLore(int index, Material material, String name, String loreTp, String lockedAgo, List<String> contents) {
+    private void setItemStackWithLore(int index, Material material, String name,
+                                      String loreLine, String lockedAgo, List<String> contents) {
         ItemStack stack = new ItemStack(material, 1);
         ItemMeta meta = stack.getItemMeta();
-        if (meta == null) {
-            inventory.setItem(index, stack);
-            return;
-        }
+        if (meta == null) { inventory.setItem(index, stack); return; }
         meta.displayName(net.kyori.adventure.text.Component.text(
-            name.replaceAll("[§&][0-9a-fk-orx]", "")));
+            name.replaceAll("[\u00a7&][0-9a-fk-orx]", "")));
         List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
         lore.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-            .legacySection().deserialize(loreTp));
-        if (!lockedAgo.isEmpty()) lore.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-            .legacySection().deserialize(lockedAgo));
+            .legacySection().deserialize(loreLine));
+        if (!lockedAgo.isEmpty()) {
+            lore.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                .legacySection().deserialize(lockedAgo));
+        }
         if (!contents.isEmpty()) {
             lore.add(net.kyori.adventure.text.Component.empty());
             for (String line : contents) {
@@ -179,5 +239,76 @@ public final class StatisticListInventory extends BlockProtInventory {
         meta.lore(lore);
         stack.setItemMeta(meta);
         inventory.setItem(index, stack);
+    }
+
+    /**
+     * A stats list entry for a protected entity (item frame, chest boat, minecart).
+     * Resolved live from the world — entity protection is stored in PDC, not NBT file.
+     */
+    public static final class EntityListEntry extends ListStatisticItem<Entity, Material> {
+        public EntityListEntry(@NotNull Entity entity) { super(entity); }
+
+        @Nullable
+        public Entity getEntity() {
+            try { return Bukkit.getEntity(value.getUniqueId()); }
+            catch (Exception e) { return null; }
+        }
+
+        @Override
+        public @NotNull Material getItemType() {
+            if (value instanceof ItemFrame || value instanceof GlowItemFrame) return Material.ITEM_FRAME;
+            if (value instanceof StorageMinecart) return Material.CHEST_MINECART;
+            if (value instanceof HopperMinecart)  return Material.HOPPER_MINECART;
+            String typeName = value.getType().name();
+            try {
+                Material m = Material.valueOf(typeName);
+                if (m != Material.AIR) return m;
+            } catch (IllegalArgumentException ignored) {}
+            return Material.OAK_CHEST_BOAT;
+        }
+
+        @Override
+        public String getTitle() {
+            Location loc = value.getLocation();
+            String coords = "[" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + "]";
+            String type = value.getType().name().replace('_', ' ');
+            StringBuilder sb = new StringBuilder("\u00a77");
+            boolean cap = true;
+            for (char c : type.toCharArray()) {
+                if (c == ' ') { sb.append(c); cap = true; }
+                else if (cap) { sb.append(Character.toUpperCase(c)); cap = false; }
+                else sb.append(Character.toLowerCase(c));
+            }
+            return sb + " " + coords;
+        }
+
+        @NotNull
+        public List<String> getContentsLore() {
+            if (value instanceof ItemFrame frame) {
+                ItemStack held = frame.getItem();
+                if (held.getType() == Material.AIR) return List.of("\u00a78(empty)");
+                return List.of("\u00a78" + held.getAmount() + "x "
+                    + held.getType().name().toLowerCase().replace('_', ' '));
+            }
+            if (value instanceof InventoryHolder holder) {
+                var inv = holder.getInventory();
+                var counts = new java.util.LinkedHashMap<Material, Integer>();
+                for (ItemStack s : inv.getContents()) {
+                    if (s != null && !s.getType().isAir())
+                        counts.merge(s.getType(), s.getAmount(), Integer::sum);
+                }
+                if (counts.isEmpty()) return List.of("\u00a78(empty)");
+                List<String> out = new ArrayList<>();
+                int n = 0;
+                for (var e : counts.entrySet()) {
+                    if (n >= 5) { out.add("\u00a78+ " + (counts.size() - n) + " more..."); break; }
+                    out.add("\u00a78" + e.getValue() + "x "
+                        + e.getKey().name().toLowerCase().replace('_', ' '));
+                    n++;
+                }
+                return out;
+            }
+            return List.of();
+        }
     }
 }

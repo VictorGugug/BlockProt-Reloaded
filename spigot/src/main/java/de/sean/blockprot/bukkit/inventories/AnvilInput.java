@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -45,14 +45,8 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * Opens a real server-side anvil so the player can type text.
- *
- * Compatible with Paper/Spigot 1.20.x through 26.1.x.
- *
- * AnvilView (typed inventory views) was introduced in 1.21.4.
- * On older servers we fall back to reading the output item display name.
- * All access to AnvilView-specific methods uses reflection so this class
- * compiles and loads cleanly on 1.20.x servers.
+ * Server-side anvil text input, compatible with Paper/Spigot 1.20.x through 26.1.x.
+ * Uses reflection for AnvilView (1.21.4+) with fallback for older servers.
  */
 public final class AnvilInput implements Listener {
 
@@ -79,13 +73,10 @@ public final class AnvilInput implements Listener {
         SET_REPAIR_COST  = setRepairCost;
     }
 
-    /** Returns true when the server supports typed AnvilView (1.21.4+). */
     private static boolean hasTypedAnvilView() {
         return ANVIL_VIEW_CLASS != null;
     }
 
-    /** Calls AnvilView#setRepairCost(0) via reflection if available.
-     * Falls back to InventoryView#setProperty(REPAIR_COST, 0) for pre-1.21.4 servers. */
     @SuppressWarnings("deprecation")
     private static void trySetRepairCost(@NotNull InventoryView view) {
         // 1.21.4+: use typed AnvilView#setRepairCost via reflection.
@@ -101,7 +92,6 @@ public final class AnvilInput implements Listener {
         } catch (Exception ignored) {}
     }
 
-    /** Calls AnvilView#getRenameText() via reflection. Returns null if not available. */
     @Nullable
     private static String tryGetRenameText(@NotNull InventoryView view) {
         if (GET_RENAME_TEXT == null || ANVIL_VIEW_CLASS == null) return null;
@@ -112,8 +102,6 @@ public final class AnvilInput implements Listener {
             return null;
         }
     }
-
-    // -------------------------------------------------------------------------
 
     private final UUID playerUuid;
     private final @Nullable Consumer<String> onConfirm;
@@ -145,15 +133,6 @@ public final class AnvilInput implements Listener {
         }
     }
 
-    /**
-     * Opens an anvil text-input for the given player.
-     *
-     * @param player      Player to open the anvil for.
-     * @param plugin      Owning plugin (for listener registration).
-     * @param initialText Text pre-filled in the rename field.
-     * @param title       Kept for API compat; not used.
-     * @param onConfirm   Called with the typed text when the player confirms.
-     */
     public static void open(
         @NotNull Player player,
         @NotNull Plugin plugin,
@@ -164,14 +143,6 @@ public final class AnvilInput implements Listener {
         new AnvilInput(player, plugin, initialText, onConfirm);
     }
 
-    // -------------------------------------------------------------------------
-    // Event handlers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Reset repair cost to 0 on every item change so the output stays clickable
-     * regardless of XP level. Paper recalculates cost on PrepareAnvilEvent.
-     */
     @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareAnvil(@NotNull PrepareAnvilEvent event) {
         if (event.getViewers().stream().noneMatch(v -> v.getUniqueId().equals(playerUuid))) return;
@@ -194,14 +165,6 @@ public final class AnvilInput implements Listener {
         }
     }
 
-    /**
-     * Extracts the rename text from the anvil.
-     *
-     * Priority:
-     *   1. AnvilView#getRenameText() via reflection (1.21.4+).
-     *   2. Output item (slot 2) display name — Bukkit copies rename text there.
-     *   3. Input item (slot 0) display name — what we pre-filled.
-     */
     @NotNull
     private String extractRenameText(@NotNull InventoryClickEvent event) {
         // 1. Typed AnvilView — 1.21.4+ only, accessed via reflection.
@@ -210,7 +173,6 @@ public final class AnvilInput implements Listener {
             if (renamed != null && !renamed.isEmpty()) return renamed;
         }
 
-        // 2. Output slot display name.
         ItemStack output = event.getInventory().getItem(OUTPUT_SLOT);
         if (output != null && output.hasItemMeta()) {
             Component displayName = output.getItemMeta().displayName();
@@ -220,7 +182,6 @@ public final class AnvilInput implements Listener {
             }
         }
 
-        // 3. Input slot display name (pre-filled by us).
         ItemStack input = event.getInventory().getItem(0);
         if (input != null && input.hasItemMeta()) {
             Component displayName = input.getItemMeta().displayName();
@@ -239,8 +200,6 @@ public final class AnvilInput implements Listener {
         event.getInventory().clear();
         unregister();
     }
-
-    // -------------------------------------------------------------------------
 
     private void unregister() {
         if (!consumed) {

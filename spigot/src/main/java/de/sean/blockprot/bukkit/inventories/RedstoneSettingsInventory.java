@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -51,7 +51,7 @@ public class RedstoneSettingsInventory extends BlockProtInventory {
 
     @Override
     @NotNull String getTranslatedInventoryName() {
-        return Translator.get(TranslationKey.INVENTORIES__REDSTONE__SETTINGS);
+        return Translator.get(TranslationKey.INVENTORIES__BLOCK_SETTINGS__TITLE);
     }
 
     @Override
@@ -97,7 +97,6 @@ public class RedstoneSettingsInventory extends BlockProtInventory {
     @Override
     public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {
         if (state.friendSearchState == InventoryState.FriendSearchState.FRIEND_SEARCH && state.getBlock() != null) {
-            // Save directly via handler — works for both owner and manager friends.
             try {
                 BlockNBTHandler handler = new BlockNBTHandler(state.getBlock());
                 RedstoneSettingsHandler redstoneHandler = handler.getRedstoneHandler();
@@ -126,7 +125,6 @@ public class RedstoneSettingsInventory extends BlockProtInventory {
         BlockNBTHandler nbtHandler = getNbtHandlerOrNull(state.getBlock());
         if (nbtHandler == null) return inventory;
 
-        // Allow owner AND manager friends to access redstone settings.
         boolean isManager = false;
         if (!nbtHandler.isOwner(player.getUniqueId().toString())) {
             var friend = nbtHandler.getFriend(player.getUniqueId().toString());

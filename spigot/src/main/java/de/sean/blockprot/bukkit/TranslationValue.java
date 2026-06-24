@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -33,12 +33,6 @@ import java.util.StringJoiner;
  * @since 0.4.6
  */
 public final class TranslationValue {
-    /**
-     * The default value for a unknown translation, where both a
-     * default value and a translated value are missing.
-     *
-     * @since 0.4.6
-     */
     @NotNull
     public static final String UNKNOWN_TRANSLATION = "Unknown Translation";
 
@@ -51,26 +45,11 @@ public final class TranslationValue {
     @NotNull
     private String translatedValue;
 
-    /**
-     * Create a new translation value without an actual translation, which
-     * can be added later.
-     *
-     * @param defaultValue The default value for this translation.
-     * @see #setTranslatedValue(String)
-     * @since 0.4.6
-     */
     TranslationValue(@NotNull final String defaultValue) {
         this.defaultValue = defaultValue;
         this.translatedValue = UNKNOWN_TRANSLATION;
     }
 
-    /**
-     * Create a new translation value.
-     *
-     * @param defaultValue    The default, fallback value for this translation.
-     * @param translatedValue The translated value.
-     * @since 0.4.6
-     */
     TranslationValue(@NotNull final String defaultValue, @Nullable final String translatedValue) {
         this.defaultValue = defaultValue;
         this.translatedValue = (translatedValue == null)
@@ -78,52 +57,20 @@ public final class TranslationValue {
             : translatedValue;
     }
 
-    /**
-     * Get the default value of this translation value as read
-     * from the default config.
-     *
-     * @return Default, fallback value.
-     * @since 0.4.6
-     */
     @NotNull
     public String getDefaultValue() {
         return defaultValue;
     }
 
-    /**
-     * Get the translated value as read from the specified config.
-     *
-     * @return The translated value, or {@link #UNKNOWN_TRANSLATION}
-     * if it was not readable.
-     * @since 0.4.6
-     */
     @NotNull
     public String getTranslatedValue() {
         return translatedValue;
     }
 
-    /**
-     * Sets a new value for the translation. Does not affect the
-     * default value.
-     *
-     * @param value The new value for the translation. Shall not be
-     *              null and will not be replaced with {@link #UNKNOWN_TRANSLATION}
-     *              if it is invalid.
-     * @since 0.4.6
-     */
     void setTranslatedValue(@NotNull final String value) {
         this.translatedValue = value;
     }
 
-    /**
-     * Get the value of this translation. This checks whether or
-     * not the translated value has been assigned a meaningful value
-     * or is simply {@link #UNKNOWN_TRANSLATION}.
-     *
-     * @return The translated value or if no translated value exists,
-     * the default value.
-     * @since 0.4.6
-     */
     @NotNull
     public String getValue() {
         return (translatedValue.equals(UNKNOWN_TRANSLATION))

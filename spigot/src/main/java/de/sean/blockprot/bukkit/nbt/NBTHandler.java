@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -55,32 +55,14 @@ public abstract class NBTHandler<T extends NBTCompound> {
      */
     protected T container;
 
-    /**
-     * Create a new base NBTHandler.
-     *
-     * @since 0.3.0
-     */
     protected NBTHandler() {
     }
 
-    /**
-     * Get the name of the nbt container.
-     *
-     * @return The name, or empty if none exists.
-     * @since 0.4.4
-     */
-    @NotNull
     public String getName() {
         String name = container.getName();
         return name == null ? "" : name;
     }
 
-    /**
-     * Copies all values of the other handler to this handler.
-     *
-     * @param handler The handler to copy values from.
-     * @since 0.3.2
-     */
     public void mergeHandler(@NotNull final NBTHandler<?> handler) {}
 
     /**

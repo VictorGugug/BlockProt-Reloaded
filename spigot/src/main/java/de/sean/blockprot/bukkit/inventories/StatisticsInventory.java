@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -40,6 +40,9 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Inventory showing player and global statistics about locked blocks.
+ */
 public final class StatisticsInventory extends BlockProtInventory {
     public StatisticsInventory() { super(true); }
     private final List<BukkitStatistic<?>> playerStatistics = new ArrayList<>() {{
@@ -56,7 +59,7 @@ public final class StatisticsInventory extends BlockProtInventory {
 
     @Override
     @NotNull String getTranslatedInventoryName() {
-        return Translator.get(TranslationKey.INVENTORIES__STATISTICS__PLAYER_STATISTICS); /* We default to player statistics. */
+        return Translator.get(TranslationKey.INVENTORIES__STATISTICS__PLAYER_STATISTICS);
     }
 
     @Override
@@ -66,7 +69,7 @@ public final class StatisticsInventory extends BlockProtInventory {
         switch (item.getType()) {
             case BLUE_STAINED_GLASS_PANE:
                 if (event.getWhoClicked() instanceof Player) {
-                    state.currentPageIndex ^= 1L; // Toggles the first bit, switching between 0 and 1.
+                    state.currentPageIndex ^= 1L;
                     this.updateTitle((Player) event.getWhoClicked(),
                             state.currentPageIndex == 0
                                     ? Translator.get(TranslationKey.INVENTORIES__STATISTICS__PLAYER_STATISTICS)
@@ -115,7 +118,7 @@ public final class StatisticsInventory extends BlockProtInventory {
 
     public Inventory fill(@NotNull final Player player) {
         final InventoryState state = InventoryState.get(player.getUniqueId());
-        if (state == null || state.currentPageIndex >= 2) return inventory; // We only have 2 pages.
+        if (state == null || state.currentPageIndex >= 2) return inventory;
 
         final List<BukkitStatistic<?>> statistics = state.currentPageIndex == 0
             ? playerStatistics
@@ -123,11 +126,13 @@ public final class StatisticsInventory extends BlockProtInventory {
         for (int i = 0; i < statistics.size() && i < getSize() - 2; ++i) {
             BukkitStatistic<?> stat = statistics.get(i);
             StatHandler.getStatistic(stat, player);
-            setItemStack(
-                i,
-                stat.getItemType(),
-                stat.getTitle()
-            );
+
+            if (stat instanceof PlayerBlocksStatistic pbs) {
+                List<String> lore = pbs.getBreakdownLore();
+                setItemStack(i, stat.getItemType(), stat.getTitle(), lore);
+            } else {
+                setItemStack(i, stat.getItemType(), stat.getTitle());
+            }
         }
 
         setItemStack(

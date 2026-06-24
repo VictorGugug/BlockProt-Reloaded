@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -48,13 +48,11 @@ public abstract class IntStatistic extends BukkitStatistic<Integer> {
         return this.get().compareTo(o.get());
     }
 
-    /** Increments the value. */
     public void increment() {
         if (this.get() < Integer.MAX_VALUE)
             this.container.setInteger(this.getKey(), this.get() + 1);
     }
 
-    /** Decrements the value. The result cannot be negative. */
     public void decrement() {
         if (this.get() > 0)
             this.container.setInteger(this.getKey(), this.get() - 1);

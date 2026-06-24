@@ -82,7 +82,7 @@ inventories:
     action_item_taken: "§eTomó artículo(s)"
     action_item_placed: "§2Colocó artículo(s)"
   # ── Protección de mascotas ───────────────────────────────────────────────────
-  pet:
+  entity_settings:
     settings: "§dAjustes de Mascota"
     protect: "§dProtección de mascota"
     no_damage: "§cBloquear daño"
@@ -152,7 +152,7 @@ messages:
   unlocked: Desprotegido.
   no_permission: No tienes permiso.
   error_prefix: "§c[BlockProt]: "
-  pet_death_notification: "§c§l[BlockProt] §r§cTu mascota §e{pet_name}§c ha muerto."
+  entity_death_notification: "§c§l[BlockProt] §r§cTu mascota §e{pet_name}§c ha muerto."
   friend_added: Permiso añadido.
   friend_removed: Permiso eliminado.
   friend_already_added: Ya tiene permiso.
@@ -253,6 +253,8 @@ console:
   java_too_old: "Versión de Java demasiado antigua: {version} (BlockProt Reloaded requiere Java 25+)"
   not_paper: "El servidor no está ejecutando Paper. La búsqueda por chat se desactiva y se usará la GUI de yunque. Se recomienda Paper."
   typed_views_fallback: "Servidor Paper/Spigot 1.21.0-1.21.3 detectado, sin vistas de inventario tipadas. Se usarán fallbacks de AnvilInput."
+  auto_reload_disabled: "Auto-recarga desactivada (auto_reload_configs: false). La configuración NO se recargará sola — usa /bp reload después de cada cambio."
+  modern_blocks_converted: "blocks.yml convertido a formato de expresiones familiares (modern_family_blocks: true). Los cambios manuales de ahora en adelante deben usar la sintaxis de expresiones."
 worlds:
   scan_start: "Escaneando mundos... ({count} cargados)"
   scan_world_added: "Mundo '{world}' agregado a worlds.yml con proteccion activada."

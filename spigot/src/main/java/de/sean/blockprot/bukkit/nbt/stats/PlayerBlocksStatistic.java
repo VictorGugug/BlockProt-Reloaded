@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -26,6 +26,11 @@ import de.sean.blockprot.nbt.stats.StatisticType;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 public final class PlayerBlocksStatistic extends LocationListStatistic {
     @Override
     public @NotNull String getKey() {
@@ -50,5 +55,48 @@ public final class PlayerBlocksStatistic extends LocationListStatistic {
     @Override
     public @NotNull String getTitle() {
         return getStatisticName() + ": " + get().size();
+    }
+
+    /**
+     * Returns a lore list with the count of protected blocks broken down by
+     * type. Only types actually present are included. At most 10 lines to
+     * avoid an oversized tooltip.
+     */
+    @NotNull
+    public List<String> getBreakdownLore() {
+        Map<Material, Integer> counts = new LinkedHashMap<>();
+        for (LocationListEntry entry : get()) {
+            try {
+                Material mat = entry.getItemType();
+                counts.merge(mat, 1, Integer::sum);
+            } catch (Exception ignored) {}
+        }
+
+        if (counts.isEmpty()) return List.of();
+
+        List<String> lore = new ArrayList<>();
+        int shown = 0;
+        for (Map.Entry<Material, Integer> e : counts.entrySet()) {
+            if (shown >= 10) {
+                lore.add("§8+ " + (counts.size() - shown) + " more...");
+                break;
+            }
+            String name = toHumanReadable(e.getKey());
+            lore.add("§7" + name + "§8: §f" + e.getValue());
+            shown++;
+        }
+        return lore;
+    }
+
+    private static String toHumanReadable(@NotNull Material mat) {
+        String raw = mat.name().replace('_', ' ');
+        StringBuilder sb = new StringBuilder();
+        boolean cap = true;
+        for (char c : raw.toCharArray()) {
+            if (c == ' ') { sb.append(c); cap = true; }
+            else if (cap) { sb.append(Character.toUpperCase(c)); cap = false; }
+            else { sb.append(Character.toLowerCase(c)); }
+        }
+        return sb.toString();
     }
 }

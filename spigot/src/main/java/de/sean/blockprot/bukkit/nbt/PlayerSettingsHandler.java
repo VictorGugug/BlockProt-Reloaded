@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -92,13 +92,6 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
         return container.getBoolean(LOCK_ON_PLACE_ATTRIBUTE);
     }
 
-    /**
-     * Set the value of the lock on place setting. If true, the
-     * player wants to lock any block right after placing it.
-     *
-     * @param lockOnPlace The boolean value to set it to.
-     * @since 0.2.3
-     */
     public void setLockOnPlace(final boolean lockOnPlace) {
         container.setBoolean(LOCK_ON_PLACE_ATTRIBUTE, lockOnPlace);
     }
@@ -149,32 +142,17 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
         }
     }
 
-    /**
-     * Clears the search history by removing the list completely.
-     *
-     * @since 1.1.16
-     */
     public void clearSearchHistory() {
         if (container.hasTag(PLAYER_SEARCH_HISTORY)) {
             container.removeKey(PLAYER_SEARCH_HISTORY);
         }
     }
 
-    /**
-     * Add a player to the search history.
-     * 
-     * @param player The player to add.
-     */
     @Deprecated
     public void addPlayerToSearchHistory(@NotNull final OfflinePlayer player) {
         this.addPlayerToSearchHistory(player.getUniqueId());
     }
 
-    /**
-     * Add a player to the search history.
-     * 
-     * @param playerUuid The player UUID to add.
-     */
     @Deprecated
     public void addPlayerToSearchHistory(@NotNull final String playerUuid) {
         this.addPlayerToSearchHistory(UUID.fromString(playerUuid));
@@ -199,11 +177,6 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
         }
     }
 
-    /**
-     * Get whether this player has interacted with any of the plugin's
-     * menus before.
-     * @return true if the player has interacted with a menu at least once.
-     */
     public boolean hasPlayerInteractedWithMenu() {
         if (!container.hasTag(PLAYER_HAS_INTERACTED_WITH_MENU)) {
             return false;
@@ -212,10 +185,6 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
         }
     }
 
-    /**
-     * Sets whether this player has interacted with any of the plugin's
-     * menus before. Toggleable in order to allow re-enabling of hints.
-     */
     public void setHasPlayerInteractedWithMenu(boolean bool) {
         container.setBoolean(PLAYER_HAS_INTERACTED_WITH_MENU, bool);
     }

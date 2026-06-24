@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -30,7 +30,7 @@ import java.util.EnumSet;
 import java.util.List;
 
 /**
- * @since 0.2.3
+ * Access flags for block protection permissions.
  */
 public enum BlockAccessFlag {
     /**
@@ -62,9 +62,6 @@ public enum BlockAccessFlag {
     @NotNull
     private final TranslationKey descriptionKey;
 
-    /**
-     * @since 0.2.3
-     */
     BlockAccessFlag(@NotNull final TranslationKey description) {
         this.descriptionKey = description;
     }
@@ -98,12 +95,6 @@ public enum BlockAccessFlag {
         return flags;
     }
 
-    /**
-     * Gets a user-friendly name of the permissions item title, that should be used together
-     * with {@link #accumulateAccessFlagLore(EnumSet)}.
-     *
-     * @return Simple title string.
-     */
     public static String toBaseString() {
         return Translator.get(TranslationKey.INVENTORIES__FRIENDS__PERMISSIONS);
     }
@@ -144,12 +135,6 @@ public enum BlockAccessFlag {
         return Translator.get(descriptionKey);
     }
 
-    /**
-     * Gets this enum as a bit flag.
-     *
-     * @return Single bit representing this flag.
-     * @since 0.2.3
-     */
     public int getFlag() {
         return 1 << ordinal();
     }

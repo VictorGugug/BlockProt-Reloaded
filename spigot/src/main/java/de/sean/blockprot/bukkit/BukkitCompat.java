@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit;
 
 import org.bukkit.Particle;
@@ -16,17 +36,11 @@ import org.jetbrains.annotations.NotNull;
  */
 public final class BukkitCompat {
 
-    /** Coloured dust particle. Use this everywhere instead of Particle.DUST. */
     public static final Particle PARTICLE_DUST;
-
-    /** Colour-transition dust particle. Use instead of Particle.DUST_COLOR_TRANSITION. */
     public static final Particle PARTICLE_DUST_COLOR_TRANSITION;
-
-    /** Glow enchantment used for visual toggle state. Use instead of Enchantment.INFINITY. */
     public static final Enchantment GLOW_ENCHANT;
 
     static {
-        // ── Particle.DUST ────────────────────────────────────────────────────
         // 1.20.6+ → "DUST"   |   1.20.x → "REDSTONE"
         Particle dust;
         try {
@@ -36,7 +50,6 @@ public final class BukkitCompat {
         }
         PARTICLE_DUST = dust;
 
-        // ── Particle.DUST_COLOR_TRANSITION ───────────────────────────────────
         // 1.20.6+ → "DUST_COLOR_TRANSITION"  |  1.20.x → "REDSTONE_TRANSITION" (some builds)
         Particle dustTransition;
         try {
@@ -50,7 +63,6 @@ public final class BukkitCompat {
         }
         PARTICLE_DUST_COLOR_TRANSITION = dustTransition;
 
-        // ── Enchantment glow ─────────────────────────────────────────────────
         // 1.20.6+ → "INFINITY"   |   1.20.x → "ARROW_INFINITE"
         Enchantment glow;
         try {
@@ -69,20 +81,14 @@ public final class BukkitCompat {
 
     private BukkitCompat() {}
 
-    /** Convenience: returns true when PARTICLE_DUST resolved to the 1.20.6+ name. */
     public static boolean hasNewParticleNames() {
         return PARTICLE_DUST.name().equals("DUST");
     }
 
-    /** Convenience: returns true when GLOW_ENCHANT resolved to the 1.20.6+ name. */
     public static boolean hasNewEnchantmentNames() {
         return GLOW_ENCHANT.getKey().getKey().equals("infinity");
     }
 
-    /**
-     * Returns a one-line diagnostic string for logging.
-     * Example: "BukkitCompat[DUST/INFINITY, newParticle=true, newEnchant=true]"
-     */
     @NotNull
     public static String getDiagnosticString() {
         return "BukkitCompat[particle=" + PARTICLE_DUST.name()

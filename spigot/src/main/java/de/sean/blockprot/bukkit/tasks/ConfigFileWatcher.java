@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit.tasks;
 
 import de.sean.blockprot.bukkit.BlockProt;
@@ -43,6 +63,7 @@ public final class ConfigFileWatcher implements Runnable {
     private final AtomicLong   lastEventTime      = new AtomicLong(0);
     private final AtomicLong   lastSuppressTime   = new AtomicLong(0);
     private final AtomicBoolean reloadScheduled   = new AtomicBoolean(false);
+    private final AtomicBoolean running           = new AtomicBoolean(false);
 
     private WatchService watchService;
 
@@ -59,13 +80,21 @@ public final class ConfigFileWatcher implements Runnable {
         lastSuppressTime.set(System.currentTimeMillis());
     }
 
+    /** Returns true if the watcher thread is currently active. */
+    public boolean isRunning() {
+        return running.get();
+    }
+
     public void start() {
-        Thread thread = new Thread(this, "BlockProt-FileWatcher");
-        thread.setDaemon(true);
-        thread.start();
+        if (running.compareAndSet(false, true)) {
+            Thread thread = new Thread(this, "BlockProt-FileWatcher");
+            thread.setDaemon(true);
+            thread.start();
+        }
     }
 
     public void stop() {
+        running.set(false);
         try {
             if (watchService != null) watchService.close();
         } catch (Exception ignored) {}
@@ -108,10 +137,12 @@ public final class ConfigFileWatcher implements Runnable {
                 if (!key.reset()) break;
             }
         } catch (InterruptedException | ClosedWatchServiceException ignored) {
-            // Plugin shutdown — exit cleanly.
+            // Plugin shutdown or deliberate stop() — exit cleanly.
         } catch (Exception e) {
             plugin.getLogger().warning(Translator.get(TranslationKey.CONSOLE__FILEWATCHER_ERROR)
                 .replace("{error}", e.getMessage()));
+        } finally {
+            running.set(false);
         }
     }
 

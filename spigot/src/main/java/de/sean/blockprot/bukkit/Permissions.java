@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -43,8 +43,6 @@ package de.sean.blockprot.bukkit;
  */
 public enum Permissions {
 
-    // ── Active permission nodes (declared in plugin.yml) ────────────────────
-
     /** Standard player features: locking, friends, settings, statistics, transfer. */
     USER("blockprot.user"),
 
@@ -63,8 +61,6 @@ public enum Permissions {
 
     /** Teleport to a protected block from the statistics inventory. */
     BLOCKS_TP("blockprot.blocks.tp"),
-
-    // ── Legacy / deprecated aliases ──────────────────────────────────────────
 
     /**
      * @deprecated Use {@link #USER_ADMIN}. Kept as an alias so existing permission

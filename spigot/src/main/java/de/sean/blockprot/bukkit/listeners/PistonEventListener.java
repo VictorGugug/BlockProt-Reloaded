@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -29,10 +29,7 @@ import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 
 /**
- * Event listener to block piston extends/retracts from destroying
- * or moving protected blocks.
- *
- * @since 0.4.4
+ * Blocks piston extends/retracts from destroying or moving protected blocks.
  */
 public class PistonEventListener implements Listener {
     @EventHandler
@@ -42,19 +39,14 @@ public class PistonEventListener implements Listener {
         }
 
         for (Block block : event.getBlocks()) {
-            // Check if the block is lockable
             if (BlockProt.getDefaultConfig().isLockableShulkerBox(block.getType())) {
-                // Shulker boxes drop right away. Those will therefore not have
-                // to be configured to disable redstone, but they will never be
-                // pushable if locked.
+                // Shulker boxes drop right away, so they will never be pushable if locked.
                 if (new BlockNBTHandler(block).isProtected()) {
                     event.setCancelled(true);
                     return;
                 }
             } else if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
                 BlockNBTHandler nbtHandler = new BlockNBTHandler(block);
-                // We check if the block is protected, because we only care
-                // about locked blocks that have redstone disabled.
                 if (nbtHandler.isProtected()
                         && (BlockProt.getDefaultConfig().shouldBlockProtectedBlockPistonMovement()
                         || nbtHandler.getRedstoneHandler().getPistonProtection())) {
@@ -67,20 +59,13 @@ public class PistonEventListener implements Listener {
 
     @EventHandler
     public void onPistonRetract(BlockPistonRetractEvent event) {
-        // We will not allow a piston to retract blocks that are locked
-        // and have redstone disabled. A non-sticky piston obviously
-        // can't pull back blocks, so we will ignore those.
+        if (!event.isSticky()) return;
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) {
             return;
         }
-        if (!event.isSticky()) return;
         for (Block block : event.getBlocks()) {
-            // Check if the block is lockable. Shulker boxes can't be pulled back
-            // so we don't do the same as in the onPistonExtend event handler.
             if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
                 BlockNBTHandler nbtHandler = new BlockNBTHandler(block);
-                // We check if the block is protected, because we only care
-                // about locked blocks that have redstone disabled.
                 if (nbtHandler.isProtected()
                         && (BlockProt.getDefaultConfig().shouldBlockProtectedBlockPistonMovement()
                         || nbtHandler.getRedstoneHandler().getPistonProtection())) {

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -41,12 +41,6 @@ public final class BlockLockOnPlaceEvent extends BlockEvent implements Cancellab
 
     private boolean isCancelled;
 
-    /**
-     * @param block  The block that was placed.
-     * @param player The player that placed the block.
-     * @see BlockLockOnPlaceEvent
-     * @since 0.4.0
-     */
     public BlockLockOnPlaceEvent(@NotNull final Block block,
                                  @NotNull final Player player) {
         super(block);
@@ -62,29 +56,16 @@ public final class BlockLockOnPlaceEvent extends BlockEvent implements Cancellab
         return HANDLERS;
     }
 
-    /**
-     * The player that placed the block and has the lock on
-     * place setting active.
-     *
-     * @return The Bukkit player.
-     * @since 0.4.0
-     */
     @NotNull
     public Player getPlayer() {
         return player;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public boolean isCancelled() {
         return isCancelled;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void setCancelled(final boolean cancel) {
         this.isCancelled = cancel;

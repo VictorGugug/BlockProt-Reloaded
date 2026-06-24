@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -57,20 +57,11 @@ public final class BlockProtConsole {
 
     private BlockProtConsole() {}
 
-    // -------------------------------------------------------------------------
-    // Startup buffer control
-    // -------------------------------------------------------------------------
-
-    /** Activates startup buffering. Call at the very start of {@code onEnable}. */
     public static void beginStartup(@NotNull Logger logger) {
         pluginLogger = logger;
         startupBuffer = new ArrayList<>();
     }
 
-    /**
-     * Prints a single success line to console and flushes the startup buffer
-     * to the session log only. Call at the end of {@code onEnable}.
-     */
     public static void printStartupBanner(@NotNull String version) {
         List<String> lines = startupBuffer != null ? startupBuffer : new ArrayList<>();
         startupBuffer = null;
@@ -83,25 +74,14 @@ public final class BlockProtConsole {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Public API
-    // -------------------------------------------------------------------------
-
-    /** Informational line — buffered during startup, immediate otherwise. */
     public static void info(@NotNull String message) {
         emit(message);
     }
 
-    /** Success line — buffered during startup, immediate otherwise. */
     public static void success(@NotNull String message) {
         emit(message);
     }
 
-    /**
-     * Warning line — always printed immediately via the plugin logger (never buffered).
-     * Uses {@code logger.warning()} so the output carries the correct
-     * {@code [HH:MM:SS WARN]} timestamp, consistent with info/success lines.
-     */
     public static void warn(@NotNull String message) {
         if (pluginLogger != null) {
             pluginLogger.warning(message);
@@ -110,24 +90,11 @@ public final class BlockProtConsole {
         }
     }
 
-    /**
-     * Logs an integration-enabled confirmation — buffered during startup,
-     * immediate otherwise. Prints a single line after the integration is
-     * confirmed active; do not also call {@link #integration(String)} for
-     * the same plugin to avoid duplicate console output.
-     *
-     * @param integrationName The plugin id (e.g. "claimchunk").
-     */
     public static void integrationEnabled(@NotNull String integrationName) {
         emit(Translator.get(TranslationKey.CONSOLE__INTEGRATION_ENABLED)
             .replace("{name}", integrationName));
     }
 
-    // -------------------------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------------------------
-
-    /** Sends one line via the plugin logger (INFO level). */
     private static void log(@NotNull String line) {
         if (pluginLogger != null) {
             pluginLogger.info(line);
@@ -136,10 +103,6 @@ public final class BlockProtConsole {
         }
     }
 
-    /**
-     * Buffers the message during startup; prints it immediately (via plugin logger)
-     * after startup completes.
-     */
     private static void emit(@NotNull String message) {
         if (startupBuffer != null) {
             startupBuffer.add(message);

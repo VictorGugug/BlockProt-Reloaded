@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -50,8 +50,6 @@ import java.util.Objects;
  */
 public class SemanticVersion implements Comparable<SemanticVersion> {
 
-    // ── Suffix rank (lower = older / less stable) ─────────────────────────────
-    // Suffixes not in this map are treated as RANK_RELEASE (i.e. patch/hotfix/fix/exp).
     private static final int RANK_SNAPSHOT = 0;
     private static final int RANK_ALPHA    = 1;
     private static final int RANK_BETA     = 2;
@@ -96,10 +94,8 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
         };
     }
 
-    /** Returns {@code true} if this is a pre-release (snapshot/alpha/beta/rc). */
     public boolean isPreRelease() { return suffixRank < RANK_RELEASE; }
 
-    /** Returns {@code true} if this is an experimental build. */
     public boolean isExperimental() { return suffix.startsWith("exp"); }
 
     @Override

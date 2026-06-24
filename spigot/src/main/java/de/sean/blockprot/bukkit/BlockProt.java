@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -58,21 +58,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.Objects;
 
-/**
- * The main plugin instance of BlockProt.
- */
 public final class BlockProt extends JavaPlugin {
-    /**
-     * bStats plugin ID for BlockProt Reloaded.
-     *
-     * To get your own ID:
-     *  1. Go to https://bstats.org/getting-started
-     *  2. Register a new plugin named "BlockProt Reloaded" (Bukkit)
-     *  3. Replace the value below with the ID shown in your dashboard.
-     *
-     * The original BlockProt used ID 9999 — this fork must use a different
-     * ID so stats appear under the correct project on bstats.org.
-     */
+
     public static final int pluginId = 31548; // BlockProt Reloaded on bStats
     public static final String defaultLanguageFile = "translations_en.yml";
 
@@ -94,12 +81,9 @@ public final class BlockProt extends JavaPlugin {
     private          boolean  pendingMigrationSuccess = false;
     @Nullable private String  pendingMigrationError   = null;
 
-    /** Plugin version string cached at startup — avoids repeated getDescription() calls. */
     @Nullable private static String pluginVersion = null;
-    /** Plugin authors list cached at startup. */
     @Nullable private static List<String> pluginAuthors = null;
 
-    /** Cross-platform scheduler (Spigot / Paper / Purpur / Pufferfish / Folia). */
     @Nullable private static FoliaLib foliaLib = null;
 
     private Metrics metrics;
@@ -232,6 +216,8 @@ public final class BlockProt extends JavaPlugin {
         fileWatcher = new ConfigFileWatcher(this);
         if (defaultConfig.isAutoReloadEnabled()) {
             fileWatcher.start();
+        } else {
+            BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__AUTO_RELOAD_DISABLED));
         }
 
         int inactivityDays = this.getConfig().getInt("inactivity_cleanup_days", -1);
@@ -242,7 +228,6 @@ public final class BlockProt extends JavaPlugin {
         metrics = new Metrics(this, pluginId);
         metrics.addCustomChart(new IntegrationBarChart());
 
-        // Enable integrations — one console line per enabled integration.
         for (PluginIntegration integration : integrations) {
             try {
                 integration.enable();
@@ -256,7 +241,6 @@ public final class BlockProt extends JavaPlugin {
 
         new BlockProtAPI(this);
 
-        /* Register Listeners */
         final PluginManager pm = getServer().getPluginManager();
         registerEvent(pm, new BlockEventListener(this));
         registerEvent(pm, new EntityEventListener());
@@ -269,18 +253,17 @@ public final class BlockProt extends JavaPlugin {
         registerEvent(pm, new RedstoneEventListener());
         registerEvent(pm, new LockEffectListener());
 
-        // ── Pet protection listeners (BlockProt Reloaded) ──────────────────────
-        // Always registered so the config toggle is hot-reloadable (/bp reload).
-        // Each event handler checks isPetProtectionEnabled() at the top and returns
+        // Always registered so the config toggles are hot-reloadable (/bp reload).
+        // Each event handler checks its own enabled-flag at the top and returns
         // immediately when disabled, adding zero overhead when the feature is off.
-        registerEvent(pm, new PetProtectionListener());
-        registerEvent(pm, new PetMenuOpenListener());
+        // EntityProtectionListener/EntityMenuOpenListener gate on isEntityProtectionEnabled();
+        // VillagerWorkstationProtectionListener gates separately on isVillagerWorkstationProtectionEnabled().
+        registerEvent(pm, new EntityProtectionListener());
+        registerEvent(pm, new EntityMenuOpenListener());
         registerEvent(pm, new VillagerWorkstationProtectionListener());
-        // ── Entity protection listeners (item frames, chest boats, minecarts) ──
         registerEvent(pm, new ItemFrameListener());
         registerEvent(pm, new VehicleProtectionListener());
         registerEvent(pm, new RaidDetectionListener());
-        // ─────────────────────────────────────────────────────────────────────
 
         if (defaultConfig.isWorldEditPasteAutolockEnabled()) {
             registerEvent(pm, new WorldEditPasteListener(this));
@@ -362,16 +345,30 @@ public final class BlockProt extends JavaPlugin {
         for (PluginIntegration integration : integrations) {
             integration.reload();
         }
+
+        // Honour the auto_reload_configs flag at runtime:
+        // start the watcher if it was disabled but the flag is now on,
+        // stop it if it was running but the flag is now off.
+        if (fileWatcher != null) {
+            boolean shouldRun = defaultConfig.isAutoReloadEnabled();
+            boolean isRunning = fileWatcher.isRunning();
+            if (shouldRun && !isRunning) {
+                fileWatcher.start();
+            } else if (!shouldRun && isRunning) {
+                fileWatcher.stop();
+                BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__AUTO_RELOAD_DISABLED));
+            }
+        }
+
+        if (defaultConfig.wasBlocksFileConverted()) {
+            BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__MODERN_BLOCKS_CONVERTED));
+        }
     }
 
     private void registerEvent(@NotNull PluginManager pm, Listener listener) {
         pm.registerEvents(listener, this);
     }
 
-    /**
-     * Registers a plugin integration. Logs to the session file only;
-     * console output is deferred until after the integration is confirmed enabled.
-     */
     void registerIntegration(@NotNull PluginIntegration integration) {
         this.integrations.add(integration);
         BlockProtLogger.log("integration", "Registered: " + integration.name);
@@ -430,12 +427,6 @@ public final class BlockProt extends JavaPlugin {
         }
     }
 
-    /**
-     * Rewrites config.yml on disk using the bundled JAR template as a base,
-     * preserving all values the administrator has already configured.
-     * This ensures format, comments, and sections are always clean,
-     * and removes obsolete keys (mysql, console, lockable_*) if present.
-     */
     private void cleanLegacyConfigKeys() {
         File diskFile = new File(this.getDataFolder(), "config.yml");
         if (!diskFile.exists()) return;
@@ -447,11 +438,6 @@ public final class BlockProt extends JavaPlugin {
         YamlConfiguration template = YamlConfiguration.loadConfiguration(
             new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
 
-        // Strategy: start from the user's config and only ADD keys that are missing.
-        // This guarantees that every value the admin has set is preserved verbatim,
-        // including keys that do not exist in the current template (custom or legacy).
-
-        // ── Migrate renamed keys (non-destructive: old key removed after new key is set) ──
         // worlds_config_enabled → per_worlds_config (renamed for clarity)
         if (userValues.contains("worlds_config_enabled") && !userValues.contains("per_worlds_config")) {
             userValues.set("per_worlds_config", userValues.getBoolean("worlds_config_enabled", false));
@@ -499,23 +485,6 @@ public final class BlockProt extends JavaPlugin {
         "console.prefix_color", "console.info_color"
     );
 
-    /**
-     * Merges new block entries from the JAR blocks.yml into the admin's blocks.yml.
-     *
-     * Two levels of merging:
-     * 1. Top-level sections absent on disk are copied from the JAR wholesale
-     *    (e.g. the entire auto_drop_to_inventory section when it did not exist).
-     * 2. For flat-list keys (lockable_tile_entities, lockable_shulker_boxes,
-     *    lockable_blocks, lockable_doors) each individual entry from the JAR
-     *    that is not already present in the disk list is appended.
-     *    This ensures new blocks added in a plugin update appear automatically
-     *    without requiring the admin to delete and regenerate blocks.yml.
-     *    Entries the admin removed intentionally will be re-added; they must
-     *    be removed again after upgrading — this matches standard plugin behaviour.
-     *    This step is skipped when the disk file uses family expressions
-     *    (modern_family_blocks=true), because expressions already resolve
-     *    against the full family registry dynamically.
-     */
     private void mergeMissingBlocksKeys() {
         String blocksPath = this.getConfig().getString("blocks_file", "blocks.yml");
         File diskFile = new File(this.getDataFolder(), blocksPath);
@@ -573,10 +542,6 @@ public final class BlockProt extends JavaPlugin {
         }
     }
 
-    /**
-     * Returns true if any lockable key in the given blocks.yml uses a family expression.
-     * Used to skip per-item list merging in modern mode.
-     */
     private static boolean isBlocksFileModern(@NotNull YamlConfiguration cfg) {
         for (String key : List.of("lockable_tile_entities", "lockable_shulker_boxes",
                                   "lockable_blocks", "lockable_doors", "lockable_entities")) {
@@ -618,9 +583,6 @@ public final class BlockProt extends JavaPlugin {
         }
     }
 
-    /**
-     * Saves a resource silently — does not log a warning when the file already exists.
-     */
     private void saveResourceSilent(@NotNull String name, boolean replace) {
         File dest = new File(this.getDataFolder(), name);
         if (!replace && dest.exists()) return; // already there, skip quietly
@@ -629,11 +591,6 @@ public final class BlockProt extends JavaPlugin {
         } catch (Exception ignored) {}
     }
 
-    /**
-     * Scans all loaded worlds for expired block protections and clears them.
-     * Runs async on startup when {@code enable_protection_expiry: true} and
-     * {@code expiry_scan_on_startup: true}.
-     */
     private void runExpiryScan() {
         if (hybridDatabase == null || !hybridDatabase.isEnabled()) return;
         int cleared = 0;
@@ -659,6 +616,14 @@ public final class BlockProt extends JavaPlugin {
         }
     }
 
+    /**
+     * Populates the in-memory {@link ProtectedBlockCache} on startup.
+     *
+     * <p>When MySQL is available, iterates the block index returned by
+     * {@link HybridDatabase#getBlockIndexByWorld(String)} for every loaded world.
+     * Otherwise falls back to iterating all offline player stats entries.
+     * Only blocks whose type is currently lockable are marked in the cache.
+     */
     private void populateProtectedBlockCache() {
         ProtectedBlockCache.clear();
         int marked = 0;
@@ -699,6 +664,11 @@ public final class BlockProt extends JavaPlugin {
         BlockProtLogger.log("protected-cache", "Populated ProtectedBlockCache with " + marked + " block(s).");
     }
 
+    /**
+     * Returns {@code true} when the server runtime is plain CraftBukkit without Spigot.
+     * BlockProt requires Spigot (or Paper/Folia/etc.) and logs a fatal error when running
+     * on CraftBukkit alone.
+     */
     private boolean isRunningCraftBukkit() {
         try {
             Class.forName("org.spigotmc.SpigotConfig");
@@ -708,27 +678,6 @@ public final class BlockProt extends JavaPlugin {
         }
     }
 
-    /**
-     * Copies data from known legacy plugin folder names into the current data folder.
-     *
-     * <p>Legacy names checked (in priority order):
-     * <ol>
-     *   <li>{@code BlockProt}       — original upstream plugin</li>
-     *   <li>{@code BlockProtPlus}   — intermediate fork name</li>
-     * </ol>
-     *
-     * <p>Rules:
-     * <ul>
-     *   <li>Only runs when the current data folder does NOT contain a {@code config.yml}
-     *       (i.e. first boot after rename). If the new folder already has data the
-     *       migration is skipped entirely to avoid overwriting admin changes.</li>
-     *   <li>Files are copied recursively; existing files in the destination are
-     *       never overwritten.</li>
-     *   <li>The legacy folder is left intact — the admin decides when to remove it.</li>
-     *   <li>A marker file {@code .migrated} is written to the source folder after a
-     *       successful copy so the migration never runs twice.</li>
-     * </ul>
-     */
     private void migrateFromLegacyFolders() {
         if (new File(this.getDataFolder(), "config.yml").exists()) return;
 
@@ -744,7 +693,6 @@ public final class BlockProt extends JavaPlugin {
 
             pendingMigrationLog = legacyName;
             try {
-                // Copy every file that does NOT already exist in the destination.
                 // This preserves any files the new plugin already created (e.g. defaults).
                 copyDirectoryContents(legacyFolder.toPath(), this.getDataFolder().toPath());
 
@@ -756,7 +704,6 @@ public final class BlockProt extends JavaPlugin {
                     new File(this.getDataFolder(), "config.yml")
                 );
 
-                // Merge every lang file present in the legacy folder.
                 File legacyLang = new File(legacyFolder, "lang");
                 File newLang    = new File(this.getDataFolder(), "lang");
                 if (legacyLang.isDirectory()) {
@@ -778,12 +725,6 @@ public final class BlockProt extends JavaPlugin {
         }
     }
 
-    /**
-     * Merges user values from {@code src} YAML into {@code dst} YAML.
-     * Every key present in {@code src} that is absent in {@code dst} is copied.
-     * Keys already in {@code dst} are never overwritten — the destination wins.
-     * If {@code dst} does not exist, {@code src} is copied verbatim.
-     */
     private static void mergeYamlUserValues(@NotNull File src, @NotNull File dst) throws IOException {
         if (!src.exists()) return;
         YamlConfiguration srcCfg = YamlConfiguration.loadConfiguration(src);
@@ -803,10 +744,6 @@ public final class BlockProt extends JavaPlugin {
         if (changed) dstCfg.save(dst);
     }
 
-    /**
-     * Emits the queued migration messages through Translator after translations are loaded.
-     * Called immediately after {@link #reloadConfigAndTranslations()}.
-     */
     private void flushMigrationLog() {
         if (pendingMigrationLog == null) return;
         String source = pendingMigrationLog;
@@ -826,11 +763,6 @@ public final class BlockProt extends JavaPlugin {
         pendingMigrationError   = null;
     }
 
-    /**
-     * Recursively copies all files from {@code src} into {@code dst}.
-     * Existing files in {@code dst} are never overwritten.
-     * Directory structure is replicated as needed.
-     */
     /**
      * Moves the legacy {@code blockprot_usercache.sqlite} from the server root
      * (next to {@code server.jar}) into the plugin data folder.
@@ -868,7 +800,6 @@ public final class BlockProt extends JavaPlugin {
                 // Never copy the migration marker itself.
                 if (file.getFileName().toString().equals(".migrated")) return FileVisitResult.CONTINUE;
                 Path target = dst.resolve(src.relativize(file));
-                // Do not overwrite files that already exist in the destination.
                 if (!Files.exists(target)) {
                     Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES);
                 }

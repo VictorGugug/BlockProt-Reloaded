@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -39,6 +39,9 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Caches hopper access checks per block to avoid repeated NBT reads.
+ */
 public class HopperEventListener implements Listener {
 
     /**
@@ -66,14 +69,11 @@ public class HopperEventListener implements Listener {
      */
     private static long cacheKey(@NotNull Block block) {
         UUID uid = block.getWorld().getUID();
-        // Cantor-pair the three signed ints into a single long, then mix with the world UID.
         long xyz = ((long) block.getX() & 0x3FFFFFFL)
                  | (((long) block.getZ() & 0x3FFFFFFL) << 26)
                  | (((long) (block.getY() + 2048) & 0xFFFL) << 52);
-        // Mix with world UID (both halves) using multiplicative hashing.
         long key = xyz ^ (uid.getMostSignificantBits() * 0x9e3779b97f4a7c15L);
         key ^= uid.getLeastSignificantBits() * 0x6c62272e07bb0142L;
-        // Final avalanche (MurmurHash3 fmix64).
         key ^= key >>> 33;
         key *= 0xff51afd7ed558ccdL;
         key ^= key >>> 33;
@@ -107,10 +107,6 @@ public class HopperEventListener implements Listener {
         }
     }
 
-    /**
-     * Invalidates the cache entry for a block. Call this whenever a block's
-     * protection state changes (lock, unlock, clear).
-     */
     public static void invalidate(@NotNull Block block) {
         cache.invalidate(cacheKey(block));
     }
@@ -126,13 +122,12 @@ public class HopperEventListener implements Listener {
         if (source == null) return;
         if (!BlockProt.getDefaultConfig().isLockable(source.getType())) return;
 
-        // O(1) early-exit: if this location has never been protected, skip all NBT work.
+        // Early-exit: skip NBT if this location has never been protected.
         if (!ProtectedBlockCache.isProtected(source)) return;
 
         CacheEntry sourceEntry = getEntry(source);
         if (sourceEntry == null || !sourceEntry.isProtected()) return;
 
-        // Fast-path: hopper protection is disabled on the source — allow the move.
         if (!sourceEntry.hopperProtection()) return;
 
         // Source is protected and hopper-protection is on.
@@ -145,12 +140,10 @@ public class HopperEventListener implements Listener {
             // containers (e.g. minecart chests) and throw a RuntimeException caught silently by Paper.
             if (destination != null && BlockProt.getDefaultConfig().isLockable(destination.getType())) {
                 CacheEntry destEntry = getEntry(destination);
-                // Same owner — allow regardless of destination protection state.
                 if (destEntry != null && destEntry.owner().equals(sourceEntry.owner())) return;
             }
         }
 
-        // All other cases (different owner, unprotected destination, minecart, etc.) — block.
         event.setCancelled(true);
     }
 

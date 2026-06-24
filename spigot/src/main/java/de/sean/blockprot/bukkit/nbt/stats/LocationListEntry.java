@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -79,7 +79,7 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
         // Copper chests and shelves (1.21.9+) — show their own variant
         if (name.contains("COPPER_CHEST") || name.contains("COPPER_TRAPPED_CHEST")) return type;
         if (name.endsWith("_SHELF")) return type;
-        // Wall signs → sign item (wall variants aren’t placeable as items)
+        // Wall signs → sign item (wall variants aren't placeable as items)
         if (name.endsWith("_WALL_SIGN")) {
             Material m = Material.matchMaterial(name.replace("_WALL_SIGN", "_SIGN"));
             return m != null ? m : type;

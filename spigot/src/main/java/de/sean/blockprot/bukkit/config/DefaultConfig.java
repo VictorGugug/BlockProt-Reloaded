@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -86,6 +86,12 @@ public final class DefaultConfig extends BlockProtConfig {
     private YamlConfiguration blocksConfig = null;
     private YamlConfiguration mysqlConfig  = null;
 
+    /** True when the constructor auto-converted blocks.yml to modern expression format. */
+    private boolean blocksFileWasConverted = false;
+
+    /** Returns true if blocks.yml was converted to modern expression format during this load. */
+    public boolean wasBlocksFileConverted() { return blocksFileWasConverted; }
+
     public DefaultConfig(@NotNull final FileConfiguration config) {
         this(config, null);
     }
@@ -106,22 +112,19 @@ public final class DefaultConfig extends BlockProtConfig {
                     boolean fileIsLegacy = !blocksFileHasFamilyExpressions(loaded);
 
                     if (modernMode && fileIsLegacy) {
-                        // Auto-convert flat list -> family expressions only when modern mode is explicitly enabled
                         YamlConfiguration converted = convertBlocksYmlToModern(loaded);
                         try {
                             converted.save(blocksFile);
                             this.blocksConfig = YamlConfiguration.loadConfiguration(blocksFile);
+                            this.blocksFileWasConverted = true;
                             BlockProtLogger.log("blocks-convert", "blocks.yml auto-converted to modern family expression format.");
                         } catch (IOException ioe) {
                             BlockProtLogger.warn("blocks.yml modern conversion failed to save: " + ioe.getMessage());
                             this.blocksConfig = loaded;
                         }
                     } else {
-                        // Always accept the file as-is — family expressions are always parsed regardless of modern_family_blocks.
-                        // The flag only controls auto-conversion of flat lists on startup; it does not block expression parsing.
                         this.blocksConfig = loaded;
                     }
-                    // Patch any keys that are missing from an older blocks.yml (non-destructive).
                     this.patchBlocksFileIfNeeded(blocksFile, this.blocksConfig);
                 } else {
                     File parent = blocksFile.getParentFile();
@@ -164,7 +167,6 @@ public final class DefaultConfig extends BlockProtConfig {
         }
         this.loadBlocksFromConfig();
 
-        // MySQL config
         if (dataFolder != null) {
             File mysqlFile = new File(dataFolder, "mysql/mysql.yml");
             if (mysqlFile.exists()) {
@@ -172,8 +174,6 @@ public final class DefaultConfig extends BlockProtConfig {
             }
         }
     }
-
-    // ── Block lists ───────────────────────────────────────────────────────────
 
     private void addMaterialIfExists(Collection<Material> set, String... names) {
         for (String name : names) {
@@ -305,8 +305,6 @@ public final class DefaultConfig extends BlockProtConfig {
             });
     }
 
-    // ── General settings ──────────────────────────────────────────────────────
-
     @Nullable public String getLanguageFile() { return config.getString("language_file"); }
 
     public boolean shouldReplaceTranslations() {
@@ -336,7 +334,6 @@ public final class DefaultConfig extends BlockProtConfig {
 
     public boolean isWorldsConfigEnabled() { return isPerWorldsConfigEnabled(); }
     public boolean isPerWorldsConfigEnabled() {
-        // Support both the new key and the legacy key for backwards compat during migration.
         if (config.contains("per_worlds_config")) return config.getBoolean("per_worlds_config", false);
         return config.getBoolean("worlds_config_enabled", false);
     }
@@ -473,9 +470,6 @@ public final class DefaultConfig extends BlockProtConfig {
     public boolean isSessionLogEnabled()                { return config.getBoolean("enable_session_log", true); }
     public boolean isBackupsEnabled()                   { return config.getBoolean("enable_backups", true); }
 
-    // ── Auto-drop to inventory ────────────────────────────────────────────────
-
-    /** Whether the auto-drop-to-inventory feature is enabled globally. */
     public boolean isAutoDropToInventoryEnabled() {
         if (blocksConfig != null) return blocksConfig.getBoolean("auto_drop_to_inventory.enabled", true);
         return config.getBoolean("auto_drop_to_inventory.enabled", true);
@@ -517,12 +511,6 @@ public final class DefaultConfig extends BlockProtConfig {
             if (!(o instanceof String s)) continue;
             String trimmed = s.trim();
             if (BlockFamilyParser.isFamilyExpression(trimmed)) {
-                // Resolve against each family independently and union results.
-                // To avoid spurious WARN logs about cross-family tokens (e.g. *-SHULKERS
-                // being tested against TILE_ENTITIES), we only feed each expression to
-                // families that actually own the sub-families referenced in the token.
-                // Families that do not own any of the referenced sub-families silently
-                // produce an empty set — no warning is emitted.
                 for (BlockFamilyParser.Family f : BlockFamilyParser.Family.values()) {
                     result.addAll(BlockFamilyParser.parseFamilyExpressionSilent(trimmed, f));
                 }
@@ -534,7 +522,6 @@ public final class DefaultConfig extends BlockProtConfig {
         return result;
     }
 
-    /** True if the given material should auto-drop to the breaker's inventory. */
     public boolean isAutoDropToInventory(@NotNull Material type) {
         return isAutoDropToInventoryEnabled() && getAutoDropToInventoryBlocks().contains(type);
     }
@@ -551,18 +538,16 @@ public final class DefaultConfig extends BlockProtConfig {
     public String getConsoleInfoColor()   { return "§x§D§2§B§4§8§C"; }
     public String getBlocksFilePath()      { return config.getString("blocks_file", "blocks.yml"); }
 
-    // ── Pet protection ────────────────────────────────────────────────────────
-
-    public boolean isPetProtectionEnabled() {
+    public boolean isEntityProtectionEnabled() {
         return getEntityProtectionBoolean("enabled", false);
     }
 
-    public boolean isPetAutoProtectOnTame() {
+    public boolean isEntityProtectionAutoProtectOnTame() {
         return getEntityProtectionBoolean("auto_protect_on_tame", true);
     }
 
     @NotNull
-    public Material getPetMenuItem() {
+    public Material getEntityProtectionMenuItem() {
         String raw = getEntityProtectionString("menu_item", "STICK");
         Material m = Material.matchMaterial(raw == null ? "STICK" : raw);
         return m == null ? Material.STICK : m;
@@ -571,6 +556,27 @@ public final class DefaultConfig extends BlockProtConfig {
     public int getVillagerLocateSeconds() {
         return Math.max(1, Math.min(10, config.getInt("entity_protection.villager_locate_seconds",
             config.getInt("pet_protection.villager_locate_seconds", 6))));
+    }
+
+    public boolean isVillagerWorkstationProtectionEnabled() {
+        return config.getBoolean("villager_workstation_protection.enabled", true);
+    }
+
+    /**
+     * Search radius (in blocks, horizontal) used to find a protected workstation near
+     * a block being broken or interacted with. Clamped to [0, 8] to bound the cost of
+     * the surrounding-block scan.
+     */
+    public int getVillagerWorkstationProtectionRadius() {
+        return Math.max(0, Math.min(8, config.getInt("villager_workstation_protection.radius", 2)));
+    }
+
+    /**
+     * Vertical search radius (in blocks) used together with {@link #getVillagerWorkstationProtectionRadius()}.
+     * Clamped to [0, 4].
+     */
+    public int getVillagerWorkstationProtectionVerticalRadius() {
+        return Math.max(0, Math.min(4, config.getInt("villager_workstation_protection.vertical_radius", 1)));
     }
 
     private boolean getEntityProtectionBoolean(@NotNull String leaf, boolean def) {
@@ -587,11 +593,9 @@ public final class DefaultConfig extends BlockProtConfig {
     }
 
     @NotNull
-    public String getPetDeniedMessage() {
-        return de.sean.blockprot.bukkit.Translator.get(de.sean.blockprot.bukkit.TranslationKey.MESSAGES__PET_DENIED);
+    public String getEntityProtectionDeniedMessage() {
+        return de.sean.blockprot.bukkit.Translator.get(de.sean.blockprot.bukkit.TranslationKey.MESSAGES__ENTITY_DENIED);
     }
-
-    // ── Block type checks ─────────────────────────────────────────────────────
 
     public boolean isLockable(Material type) { return isLockableBlock(type) || isLockableTileEntity(type); }
 
@@ -637,8 +641,6 @@ public final class DefaultConfig extends BlockProtConfig {
 
     public boolean isModernFamilyBlocks() { return config.getBoolean("modern_family_blocks", false); }
 
-    // ── blocks.yml integrity helpers ──────────────────────────────────────────
-
     /**
      * Returns true if any lockable key in the given blocks.yml config contains a family expression.
      */
@@ -683,7 +685,6 @@ public final class DefaultConfig extends BlockProtConfig {
             }
         }
 
-        // Preserve auto_drop_to_inventory — convert blocks list to [*-SHULKERS] if all shulkers present
         if (legacy.contains("auto_drop_to_inventory")) {
             modern.set("auto_drop_to_inventory.enabled",
                 legacy.getBoolean("auto_drop_to_inventory.enabled", true));
@@ -739,16 +740,13 @@ public final class DefaultConfig extends BlockProtConfig {
     private void patchBlocksFileIfNeeded(@NotNull File blocksFile, @NotNull YamlConfiguration bc) {
         boolean dirty = false;
 
-        // lockable_entities — added in BPR 1.3+
         if (!bc.contains("lockable_entities")) {
             bc.set("lockable_entities", Collections.emptyList());
             BlockProtLogger.log("blocks-patch", "blocks.yml: added missing key 'lockable_entities' (empty list).");
             dirty = true;
         }
 
-        // auto_drop_to_inventory — added in BPR 1.2+
         if (!bc.contains("auto_drop_to_inventory")) {
-            // Default: enabled, shulkers auto-drop
             bc.set("auto_drop_to_inventory.enabled", true);
             bc.set("auto_drop_to_inventory.blocks", List.of(
                 "SHULKER_BOX", "WHITE_SHULKER_BOX", "ORANGE_SHULKER_BOX", "MAGENTA_SHULKER_BOX",

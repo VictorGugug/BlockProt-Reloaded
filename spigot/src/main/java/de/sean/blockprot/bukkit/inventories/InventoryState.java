@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -34,87 +34,39 @@ import java.util.*;
  * @since 0.1.9
  */
 public final class InventoryState {
-    /**
-     * HashMap containing the current InventoryState of each player.
-     * The keys are the String representation of the player's UUID.
-     *
-     * @since 0.4.7
-     */
     private static final HashMap<String, InventoryState> players = new HashMap<>();
 
-    /**
-     * A local cache of offline players for this state.
-     *
-     * @since 1.1.16
-     */
     @NotNull
     public final ArrayList<UUID> friendResultCache = new ArrayList<>();
 
     @Nullable
     private final Block block;
 
-    /**
-     * UUID of the pet entity currently open in {@link de.sean.blockprot.bukkit.inventories.PetSettingsInventory}.
-     * Null when the player is not in a pet-settings menu.
-     *
-     * @since SP26-ZV
-     */
     @Nullable
-    private UUID petEntityId = null;
+    private UUID entityProtectionId = null;
 
-    /**
-     * UUID of the entity (item frame, chest boat, minecart) being edited through
-     * an entity protection menu. Null when the current menu is for a block.
-     *
-     * @since SP26-ZV.BPR
-     */
     @Nullable
     public UUID entityUUID = null;
 
-    /**
-     * The current state of the friend search mechanism.
-     *
-     * @since 0.4.7
-     */
     @NotNull
     public FriendSearchState friendSearchState = FriendSearchState.FRIEND_SEARCH;
 
-    /**
-     * The current index of the page, if the inventory has any multi-page capabilities.
-     *
-     * @since 1.0.0
-     */
     public int currentPageIndex = 0;
 
-    /**
-     * The current friend we currently want to modify with {@link FriendDetailInventory}.
-     *
-     * @since 1.1.16
-     */
     @Nullable
     public UUID currentFriend = null;
 
-    /**
-     * The current cached menu permissions for this player.
-     *
-     * @since 1.0.0
-     */
     @NotNull
     public Set<BlockAccessMenuEvent.MenuPermission> menuPermissions = new HashSet<>();
 
     public boolean remoteLockPendingConfirm = false;
 
-    /**
-     * Tracks which menu opened the current one, so the back button can return correctly.
-     */
     @NotNull
     public MenuOrigin origin = MenuOrigin.NONE;
 
     public InventoryState(@Nullable Block block) {
         this.block = block;
     }
-
-    // ── Static accessors ──────────────────────────────────────────────────────
 
     public static void set(String player, InventoryState state) {
         players.put(player, state);
@@ -132,12 +84,6 @@ public final class InventoryState {
         return players.get(player.toString());
     }
 
-    /**
-     * Returns the existing state for the player, or creates a new one (with no block)
-     * if none exists. This is used by pet-menu open paths where there is no block.
-     *
-     * @since SP26-ZV
-     */
     @NotNull
     public static InventoryState getOrCreate(@NotNull UUID player) {
         InventoryState existing = players.get(player.toString());
@@ -155,36 +101,19 @@ public final class InventoryState {
         players.remove(player.toString());
     }
 
-    // ── Instance accessors ────────────────────────────────────────────────────
-
     @Nullable
     public Block getBlock() {
         return this.block;
     }
 
-    /**
-     * Returns the UUID of the pet entity currently being configured,
-     * or null when not in a pet settings menu.
-     *
-     * @since SP26-ZV
-     */
     @Nullable
-    public UUID getPetEntityId() {
-        return petEntityId;
+    public UUID getEntityProtectionId() {
+        return entityProtectionId;
     }
 
-    /**
-     * Sets the pet entity UUID for this state. Used by
-     * {@link de.sean.blockprot.bukkit.inventories.PetSettingsInventory} to track
-     * which entity is being edited across click events.
-     *
-     * @since SP26-ZV
-     */
-    public void setPetEntityId(@Nullable UUID id) {
-        this.petEntityId = id;
+    public void setEntityProtectionId(@Nullable UUID id) {
+        this.entityProtectionId = id;
     }
-
-    // ── Enum ──────────────────────────────────────────────────────────────────
 
     /**
      * The current search state of the friend menu.

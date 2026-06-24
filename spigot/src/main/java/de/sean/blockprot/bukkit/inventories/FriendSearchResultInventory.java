@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -47,6 +47,9 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * Inventory showing friend search results as player skulls.
+ */
 public class FriendSearchResultInventory extends BlockProtInventory {
     public FriendSearchResultInventory() { super(true); }
     final ConcurrentLinkedQueue<Profile> resultQueue = new ConcurrentLinkedQueue<>();
@@ -76,10 +79,6 @@ public class FriendSearchResultInventory extends BlockProtInventory {
         if (item == null) return;
         switch (item.getType()) {
             case BLACK_STAINED_GLASS_PANE ->
-                // As in the anvil inventory we cannot differentiate between
-                // pressing Escape to go back, or closing it to go to the result
-                // inventory, we won't return to the anvil inventory and instead
-                // go right back to the FriendAddInventory.
                 closeAndOpen(
                     player,
                     new FriendManageInventory().fill(player)
@@ -91,7 +90,6 @@ public class FriendSearchResultInventory extends BlockProtInventory {
                     modifyFriendsForAction(player, id, FriendModifyAction.ADD_FRIEND);
                     closeAndOpen(player, new FriendManageInventory().fill(player));
 
-                    // Update the search history
                     PlayerSettingsHandler settingsHandler = new PlayerSettingsHandler(player);
                     settingsHandler.addPlayerToSearchHistory(id);
                 }
@@ -109,7 +107,6 @@ public class FriendSearchResultInventory extends BlockProtInventory {
             updateTask.cancel();
     }
 
-    /** Delegates to {@link StringUtil#similarity(String, String)}. */
     private double compareStrings(String str1, String str2) {
         return StringUtil.similarity(str1, str2);
     }
@@ -129,7 +126,6 @@ public class FriendSearchResultInventory extends BlockProtInventory {
         return inventory;
     }
 
-    /** This task is responsible for taking available results and inserting it into the inventory */
     private class ResultUpdateTask implements Runnable {
         InventoryState state;
         int playersIndex = 0;
@@ -143,7 +139,6 @@ public class FriendSearchResultInventory extends BlockProtInventory {
             final var scheduler = Bukkit.getScheduler();
             if (!scheduler.isQueued(loadTask.getTaskId()) && !scheduler.isCurrentlyRunning(loadTask.getTaskId()) && resultQueue.isEmpty()) {
                 if (playersIndex == 0) {
-                    // If the task has stopped running and there are no results, clear the inventory
                     for (int i = 0; i < maxResults; i++) {
                         inventory.clear(i);
                     }
@@ -154,7 +149,6 @@ public class FriendSearchResultInventory extends BlockProtInventory {
 
             Profile profile;
             while ((profile = resultQueue.poll()) != null && playersIndex < maxResults) {
-                // Clear all the skeleton skulls named "Loading"
                 if (playersIndex == 0) {
                     for (int i = 0; i < maxResults; i++) {
                         inventory.clear(i);
@@ -168,7 +162,6 @@ public class FriendSearchResultInventory extends BlockProtInventory {
                 ++playersIndex;
             }
 
-            // If we hit the maximum amount of results we can just tell the task to stop, and cancel ourselves.
             if (playersIndex == maxResults) {
                 loadTask.cancel();
                 updateTask.cancel();
@@ -176,8 +169,6 @@ public class FriendSearchResultInventory extends BlockProtInventory {
         }
     }
 
-    /** This task asynchronously loads all possible players and filters them based on the search criteria.
-     * It then adds every possible result to a queue that the {@link ResultUpdateTask} then consumes. */
     private class AsyncResultLoadTask implements Runnable {
         InventoryState state;
         Player player;

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -42,6 +42,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 
+/**
+ * Checks for new plugin releases on GitHub and notifies ops/admins.
+ */
 public final class UpdateChecker implements Runnable {
 
     /**
@@ -79,7 +82,6 @@ public final class UpdateChecker implements Runnable {
         this.currentVersion = new SemanticVersion(version);
     }
 
-    /** @deprecated Use {@link #UpdateChecker(String)} instead. */
     @Deprecated
     public UpdateChecker(@NotNull final PluginDescriptionFile description) {
         this.pluginVersion = description.getVersion();
@@ -87,7 +89,6 @@ public final class UpdateChecker implements Runnable {
         this.currentVersion = new SemanticVersion(description.getVersion());
     }
 
-    /** @deprecated Use the String-based constructor. */
     @Deprecated
     public UpdateChecker(@NotNull final PluginDescriptionFile description,
                          @Nullable final List<Player> recipients) {
@@ -146,12 +147,11 @@ public final class UpdateChecker implements Runnable {
                 if (best == null || v.compareTo(best) > 0) best = v;
             }
 
-            if (best == null) return; // no applicable release found
+            if (best == null) return;
             UpdateChecker.latestVersion = best;
             this.sendMessage(currentVersion, best);
 
         } catch (Exception ignored) {
-            // Network error or JSON parse failure — silently ignore.
         }
     }
 
@@ -159,7 +159,6 @@ public final class UpdateChecker implements Runnable {
         boolean isOutdated = latestVersion.compareTo(currentVersion) > 0;
 
         if (this.recipients != null && !this.recipients.isEmpty()) {
-            // In-game notification for ops/admins on join.
             String message;
             if (isOutdated) {
                 message = "BlockProt Reloaded v" + currentVersion
@@ -181,7 +180,6 @@ public final class UpdateChecker implements Runnable {
                 player.sendMessage(comp);
             }
         } else {
-            // Startup console check: only print a warning if outdated; log silently otherwise.
             if (isOutdated) {
                 BlockProt.getInstance().getLogger().warning(
                     "BlockProt Reloaded v" + currentVersion

@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2021 - 2025 spnda
- * Modifications Copyright (C) 2025 Zaynr (Zar)
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
@@ -20,9 +20,6 @@
 
 package de.sean.blockprot.nbt;
 
-/**
- * @since 0.1.16
- */
 public enum FriendModifyAction {
     ADD_FRIEND,
     REMOVE_FRIEND

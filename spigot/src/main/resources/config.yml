@@ -17,21 +17,20 @@ bedrock_username_prefixes:
 inactivity_cleanup_days: -1
 
 # ── Auto-reload ───────────────────────────────────────────────────────────────
-# true  (default) — BlockProt watches its config files and reloads automatically
-#                   when it detects a change (config.yml, blocks.yml, lang/*.yml).
-# false           — Disables the file watcher entirely. Use /bp reload manually
-#                   after editing any config file. Recommended on high-load servers
-#                   or when editors write files in ways that cause spurious reloads.
+# true  (default) — BlockProt watches its config files and reloads when it detects
+#                   a change on disk (config.yml, blocks.yml, lang/*.yml).
+# false           — File watcher disabled. Config will NOT reload on its own;
+#                   use /bp reload after every edit. A notice is logged on startup.
 auto_reload_configs: true
 
 # ── Block format mode ─────────────────────────────────────────────────────────
-# false (default) → blocks.yml is read as a legacy flat list of material names.
-# true            → compact family expressions are active in blocks.yml:
-#                   [*], [*-CHEST], [-*SHULKERS], etc.
+# false (default) → blocks.yml is read as a flat list of material names.
+# true            → on startup, flat lists in blocks.yml are auto-converted to
+#                   compact family expressions ([*], [*-CHEST], [-*SHULKERS], etc.).
+#                   A notice is logged to console when conversion runs.
 #                   See docs/BLOCK_FAMILY_SYNTAX.md for the full syntax.
-#
-# To switch modes: edit blocks.yml entries to match the desired format,
-# then set this flag to match and run /bp reload (or restart).
+#                   Note: expressions are always parsed regardless of this flag;
+#                   it only controls the one-time auto-conversion on startup.
 modern_family_blocks: false
 
 # ── 2. Player & Protection Defaults ──────────────────────────────────────────
@@ -58,6 +57,20 @@ entity_protection:
   auto_protect_on_tame: true
   menu_item: STICK
   villager_locate_seconds: 6
+
+# ── 4b. Villager Workstation Protection ──────────────────────────────────────
+# Protects a villager linked to a protected workstation (job site block), and
+# the area around that workstation, from interaction/damage/block-break by
+# non-owners. This is independent from entity_protection.enabled above and can
+# be disabled on its own — it is intentionally powerful (it extends block
+# protection into open space around the workstation), so keep the radius small
+# on survival/SMP servers to avoid over-claiming shared areas.
+villager_workstation_protection:
+  enabled: true
+  # Horizontal search radius in blocks (each direction). 0-8, default 2.
+  radius: 2
+  # Vertical search radius in blocks (each direction). 0-4, default 1.
+  vertical_radius: 1
 
 # ── 5. Effects ───────────────────────────────────────────────────────────────
 block_lock_effects: true
