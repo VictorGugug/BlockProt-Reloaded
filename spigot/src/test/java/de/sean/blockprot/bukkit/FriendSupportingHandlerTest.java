@@ -21,11 +21,15 @@
 package de.sean.blockprot.bukkit;
 
 import de.sean.blockprot.bukkit.nbt.FriendSupportingHandler;
-import de.sean.blockprot.bukkit.nbt.FriendHandler;
-import de.tr7zw.changeme.nbtapi.NBTCompound;
-import de.tr7zw.changeme.nbtapi.NBTContainer;
+import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.nbt.MapNBTCompound;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockbukkit.mockbukkit.MockBukkit;
+import org.mockbukkit.mockbukkit.ServerMock;
 
 import java.util.List;
 import java.util.UUID;
@@ -36,14 +40,29 @@ class FriendSupportingHandlerTest {
 
     private static final String FRIENDS_KEY = "test_friends";
 
+    private static ServerMock server;
     private TestHandler handler;
 
-    private static class TestHandler extends FriendSupportingHandler<NBTCompound> {
+    @BeforeAll
+    static void initConfig() throws Exception {
+        server = MockBukkit.mock();
+        var config = new DefaultConfig(new YamlConfiguration());
+        var field = BlockProt.class.getDeclaredField("defaultConfig");
+        field.setAccessible(true);
+        field.set(null, config);
+    }
+
+    @AfterAll
+    static void shutdownBukkit() {
+        MockBukkit.unmock();
+    }
+
+    private static class TestHandler extends FriendSupportingHandler<MapNBTCompound> {
         int mutateCount = 0;
 
         TestHandler() {
             super(FRIENDS_KEY);
-            this.container = new NBTContainer();
+            this.container = new MapNBTCompound();
         }
 
         @Override
