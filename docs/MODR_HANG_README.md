@@ -1,4 +1,4 @@
-# BlockProt Reloaded — Modrinth & Hangar Description
+# BlockProt Reloaded - Modrinth & Hangar Description
 
 BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper and Spigot servers (Minecraft 1.21.1 through 26.1.x). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
 
@@ -6,7 +6,7 @@ BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/
 
 ## What it does
 
-Players sneak and right-click any lockable block or entity to open the protection GUI — no commands required. From the GUI they can lock or unlock, manage a per-block friend list with Read, Write, or Manager roles, control redstone and hopper access, inspect the access audit trail, copy and paste settings between blocks, and set an optional protection expiry timer.
+Players sneak and right-click any lockable block or entity to open the protection GUI - no commands required. From the GUI they can lock or unlock, manage a per-block friend list with Read, Write, or Manager roles, control redstone and hopper access, inspect the access audit trail, copy and paste settings between blocks, and set an optional protection expiry timer.
 
 Admins get a separate toolset: a paged block browser (`/bp lockables`), per-player block lists (`/bp info`), an unlock GUI (`/bp unlock`), diagnostics (`/bp debug run`), and a full audit log per protected block.
 
@@ -30,7 +30,7 @@ All block lists are defined in `blocks.yml` and can be changed at runtime withou
 Every button in the Block Lock GUI now occupies a fixed slot across all block and entity types. Previously, a missing button (for example, no Redstone button on a workstation) caused all subsequent buttons to shift left, making the menu inconsistent between block types.
 
 ### Entity protection
-Tamed animals (wolves, cats, parrots, horses, llamas) can be protected. Right-click your tamed animal while holding the configured menu item (default: Stick) to open the protection GUI. Disabled by default; enable under `entity_protection` in `config.yml`. Renamed from `pet_protection` in earlier versions — the old key is migrated automatically on upgrade, no manual edit needed.
+Tamed animals (wolves, cats, parrots, horses, llamas) can be protected. Right-click your tamed animal while holding the configured menu item (default: Stick) to open the protection GUI. Disabled by default; enable under `entity_protection` in `config.yml`. Renamed from `pet_protection` in earlier versions - the old key is migrated automatically on upgrade, no manual edit needed.
 
 ### Villager workstation protection
 A villager whose job-site memory points to a protected workstation block inherits that block's protection automatically. Non-owners cannot damage or trade with the linked villager and cannot break or interact with blocks in a configurable area around the workstation. A "Locate linked villager" Emerald button appears in the workstation's lock menu, showing a short particle effect at the villager's location visible only to the clicking player. Configurable in `config.yml`:
@@ -38,8 +38,8 @@ A villager whose job-site memory points to a protected workstation block inherit
 ```yaml
 villager_workstation_protection:
   enabled: true
-  radius: 2           # horizontal search radius (0–8)
-  vertical_radius: 1  # vertical search radius (0–4)
+  radius: 2           # horizontal search radius (0-8)
+  vertical_radius: 1  # vertical search radius (0-4)
 ```
 
 ### Item frame protection with automatic block linking
@@ -64,7 +64,7 @@ Sub-families: `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN` (tile ent
 Full syntax: `docs/BLOCK_FAMILY_SYNTAX.md`. Full material list: `docs/LOCKABLE_BLOCKS_REFERENCE.md`.
 
 ### Config and blocks auto-merge on every reload
-On every startup and `/bp reload`, missing keys are added from JAR defaults and renamed keys are migrated. Existing values — including every family expression already written in `blocks.yml` — are never overwritten or reordered. In legacy flat-list mode, new material entries from a newer JAR are appended automatically so new block types become lockable without manual edits.
+On every startup and `/bp reload`, missing keys are added from JAR defaults and renamed keys are migrated. Existing values - including every family expression already written in `blocks.yml` - are never overwritten or reordered. In legacy flat-list mode, new material entries from a newer JAR are appended automatically so new block types become lockable without manual edits.
 
 ### Raid detection
 Monitors explosions near lockable blocks. Logs the event, alerts the owner via action bar and chat if online, or queues the alert for delivery at next login. Configurable via `raid_detection.enabled`.
@@ -140,7 +140,7 @@ Towny, WorldGuard, Lands, ClaimChunk, PlaceholderAPI, SkinsRestorer, WorldEdit/F
 
 ## Install
 
-Place the JAR in `plugins/` and restart. Requires Java 25 and Paper or Spigot 1.21.1+. On upgrade, config keys are migrated automatically — no manual edits required.
+Place the JAR in `plugins/` and restart. Requires Java 25 and Paper or Spigot 1.21.1+. On upgrade, config keys are migrated automatically - no manual edits required.
 
 ---
 
@@ -156,4 +156,4 @@ Place the JAR in `plugins/` and restart. Requires Java 25 and Paper or Spigot 1.
 
 Repository: https://github.com/VictorGugug/BlockProt-Reloaded
 Issues and contributions: https://github.com/VictorGugug/BlockProt-Reloaded/issues
-License: GNU General Public License v3 — based on [BlockProt](https://github.com/spnda/BlockProt) by spnda.
+License: GNU General Public License v3 - based on [BlockProt](https://github.com/spnda/BlockProt) by spnda.

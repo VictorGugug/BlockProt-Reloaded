@@ -1,6 +1,8 @@
-﻿![1.3.3](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/1.3.3.png)
+![1.3.3](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/1.3.3.png)
 
-This page lists what changed in each release, in the order it shipped. Each entry describes the final, working behavior — not the intermediate steps taken to get there.
+This page lists what changed in each release, in the order it shipped. Each entry describes the final, working behavior - not the intermediate steps taken to get there.
+
+Hello everyone, I apologize for how long this release took. The main reason is my studies, but I am also running a server alone, developing 2 plugins and 1 mod, and managing 14 personal projects on top of this one. I want to thank everyone for the 100 downloads on Modrinth -- it is an honor to contribute to the Minecraft community and help people. I kindly ask for your patience with each release and its timing. I am just one person, Zar, working on this project alone. I do it for the love of the craft and to share my ideas in something as beautiful as this. I will keep an eye on all your issues and suggestions. I will soon open a Discord server where you can interact with me more directly and where I can assist you as attentively and quickly as I can. Thank you all very much. Below is a detailed changelog of everything added, fixed, changed, and more. This is a MAJOR UPDATE that adds a lot of new content. I strongly recommend reading it in full, as well as the following documents: https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/BLOCK_FAMILY_SYNTAX.md and https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/LOCKABLE_BLOCKS_REFERENCE.md. These documents will be updated periodically so I recommend keeping an eye on them. Since this is a major update, many more will follow. This update focuses on simplicity and explaining the entire project for better understanding and usability. Future 1.3.x / 1.x.x updates will focus on bug fixes, new features, and more. I hope you understand that I do what I can to offer something complete and that you understand the time it takes. Good night, and I hope that by tomorrow, July 24, 2026, version 1.3.3 will finally be released. Have a lovely night.
 
 ---
 
@@ -47,7 +49,7 @@ The `pet_protection` key in `config.yml` is renamed to `entity_protection`. Upgr
 
 ### Villager workstation protection
 
-A villager whose job-site memory points to a protected workstation block (grindstone, stonecutter, loom, cartography table, smithing table, enchanting table, fletching table, lectern, composter, brewing stand, blast furnace, smoker, barrel, cauldron) inherits that block's protection automatically — no separate configuration is needed per villager.
+A villager whose job-site memory points to a protected workstation block (grindstone, stonecutter, loom, cartography table, smithing table, enchanting table, fletching table, lectern, composter, brewing stand, blast furnace, smoker, barrel, cauldron) inherits that block's protection automatically - no separate configuration is needed per villager.
 
 Protected actions:
 - Damage to the villager by non-owners (melee and projectiles)
@@ -70,7 +72,7 @@ A new Emerald button ("Locate Linked Villager") appears in the lock menu for a p
 
 `ITEM_FRAME` and `GLOW_ITEM_FRAME` are full members of the `ENTITIES` family under the `ITEM_FRAMES` sub-family. They appear in `/bp lockables` with `Status: INACTIVE` by default (not included in `lockable_entities`) or `ACTIVE` when listed.
 
-A frame mounted on the face of a lockable block is automatically linked to that block at the moment it is placed. A linked frame has no protection state of its own: no owner, no friend list, no lock toggle. Interacting with it opens the underlying block's lock menu directly, and the frame's protection always matches the block's exactly — same owner, same friends, locks and unlocks together. The link is stored bidirectionally (the frame stores the block's coordinates, the block stores the frame's entity UUID) so it survives chunk reloads and server restarts, and is validated on each interaction in case the frame or block changed since linking.
+A frame mounted on the face of a lockable block is automatically linked to that block at the moment it is placed. A linked frame has no protection state of its own: no owner, no friend list, no lock toggle. Interacting with it opens the underlying block's lock menu directly, and the frame's protection always matches the block's exactly - same owner, same friends, locks and unlocks together. The link is stored bidirectionally (the frame stores the block's coordinates, the block stores the frame's entity UUID) so it survives chunk reloads and server restarts, and is validated on each interaction in case the frame or block changed since linking.
 
 A frame not mounted on a lockable block, or mounted on a block that is not currently lockable, keeps the standalone entity-protection flow: sneak and right-click with an empty hand opens the BlockProt entity menu directly, exactly like 1.3.2.
 
@@ -92,7 +94,7 @@ The info panel for a protected entity shows an Oak Sign in slot 1 displaying the
 
 ### `BlockFamilyParser` cross-family validation and `/bp lockables`
 
-`BlockFamilyParser` parses compact family expressions in `blocks.yml` and `worlds.yml`. Expressions are always parsed regardless of the `modern_family_blocks` flag in `config.yml` — that flag only controls whether flat material lists are auto-converted to expressions on startup.
+`BlockFamilyParser` parses compact family expressions in `blocks.yml` and `worlds.yml`. Expressions are always parsed regardless of the `modern_family_blocks` flag in `config.yml` - that flag only controls whether flat material lists are auto-converted to expressions on startup.
 
 A `NAME` or `-NAME` token inside an expression is now validated against the family of the config key it appears in. A material that does not belong to that family is rejected with a console warning and discarded, rather than silently producing an incorrect or empty result. For example, `COPPER_CHESTPLATE` (armor) inside a `lockable_tile_entities` expression is rejected with a warning, while `COPPER_CHEST` (a valid `CHEST` sub-family member) is accepted.
 
@@ -118,7 +120,7 @@ Sub-families per config key:
 | `lockable_doors` | DOORS |
 | `lockable_entities` | CHEST_BOATS, CHEST_MINECARTS, HOPPER_MINECARTS, ITEM_FRAMES |
 
-Full syntax guide and worked examples: [`BLOCK_FAMILY_SYNTAX.md`](BLOCK_FAMILY_SYNTAX.md). Both the plain flat-list format (one material per line with `-`) and the bracketed expression format are accepted, and can be mixed across different lines of the same list — see the "Two valid formats" section of that document.
+Full syntax guide and worked examples: [`BLOCK_FAMILY_SYNTAX.md`](BLOCK_FAMILY_SYNTAX.md). Both the plain flat-list format (one material per line with `-`) and the bracketed expression format are accepted, and can be mixed across different lines of the same list - see the "Two valid formats" section of that document.
 
 ### ViaBackwards and ViaRewind detection
 
@@ -139,10 +141,10 @@ Full syntax guide and worked examples: [`BLOCK_FAMILY_SYNTAX.md`](BLOCK_FAMILY_S
 ### Audit log action classification
 
 Clarified and corrected audit-trail event meanings:
-- `ACCESS_DENIED` — a player attempted to access a protected block/entity and was blocked
-- `OPENED` — a player with access opened the inventory of a protected block
-- `RAID_EXPLOSION` — an explosion affected a protected block
-- `ITEM_TAKEN` / `ITEM_PLACED` — a player moved items in a protected inventory
+- `ACCESS_DENIED` - a player attempted to access a protected block/entity and was blocked
+- `OPENED` - a player with access opened the inventory of a protected block
+- `RAID_EXPLOSION` - an explosion affected a protected block
+- `ITEM_TAKEN` / `ITEM_PLACED` - a player moved items in a protected inventory
 
 ### StatHandler rewrite
 
@@ -162,9 +164,9 @@ See "`BlockFamilyParser` cross-family validation and `/bp lockables`" above for 
 
 `reloadConfigAndTranslations()` runs all merge and sync operations on every `/bp reload` call, not only on startup: `cleanLegacyConfigKeys()`, `mergeMissingConfigKeys()`, `mergeMissingBlocksKeys()`, language-file key merging, and the world-config re-scan all run on reload.
 
-The merge guarantee for `blocks.yml`, `config.yml`, and `worlds.yml` is: any key or section that is entirely missing from the file on disk is added from the bundled JAR defaults, and a console line records what was added. Any key or section that already exists is never overwritten — this includes the contents of `blocks` lists inside `auto_drop_to_inventory`, and every line inside `lockable_tile_entities`, `lockable_shulker_boxes`, `lockable_blocks`, `lockable_doors`, and `lockable_entities`, whether written as plain material names or as bracketed family expressions. A future version that adds a brand-new top-level key (for example, a new boolean toggle) will see that key appended automatically; a family expression you already wrote, such as `'[*-CHEST_BOATS ITEM_FRAME]'`, is never rewritten, reordered, or stripped, regardless of how many versions you upgrade through.
+The merge guarantee for `blocks.yml`, `config.yml`, and `worlds.yml` is: any key or section that is entirely missing from the file on disk is added from the bundled JAR defaults, and a console line records what was added. Any key or section that already exists is never overwritten - this includes the contents of `blocks` lists inside `auto_drop_to_inventory`, and every line inside `lockable_tile_entities`, `lockable_shulker_boxes`, `lockable_blocks`, `lockable_doors`, and `lockable_entities`, whether written as plain material names or as bracketed family expressions. A future version that adds a brand-new top-level key (for example, a new boolean toggle) will see that key appended automatically; a family expression you already wrote, such as `'[*-CHEST_BOATS ITEM_FRAME]'`, is never rewritten, reordered, or stripped, regardless of how many versions you upgrade through.
 
-In legacy flat-list mode specifically, individual new material entries shipped in a newer JAR are also appended to the matching list on disk if not already present — this is how a new release that adds a new block type makes that block immediately lockable for legacy-mode servers without requiring a manual edit. In modern expression mode this entry-level merge is skipped, because a `*` or `*-TAG` token already resolves dynamically against the current material set on every load; a brand-new sub-family tag introduced in a future version is not automatically added to an existing expression that does not already reference it, and must be added manually if wanted.
+In legacy flat-list mode specifically, individual new material entries shipped in a newer JAR are also appended to the matching list on disk if not already present - this is how a new release that adds a new block type makes that block immediately lockable for legacy-mode servers without requiring a manual edit. In modern expression mode this entry-level merge is skipped, because a `*` or `*-TAG` token already resolves dynamically against the current material set on every load; a brand-new sub-family tag introduced in a future version is not automatically added to an existing expression that does not already reference it, and must be added manually if wanted.
 
 ### Renamed config keys with automatic migration
 
@@ -217,7 +219,7 @@ Starting with 1.3.4, the project's `README.md` will be condensed to a short summ
 
 ### Bug fixes
 
-- **Block Lock menu button shifting**: every button used a shared incrementing slot counter, so any block type missing one button (for example, no Redstone on a workstation) shifted every later button one slot to the left. The same menu rendered differently for a chest versus a workstation versus a door. Fixed by giving every button a fixed slot in both `fill()` and `fillForEntity()` — see "Fixed menu layout" above.
+- **Block Lock menu button shifting**: every button used a shared incrementing slot counter, so any block type missing one button (for example, no Redstone on a workstation) shifted every later button one slot to the left. The same menu rendered differently for a chest versus a workstation versus a door. Fixed by giving every button a fixed slot in both `fill()` and `fillForEntity()` - see "Fixed menu layout" above.
 - **StatHandler NBT save crash**: `Files.move(ATOMIC_MOVE)` failed on cross-device paths. Rewritten to temp-write, validate, backup, replace with fallback copy.
 - **Server freeze on stats purge**: `purgeStalePbsEntries` called `Block.getType()` on unloaded chunks, triggering synchronous chunk loads. Fixed with a `World.isChunkLoaded()` guard.
 - **EntityChangeBlockEvent AIR crash**: missing early-return for AIR blocks caused a `RuntimeException` in `BlockNBTHandler`.
@@ -227,19 +229,56 @@ Starting with 1.3.4, the project's `README.md` will be condensed to a short summ
 - **EntitySettingsInventory permission**: used the raw string `"blockprot.admin"` instead of `Permissions.USER_ADMIN` and lacked an `isOp()` fallback. Fixed.
 - **CraftBukkit error path**: the error message shown to plain-CraftBukkit servers is now properly translated instead of showing a raw key string.
 
-### Upstream bug fixes inherited
+### Inherited bug fixes
 
-| Issue | Title | Status |
+| Issue | Title | Fixed in |
 |---|---|---|
-| #339 | Shulker box vanishes when broken | Fixed — uses `minecraft:shulker_box` NBT ID |
-| #165 | Random inventory close on interaction | Fixed upstream, inherited |
-| #266 | Config key `public_is_friend_by_default` | Fixed upstream, inherited |
-| #294 | Geyser players missing from friend search | Fixed upstream, inherited |
-| #268 | Friend list copy/paste now replaces instead of appending | Fixed in fork |
-| #306 | HopperEventListener lag | Fixed in fork with Caffeine caching |
-| #324 | Allow breaking protected blocks | Fixed in fork with config option |
-| #329 | AIR block error on entity change | Fixed in fork with early-return guard |
-| #330 | Pale oak door/gate cannot be locked | Fixed in fork via DOORS family parser |
+| [#302](https://github.com/spnda/BlockProt/issues/302) | 1.21.1 not supported properly | Upstream |
+| [#304](https://github.com/spnda/BlockProt/issues/304) | Unknown warning/error occurred | Upstream |
+| [#305](https://github.com/spnda/BlockProt/issues/305) | Taking map from Search Players slot | Upstream |
+| [#319](https://github.com/spnda/BlockProt/issues/319) | Emptying large chests incorrectly on hoppers | Upstream |
+| [#323](https://github.com/spnda/BlockProt/issues/323) | 1.21.3 not supported properly | Upstream |
+| [#326](https://github.com/spnda/BlockProt/issues/326) | Redstone protection bugged with trapdoors | Upstream |
+| [#327](https://github.com/spnda/BlockProt/issues/327) | Paper NoClassDefFoundError Container | Upstream |
+| [#328](https://github.com/spnda/BlockProt/issues/328) | Colored shulker boxes reset when broken | Upstream |
+| [#329](https://github.com/spnda/BlockProt/issues/329) | AIR block error on entity change | Upstream |
+| [#330](https://github.com/spnda/BlockProt/issues/330) | Pale oak door/gate cannot be locked | Upstream |
+| [#332](https://github.com/spnda/BlockProt/issues/332) | Unable to use BlockProt on 1.21.7 | Upstream |
+| [#338](https://github.com/spnda/BlockProt/issues/338) | Support for Minecraft 1.21.9 | Upstream |
+| [#339](https://github.com/spnda/BlockProt/issues/339) | Shulker box vanishes when broken | Upstream |
+| [#344](https://github.com/spnda/BlockProt/issues/344) | Console spam (NbtApiException) | Upstream |
+| [#165](https://github.com/spnda/BlockProt/issues/165) | Random inventory close on interaction | Upstream |
+| [#266](https://github.com/spnda/BlockProt/issues/266) | `public_is_friend_by_default` setting | Upstream |
+| [#294](https://github.com/spnda/BlockProt/issues/294) | Geyser players missing from friend search | Upstream |
+| [#185](https://github.com/spnda/BlockProt/issues/185) | Hopper protection below chest not working | Upstream |
+| [#214](https://github.com/spnda/BlockProt/issues/214) | Making doors public only half the door | Upstream |
+| [#224](https://github.com/spnda/BlockProt/issues/224) | Locked shulker boxes break without dropping | Upstream |
+| [#227](https://github.com/spnda/BlockProt/issues/227) | Hopper and piston protection swapped | Upstream |
+| [#235](https://github.com/spnda/BlockProt/issues/235) | Lectern protection issues | Upstream |
+| [#240](https://github.com/spnda/BlockProt/issues/240) | Hopper protecting not working | Upstream |
+| [#250](https://github.com/spnda/BlockProt/issues/250) | Can get Player Head from menu | Upstream |
+| [#256](https://github.com/spnda/BlockProt/issues/256) | Can't copy/paste settings between blocks | Upstream |
+| [#263](https://github.com/spnda/BlockProt/issues/263) | Can take Telescope from Menu | Upstream |
+| [#272](https://github.com/spnda/BlockProt/issues/272) | Can't move items as admin/op | Upstream |
+| [#276](https://github.com/spnda/BlockProt/issues/276) | Items can still be placed into chests | Upstream |
+| [#279](https://github.com/spnda/BlockProt/issues/279) | Items being deleted on interact | Upstream |
+| [#280](https://github.com/spnda/BlockProt/issues/280) | Shulker box items deleted after breaking | Upstream |
+| [#281](https://github.com/spnda/BlockProt/issues/281) | Dropper not working after unlock | Upstream |
+| [#287](https://github.com/spnda/BlockProt/issues/287) | Double chest not handled on inventory click | Upstream |
+| [#289](https://github.com/spnda/BlockProt/issues/289) | Chest locked but friends can open | Upstream |
+| [#296](https://github.com/spnda/BlockProt/issues/296) | Item lost on interact | Upstream |
+| [#297](https://github.com/spnda/BlockProt/issues/297) | Item drops can't be picked by hopper | Upstream |
+| [#321](https://github.com/spnda/BlockProt/issues/321) | Wither explosions breaking protected blocks | Upstream |
+
+### Fork-specific fixes
+
+| Issue | Title | Fix |
+|---|---|---|
+| [#268](https://github.com/spnda/BlockProt/issues/268) | Friend list copy/paste should replace instead of appending | Paste replaces friend list |
+| [#306](https://github.com/spnda/BlockProt/issues/306) | Plugin causes server lag (hopper checks) | ProtectedBlockCache with O(1) early-exit |
+| [#324](https://github.com/spnda/BlockProt/issues/324) | Option to allow all protected blocks to be broken | `allow_break_protected_blocks` config key |
+| [#274](https://github.com/spnda/BlockProt/issues/274) | Players can access second row of large chest | Inventory double-chest gating |
+| [#349](https://github.com/spnda/BlockProt/issues/349) | Warn spam in console (NBT swap error) | StatHandler rewrite with temp-write-validate-replace |
 
 ### Dependency updates
 
@@ -253,12 +292,98 @@ Starting with 1.3.4, the project's `README.md` will be condensed to a short summ
 ### Known Issues
 
 - **MockBukkit unresolvable**: `MockBukkit-v1.21:4.8.0` returns HTTP 401 from jitpack.io. Build with `-x test` to skip tests.
-- **Console spam (upstream #344)**: `NbtApiException` can still appear on shulker placement in high-TPS scenarios despite the partial fix.
 - **Gradle `shadowJar` false up-to-date**: on some local setups, running `:blockprot-spigot:shadowJar` after only source changes (no `clean`) can report `BUILD SUCCESSFUL` while reusing a stale or absent output if Gradle's up-to-date check does not detect the change. If the jar is missing or unexpectedly small after a build, rerun with `--rerun-tasks`, or run `gradlew clean :blockprot-spigot:shadowJar` to force a full rebuild.
 
----
+## Complete Issue Reference (>= #250)
 
-## 1.3.2
+Every non-trivial issue from the upstream repository sorted by category. Issues closed upstream are fixed in our fork by inheritance. Issues open upstream but resolved in our fork are noted as fork-specific fixes.
 
-See the project history prior to this file's introduction. Highlights carried forward into 1.3.3: protection expiry (`DurationParser`, NBT attributes, startup scan), `ProtectedBlockCache` with O(1) hopper early-exit, Caffeine cache migration for hopper/block event listeners, lock-groups feature fully removed, versioning system (`alpha.N → beta.N → rc.N → release → snapshot`), ownership transfer (`/bp transferall`), timed friend access, admin block listing, copy-paste in replace mode, `config.yml` restructured into named sections, `blocks.yml` and `mysql/mysql.yml` split out, full block coverage expansion (copper chests, shelves, decorated pot, crafter, etc.), plugin rebrand to `BlockProtReloaded`, bStats ID `25808`, session-based logging (`BlockProtLogger`), `enable_session_log` / `enable_backups` config toggles.
+### Bugs fixed upstream (inherited)
+
+These were closed in the upstream repository and are fixed in our fork:
+
+| Issue | Title |
+|---|---|
+| [#344](https://github.com/spnda/BlockProt/issues/344) | Console spam (NbtApiException) |
+| [#339](https://github.com/spnda/BlockProt/issues/339) | Shulker box vanishes when broken |
+| [#338](https://github.com/spnda/BlockProt/issues/338) | Support for 1.21.9 |
+| [#337](https://github.com/spnda/BlockProt/issues/337) | Bug (untitled) |
+| [#336](https://github.com/spnda/BlockProt/issues/336) | Bug (untitled) |
+| [#335](https://github.com/spnda/BlockProt/issues/335) | Bug (untitled) |
+| [#332](https://github.com/spnda/BlockProt/issues/332) | Unable to use on 1.21.7 server |
+| [#330](https://github.com/spnda/BlockProt/issues/330) | Pale oak door/gate cannot be locked |
+| [#329](https://github.com/spnda/BlockProt/issues/329) | Air block error on entity change |
+| [#328](https://github.com/spnda/BlockProt/issues/328) | Colored shulker boxes reset when broken |
+| [#327](https://github.com/spnda/BlockProt/issues/327) | Paper NoClassDefFoundError Container |
+| [#326](https://github.com/spnda/BlockProt/issues/326) | Redstone protection bugged with trapdoors |
+| [#323](https://github.com/spnda/BlockProt/issues/323) | 1.21.3 not supported properly |
+| [#319](https://github.com/spnda/BlockProt/issues/319) | Emptying large chests incorrectly on hoppers |
+| [#305](https://github.com/spnda/BlockProt/issues/305) | Taking map from Search Players slot |
+| [#304](https://github.com/spnda/BlockProt/issues/304) | Unknown warning or error occurred |
+| [#302](https://github.com/spnda/BlockProt/issues/302) | 1.21.1 not supported properly |
+| [#297](https://github.com/spnda/BlockProt/issues/297) | Item drops can't be picked by hopper |
+| [#296](https://github.com/spnda/BlockProt/issues/296) | Item lost on interact |
+| [#293](https://github.com/spnda/BlockProt/issues/293) | Problem with chests regarding hoppers |
+| [#290](https://github.com/spnda/BlockProt/issues/290) | Bug (untitled) |
+| [#289](https://github.com/spnda/BlockProt/issues/289) | Chest locked but friends can open |
+| [#281](https://github.com/spnda/BlockProt/issues/281) | Dropper not working after unlock |
+| [#280](https://github.com/spnda/BlockProt/issues/280) | Shulker box items deleted after breaking |
+| [#279](https://github.com/spnda/BlockProt/issues/279) | Items being deleted on interact |
+| [#276](https://github.com/spnda/BlockProt/issues/276) | Items can still be placed into chests |
+| [#275](https://github.com/spnda/BlockProt/issues/275) | Hoppers can take items from protected chests |
+| [#274](https://github.com/spnda/BlockProt/issues/274) | Players can access second row of large chest |
+| [#272](https://github.com/spnda/BlockProt/issues/272) | Can't move items as admin/op |
+| [#263](https://github.com/spnda/BlockProt/issues/263) | Can take Telescope from Menu |
+| [#256](https://github.com/spnda/BlockProt/issues/256) | Can't copy/paste settings between blocks |
+| [#255](https://github.com/spnda/BlockProt/issues/255) | Can't remove everyone from settings |
+| [#250](https://github.com/spnda/BlockProt/issues/250) | Can get Player Head from menu |
+| [#240](https://github.com/spnda/BlockProt/issues/240) | Hopper protecting not working |
+| [#236](https://github.com/spnda/BlockProt/issues/236) | Copy Paste not working properly |
+| [#235](https://github.com/spnda/BlockProt/issues/235) | Lectern protection issues |
+| [#232](https://github.com/spnda/BlockProt/issues/232) | Sign not in lockable_blocks |
+| [#230](https://github.com/spnda/BlockProt/issues/230) | Can't unlock wall sign |
+| [#227](https://github.com/spnda/BlockProt/issues/227) | Hopper and piston protection swapped |
+| [#226](https://github.com/spnda/BlockProt/issues/226) | Chest unlocked but shown as locked |
+| [#224](https://github.com/spnda/BlockProt/issues/224) | Locked shulker boxes break without dropping |
+| [#221](https://github.com/spnda/BlockProt/issues/221) | Chest locked but friends can open |
+| [#215](https://github.com/spnda/BlockProt/issues/215) | Chests cannot be placed on public |
+| [#214](https://github.com/spnda/BlockProt/issues/214) | Making doors public only half the door |
+| [#185](https://github.com/spnda/BlockProt/issues/185) | Hopper protection below chest not working |
+
+### Bugs open upstream, fixed in fork
+
+| Issue | Title | Fork Fix |
+|---|---|---|
+| [#306](https://github.com/spnda/BlockProt/issues/306) | Plugin causes server lag | ProtectedBlockCache with Caffeine O(1) early-exit |
+| [#324](https://github.com/spnda/BlockProt/issues/324) | Allow breaking protected blocks | `allow_break_protected_blocks` config key |
+| [#349](https://github.com/spnda/BlockProt/issues/349) | Warn spam in console (NBT swap error) | StatHandler rewrite with temp-write-validate-replace |
+
+### Features open upstream, not yet implemented
+
+| Issue | Title |
+|---|---|
+| [#346](https://github.com/spnda/BlockProt/issues/346) | New configuration option |
+| [#334](https://github.com/spnda/BlockProt/issues/334) | Colored prompt messages |
+| [#322](https://github.com/spnda/BlockProt/issues/322) | Toggle for simplified hopper logic |
+| [#318](https://github.com/spnda/BlockProt/issues/318) | Ability to configure lockable blocks per world |
+| [#303](https://github.com/spnda/BlockProt/issues/303) | Respect spawn protection radius |
+| [#298](https://github.com/spnda/BlockProt/issues/298) | Integration support for ClaimChunk |
+| [#295](https://github.com/spnda/BlockProt/issues/295) | Lock trapdoors and iron doors |
+| [#282](https://github.com/spnda/BlockProt/issues/282) | MySQL Support |
+| [#269](https://github.com/spnda/BlockProt/issues/269) | Shows the owner of the box |
+| [#268](https://github.com/spnda/BlockProt/issues/268) | Removed old friends when copy/pasting |
+| [#267](https://github.com/spnda/BlockProt/issues/267) | Expire locks after owner offline for x time |
+| [#228](https://github.com/spnda/BlockProt/issues/228) | Separate Redstone in config |
+| [#225](https://github.com/spnda/BlockProt/issues/225) | Stats more Features |
+| [#192](https://github.com/spnda/BlockProt/issues/192) | Support Inspect contents block name i18n |
+| [#183](https://github.com/spnda/BlockProt/issues/183) | Support Residence |
+| [#154](https://github.com/spnda/BlockProt/issues/154) | Support for GriefPrevention |
+
+### Currently open bugs (upstream, confirmed not yet fixed)
+
+| Issue | Title |
+|---|---|
+| [#238](https://github.com/spnda/BlockProt/issues/238) | Piston Protection Shulker Box |
+
+
 

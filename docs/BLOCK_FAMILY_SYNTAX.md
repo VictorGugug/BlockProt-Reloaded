@@ -1,4 +1,4 @@
-﻿![BLOCK FAMILY SYNTAX](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BLOCK%20FAMILY%20SYNTAX.png)
+![BLOCK FAMILY SYNTAX](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BLOCK%20FAMILY%20SYNTAX.png)
 
 Family expressions are a compact syntax for `blocks.yml`, `worlds.yml`, and
 `auto_drop_to_inventory`. They are **always parsed** regardless of the `modern_family_blocks`
@@ -12,19 +12,19 @@ against the full family registry at startup and on `/bp reload`.
 
 ---
 
-## Two valid formats — do not mix them on one line
+## Two valid formats - do not mix them on one line
 
 Every list key (`lockable_tile_entities`, `lockable_blocks`, `lockable_entities`, etc.)
 accepts a normal YAML list. Each line in that list is either:
 
-1. **A plain material name** — one block/entity per line, exactly like every other
+1. **A plain material name** - one block/entity per line, exactly like every other
    list in `blocks.yml`:
    ```yaml
    lockable_entities:
      - ITEM_FRAME
      - ACACIA_CHEST_BOAT
    ```
-2. **A family expression** — a single string wrapped in `[...]`, quoted, that can
+2. **A family expression** - a single string wrapped in `[...]`, quoted, that can
    stand for many materials at once:
    ```yaml
    lockable_entities:
@@ -32,32 +32,32 @@ accepts a normal YAML list. Each line in that list is either:
    ```
 
 You can mix plain names and expressions across different lines of the same list.
-What you **cannot** do is put more than one plain name inside `[...]` without commas —
+What you **cannot** do is put more than one plain name inside `[...]` without commas -
 that is not YAML list syntax, it is the family-expression bracket, and it only
 understands the tokens below (`*`, `*-TAG`, `-*TAG`, `NAME`, `-NAME`).
 
 ```yaml
-# WRONG — square brackets are read as ONE family expression, not a list of two names.
+# WRONG - square brackets are read as ONE family expression, not a list of two names.
 # "ITEM_FRAME" and "ACACIA_CHEST_BOAT" are not valid tokens, so this resolves to nothing
 # and silently enables zero entities. No warning is logged for this case.
 lockable_entities: [ITEM_FRAME ACACIA_CHEST_BOAT]
 
-# RIGHT — plain list, one entry per line
+# RIGHT - plain list, one entry per line
 lockable_entities:
   - ITEM_FRAME
   - ACACIA_CHEST_BOAT
 
-# ALSO RIGHT — YAML flow-list with a comma (now two real list entries)
+# ALSO RIGHT - YAML flow-list with a comma (now two real list entries)
 lockable_entities: [ITEM_FRAME, ACACIA_CHEST_BOAT]
 
-# ALSO RIGHT — family expression, quoted, as the list's only entry
+# ALSO RIGHT - family expression, quoted, as the list's only entry
 lockable_entities:
   - '[*-ITEM_FRAMES *-CHEST_BOATS]'
 ```
 
 If you only want one or two specific materials, the plain list format is simpler and
 clearer. Reach for a family expression when you want "all of a sub-family" or
-"everything except a few" — see the token reference below.
+"everything except a few" - see the token reference below.
 
 ---
 

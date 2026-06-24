@@ -14,7 +14,7 @@ Java 25 · Paper 1.21.1 through 26.x · MySQL index · per-world config · acces
 
 </div>
 
-Block protection plugin for Paper and Spigot servers. Players lock chests, furnaces, doors, and other blocks through a GUI — no commands required. This fork extends the original NBT core with stability fixes, performance improvements, and new features not present in upstream.
+Block protection plugin for Paper and Spigot servers. Players lock chests, furnaces, doors, and other blocks through a GUI - no commands required. This fork extends the original NBT core with stability fixes, performance improvements, and new features not present in upstream.
 
 
 ## Screenshots
@@ -88,7 +88,7 @@ The version suffix is controlled by the `versionSuffix` property in `gradle.prop
 
 | Value | Output |
 |---|---|
-| *(blank)* | `BlockProt-1.3.3.jar` — stable release |
+| *(blank)* | `BlockProt-1.3.3.jar` - stable release |
 | `SNAPSHOT` | `BlockProt-1.3.3-SNAPSHOT.jar` |
 | `beta.1` | `BlockProt-1.3.3-beta.1.jar` |
 | `rc.1` | `BlockProt-1.3.3-rc.1.jar` |
@@ -123,7 +123,7 @@ plugins/BlockProtReloaded/
 
 Opened by sneaking and right-clicking any lockable block. Two-row inventory.
 
-**Top row — functional buttons:**
+**Top row - functional buttons:**
 
 | Slot | Item | Function |
 |---|---|---|
@@ -135,9 +135,9 @@ Opened by sneaking and right-clicking any lockable block. Two-row inventory.
 | 5 | Emerald | Locate the villager linked to this workstation *(workstation blocks only)* |
 | 6 | Hopper or Lime Dye | Protection expiry *(storage blocks only, and only when enabled in config)* |
 
-The redstone button is not shown for display-only blocks such as signs, lecterns, and workstations, because those have no hopper or redstone interaction to gate. Every button above lives in a fixed slot regardless of block type — a slot that does not apply to the current block is simply left empty, so the remaining buttons never shift position.
+The redstone button is not shown for display-only blocks such as signs, lecterns, and workstations, because those have no hopper or redstone interaction to gate. Every button above lives in a fixed slot regardless of block type - a slot that does not apply to the current block is simply left empty, so the remaining buttons never shift position.
 
-**Bottom row — utility buttons:**
+**Bottom row - utility buttons:**
 
 | Slot | Item | When shown |
 |---|---|---|
@@ -272,11 +272,11 @@ A villager whose job-site memory points to a protected workstation block inherit
 
 ### StatHandler Stability Fixes
 
-`StatHandler.saveFile()` was completely rewritten for 1.3.3. The old code used an unconditional `Files.move(ATOMIC_MOVE)` which crashes on Windows and some Linux filesystems that do not support atomic cross-directory moves, causing `Failed to swap backup NBT file` spam every five minutes. The new implementation writes to a temp file first, validates it, copies it to the backup, then replaces the live file — with a fallback to a non-atomic copy-and-delete when atomic move is not available. A Caffeine cache also throttles the per-player stale-entry scan to at most once per 60 seconds per player. The chunk-load guard in `purgeStalePbsEntries` prevents the 20-second server freeze that occurred when that method triggered a synchronous chunk load on an unloaded chunk.
+`StatHandler.saveFile()` was completely rewritten for 1.3.3. The old code used an unconditional `Files.move(ATOMIC_MOVE)` which crashes on Windows and some Linux filesystems that do not support atomic cross-directory moves, causing `Failed to swap backup NBT file` spam every five minutes. The new implementation writes to a temp file first, validates it, copies it to the backup, then replaces the live file - with a fallback to a non-atomic copy-and-delete when atomic move is not available. A Caffeine cache also throttles the per-player stale-entry scan to at most once per 60 seconds per player. The chunk-load guard in `purgeStalePbsEntries` prevents the 20-second server freeze that occurred when that method triggered a synchronous chunk load on an unloaded chunk.
 
 ### Block Family Expression System
 
-`blocks.yml` supports a compact family expression syntax alongside the standard flat material lists. Expressions are always parsed regardless of the `modern_family_blocks` flag — that flag only controls whether flat lists are auto-converted to expressions on startup.
+`blocks.yml` supports a compact family expression syntax alongside the standard flat material lists. Expressions are always parsed regardless of the `modern_family_blocks` flag - that flag only controls whether flat lists are auto-converted to expressions on startup.
 
 ```yaml
 lockable_tile_entities:
@@ -347,7 +347,7 @@ Automatically locks unprotected blocks near a WorldEdit paste origin. Disabled b
 
 ### Protection Expiry
 
-Block owners can set an optional expiry date on their lock. When the timer elapses the block auto-unlocks. Open the Block Lock menu, click the Hopper slot, and type a duration such as `7d`, `1mo`, or `2d12h`. A green dye replaces the hopper when an expiry is already active — click it to clear. Disabled by default.
+Block owners can set an optional expiry date on their lock. When the timer elapses the block auto-unlocks. Open the Block Lock menu, click the Hopper slot, and type a duration such as `7d`, `1mo`, or `2d12h`. A green dye replaces the hopper when an expiry is already active - click it to clear. Disabled by default.
 
 ### Entity Protection (Tamed Animals)
 
@@ -511,20 +511,20 @@ Language files are in `spigot/src/main/resources/lang/`. Both legacy color codes
 
 | Issue | Description | Status |
 |---|---|---|
-| [#346](https://github.com/spnda/BlockProt/issues/346) | Clear protection when a shulker box is broken so gifted shulkers arrive unlocked | ✅ Implemented |
-| [#345](https://github.com/spnda/BlockProt/issues/345) | Official Paper 26.1.x support | ✅ Implemented |
-| [#344](https://github.com/spnda/BlockProt/issues/344) | `NbtApiException` spam on shulker box place | ✅ Fixed |
-| [#343](https://github.com/spnda/BlockProt/issues/343) | 1.21.11 support | ✅ Implemented |
-| [#334](https://github.com/spnda/BlockProt/issues/334) | Configurable message colors via MiniMessage | ✅ Implemented |
-| [#329](https://github.com/spnda/BlockProt/issues/329) | `RuntimeException` on AIR block in `EntityChangeBlockEvent` | ✅ Fixed |
-| [#324](https://github.com/spnda/BlockProt/issues/324) | Allow breaking protected blocks for reinforcement-plugin compatibility | ✅ Implemented |
-| [#318](https://github.com/spnda/BlockProt/issues/318) | Per-world lockable block configuration | ✅ Implemented |
-| [#306](https://github.com/spnda/BlockProt/issues/306) | Server lag caused by `HopperEventListener` | ✅ Fixed via Caffeine cache and `ProtectedBlockCache` |
-| [#303](https://github.com/spnda/BlockProt/issues/303) | Respect spawn-protection radius | ✅ Implemented |
-| [#298](https://github.com/spnda/BlockProt/issues/298) | ClaimChunk integration | ✅ Implemented |
-| [#295](https://github.com/spnda/BlockProt/issues/295) | Lock trapdoors and iron doors | ✅ Implemented |
-| [#282](https://github.com/spnda/BlockProt/issues/282) | MySQL support | ✅ Implemented |
-| — | Filter `/bp lockables` material list by client protocol version when ViaVersion is active | Pending |
+| [#346](https://github.com/spnda/BlockProt/issues/346) | Clear protection when a shulker box is broken so gifted shulkers arrive unlocked | [OK] Implemented |
+| [#345](https://github.com/spnda/BlockProt/issues/345) | Official Paper 26.1.x support | [OK] Implemented |
+| [#344](https://github.com/spnda/BlockProt/issues/344) | `NbtApiException` spam on shulker box place | [OK] Fixed |
+| [#343](https://github.com/spnda/BlockProt/issues/343) | 1.21.11 support | [OK] Implemented |
+| [#334](https://github.com/spnda/BlockProt/issues/334) | Configurable message colors via MiniMessage | [OK] Implemented |
+| [#329](https://github.com/spnda/BlockProt/issues/329) | `RuntimeException` on AIR block in `EntityChangeBlockEvent` | [OK] Fixed |
+| [#324](https://github.com/spnda/BlockProt/issues/324) | Allow breaking protected blocks for reinforcement-plugin compatibility | [OK] Implemented |
+| [#318](https://github.com/spnda/BlockProt/issues/318) | Per-world lockable block configuration | [OK] Implemented |
+| [#306](https://github.com/spnda/BlockProt/issues/306) | Server lag caused by `HopperEventListener` | [OK] Fixed via Caffeine cache and `ProtectedBlockCache` |
+| [#303](https://github.com/spnda/BlockProt/issues/303) | Respect spawn-protection radius | [OK] Implemented |
+| [#298](https://github.com/spnda/BlockProt/issues/298) | ClaimChunk integration | [OK] Implemented |
+| [#295](https://github.com/spnda/BlockProt/issues/295) | Lock trapdoors and iron doors | [OK] Implemented |
+| [#282](https://github.com/spnda/BlockProt/issues/282) | MySQL support | [OK] Implemented |
+| - | Filter `/bp lockables` material list by client protocol version when ViaVersion is active | Pending |
 
 
 ## Documentation policy from 1.3.4 onward
