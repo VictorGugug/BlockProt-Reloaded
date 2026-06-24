@@ -385,5 +385,17 @@ These were closed in the upstream repository and are fixed in our fork:
 |---|---|
 | [#238](https://github.com/spnda/BlockProt/issues/238) | Piston Protection Shulker Box |
 
+## Reporting an Issue
+
+If you reached this point in the document, thank you for reading. When reporting a bug, please include the following information so the issue can be diagnosed and fixed faster:
+
+| Field | What to include |
+|---|---|
+| Discord (optional) | Your Discord username so I can follow up directly |
+| Error description | Exactly what the error says and step-by-step how to reproduce it |
+| Multimedia | Screenshots or videos showing the issue |
+| Server info | Server version, software (Paper / Purpur / Spigot), and a list of other plugins installed |
+| Error log | The full error log (use a paste site like https://pastes.dev if it is long) |
+
 
 
