@@ -10,7 +10,7 @@
 [![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
 [![Paper](https://img.shields.io/badge/Paper-1.21.1%2B%20%7C%2026.x-white?style=flat-square)](https://papermc.io/)
 
-Java 25 · Paper 1.21.1 through 26.x · MySQL index · per-world config · access audit · pet protection · auto-backup · ownership transfer · item frame and vehicle protection
+Java 25 · Paper 1.21.1 through 26.x · MySQL index · per-world config · access audit · entity protection · villager workstation protection · auto-backup · ownership transfer · item frame and vehicle protection
 
 </div>
 
