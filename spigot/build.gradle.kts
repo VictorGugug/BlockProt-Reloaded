@@ -7,7 +7,7 @@ buildscript {
 plugins {
     id("maven-publish")
     // Updated to com.gradleup.shadow which supports Java 25+ (ASM updated)
-    id("com.gradleup.shadow") version "8.3.8"
+    id("com.gradleup.shadow") version "9.4.2"
     id("xyz.jpenilla.run-paper") version "3.0.2"
 }
 
@@ -48,12 +48,12 @@ dependencies {
     // reflection at runtime, never directly imported.
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
     compileOnly("org.apache.commons:commons-lang3:3.13.0")
-    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
-    testImplementation("com.github.seeseemelk:MockBukkit-v1.21:4.8.0")
+    testImplementation("org.junit.jupiter:junit-jupiter:5.14.4")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.14.4")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.4")
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.110.0")
 
     // bStats — 3.2.1
     api("org.bstats:bstats-bukkit:3.2.1")
@@ -65,7 +65,7 @@ dependencies {
     implementation("com.tcoded:FoliaLib:0.5.1")
 
     implementation("org.enginehub:squirrelid:0.3.2")
-    implementation("com.zaxxer:HikariCP:7.0.2")
+    implementation("com.zaxxer:HikariCP:7.1.0")
     implementation("com.mysql:mysql-connector-j:9.7.0")
 
     // Integrations (soft-depend — provided at runtime by the server)
