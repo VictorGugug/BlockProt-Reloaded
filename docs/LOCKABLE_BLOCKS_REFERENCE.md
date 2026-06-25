@@ -45,7 +45,7 @@ and a count of how many blocks are currently active vs inactive.
 | `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES`            |
 
 `lockable_entities` uses entity NBT (persistent data container), not block NBT. Family expressions are fully supported.
-All entity sub-families are **disabled by default** - the `lockable_entities` list ships empty. Add entries to enable.
+Item frames (`*-ITEM_FRAMES`) are **enabled by default**. Other entity sub-families are disabled — add them to enable.
 
 ---
 
@@ -334,9 +334,10 @@ Storage entities and item frames. Protection is stored in the entity's persisten
 (PDC) via NBT-API and survives chunk reloads and server restarts. It does NOT survive the entity
 being killed (the entity ceases to exist; protection data goes with it).
 
-**Default state:** `lockable_entities` ships as an empty list. No entity type is protected until
-an admin adds it to `blocks.yml`. This is intentional - entity protection has a higher
-performance profile than block protection because entities are not indexed by chunk the same way.
+**Default state:** `ITEM_FRAME` and `GLOW_ITEM_FRAME` are enabled by default.
+Other entity types are disabled until an admin adds them to `blocks.yml`. This is intentional —
+entity protection has a higher performance profile than block protection because entities are not
+indexed by chunk the same way.
 
 To enable all entity types:
 ```yaml
@@ -390,9 +391,8 @@ Protects the inventory from player access and disables item-collection by the mi
 Token: `*-ITEM_FRAMES`
 
 Item frames and glowing item frames use entity PDC for protection. They are part of the
-`ENTITIES` family and are shown in `/bp lockables`. They are **disabled by default** (not in
-`lockable_entities`). Enable them by adding `ITEM_FRAME` and/or `GLOW_ITEM_FRAME` to
-`blocks.yml`, or use the sub-family token `*-ITEM_FRAMES`.
+`ENTITIES` family and are shown in `/bp lockables`. They are **enabled by default** in
+`blocks.yml`. Remove them from the list or use the sub-family token `*-ITEM_FRAMES` to manage them.
 
 | Material | MC version | Notes |
 |---|---|---|

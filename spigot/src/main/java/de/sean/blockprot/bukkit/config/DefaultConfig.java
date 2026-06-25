@@ -23,8 +23,11 @@ package de.sean.blockprot.bukkit.config;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
@@ -70,7 +73,7 @@ public final class DefaultConfig extends BlockProtConfig {
         Material.FURNACE, Material.SMOKER, Material.BLAST_FURNACE,
         Material.HOPPER, Material.BARREL, Material.BREWING_STAND, Material.DISPENSER, Material.DROPPER,
         Material.LECTERN, Material.BEEHIVE, Material.BEE_NEST,
-        Material.JUKEBOX,
+        Material.JUKEBOX, Material.BEACON,
         Material.OAK_SIGN, Material.OAK_WALL_SIGN,
         Material.SPRUCE_SIGN, Material.SPRUCE_WALL_SIGN,
         Material.BIRCH_SIGN, Material.BIRCH_WALL_SIGN,
@@ -283,7 +286,7 @@ public final class DefaultConfig extends BlockProtConfig {
                 if (name.equals("DRAGON_EGG")) return true;
                 if (name.equals("COMPOSTER") || name.equals("BELL") || name.equals("NOTE_BLOCK")) return true;
                 if (name.equals("GRINDSTONE") || name.equals("STONECUTTER") || name.equals("LOOM")) return true;
-                if (name.equals("CARTOGRAPHY_TABLE") || name.equals("SMITHING_TABLE") || name.equals("ENCHANTING_TABLE")) return true;
+                if (name.equals("CARTOGRAPHY_TABLE") || name.equals("SMITHING_TABLE") || name.equals("ENCHANTING_TABLE") || name.equals("FLETCHING_TABLE")) return true;
                 if (name.contains("CAULDRON")) return true;
                 if (name.contains("ANVIL")) return true;
                 if (name.contains("FENCE_GATE")) return true;
@@ -724,6 +727,130 @@ public final class DefaultConfig extends BlockProtConfig {
         } catch (IOException e) {
             BlockProtLogger.warn("Failed to reset blocks.yml from JAR: " + e.getMessage());
             return false;
+        }
+    }
+
+    @Nullable
+    private File getBlocksFile() {
+        if (dataFolder == null) return null;
+        String blocksFilePath = config.getString("blocks_file", "blocks.yml");
+        return new File(dataFolder, blocksFilePath);
+    }
+
+    private void saveBlocksConfig() {
+        File file = getBlocksFile();
+        if (file == null || blocksConfig == null) return;
+        try {
+            blocksConfig.save(file);
+        } catch (IOException e) {
+            BlockProtLogger.warn("Failed to save blocks.yml: " + e.getMessage());
+        }
+    }
+
+    private void reloadBlocksAfterToggle() {
+        loadBlocksFromConfig();
+    }
+
+    @Nullable
+    private static String configKeyForMaterial(@NotNull Material material) {
+        for (BlockFamilyParser.Family family : BlockFamilyParser.Family.values()) {
+            if (BlockFamilyParser.getFamilyMembers(family).contains(material)) {
+                return switch (family) {
+                    case TILE_ENTITIES -> "lockable_tile_entities";
+                    case SHULKER_BOXES -> "lockable_shulker_boxes";
+                    case BLOCKS -> "lockable_blocks";
+                    case DOORS -> "lockable_doors";
+                    case ENTITIES -> "lockable_entities";
+                };
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    public static String configKeyForFamily(@NotNull BlockFamilyParser.Family family) {
+        return switch (family) {
+            case TILE_ENTITIES -> "lockable_tile_entities";
+            case SHULKER_BOXES -> "lockable_shulker_boxes";
+            case BLOCKS -> "lockable_blocks";
+            case DOORS -> "lockable_doors";
+            case ENTITIES -> "lockable_entities";
+        };
+    }
+
+    /**
+     * Toggles a single material in blocks.yml. Adds it if currently inactive, removes it
+     * if currently active. Saves to disk and logs the change. Handles both flat and
+     * expression-based entries.
+     *
+     * @param material the material to toggle
+     * @param who      the player who initiated the toggle
+     * @return the new active state (true = now lockable, false = now not lockable)
+     */
+    public synchronized boolean toggleLockable(@NotNull Material material, @NotNull Player who) {
+        String configKey = configKeyForMaterial(material);
+        if (configKey == null || blocksConfig == null) return isLockable(material);
+
+        List<String> list = new ArrayList<>(blocksConfig.getStringList(configKey));
+        String name = material.name();
+        String exclusion = "-" + name;
+        boolean currentlyActive = isLockable(material) || isLockableEntity(material);
+
+        if (currentlyActive) {
+            list.remove(name);
+            list.remove(exclusion);
+            if (!list.contains(exclusion)) list.add(exclusion);
+        } else {
+            list.remove(exclusion);
+            if (!list.contains(name)) list.add(name);
+        }
+
+        blocksConfig.set(configKey, list);
+        saveBlocksConfig();
+        reloadBlocksAfterToggle();
+
+        BlockProtLogger.log("lockables-toggle",
+            (currentlyActive ? "Disabled" : "Enabled") + " " + name + " in " + configKey
+                + " (by " + who.getName() + ")");
+        if (who.isOnline()) {
+            who.sendMessage(Component.text(
+                (currentlyActive ? "Disabled" : "Enabled") + " " + name + " in blocks.yml")
+                .color(currentlyActive ? NamedTextColor.RED : NamedTextColor.GREEN));
+        }
+
+        return !currentlyActive;
+    }
+
+    /**
+     * Enables an entire family (all its members) in blocks.yml using the appropriate
+     * family expression. In flat mode, adds a {@code [*]} or sub-family expression. In
+     * modern mode, replaces the list with the expression.
+     *
+     * @param family   the family to enable
+     * @param configKey the config key to modify
+     * @param expression the family expression to set
+     * @param who      the player who initiated the action
+     */
+    public synchronized void enableFamily(
+            @NotNull BlockFamilyParser.Family family,
+            @NotNull String configKey,
+            @NotNull String expression,
+            @NotNull Player who) {
+        if (blocksConfig == null) return;
+
+        List<String> list = new ArrayList<>();
+        list.add(expression);
+        blocksConfig.set(configKey, list);
+        saveBlocksConfig();
+        reloadBlocksAfterToggle();
+
+        BlockProtLogger.log("lockables-toggle",
+            "Enabled " + family.name() + " via " + expression + " in " + configKey
+                + " (by " + who.getName() + ")");
+        if (who.isOnline()) {
+            who.sendMessage(Component.text(
+                "Enabled all " + family.name() + " in blocks.yml")
+                .color(NamedTextColor.GREEN));
         }
     }
 

@@ -96,7 +96,7 @@ The info panel for a protected entity shows an Oak Sign in slot 1 displaying the
 
 `BlockFamilyParser` parses compact family expressions in `blocks.yml` and `worlds.yml`. Expressions are always parsed regardless of the `modern_family_blocks` flag in `config.yml` - that flag only controls whether flat material lists are auto-converted to expressions on startup.
 
-A `NAME` or `-NAME` token inside an expression is now validated against the family of the config key it appears in. A material that does not belong to that family is rejected with a console warning and discarded, rather than silently producing an incorrect or empty result. For example, `COPPER_CHESTPLATE` (armor) inside a `lockable_tile_entities` expression is rejected with a warning, while `COPPER_CHEST` (a valid `CHEST` sub-family member) is accepted.
+A `NAME` or `-NAME` token inside an expression is now validated against the family of the config key it appears in. A material that does not belong to that family is rejected with a console warning and discarded, rather than silently producing an incorrect or empty result. For example, `FLETCHING_TABLE` (a `BLOCKS` workstation) inside a `lockable_tile_entities` expression is rejected with a warning, while `COPPER_CHEST` (a valid `CHEST` sub-family member) is accepted.
 
 `/bp lockables` is a new admin command (`blockprot.user.admin`) that opens a six-row paged GUI listing every block and entity the family system knows about, regardless of whether it is currently enabled. Active entries show a green `Status: ACTIVE` label; disabled entries show a red `Status: INACTIVE` label. Left-clicking an entry sends a clickable chat message that copies the material name; right-clicking copies the exclusion token (`-MATERIAL_NAME`). The info book in the GUI shows server version, client version (via ViaVersion, if installed), and active/inactive counts.
 
@@ -212,6 +212,30 @@ The compile target is raised from `paper-api:1.20.6` to `paper-api:1.21.1`. Serv
 ### Documentation policy change
 
 Starting with 1.3.4, the project's `README.md` will be condensed to a short summary of all current features rather than documented feature-by-feature in full detail. `RELEASE_NOTES.md` becomes the single authoritative place where what changed between every version is recorded, including this entry. `docs/MODR_HANG_README.md`, the short description used on Modrinth and Hangar, will continue to be updated for store listings but is not a substitute for this file.
+
+### BEACON added to lockable tile entities
+
+BEACON is now recognized as a lockable tile entity. It can be locked via flat list (add `BEACON` to `lockable_tile_entities`) or family expression (`*-MISC` catches it as an ungrouped tile entity). The default `blocks.yml` now includes `BEACON`.
+
+### SIGNS enabled by default in blocks.yml
+
+All sign variants (floor, wall, hanging, wall-hanging for all 12 wood types) are now enabled by default via the family expression `[*-SIGN]` in `lockable_tile_entities`. This works in both flat-list and modern-expression modes since family expressions are always parsed.
+
+### FLETCHING_TABLE added to WORKSTATION sub-family
+
+FLETCHING_TABLE was present in the default flat list of `lockable_blocks` but was missing from the `isWorkstationMaterial()` check in `BlockFamilyParser` and the `blockValidator` in `DefaultConfig`. This meant it was silently rejected during family expression resolution and the `loadBlocksFromConfig()` validator. It is now a proper member of the `*-WORKSTATION` sub-family and the `lockable_blocks` BLOCKS family.
+
+### /bp lockables now toggles items in blocks.yml
+
+The /bp lockables GUI no longer only copies material names to clipboard. Left-clicking any block now toggles its active state: if inactive, it is added to blocks.yml; if active, it is removed. The change is saved to disk immediately, the relevant lockable lists are reloaded in memory, and a console log entry is written. The GUI refreshes to reflect the new state. Right-click still copies the exclusion token (`-MATERIAL_NAME`) to clipboard for manual config editing.
+
+### /bp lockables "Enable all" entry per category
+
+A NETHER_STAR "Enable all" entry appears at the top of every category section (Chests, Shulkers, Furnaces, Storage, Signs, Doors, Trapdoors, Fence Gates, Workstations, Interactive, Entities). Clicking it adds the appropriate family expression (e.g. `[*-CHEST]`, `[*]`, `[*-WORKSTATION]`) to blocks.yml, enabling every material in that category at once. The change is saved to disk and logged.
+
+### /bp lockables active-first sorting
+
+Both the category-grouped entries and the entity entries in the lockables GUI are now sorted with active (currently lockable) items first, followed by inactive items. Previously the order was inactive-first.
 
 ---
 

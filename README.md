@@ -16,6 +16,9 @@ Java 25 · Paper 1.21.1 through 26.x · MySQL index · per-world config · acces
 
 Block protection plugin for Paper and Spigot servers. Players lock chests, furnaces, doors, and other blocks through a GUI - no commands required. This fork extends the original NBT core with stability fixes, performance improvements, and new features not present in upstream.
 
+## Philosophy
+
+BlockProt Reloaded exists because the best ideas come from the community that uses the plugin. If you have a feature request, a bug report, or want to discuss improvements, open an issue on GitHub or join our Discord (link coming soon). If you are a developer, open a pull request. Fragmentation into multiple forks helps nobody; every improvement belongs in one place, shared with everyone.
 
 ## Screenshots
 
@@ -156,11 +159,9 @@ Item frames, glowing item frames, chest boats, storage minecarts, and hopper min
 
 ### Lockable Blocks Browser (`/bp lockables`)
 
-Six-row paged GUI listing every block the plugin knows about.
+Six-row paged GUI listing every block the plugin knows about, organized by category with active entries first.
 
-Blocks with a green **Status: ACTIVE** label are currently lockable. Blocks with a red **Status: INACTIVE** label are recognized by the system but not enabled in `blocks.yml`. Clicking any entry sends a clickable message to your chat that copies the material name to your clipboard when clicked.
-
-Left-click copies `MATERIAL_NAME` for use as a flat list entry or include token. Right-click copies `-MATERIAL_NAME` for use as an exclusion token in a family expression.
+Blocks with a green **Status: ACTIVE** label are currently lockable. Blocks with a red **Status: INACTIVE** label are recognized by the system but not enabled in `blocks.yml`. Left-click any entry to toggle its state: inactive blocks become active and vice versa, updating `blocks.yml` on disk and reloading automatically. Each category has a NETHER STAR entry that enables every material in that category at once. Right-click copies `-MATERIAL_NAME` to your clipboard for use as an exclusion token in a family expression.
 
 The info book shows your server version, your client version when ViaVersion is active, and a count of active vs inactive blocks. Full documentation of families and sub-families is in [`docs/LOCKABLE_BLOCKS_REFERENCE.md`](docs/LOCKABLE_BLOCKS_REFERENCE.md).
 
@@ -225,6 +226,7 @@ Command visibility is controlled by `use_menus` in `config.yml`. With `use_menus
 | `/bp info <player>` | `blockprot.user.admin` | View all blocks owned by a player, including offline players |
 | `/bp unlock <player>` | `blockprot.user.admin` | GUI to inspect or remove protections from any player's blocks |
 | `/bp lockables` | `blockprot.user.admin` | Browse all blocks the system knows about with active/inactive status |
+| `/bp protdel` | op | Delete all protections in the current world with undo support |
 | `/bp reload` | op | Backup then reload all config files and translations |
 | `/bp update` | op | Check for plugin updates |
 | `/bp integrations` | op | List active plugin integrations |
@@ -386,9 +388,9 @@ On first boot after a plugin rename, BlockProt Reloaded automatically copies dat
 
 All block lists are defined in `blocks.yml` and can be changed without restarting. Full details are in [`docs/LOCKABLE_BLOCKS_REFERENCE.md`](docs/LOCKABLE_BLOCKS_REFERENCE.md).
 
-**Storage blocks:** all chest variants including all copper oxidation stages (1.21.9+), all 17 shulker box colors, furnace, smoker, blast furnace, hopper, dispenser, dropper, barrel, brewing stand, decorated pot, chiseled bookshelf, crafter, jukebox, lectern, beehive, bee nest, all 12 shelf variants (1.21.9+).
+**Storage blocks:** all chest variants including all copper oxidation stages (1.21.9+), all 17 shulker box colors, furnace, smoker, blast furnace, hopper, dispenser, dropper, barrel, brewing stand, decorated pot, chiseled bookshelf, crafter, jukebox, lectern, beehive, bee nest, beacon, all 12 shelf variants, and all sign variants (standing, hanging, wall).
 
-**Interactive blocks:** dragon egg, composter, bell, note block, all cauldron variants, all anvil damage stages, enchanting table, grindstone, stonecutter, loom, cartography table, smithing table.
+**Interactive blocks:** dragon egg, composter, bell, note block, all cauldron variants, all anvil damage stages, enchanting table, grindstone, stonecutter, loom, cartography table, smithing table, fletching table.
 
 **Doors, trapdoors, and fence gates:** all 12 wood variants for each, plus iron and all copper oxidation stages for doors and trapdoors.
 

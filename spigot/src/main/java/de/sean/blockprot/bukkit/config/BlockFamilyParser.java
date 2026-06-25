@@ -36,7 +36,7 @@ import java.util.*;
  *   [* -CHEST]                 → all members except the CHEST material specifically
  *   [*-CHEST]                  → only the CHEST sub-family
  *   [*-CHEST -COPPER_CHEST]    → all chest sub-family members except COPPER_CHEST
- *   [*-CHEST -COPPER_CHESTPLATE] → ERROR: COPPER_CHESTPLATE not in TILE_ENTITIES family; discarded
+ *   [* -FLETCHING_TABLE]         → ERROR: FLETCHING_TABLE not in TILE_ENTITIES family; discarded
  *   [CHEST BARREL]             → only CHEST and BARREL (empty base, explicit inclusions)
  *   [-*SHULKERS WHITE_SHULKER_BOX] → all family except shulkers, but WHITE_SHULKER_BOX added back
  * </pre>
@@ -197,7 +197,7 @@ public final class BlockFamilyParser {
     private static boolean isWorkstationMaterial(@NotNull String n) {
         return n.equals("GRINDSTONE") || n.equals("STONECUTTER") || n.equals("LOOM")
             || n.equals("CARTOGRAPHY_TABLE") || n.equals("SMITHING_TABLE")
-            || n.equals("ENCHANTING_TABLE");
+            || n.equals("ENCHANTING_TABLE") || n.equals("FLETCHING_TABLE");
     }
 
     private static boolean isEntityMaterial(@NotNull String n) {
@@ -215,6 +215,7 @@ public final class BlockFamilyParser {
         if (n.equals("DECORATED_POT") || n.equals("CHISELED_BOOKSHELF") || n.equals("CRAFTER")) return true;
         if (n.equals("LECTERN") || n.equals("BEEHIVE") || n.equals("BEE_NEST")) return true;
         if (n.equals("JUKEBOX")) return true;
+        if (n.equals("BEACON")) return true;
         if (isSignMaterial(n)) return true;
         return false;
     }

@@ -70,10 +70,12 @@ public final class LockablesInventory extends BlockProtInventory {
         Category(String l) { this.label = l; }
     }
 
-    /** Entry in the display list. null material = category separator. */
-    private record Entry(@Nullable Material material, boolean active, @Nullable String categoryLabel) {
-        static Entry separator(String label) { return new Entry(null, false, label); }
-        static Entry block(Material m, boolean active) { return new Entry(m, active, null); }
+    /** Entry in the display list. null material = category separator or select-all header. */
+    private record Entry(@Nullable Material material, boolean active,
+                         @Nullable String categoryLabel, @Nullable String selectAllToken) {
+        static Entry separator(String label) { return new Entry(null, false, label, null); }
+        static Entry block(Material m, boolean active) { return new Entry(m, active, null, null); }
+        static Entry selectAll(String token) { return new Entry(null, true, null, token); }
     }
 
     private List<Entry> pagedList = List.of();
@@ -101,7 +103,9 @@ public final class LockablesInventory extends BlockProtInventory {
         for (int i = start; i < end; i++) {
             Entry e = pagedList.get(i);
             int slot = i - start;
-            if (e.material() == null) {
+            if (e.selectAllToken() != null) {
+                inventory.setItem(slot, selectAllItem(e.selectAllToken()));
+            } else if (e.material() == null) {
                 inventory.setItem(slot, separatorItem(e.categoryLabel() != null ? e.categoryLabel() : ""));
             } else {
                 inventory.setItem(slot, blockItem(e.material(), e.active()));
@@ -160,23 +164,85 @@ public final class LockablesInventory extends BlockProtInventory {
             int absIdx = cachedPage * CONTENT_SLOTS + slot;
             if (absIdx < pagedList.size()) {
                 Entry e = pagedList.get(absIdx);
-                if (e.material() != null) {
+                if (e.selectAllToken() != null) {
+                    toggleCategory(player, e.selectAllToken());
+                    player.openInventory(fill(player, cachedPage));
+                } else if (e.material() != null) {
                     boolean right = event.getClick() == ClickType.RIGHT
                         || event.getClick() == ClickType.SHIFT_RIGHT;
-                    String token = right ? "-" + e.material().name() : e.material().name();
-                    net.kyori.adventure.text.event.ClickEvent copyEvent =
-                        net.kyori.adventure.text.event.ClickEvent.copyToClipboard(token);
-                    net.kyori.adventure.text.event.HoverEvent<?> hoverEvent =
-                        net.kyori.adventure.text.event.HoverEvent.showText(
-                            Component.text("Click to copy to clipboard").color(NamedTextColor.GRAY));
-                    Component msg = Component.text("[Copy] ").color(NamedTextColor.DARK_GRAY)
-                        .append(Component.text(token)
-                            .color(right ? NamedTextColor.RED : NamedTextColor.GREEN)
-                            .clickEvent(copyEvent)
-                            .hoverEvent(hoverEvent));
-                    player.sendMessage(msg);
+                    if (right) {
+                        String token = "-" + e.material().name();
+                        net.kyori.adventure.text.event.ClickEvent copyEvent =
+                            net.kyori.adventure.text.event.ClickEvent.copyToClipboard(token);
+                        net.kyori.adventure.text.event.HoverEvent<?> hoverEvent =
+                            net.kyori.adventure.text.event.HoverEvent.showText(
+                                Component.text("Click to copy to clipboard").color(NamedTextColor.GRAY));
+                        Component msg = Component.text("[Copy] ").color(NamedTextColor.DARK_GRAY)
+                            .append(Component.text(token)
+                                .color(NamedTextColor.RED)
+                                .clickEvent(copyEvent)
+                                .hoverEvent(hoverEvent));
+                        player.sendMessage(msg);
+                    } else {
+                        DefaultConfig cfg = BlockProt.getDefaultConfig();
+                        cfg.toggleLockable(e.material(), player);
+                        player.openInventory(fill(player, cachedPage));
+                    }
                 }
             }
+        }
+    }
+
+    private void toggleCategory(@NotNull Player player, @NotNull String expression) {
+        DefaultConfig cfg = BlockProt.getDefaultConfig();
+        String clean = expression.replace("[", "").replace("]", "");
+
+        BlockFamilyParser.Family family = null;
+        String configKey = null;
+
+        if (clean.equals("*")) {
+            family = deduceFamilyForCategory(expression);
+            if (family != null) configKey = DefaultConfig.configKeyForFamily(family);
+        } else if (clean.startsWith("*-")) {
+            String tag = clean.substring(2);
+            BlockFamilyParser.SubFamily sf = BlockFamilyParser.SubFamily.byTag(tag);
+            if (sf != null) {
+                family = sf.ownerFamily;
+                configKey = DefaultConfig.configKeyForFamily(family);
+            }
+        }
+
+        if (family != null && configKey != null) {
+            cfg.enableFamily(family, configKey, expression, player);
+        } else {
+            player.sendMessage(Component.text("Could not determine family for " + expression)
+                .color(NamedTextColor.RED));
+        }
+    }
+
+    @Nullable
+    private static BlockFamilyParser.Family deduceFamilyForCategory(@NotNull String expression) {
+        for (Map.Entry<Category, String> entry : CATEGORY_TOKENS.entrySet()) {
+            if (entry.getValue().equals(expression)) return categoryFamily(entry.getKey());
+        }
+        return null;
+    }
+
+    @Nullable
+    private static BlockFamilyParser.Family categoryFamily(@NotNull Category cat) {
+        return switch (cat) {
+            case CHESTS, FURNACES, STORAGE, SIGNS -> BlockFamilyParser.Family.TILE_ENTITIES;
+            case SHULKERS -> BlockFamilyParser.Family.SHULKER_BOXES;
+            case TRAPDOORS, GATES, WORKSTATIONS, INTERACTIVE -> BlockFamilyParser.Family.BLOCKS;
+            case DOORS -> BlockFamilyParser.Family.DOORS;
+            case ENTITIES -> BlockFamilyParser.Family.ENTITIES;
+        };
+    }
+
+    private static final Map<Category, String> CATEGORY_TOKENS = new LinkedHashMap<>();
+    static {
+        for (Category c : Category.values()) {
+            CATEGORY_TOKENS.put(c, familyTokenForCategory(c));
         }
     }
 
@@ -205,14 +271,14 @@ public final class LockablesInventory extends BlockProtInventory {
         }
         if (!entityEntries.isEmpty()) {
             entityEntries.sort(Comparator
-                .<Entry, Boolean>comparing(e -> !e.active())
+                .<Entry, Boolean>comparing(e -> e.active())
                 .thenComparing(e -> e.material() != null ? e.material().name() : ""));
             grouped.get(Category.ENTITIES).addAll(entityEntries);
         }
 
         for (List<Entry> list : grouped.values()) {
             list.sort(Comparator
-                .<Entry, Boolean>comparing(e -> !e.active())
+                .<Entry, Boolean>comparing(e -> e.active())
                 .thenComparing(e -> e.material() != null ? e.material().name() : ""));
         }
 
@@ -220,6 +286,8 @@ public final class LockablesInventory extends BlockProtInventory {
         for (Map.Entry<Category, List<Entry>> entry : grouped.entrySet()) {
             if (entry.getValue().isEmpty()) continue;
             result.add(Entry.separator(entry.getKey().label));
+            String allToken = familyTokenForCategory(entry.getKey());
+            if (allToken != null) result.add(Entry.selectAll(allToken));
             result.addAll(entry.getValue());
         }
         if (!result.isEmpty() && result.get(0).material() == null) result.remove(0);
@@ -248,8 +316,41 @@ public final class LockablesInventory extends BlockProtInventory {
         if (n.equals("GRINDSTONE") || n.equals("STONECUTTER")
             || n.equals("LOOM") || n.equals("CARTOGRAPHY_TABLE")
             || n.equals("SMITHING_TABLE") || n.equals("ENCHANTING_TABLE")
+            || n.equals("FLETCHING_TABLE")
             || n.contains("ANVIL"))                                    return Category.WORKSTATIONS;
         return Category.INTERACTIVE;
+    }
+
+    @Nullable
+    private static String familyTokenForCategory(@NotNull Category cat) {
+        return switch (cat) {
+            case CHESTS       -> "[*-CHEST]";
+            case SHULKERS     -> "[*]";
+            case FURNACES     -> "[*-FURNACE]";
+            case STORAGE      -> "[*-TRANSPORT *-MISC *-SHELF]";
+            case SIGNS        -> "[*-SIGN]";
+            case DOORS        -> "[*]";
+            case TRAPDOORS    -> "[*-TRAPDOOR]";
+            case GATES        -> "[*-FENCE_GATE]";
+            case WORKSTATIONS -> "[*-WORKSTATION]";
+            case INTERACTIVE  -> "[*-ANVIL *-CAULDRON]";
+            case ENTITIES     -> "[*]";
+        };
+    }
+
+    @NotNull
+    private static ItemStack selectAllItem(@NotNull String token) {
+        ItemStack stack = new ItemStack(Material.NETHER_STAR);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            meta.displayName(Component.text("Enable all: " + token).color(NamedTextColor.AQUA));
+            meta.lore(List.of(
+                Component.text("Click to copy to clipboard").color(NamedTextColor.GRAY),
+                Component.text(token).color(NamedTextColor.DARK_AQUA)
+            ));
+            stack.setItemMeta(meta);
+        }
+        return stack;
     }
 
     @NotNull

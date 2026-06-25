@@ -38,6 +38,7 @@ lockable_tile_entities:
   - BEEHIVE
   - BEE_NEST
   - JUKEBOX
+  - BEACON
   - OAK_SHELF
   - SPRUCE_SHELF
   - BIRCH_SHELF
@@ -50,6 +51,7 @@ lockable_tile_entities:
   - BAMBOO_SHELF
   - CRIMSON_SHELF
   - WARPED_SHELF
+  - '[*-SIGN]'
 
 lockable_shulker_boxes:
   - SHULKER_BOX
@@ -146,9 +148,11 @@ lockable_doors:
   - WAXED_WEATHERED_COPPER_DOOR
   - WAXED_OXIDIZED_COPPER_DOOR
 
-# Entity protection — all types disabled by default.
-# Add material names or family expressions to enable. See docs/BLOCK_FAMILY_SYNTAX.md.
-lockable_entities: []
+# Entity protection — item frames enabled by default.
+# Add or remove material names, or use family expressions. See docs/BLOCK_FAMILY_SYNTAX.md.
+lockable_entities:
+  - ITEM_FRAME
+  - GLOW_ITEM_FRAME
 
 # Auto-drop shulker boxes to the breaker's inventory on break.
 # Set enabled: false or clear the blocks list to disable.

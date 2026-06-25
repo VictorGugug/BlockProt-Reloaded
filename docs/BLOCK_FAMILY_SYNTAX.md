@@ -89,11 +89,11 @@ A material that does not belong to the current family is rejected with a warning
 
 ```yaml
 # lockable_tile_entities belongs to the TILE_ENTITIES family.
-# COPPER_CHESTPLATE is armor - not a TILE_ENTITIES member - rejected.
+# FLETCHING_TABLE is a BLOCKS (workstation) member — not a TILE_ENTITIES member — rejected.
 lockable_tile_entities:
-  - "[*-CHEST -COPPER_CHESTPLATE]"   # ERROR: COPPER_CHESTPLATE not in TILE_ENTITIES -> discarded
+  - "[* -FLETCHING_TABLE]"           # ERROR: FLETCHING_TABLE not in TILE_ENTITIES -> discarded
 
-# COPPER_CHEST is a CHEST sub-family member - valid.
+# COPPER_CHEST is a CHEST sub-family member — valid.
 lockable_tile_entities:
   - "[*-CHEST -COPPER_CHEST]"        # OK: all chest variants except COPPER_CHEST
 ```
@@ -155,7 +155,7 @@ lockable_tile_entities:
 lockable_tile_entities:
   - "[*-FURNACE *-SHELF *-TRANSPORT *-MISC *-CHEST -COPPER_CHEST]"
 
-# Entity family - item frames only
+# Entity family - item frames only (already enabled by default)
 lockable_entities:
   - "[*-ITEM_FRAMES]"
 
@@ -220,6 +220,6 @@ auto_drop_to_inventory:
 | `lockable_shulker_boxes`  | `SHULKER_BOXES` | `SHULKERS`                                                         |
 | `lockable_blocks`         | `BLOCKS`        | `ANVIL`, `CAULDRON`, `FENCE_GATE`, `TRAPDOOR`, `WORKSTATION`       |
 | `lockable_doors`          | `DOORS`         | `DOORS`                                                            |
-| `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES`|
+| `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES` |
 
 For the full list of materials in each sub-family: see `LOCKABLE_BLOCKS_REFERENCE.md`.
