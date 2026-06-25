@@ -2,7 +2,7 @@
 
 This page lists what changed in each release, in the order it shipped. Each entry describes the final, working behavior - not the intermediate steps taken to get there.
 
-Hello everyone, I apologize for how long this release took. The main reason is my studies, but I am also running a server alone, developing 2 plugins and 1 mod, and managing 14 personal projects on top of this one. I want to thank everyone for the 100 downloads on Modrinth -- it is an honor to contribute to the Minecraft community and help people. I kindly ask for your patience with each release and its timing. I am just one person, Zar, working on this project alone. I do it for the love of the craft and to share my ideas in something as beautiful as this. I will keep an eye on all your issues and suggestions. I will soon open a Discord server where you can interact with me more directly and where I can assist you as attentively and quickly as I can. Thank you all very much. Below is a detailed changelog of everything added, fixed, changed, and more. This is a MAJOR UPDATE that adds a lot of new content. I strongly recommend reading it in full, as well as the following documents: [BLOCK FAMILY SYNTAX](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/BLOCK_FAMILY_SYNTAX.md) and [LOCKABLE BLOCKS REFERENCE](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/LOCKABLE_BLOCKS_REFERENCE.md). These documents will be updated periodically so I recommend keeping an eye on them. Since this is a major update, many more will follow. This update focuses on simplicity and explaining the entire project for better understanding and usability. Future 1.3.x / 1.x.x updates will focus on bug fixes, new features, and more. I hope you understand that I do what I can to offer something complete and that you understand the time it takes. Good night, and I hope that by tomorrow, July 24, 2026, version 1.3.3 will finally be released. Have a lovely night.
+Hello everyone, I apologize for how long this release took. The main reason is my studies, but I am also running a server alone, developing 2 plugins and 1 mod, and managing 14 personal projects on top of this one. I want to thank everyone for the 100 downloads on Modrinth -- it is an honor to contribute to the Minecraft community and help people. I kindly ask for your patience with each release and its timing. I am just one person, Zar, working on this project alone. I do it for the love of the craft and to share my ideas in something as beautiful as this. I will keep an eye on all your issues and suggestions. I will soon open a Discord server where you can interact with me more directly and where I can assist you as attentively and quickly as I can. Thank you all very much. Below is a detailed changelog of everything added, fixed, changed, and more. This is a MAJOR UPDATE that adds a lot of new content. I strongly recommend reading it in full, as well as the following documents: [BLOCK FAMILY SYNTAX](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/BLOCK_FAMILY_SYNTAX.md) and [LOCKABLE BLOCKS REFERENCE](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/LOCKABLE_BLOCKS_REFERENCE.md). These documents will be updated periodically so I recommend keeping an eye on them. Since this is a major update, many more will follow. This update focuses on simplicity and explaining the entire project for better understanding and usability. Future 1.3.x / 1.x.x updates will focus on bug fixes, new features, and more. I hope you understand that I do what I can to offer something complete and that you understand the time it takes. Good night, and I hope that by July 25, 2026 or soon the version 1.3.3 will finally be released. Have a lovely night.
 
 ---
 
@@ -225,15 +225,19 @@ All sign variants (floor, wall, hanging, wall-hanging for all 12 wood types) are
 
 FLETCHING_TABLE was present in the default flat list of `lockable_blocks` but was missing from the `isWorkstationMaterial()` check in `BlockFamilyParser` and the `blockValidator` in `DefaultConfig`. This meant it was silently rejected during family expression resolution and the `loadBlocksFromConfig()` validator. It is now a proper member of the `*-WORKSTATION` sub-family and the `lockable_blocks` BLOCKS family.
 
-### /bp lockables now toggles items in blocks.yml
+### `/bp lockables` click-to-toggle config option
 
-The /bp lockables GUI no longer only copies material names to clipboard. Left-clicking any block now toggles its active state: if inactive, it is added to blocks.yml; if active, it is removed. The change is saved to disk immediately, the relevant lockable lists are reloaded in memory, and a console log entry is written. The GUI refreshes to reflect the new state. Right-click still copies the exclusion token (`-MATERIAL_NAME`) to clipboard for manual config editing.
+The `/bp lockables` toggling behavior is now controlled by a config option `lockables_gui_click_to_toggle: false` in config.yml. When enabled (`true`), right-clicking a material toggles it active/inactive and left-click copies the material name. When disabled (`false`, default), no toggling is available via click: left-click copies the material name and right-click copies the exclusion token (`-MATERIAL_NAME`), preserving the original copy-only behavior. Console logging was added to every toggle action, recording which player toggled which material and the resulting state.
 
-### /bp lockables "Enable all" entry per category
+### `/bp lockables` modern mode compliance
+
+`toggleLockable()` now respects `modern_family_blocks`. In legacy mode, toggling adds/removes flat material names as before. In modern mode, the current config list is parsed into a material set via `BlockFamilyParser.parse()`, the target material is added or removed, and the set is converted back to a compact family expression via `BlockFamilyParser.toFamilyExpression()`. This keeps blocks.yml clean and avoids mixing flat names with expressions.
+
+### `/bp lockables` "Enable all" entry per category
 
 A NETHER_STAR "Enable all" entry appears at the top of every category section (Chests, Shulkers, Furnaces, Storage, Signs, Doors, Trapdoors, Fence Gates, Workstations, Interactive, Entities). Clicking it adds the appropriate family expression (e.g. `[*-CHEST]`, `[*]`, `[*-WORKSTATION]`) to blocks.yml, enabling every material in that category at once. The change is saved to disk and logged.
 
-### /bp lockables active-first sorting
+### `/bp lockables` active-first sorting
 
 Both the category-grouped entries and the entity entries in the lockables GUI are now sorted with active (currently lockable) items first, followed by inactive items. Previously the order was inactive-first.
 
@@ -249,6 +253,8 @@ Both the category-grouped entries and the entity entries in the lockables GUI ar
 - **EntityChangeBlockEvent AIR crash**: missing early-return for AIR blocks caused a `RuntimeException` in `BlockNBTHandler`.
 - **Shulker auto-lock NPE**: wrote NBT via `block.getState()` on freshly placed shulkers whose `BlockEntity` was not yet initialized. Fixed with `block.getState(true)` and a `TileState` guard.
 - **`/bp protdel` typo**: was registered as `protdell` (double L); corrected to `protdel`.
+- **`/bp protdel` missing non-tile-entity blocks**: the non-MySQL fallback path only scanned `chunk.getTileEntities()`, missing all non-tile lockable blocks (doors, trapdoors, fence gates, anvils, cauldrons, workstations, interactive blocks). The fallback now also scans every block in loaded chunks for lockable non-tile types.
+- **`/bp protdel` missing double-chest and door cleanup**: `handler.clear()` was called without `handler.applyToOtherContainer()`, leaving protection data on the other half of double chests and double doors. Added the missing call.
 - **Update checker silent failure**: produced no output when running ahead of the latest release; now logs silently instead of erroring.
 - **EntitySettingsInventory permission**: used the raw string `"blockprot.admin"` instead of `Permissions.USER_ADMIN` and lacked an `isOp()` fallback. Fixed.
 - **CraftBukkit error path**: the error message shown to plain-CraftBukkit servers is now properly translated instead of showing a raw key string.
