@@ -2,15 +2,47 @@
 
 This page lists what changed in each release, in the order it shipped. Each entry describes the final, working behavior - not the intermediate steps taken to get there.
 
-Hello everyone, I apologize for how long this release took. The main reason is my studies, but I am also running a server alone, developing 2 plugins and 1 mod, and managing 14 personal projects on top of this one. I want to thank everyone for the 100 downloads on Modrinth -- it is an honor to contribute to the Minecraft community and help people. I kindly ask for your patience with each release and its timing. I am just one person, Zar, working on this project alone. I do it for the love of the craft and to share my ideas in something as beautiful as this. I will keep an eye on all your issues and suggestions. I will soon open a Discord server where you can interact with me more directly and where I can assist you as attentively and quickly as I can. Thank you all very much. Below is a detailed changelog of everything added, fixed, changed, and more. This is a MAJOR UPDATE that adds a lot of new content. I strongly recommend reading it in full, as well as the following documents: [BLOCK FAMILY SYNTAX](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/BLOCK_FAMILY_SYNTAX.md) and [LOCKABLE BLOCKS REFERENCE](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/LOCKABLE_BLOCKS_REFERENCE.md). These documents will be updated periodically so I recommend keeping an eye on them. Since this is a major update, many more will follow. This update focuses on simplicity and explaining the entire project for better understanding and usability. Future 1.3.x / 1.x.x updates will focus on bug fixes, new features, and more. I hope you understand that I do what I can to offer something complete and that you understand the time it takes. Good night, and I hope that by July 25, 2026 or soon the version 1.3.3 will finally be released. Have a lovely night.
+Hello everyone, I apologize for how long this release took. The main reason is my studies, but I am also running a server alone, developing 2 plugins and 1 mod, and managing 14 personal projects on top of this one. I want to thank everyone for the 100 downloads on Modrinth -- it is an honor to contribute to the Minecraft community and help people. I kindly ask for your patience with each release and its timing. I am just one person, Zar, working on this project alone. I do it for the love of the craft and to share my ideas in something as beautiful as this. I will keep an eye on all your issues and suggestions. I will soon open a Discord server where you can interact with me more directly and where I can assist you as attentively and accurately as I can. Thank you all very much. Below is a detailed changelog of everything added, fixed, changed, and more. This is a MAJOR UPDATE that adds a lot of new content. I strongly recommend reading it in full, as well as the following documents: [BLOCK FAMILY SYNTAX](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/BLOCK_FAMILY_SYNTAX.md) and [LOCKABLE BLOCKS REFERENCE](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/LOCKABLE_BLOCKS_REFERENCE.md). These documents will be updated periodically so I recommend keeping an eye on them. Since this is a major update, many more will follow. This update focuses on simplicity and explaining the entire project for better understanding and usability. Future 1.3.x / 1.x.x updates will focus on bug fixes, new features, and more. I hope you understand that I do what I can to offer something complete and that you understand the time it takes. Good night, and I hope that 1.3.3 will be published by late June or early to mid July 2026. Have a lovely night.
 
 ---
 
 ## 1.3.3
 
+### Breaking changes (0.1% of servers affected)
+
+- **All lockable lists are now empty by default.** On a fresh install, `blocks.yml` starts with `[]` for every list. The admin must configure lockable blocks via `/bp lockables` in-game or by editing `blocks.yml` directly. Existing servers upgrading are unaffected: their `blocks.yml` is never overwritten.
+- **Bidirectional blocks.yml startup conversion removed.** The `modern_family_blocks` flag no longer auto-converts `blocks.yml` on startup. The file is read as-is regardless of the flag. The flag now only controls the format used when `/bp lockables` modifies blocks.yml (flat list vs family expression). Manual edits to `blocks.yml` are never rewritten by the plugin.
+- **Console startup messages consolidated.** The file watcher now logs a single `"Config changed -> reloading..."` line followed by `"Reload done."` instead of two separate messages per change. World scan messages only appear when worlds are actually added or patched.
+- **Startup banner with ASCII art.** BlockProt Reloaded now prints a golden ASCII "BPR" chest logo on startup, followed by colored status lines (config loaded, integrations hooked, etc.).
+- **`/bp recommended` command.** A new console-only command that generates a sensible default configuration for `blocks.yml`. Run `bp recommended` in the console to populate all lockable lists with common block types. The file is written immediately; reload with `/bp reload`. The mention of this command appears in the session log on first run.
+- **Per-world lockable counts in worlds.yml.** Each world entry in `worlds.yml` now includes a `lockable_counts` key (populated at scan time) showing which block types are lockable in that world. Used by future GUI features.
+- **Translation key `console.modern_blocks_converted` removed.** No longer used since auto-conversion is removed.
+
 ## Additions
 
 ### Fixed menu layout for all block and entity types
+
+### Auto-drop to inventory configuration GUI
+
+A new GUI to configure `auto_drop_to_inventory.blocks` is accessible from the `/bp lockables` inventory (DROPPER item at slot 46). The page shows each family (Tile Entities, Shulker Boxes, Blocks, Doors, Entities) with a representative icon and its active/inactive/partial status.
+
+- **Right-click** a family toggles all its members at once (enables or disables auto-drop for the entire family).
+- **Left-click** opens a paged sub-menu listing every material in that family. Each material can be toggled individually.
+- The back button returns to the lockables GUI.
+
+New methods in `DefaultConfig`: `toggleAutoDropMaterial()`, `toggleAutoDropFamily()`, `representativeMaterialForFamily()`. All toggles persist to `blocks.yml` on disk.
+
+### Lockables GUI blocks no longer move on toggle
+
+The active-status sort was removed. Blocks stay in their family section sorted by name only. Toggling a block on or off no longer changes its position in the inventory.
+
+### Bidirectional blocks.yml startup conversion
+
+`modern_family_blocks` now controls conversion in both directions. When `true` and the file is flat, it converts flat→expressions (as before). When `false` and the file contains expressions, it converts expressions→flat at startup. Both conversions preserve the exact active material set. A log line is printed per converted key.
+
+### Fixed crash on non-item materials in auto-drop sub-menu
+
+Materials that cannot be held in an ItemStack (LAVA_CAULDRON, WATER_CAULDRON, POWDER_SNOW_CAULDRON, wall-mounted signs) are resolved to display equivalents before creating ItemStacks. The sub-menu no longer crashes when opening the Blocks family.
 
 The Block Lock menu previously placed its buttons using a counter that incremented for each button actually shown. When a button did not apply to the current block (for example, no Redstone button on a workstation), every button after it shifted one slot to the left. This meant the same menu looked different depending on which block type opened it, and the bottom-row buttons (Inspect, Audit Log, Paste, Copy, Info) ended up in inconsistent slots between block types.
 
@@ -164,9 +196,9 @@ See "`BlockFamilyParser` cross-family validation and `/bp lockables`" above for 
 
 `reloadConfigAndTranslations()` runs all merge and sync operations on every `/bp reload` call, not only on startup: `cleanLegacyConfigKeys()`, `mergeMissingConfigKeys()`, `mergeMissingBlocksKeys()`, language-file key merging, and the world-config re-scan all run on reload.
 
-The merge guarantee for `blocks.yml`, `config.yml`, and `worlds.yml` is: any key or section that is entirely missing from the file on disk is added from the bundled JAR defaults, and a console line records what was added. Any key or section that already exists is never overwritten - this includes the contents of `blocks` lists inside `auto_drop_to_inventory`, and every line inside `lockable_tile_entities`, `lockable_shulker_boxes`, `lockable_blocks`, `lockable_doors`, and `lockable_entities`, whether written as plain material names or as bracketed family expressions. A future version that adds a brand-new top-level key (for example, a new boolean toggle) will see that key appended automatically; a family expression you already wrote, such as `'[*-CHEST_BOATS ITEM_FRAME]'`, is never rewritten, reordered, or stripped, regardless of how many versions you upgrade through.
+The merge guarantee for `blocks.yml`, `config.yml`, and `worlds.yml` is: any top-level section that is entirely missing from the file on disk is added from the bundled JAR defaults, and a console line records what was added. Any key or section that already exists is never overwritten - this means user-configured lockable lists, family expressions, and all other values are preserved across reloads and version upgrades. A future version that adds a brand-new top-level key (for example, a new boolean toggle) will see that key appended automatically; a family expression you already wrote, such as `'[*-CHEST_BOATS ITEM_FRAME]'`, is never rewritten, reordered, or stripped, regardless of how many versions you upgrade through.
 
-In legacy flat-list mode specifically, individual new material entries shipped in a newer JAR are also appended to the matching list on disk if not already present - this is how a new release that adds a new block type makes that block immediately lockable for legacy-mode servers without requiring a manual edit. In modern expression mode this entry-level merge is skipped, because a `*` or `*-TAG` token already resolves dynamically against the current material set on every load; a brand-new sub-family tag introduced in a future version is not automatically added to an existing expression that does not already reference it, and must be added manually if wanted.
+Individual entry-level merge (appending new materials to existing flat lists) was removed in 1.3.3 to prevent accidental population of user-configured lists. Only missing top-level sections are merged.
 
 ### Renamed config keys with automatic migration
 
@@ -323,6 +355,7 @@ Both the category-grouped entries and the entity entries in the lockables GUI ar
 
 - **MockBukkit unresolvable**: `MockBukkit-v1.21:4.8.0` returns HTTP 401 from jitpack.io. Build with `-x test` to skip tests.
 - **Gradle `shadowJar` false up-to-date**: on some local setups, running `:blockprot-spigot:shadowJar` after only source changes (no `clean`) can report `BUILD SUCCESSFUL` while reusing a stale or absent output if Gradle's up-to-date check does not detect the change. If the jar is missing or unexpectedly small after a build, rerun with `--rerun-tasks`, or run `gradlew clean :blockprot-spigot:shadowJar` to force a full rebuild.
+- **Conversion methods retained**: `DefaultConfig` still contains the `convertBlocksYmlToModern()` and `convertBlocksYmlToFlat()` methods as dead code for reference. They are never called automatically. May be removed in a future release.
 
 ## Complete Issue Reference (>= #250)
 
