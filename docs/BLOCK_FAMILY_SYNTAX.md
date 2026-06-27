@@ -4,8 +4,10 @@ Family expressions are a compact syntax for `blocks.yml`, `worlds.yml`, and
 `auto_drop_to_inventory`. They are **always parsed** regardless of the `modern_family_blocks`
 flag in `config.yml`.
 
-`modern_family_blocks: true` only controls one thing: whether flat material lists are
-automatically converted to expressions on startup. It does not gate expression parsing.
+`modern_family_blocks` controls startup auto-conversion in both directions:
+- `true`  → flat material lists are automatically converted to compact family expressions.
+- `false` → any existing family expressions in the file are automatically converted to flat lists.
+It does not gate expression parsing (expressions are always parsed regardless of this flag).
 
 They replace flat material lists with token-based expressions that resolve dynamically
 against the full family registry at startup and on `/bp reload`.
