@@ -35,14 +35,16 @@ lockable_entities:
 
 ## Quick reference
 
-| Key | Family | Default |
+All five lockable list keys are empty (`[]`) by default on a fresh install. Run `/bp recommended` (console only) to populate a sensible default set instead of configuring everything by hand. The table below shows what `/bp recommended` writes for each key when `modern_family_blocks: false` (flat mode).
+
+| Key | Family | `/bp recommended` default (flat mode) |
 |---|---|---|
 | `lockable_tile_entities` | TILE_ENTITIES | All chests, furnaces, hoppers, barrels, shelves, etc. |
 | `lockable_shulker_boxes` | SHULKER_BOXES | All 17 shulker box variants |
 | `lockable_blocks` | BLOCKS | Anvils, cauldrons, workstations, fence gates, trapdoors |
 | `lockable_doors` | DOORS | All wood types + iron + copper |
 | `lockable_entities` | ENTITIES | ITEM_FRAME + GLOW_ITEM_FRAME only |
-| `auto_drop_to_inventory` | -- | All shulker boxes |
+| `auto_drop_to_inventory` | -- | Empty (`auto_drop_to_inventory.enabled: true`, `blocks: []`) even after `/bp recommended` in flat mode; only the modern-mode (`modern_family_blocks: true`) branch of `/bp recommended` populates it, with `[*-SHULKERS]` |
 
 ### Flat list -- per-material
 
@@ -70,7 +72,7 @@ If you use a token that does not belong to that family (e.g. `FLETCHING_TABLE` i
 
 ## Enabling and disabling entities
 
-`lockable_entities` controls entity protection. Only `ITEM_FRAME` and `GLOW_ITEM_FRAME` are enabled by default.
+`lockable_entities` controls entity protection. It is empty by default; nothing is protected until it is configured, either manually or via `/bp recommended`.
 
 ```yaml
 # Enable everything (all entity sub-families)

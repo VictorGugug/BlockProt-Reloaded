@@ -3,7 +3,7 @@ version: ${version}
 main: de.sean.blockprot.bukkit.BlockProt
 api-version: '1.21.1'
 authors: [ Zar ]
-description: Block protection plugin — BlockProt Reloaded
+description: Block protection plugin, BlockProt Reloaded
 prefix: BlockProt
 website: https://github.com/VictorGugug/BlockProt-Reloaded
 folia-supported: true
@@ -11,12 +11,12 @@ permissions:
   blockprot.user:
     default: true
     description: >
-      Grants access to all standard player features — locking blocks, managing friends,
+      Grants access to all standard player features: locking blocks, managing friends,
       personal settings, statistics, transfer, and the /bp user menu.
   blockprot.user.admin:
     default: op
     description: >
-      Grants all admin features — reload, update check, integrations list, debug,
+      Grants all admin features: reload, update check, integrations list, debug,
       /bp info, /bp unlock, /bp protdel, and the /bp admin menu.
       Also allows breaking any protected block or shulker owned by another player,
       with protection data automatically cleared on break.

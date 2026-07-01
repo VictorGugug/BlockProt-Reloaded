@@ -81,12 +81,12 @@ messages:
   friends_list_title: §6你的信任者
 worlds:
   scan_start: '[BlockProt] 正在掃描世界... ({count} 已載入)'
-  scan_world_added: '[BlockProt] 世界 ''{world}'' 已新增到 worlds.yml — 保護預設禁用。請手動啟用。'
+  scan_world_added: '[BlockProt] 世界 ''{world}'' 已新增到 worlds.yml，保護預設禁用。請手動啟用。'
   scan_complete: '[BlockProt] 掃描完成。{added} 個新世界已註冊。'
 claims:
   wand_pos_a: §b角落A已設置在 §f({x}, {y}, {z})§b。現在右鍵點擊角落B。
   wand_pos_b: §b角落B已設置在 §f({x}, {y}, {z})§b。在聊天中輸入名稱以創建領地。
-  created: '§a領地 §6{name} §a已創建！區域: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(世界: {world})。'
+  created: '§a領地 §6{name} §a已創建！區域: §f{x1},{y1},{z1} §a到 §f{x2},{y2},{z2} §7(世界: {world})。'
   deleted: §a領地 §6{name} §a已刪除。
   no_claim_here: §c您當前位置沒有領地。
   overlap: §c該區域與其他玩家的領地重疊。

@@ -1,4 +1,4 @@
-![1.3.3](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/1.3.3.png)
+![1.3.3](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/R_N/RELEASE_NOTES_1.3.3.png)
 
 This page lists what changed in each release, in the order it shipped. Each entry describes the final, working behavior - not the intermediate steps taken to get there.
 
@@ -8,9 +8,8 @@ This page lists what changed in each release, in the order it shipped. Each entr
 
 ### Breaking changes (0.1% of servers affected)
 
-- **All lockable lists are now empty by default.** On a fresh install, `blocks.yml` starts with `[]` for every list. The admin must configure lockable blocks via `/bp lockables` in-game or by editing `blocks.yml` directly. Existing servers upgrading are unaffected: their `blocks.yml` is never overwritten.
-- **All lockable lists are empty by default.** blocks.yml ships with `[]` for every list. Admins must configure via `/bp lockables` GUI or edit blocks.yml. Existing servers are never overwritten.
-- **Bidirectional blocks.yml startup conversion re-added with guard.** The `modern_family_blocks` flag now auto-converts blocks.yml format on `/bp reload` (via `convertBlocksFormatIfNeeded()`), but only when the file format actually mismatches the flag. This conversion preserves all material selections — only the format changes. On the first reload after changing the flag, the file is converted; subsequent reloads are no-ops. Manual edits are preserved (materials are never dropped, only reformatted). The infinite-reload-loop bug is prevented by `suppressNext()` before every save.
+- **All lockable lists are empty by default.** On a fresh install, `blocks.yml` starts with `[]` for every list, including `lockable_entities`. The admin configures lockable blocks via `/bp lockables` in-game, by editing `blocks.yml` directly, or by running the `/bp recommended` console command to populate a sensible default set. Existing servers upgrading are unaffected: their `blocks.yml` is never overwritten.
+- **Bidirectional blocks.yml startup conversion re-added with guard.** The `modern_family_blocks` flag now auto-converts blocks.yml format on `/bp reload` (via `convertBlocksFormatIfNeeded()`), but only when the file format actually mismatches the flag. This conversion preserves all material selections, only the format changes. On the first reload after changing the flag, the file is converted; subsequent reloads are no-ops. Manual edits are preserved (materials are never dropped, only reformatted). The infinite-reload-loop bug is prevented by `suppressNext()` before every save.
 - **Config file writes only when dirty.** `cleanLegacyConfigKeys()` and `mergeMissingConfigKeys()` now only write to disk when a change was actually made. This stops the infinite auto-reload loop caused by the plugin overwriting its own config files.
 - **File watcher console spam reduced.** The watcher logs one short line to the console ("Configuration change detected; reloading...") and one line to the session log per change. Previously it logged two console lines. World scan messages only print when worlds are actually added or patched.
 - **Startup banner with ASCII art.** BlockProt prints a golden ASCII "BPR" logo on startup with colored status lines.
