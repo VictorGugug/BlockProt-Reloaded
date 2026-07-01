@@ -101,6 +101,7 @@ public final class InactivityCleanupTask implements Runnable {
                                 handler.clear();
                                 handler.applyToOtherContainer();
                                 HopperEventListener.invalidate(block);
+                                StatHandler.removeContainerByUuid(offline.getUniqueId(), loc.clone());
                                 total.incrementAndGet();
                             }
                         } catch (Exception ignored) {}

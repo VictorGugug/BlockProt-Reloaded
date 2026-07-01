@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.listeners.HopperEventListener;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -43,6 +44,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -71,9 +73,8 @@ public final class BpUnlockInventory extends BlockProtInventory {
 
     @Override
     @NotNull String getTranslatedInventoryName() {
-        String title = Translator.get(TranslationKey.INVENTORIES__BP_UNLOCK__TITLE);
-        if (title == null || title.isBlank()) title = "[Admin] Unlock: {player}";
-        return title.replace("{player}", targetName);
+        return Translator.get(TranslationKey.INVENTORIES__BP_UNLOCK__TITLE)
+            .replace("{player}", targetName);
     }
 
     @Override
@@ -140,9 +141,16 @@ public final class BpUnlockInventory extends BlockProtInventory {
             if (!handler.isProtected()) return;
 
             String blockName = handler.getName();
+            String ownerUuid = handler.getOwner();
 
             handler.clear();
             HopperEventListener.invalidate(block);
+            if (ownerUuid != null && !ownerUuid.isEmpty()) {
+                try {
+                    StatHandler.removeContainerByUuid(
+                        UUID.fromString(ownerUuid), loc.clone());
+                } catch (IllegalArgumentException ignored) {}
+            }
 
             String msg = Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_REMOVED)
                 .replace("{block}",  blockName)

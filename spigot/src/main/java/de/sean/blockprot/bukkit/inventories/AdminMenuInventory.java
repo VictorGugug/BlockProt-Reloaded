@@ -46,13 +46,14 @@ import java.util.function.Consumer;
 /** Admin menu GUI. */
 public class AdminMenuInventory extends BlockProtInventory {
 
-    private static final int SLOT_LOCKABLES    = 10;
-    private static final int SLOT_RELOAD       = 11;
-    private static final int SLOT_UPDATE       = 12;
-    private static final int SLOT_INTEGRATIONS = 13;
-    private static final int SLOT_STATS        = 14;
-    private static final int SLOT_DEBUG        = 15;
-    private static final int SLOT_INFO         = 16;
+    private static final int SLOT_LOCKABLES     = 10;
+    private static final int SLOT_RELOAD        = 11;
+    private static final int SLOT_UPDATE        = 12;
+    private static final int SLOT_INTEGRATIONS  = 13;
+    private static final int SLOT_STATS         = 14;
+    private static final int SLOT_DEBUG         = 15;
+    private static final int SLOT_INFO          = 16;
+    private static final int SLOT_WORLD_EXPIRY  = 22;
 
     public AdminMenuInventory() { super(false); }
 
@@ -68,8 +69,8 @@ public class AdminMenuInventory extends BlockProtInventory {
         inventory = createInventory();
 
         inventory.setItem(SLOT_LOCKABLES, item(Material.CHEST,
-            "Lockable Blocks",
-            "View all lockable blocks on this server"));
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__LOCKABLES),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__LOCKABLES_LORE)));
         inventory.setItem(SLOT_RELOAD, item(Material.COMPARATOR,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD_LORE)));
@@ -88,6 +89,9 @@ public class AdminMenuInventory extends BlockProtInventory {
         inventory.setItem(SLOT_INFO, item(Material.PLAYER_HEAD,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO_LORE)));
+        inventory.setItem(SLOT_WORLD_EXPIRY, item(Material.CLOCK,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY_LORE)));
 
         InventoryState state = InventoryState.get(player.getUniqueId());
         if (state != null && state.origin != InventoryState.MenuOrigin.NONE) {
@@ -135,7 +139,7 @@ public class AdminMenuInventory extends BlockProtInventory {
             var list = BlockProtAPI.getInstance().getIntegrations().stream()
                 .filter(i -> i.isEnabled())
                 .map(i -> i.name).toList();
-            String names = list.isEmpty() ? "(none)" : String.join(", ", list);
+            String names = list.isEmpty() ? Translator.get(TranslationKey.MESSAGES__INTEGRATIONS__NONE) : String.join(", ", list);
             String msg = Translator.get(TranslationKey.MESSAGES__ADMIN_INTEGRATIONS)
                 .replace("{count}", String.valueOf(list.size()))
                 .replace("{integrations}", names);
@@ -153,6 +157,14 @@ public class AdminMenuInventory extends BlockProtInventory {
             player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__ADMIN_DEBUG_HINT)));
             player.performCommand("blockprot debug run");
+
+        } else if (slot == SLOT_WORLD_EXPIRY) {
+            InventoryState newState = InventoryState.builder()
+                .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                .build();
+            newState.currentPageIndex = 0;
+            InventoryState.set(player.getUniqueId(), newState);
+            player.openInventory(new WorldExpiryInventory().fill(player, 0));
 
         } else if (slot == SLOT_INFO) {
             player.closeInventory();

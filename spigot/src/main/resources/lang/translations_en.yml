@@ -1,8 +1,8 @@
 # BlockProt Reloaded — translations_en.yml
 # Reference English translation file.
 locale: en
-enabled: Enabled
-disabled: Disabled
+enabled: "§aEnabled"
+disabled: "§7Disabled"
 
 about:
   title: "§x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin"
@@ -24,6 +24,9 @@ inventories:
     owner_label: "§6Owner"
     owner_lore: "§7This block is owned by §f{player}§7."
     friend_count: "§7Friends: §f{count}"
+    linked_frame: "§7Linked Item Frame: {item}"
+    location_format: "{type} \"§f{nbtName}§7\" {coords}"
+    lore_prefix: "§7"
   lock: "Lock"
   unlock: "Unlock"
   lock_on_place: "Lock automatically"
@@ -60,6 +63,7 @@ inventories:
       read: "Read"
       write: "Write"
       manager: "Manager"
+      none: "No access"
   groups:
     title: "Lock Group"
     button: "§bLock Group"
@@ -83,6 +87,12 @@ inventories:
   stats:
     lore_tp: "§7[✓] Click: Teleport to block"
     lore_no_tp: "§c[✗] No permission (blockprot.blocks.tp)"
+    click_to_open: "§7Click to open"
+    contents_item_format: "§8- {count}x {item}"
+    contents_more_format: "§8+ {count} more..."
+    breakdown_entry: "§7{name}§8: §f{count}"
+    breakdown_more: "§8+ {count} more..."
+    item_frame_entry: "§8{count}x {item}"
   audit:
     title: "Access Log"
     no_entries: "No entries found."
@@ -157,6 +167,12 @@ inventories:
     info_lore: "Search a player's protected blocks (opens GUI)."
     close: "§cClose"
     close_lore: "Close this menu."
+    world_expiry: "§5World Expiry"
+    world_expiry_lore: "Configure per-world scheduled protection expiry."
+    lockables: "§fLockable Blocks"
+    lockables_lore: "View and toggle all lockable block types on this server."
+    auto_drop: "§bAuto-Drop"
+    auto_drop_lore: "Configure which blocks auto-drop contents to the breaker's inventory."
   admin_block_list:
     title: "{player}'s Blocks"
   player_list:
@@ -185,6 +201,49 @@ inventories:
     undo_lore: "§7Restores the protections removed in the last operation."
     environment: "§7Environment: "
     no_undo_available: "§7No undo available"
+  world_expiry:
+    title: "World Expiry Settings"
+    world_lore: "§7Click to set expiry duration"
+    disabled: "§7Disabled"
+    duration_label: "Duration: "
+    environment_label: "Environment: "
+  lockables:
+    title: "Lockable Blocks"
+    info_title: "Lockable Blocks Info"
+    left_click_hint: "Left-click: enable / disable"
+    right_click_hint: "Right-click: copy name"
+    toggle_family: "Toggle family: "
+    toggle_family_hint: "Left-click: enable / disable all in category"
+    status_active: "Status: ACTIVE"
+    status_inactive: "Status: INACTIVE"
+    off_suffix: " [OFF]"
+    copy_message: "[Copy] "
+    copy_hover: "Click to copy to clipboard"
+    info_server: "Server: "
+    info_client: "Client: "
+    info_active: "Active: "
+    info_inactive: "Inactive: "
+    info_page: "Page: "
+    category:
+      chests: "Chests"
+      shulkers: "Shulker Boxes"
+      furnaces: "Furnaces"
+      storage: "Storage"
+      signs: "Signs"
+      doors: "Doors"
+      trapdoors: "Trapdoors"
+      gates: "Fence Gates"
+      workstations: "Workstations"
+      interactive: "Interactive"
+      entities: "Entities"
+      misc: "Misc"
+  auto_drop:
+    title: "Auto-Drop to Inventory"
+    family_title: "Auto-Drop: {family}"
+    left_click_hint: "Left-click: select individual blocks"
+    right_click_hint: "Right-click: toggle entire family"
+    status_active: "Status: ACTIVE"
+    status_inactive: "Status: INACTIVE"
   integrations:
     separator: "§7, "
     none: "§8-"
@@ -273,6 +332,18 @@ messages:
   expiry_cleared: "§aExpiry removed. This block will no longer auto-unlock."
   expiry_expired: "§eThis block's protection has expired and has been cleared."
   expiry_invalid_duration: "§cInvalid duration. Use: 30s, 60m, 24h, 28d, 12mo, 1y (or combined: 1d12h30m)."
+  world_expiry:
+    set: "§aSet expiry for §f{world} §ato §f{duration}§a."
+    cleared: "§cCleared expiry for §f{world}§c."
+    error: "§cInvalid duration: {input}. Use format like 30d, 12h, 45m."
+    usage: "§eEnter a duration (e.g. 30d, 12h, 45m) or 0 to disable."
+  lockables:
+    family_unknown: "Could not determine family for {expression}"
+    toggle_feedback: "{action} {name} in blocks.yml"
+    toggle_family_feedback: "{action} {family} in blocks.yml"
+  auto_drop:
+    toggle_feedback: "{action} {name} in auto_drop_to_inventory"
+    toggle_family_feedback: "{action} {family} in auto_drop_to_inventory"
   groups:
     created: "§aGroup created. This block is now the first member."
     dissolved: "§aGroup dissolved. All {count} block(s) removed from the group."
@@ -308,8 +379,22 @@ messages:
     hour: "hour"
     minutes: "minutes"
     minute: "minute"
+  first_run:
+    header: "§6§m{line}"
+    title: "§6   BlockProt Reloaded — First Start Guide"
+    step1: "§7   1. Use §e{command} §7to configure lockable blocks."
+    step1_click: "§7      Click here to open the GUI §7[§e{command}§7]"
+    step2: "§7   2. Or edit §e{file} §7manually in the plugin folder."
+    step3: "§7   3. See docs: §e{url}"
+    step4: "§7   4. Run §e{command} §7in console for a recommended config."
+    footer: "§6§m{line}"
+
+  integrations:
+    name_colored: "§6{name}"
+
   location:
     locked_ago: "§8Locked {time} ago"
+    just_now: "just now"
     empty_contents: "§8Empty"
   integrations:
     name: "Integrations"
@@ -319,6 +404,7 @@ messages:
     outdated: "§cBlockProt is outdated! New version: {version}"
     ahead: "§eBlockProt version is ahead of release ({version})"
     up_to_date: "§aBlockProt is up-to-date"
+    click_hint: "Click to visit the GitHub Releases page"
 
 console:
   config_change_detected: "Configuration change detected; reloading..."
@@ -366,12 +452,49 @@ console:
   integration_enabled: "Integration enabled: {name}"
   startup_complete: "BlockProt v{version} enabled."
   auto_reload_disabled: "Auto-reload is disabled (auto_reload_configs: false). Configuration will NOT reload on its own — use /bp reload after every edit."
-  modern_blocks_converted: "blocks.yml converted to modern family expression format (modern_family_blocks: true). Manual edits from now on must use expression syntax."
+  boot_configuration: "Configuration"
+  boot_listeners: "Listeners"
+  boot_commands: "Commands"
+  boot_startup_time: "Startup time"
+  boot_loaded: "Loaded"
+  boot_registered: "Registered"
+  boot_hooked: "Hooked"
+  boot_not_installed: "Not installed"
+
+  recommended_console_only: "§cThis command can only be run from the console."
+  recommended_blocks_missing: "§cblocks.yml not found. Start the server once to generate it."
+  recommended_done: "§aRecommended configuration written to blocks.yml."
+  recommended_reload: "§7Reload with '/bp reload' or wait for auto-reload."
+  recommended_failed: "§cFailed to write blocks.yml: {error}"
+
+  first_start:
+    title: "§6   BlockProt Reloaded — First Start Guide"
+    step1: "§7   1. Use §e{command} §7to configure lockable blocks."
+    step2: "§7   2. Or edit §e{file} §7manually in the plugin folder."
+    step3: "§7   3. See docs: §e{url}"
+    step4: "§7   4. Run §e{command} §7in console for a recommended config."
+
+  boot:
+    configuration: "Configuration"
+    listeners: "Listeners"
+    commands: "Commands"
+    startup_time: "Startup time"
+    loaded: "Loaded"
+    registered: "Registered"
+    hooked: "Hooked"
+    not_installed: "Not installed"
 
 worlds:
   scan_start: "Scanning worlds... ({count} loaded)"
   scan_world_added: "World '{world}' added to worlds.yml with protection enabled."
   scan_complete: "World scan complete: {count} world(s) detected, {added} added to worlds.yml. Check session log for details."
+  status: "Status"
+  protected_count: "Protected blocks"
+  no_worlds: "No worlds found."
+  world_config_hint: "Has per-world config"
+  per_world_config: "Configure per world"
+  worlds: "worlds"
+  configured: "Configured"
 
 integrations:
   lands:

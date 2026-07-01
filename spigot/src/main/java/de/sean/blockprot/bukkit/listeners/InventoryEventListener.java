@@ -347,7 +347,7 @@ public class InventoryEventListener implements Listener {
         return null;
     }
 
-    // ── Helpers ────────────────────────────────────────────────────────────────
+    // Helpers
 
     private void sendMessage(@NotNull HumanEntity player, @NotNull String text) {
         if (!(player instanceof Player p)) return;

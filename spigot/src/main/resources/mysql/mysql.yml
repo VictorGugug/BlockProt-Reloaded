@@ -1,11 +1,8 @@
-# ┌─────────────────────────────────────────────────────────────────┐
-# │                 BlockProt — MySQL / Storage                      │
-# │                   BlockProt Reloaded (BPR)                      │
-# ├─────────────────────────────────────────────────────────────────┤
-# │  When disabled, BlockProt uses NBT/PDC stored on the blocks     │
-# │  themselves. Enable MySQL to use a shared relational database.  │
-# │  Run  /bp reload  to apply changes without restarting.          │
-# └─────────────────────────────────────────────────────────────────┘
+# BlockProt — MySQL / Storage
+# BlockProt Reloaded (BPR)
+# When disabled, BlockProt uses NBT/PDC stored on the blocks
+# themselves. Enable MySQL to use a shared relational database.
+# Run /bp reload to apply changes without restarting.
 
 mysql:
   # Switch to MySQL as the storage backend.

@@ -150,7 +150,7 @@ public final class StatisticListInventory extends BlockProtInventory {
             final ListStatisticItem<?, Material> entry = list.get(offset + i);
             if (entry instanceof EntityListEntry entityEntry) {
                 setItemStackWithLore(i, entityEntry.getItemType(), entityEntry.getTitle(),
-                    "\u00a77Click to open", "", entityEntry.getContentsLore());
+                    Translator.get(TranslationKey.INVENTORIES__STATS__CLICK_TO_OPEN), "", entityEntry.getContentsLore());
             } else if (entry instanceof LocationListEntry loc) {
                 setItemStackWithLore(i, resolveDisplayMaterial(entry.getItemType()),
                     entry.getTitle(), loreTP, loc.getLockedAgoText(), loc.getContentsLore());
@@ -286,9 +286,10 @@ public final class StatisticListInventory extends BlockProtInventory {
         public List<String> getContentsLore() {
             if (value instanceof ItemFrame frame) {
                 ItemStack held = frame.getItem();
-                if (held.getType() == Material.AIR) return List.of("\u00a78(empty)");
-                return List.of("\u00a78" + held.getAmount() + "x "
-                    + held.getType().name().toLowerCase().replace('_', ' '));
+                if (held.getType() == Material.AIR) return List.of(Translator.get(TranslationKey.MESSAGES__LOCATION__EMPTY_CONTENTS));
+                return List.of(Translator.get(TranslationKey.INVENTORIES__STATS__ITEM_FRAME_ENTRY)
+                    .replace("{count}", String.valueOf(held.getAmount()))
+                    .replace("{item}", held.getType().name().toLowerCase().replace('_', ' ')));
             }
             if (value instanceof InventoryHolder holder) {
                 var inv = holder.getInventory();
@@ -297,13 +298,18 @@ public final class StatisticListInventory extends BlockProtInventory {
                     if (s != null && !s.getType().isAir())
                         counts.merge(s.getType(), s.getAmount(), Integer::sum);
                 }
-                if (counts.isEmpty()) return List.of("\u00a78(empty)");
+                if (counts.isEmpty()) return List.of(Translator.get(TranslationKey.MESSAGES__LOCATION__EMPTY_CONTENTS));
                 List<String> out = new ArrayList<>();
                 int n = 0;
                 for (var e : counts.entrySet()) {
-                    if (n >= 5) { out.add("\u00a78+ " + (counts.size() - n) + " more..."); break; }
-                    out.add("\u00a78" + e.getValue() + "x "
-                        + e.getKey().name().toLowerCase().replace('_', ' '));
+                    if (n >= 5) {
+                        out.add(Translator.get(TranslationKey.INVENTORIES__STATS__CONTENTS_MORE_FORMAT)
+                            .replace("{count}", String.valueOf(counts.size() - n)));
+                        break;
+                    }
+                    out.add(Translator.get(TranslationKey.INVENTORIES__STATS__CONTENTS_ITEM_FORMAT)
+                        .replace("{count}", String.valueOf(e.getValue()))
+                        .replace("{item}", e.getKey().name().toLowerCase().replace('_', ' ')));
                     n++;
                 }
                 return out;

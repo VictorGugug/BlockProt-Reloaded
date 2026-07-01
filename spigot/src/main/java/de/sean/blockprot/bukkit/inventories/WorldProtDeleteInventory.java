@@ -68,8 +68,7 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
 
     @Override
     @NotNull String getTranslatedInventoryName() {
-        String title = Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__TITLE);
-        return (title == null || title.isBlank()) ? "Delete World Protections" : title;
+        return Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__TITLE);
     }
 
     @Override
@@ -153,7 +152,7 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
                 meta.displayName(Component.text(w.getName()));
                 List<Component> lore = new ArrayList<>();
                 lore.add(LegacyComponentSerializer.legacySection()
-                    .deserialize(hintKey != null ? hintKey : "§eClick to select"));
+                    .deserialize(hintKey));
                 lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__ENVIRONMENT) + w.getEnvironment().name()));
                 meta.lore(lore);
                 item.setItemMeta(meta);

@@ -21,14 +21,20 @@
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.config.WorldsConfig;
 import de.sean.blockprot.bukkit.integrations.PluginIntegration;
 import de.sean.blockprot.bukkit.integrations.ViaVersionIntegration;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -48,34 +54,40 @@ import java.util.*;
 public final class LockablesInventory extends BlockProtInventory {
 
     private static final int CONTENT_SLOTS = 45;
-    private static final int SLOT_INFO     = 45;
-    private static final int SLOT_PREV     = 47;
-    private static final int SLOT_NEXT     = 49;
-    private static final int SLOT_BACK     = 53;
+    private static final int SLOT_INFO       = 45;
+    private static final int SLOT_AUTO_DROP  = 46;
+    private static final int SLOT_PREV       = 47;
+    private static final int SLOT_WORLDS     = 48;
+    private static final int SLOT_NEXT       = 49;
+    private static final int SLOT_BACK       = 53;
 
     private enum Category {
-        CHESTS("Chests"),
-        SHULKERS("Shulker Boxes"),
-        FURNACES("Furnaces"),
-        STORAGE("Storage"),
-        SIGNS("Signs"),
-        DOORS("Doors"),
-        TRAPDOORS("Trapdoors"),
-        GATES("Fence Gates"),
-        WORKSTATIONS("Workstations"),
-        INTERACTIVE("Interactive"),
-        ENTITIES("Entities");
+        CHESTS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__CHESTS),
+        SHULKERS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__SHULKERS),
+        FURNACES(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__FURNACES),
+        STORAGE(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__STORAGE),
+        SIGNS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__SIGNS),
+        DOORS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__DOORS),
+        TRAPDOORS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__TRAPDOORS),
+        GATES(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__GATES),
+        WORKSTATIONS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__WORKSTATIONS),
+        INTERACTIVE(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__INTERACTIVE),
+        ENTITIES(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__ENTITIES);
 
-        final String label;
-        Category(String l) { this.label = l; }
+        final TranslationKey labelKey;
+        Category(TranslationKey k) { this.labelKey = k; }
     }
 
     /** Entry in the display list. null material = category separator or select-all header. */
     private record Entry(@Nullable Material material, boolean active,
-                         @Nullable String categoryLabel, @Nullable String selectAllToken) {
-        static Entry separator(String label) { return new Entry(null, false, label, null); }
-        static Entry block(Material m, boolean active) { return new Entry(m, active, null, null); }
-        static Entry selectAll(String token) { return new Entry(null, true, null, token); }
+                         @Nullable String categoryLabel, @Nullable String selectAllToken,
+                         @Nullable Category selectAllCategory, long selectActiveCount,
+                         long selectTotalCount) {
+        static Entry separator(String label) { return new Entry(null, false, label, null, null, 0, 0); }
+        static Entry block(Material m, boolean active) { return new Entry(m, active, null, null, null, 0, 0); }
+        static Entry selectAll(String token, Category category, long activeCount, long totalCount) {
+            return new Entry(null, true, null, token, category, activeCount, totalCount);
+        }
     }
 
     private List<Entry> pagedList = List.of();
@@ -86,11 +98,12 @@ public final class LockablesInventory extends BlockProtInventory {
     @Override int getSize() { return InventoryConstants.sextupletLine; }
 
     @Override
-    String getTranslatedInventoryName() { return "Lockable Blocks"; }
+    String getTranslatedInventoryName() { return Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TITLE); }
 
     @NotNull
     public Inventory fill(@NotNull Player player, int page) {
         pagedList = buildAllEntries();
+        boolean modern = BlockProt.getDefaultConfig().isModernFamilyBlocks();
 
         int totalPages = Math.max(1, (int) Math.ceil(pagedList.size() / (double) CONTENT_SLOTS));
         int safePage   = Math.max(0, Math.min(page, totalPages - 1));
@@ -104,7 +117,8 @@ public final class LockablesInventory extends BlockProtInventory {
             Entry e = pagedList.get(i);
             int slot = i - start;
             if (e.selectAllToken() != null) {
-                inventory.setItem(slot, selectAllItem(e.selectAllToken()));
+                inventory.setItem(slot, selectAllItem(e.selectAllToken(),
+                    e.selectActiveCount(), e.selectTotalCount(), modern));
             } else if (e.material() == null) {
                 inventory.setItem(slot, separatorItem(e.categoryLabel() != null ? e.categoryLabel() : ""));
             } else {
@@ -118,20 +132,52 @@ public final class LockablesInventory extends BlockProtInventory {
         ItemStack info = new ItemStack(Material.BOOK, 1);
         ItemMeta im = info.getItemMeta();
         if (im != null) {
-            im.displayName(Component.text("Lockable Blocks Info").color(NamedTextColor.GOLD));
+            im.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_TITLE)).color(NamedTextColor.GOLD));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text("Server: " + VersionCompat.getVersionString()).color(NamedTextColor.YELLOW));
-            lore.add(Component.text("Client: " + resolveClientVersion(player)).color(NamedTextColor.YELLOW));
-            lore.add(Component.text("Active:   " + activeCount).color(NamedTextColor.GREEN));
-            lore.add(Component.text("Inactive: " + inactiveCount).color(NamedTextColor.GRAY));
-            lore.add(Component.text("Page: " + (safePage + 1) + "/" + totalPages).color(NamedTextColor.DARK_GRAY));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_SERVER) + VersionCompat.getVersionString()).color(NamedTextColor.YELLOW));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_CLIENT) + resolveClientVersion(player)).color(NamedTextColor.YELLOW));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_ACTIVE) + activeCount).color(NamedTextColor.GREEN));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_INACTIVE) + inactiveCount).color(NamedTextColor.GRAY));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_PAGE) + (safePage + 1) + "/" + totalPages).color(NamedTextColor.DARK_GRAY));
             im.lore(lore);
             info.setItemMeta(im);
         }
         inventory.setItem(SLOT_INFO, info);
 
-        if (safePage > 0)              setItemStack(SLOT_PREV, Material.ARROW, "< Previous");
-        if (safePage < totalPages - 1) setItemStack(SLOT_NEXT, Material.ARROW, "Next >");
+        ItemStack autoDropItem = new ItemStack(Material.DROPPER);
+        ItemMeta adm = autoDropItem.getItemMeta();
+        if (adm != null) {
+            adm.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP)).color(NamedTextColor.AQUA));
+            adm.lore(List.of(
+                Component.text(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP_LORE)).color(NamedTextColor.GRAY)
+            ));
+            autoDropItem.setItemMeta(adm);
+        }
+        inventory.setItem(SLOT_AUTO_DROP, autoDropItem);
+
+        if (safePage > 0)              setItemStack(SLOT_PREV, Material.ARROW, Translator.get(TranslationKey.INVENTORIES__LAST_PAGE));
+        if (safePage < totalPages - 1) setItemStack(SLOT_NEXT, Material.ARROW, Translator.get(TranslationKey.INVENTORIES__NEXT_PAGE));
+        if (BlockProt.getDefaultConfig().isPerWorldsConfigEnabled()) {
+            WorldsConfig wc = BlockProt.getWorldsConfig();
+            int worldCount = Bukkit.getWorlds().size();
+            int enabledCount = 0;
+            if (wc != null) {
+                for (org.bukkit.World w : Bukkit.getWorlds()) {
+                    if (wc.hasWorldConfig(w)) enabledCount++;
+                }
+            }
+            ItemStack worldItem = new ItemStack(Material.MAP);
+            ItemMeta wim = worldItem.getItemMeta();
+            if (wim != null) {
+                wim.displayName(Component.text(Translator.get(TranslationKey.WORLDS__PER_WORLD_CONFIG)).color(NamedTextColor.GOLD));
+                wim.lore(List.of(
+                    Component.text("§7" + worldCount + " " + Translator.get(TranslationKey.WORLDS__WORLDS)).color(NamedTextColor.GRAY),
+                    Component.text("§7" + Translator.get(TranslationKey.WORLDS__CONFIGURED) + ": §e" + enabledCount + "/" + worldCount).color(NamedTextColor.GRAY)
+                ));
+                worldItem.setItemMeta(wim);
+            }
+            inventory.setItem(SLOT_WORLDS, worldItem);
+        }
         setBackButton(SLOT_BACK);
         return inventory;
     }
@@ -143,7 +189,21 @@ public final class LockablesInventory extends BlockProtInventory {
         int slot = event.getRawSlot();
         if (slot < 0 || slot >= getSize()) return;
 
-        if (slot == SLOT_BACK)  { goBack(player, state); return; }
+        if (slot == SLOT_BACK)   { goBack(player, state); return; }
+
+        if (slot == SLOT_WORLDS && BlockProt.getDefaultConfig().isPerWorldsConfigEnabled()) {
+            state.currentPageIndex = cachedPage;
+            InventoryState.set(player.getUniqueId(), state);
+            player.openInventory(new WorldLockableSelectionInventory().fill(player));
+            return;
+        }
+
+        if (slot == SLOT_AUTO_DROP) {
+            state.currentPageIndex = cachedPage;
+            InventoryState.set(player.getUniqueId(), state);
+            player.openInventory(new AutoDropInventory().fill(player));
+            return;
+        }
 
         if (slot == SLOT_PREV && cachedPage > 0) {
             state.currentPageIndex = cachedPage - 1;
@@ -165,27 +225,22 @@ public final class LockablesInventory extends BlockProtInventory {
             if (absIdx < pagedList.size()) {
                 Entry e = pagedList.get(absIdx);
                 if (e.selectAllToken() != null) {
-                    toggleCategory(player, e.selectAllToken());
+                    toggleCategory(player, e.selectAllToken(), e.selectAllCategory());
+                    state.currentPageIndex = cachedPage;
+                    InventoryState.set(player.getUniqueId(), state);
                     player.openInventory(fill(player, cachedPage));
                 } else if (e.material() != null) {
+                    DefaultConfig cfg = BlockProt.getDefaultConfig();
                     boolean right = event.getClick() == ClickType.RIGHT
                         || event.getClick() == ClickType.SHIFT_RIGHT;
                     if (right) {
-                        String token = "-" + e.material().name();
-                        net.kyori.adventure.text.event.ClickEvent copyEvent =
-                            net.kyori.adventure.text.event.ClickEvent.copyToClipboard(token);
-                        net.kyori.adventure.text.event.HoverEvent<?> hoverEvent =
-                            net.kyori.adventure.text.event.HoverEvent.showText(
-                                Component.text("Click to copy to clipboard").color(NamedTextColor.GRAY));
-                        Component msg = Component.text("[Copy] ").color(NamedTextColor.DARK_GRAY)
-                            .append(Component.text(token)
-                                .color(NamedTextColor.RED)
-                                .clickEvent(copyEvent)
-                                .hoverEvent(hoverEvent));
-                        player.sendMessage(msg);
+                        copyToClipboard(player, e.material().name());
                     } else {
-                        DefaultConfig cfg = BlockProt.getDefaultConfig();
                         cfg.toggleLockable(e.material(), player);
+                        BlockProtLogger.log("lockables-toggle",
+                            e.material().name() + " toggled via /bp lockables (by " + player.getName() + ")");
+                        state.currentPageIndex = cachedPage;
+                        InventoryState.set(player.getUniqueId(), state);
                         player.openInventory(fill(player, cachedPage));
                     }
                 }
@@ -193,39 +248,35 @@ public final class LockablesInventory extends BlockProtInventory {
         }
     }
 
-    private void toggleCategory(@NotNull Player player, @NotNull String expression) {
+    private void toggleCategory(@NotNull Player player, @NotNull String expression,
+                                @Nullable Category category) {
         DefaultConfig cfg = BlockProt.getDefaultConfig();
-        String clean = expression.replace("[", "").replace("]", "");
 
         BlockFamilyParser.Family family = null;
         String configKey = null;
 
-        if (clean.equals("*")) {
-            family = deduceFamilyForCategory(expression);
-            if (family != null) configKey = DefaultConfig.configKeyForFamily(family);
-        } else if (clean.startsWith("*-")) {
-            String tag = clean.substring(2);
-            BlockFamilyParser.SubFamily sf = BlockFamilyParser.SubFamily.byTag(tag);
-            if (sf != null) {
-                family = sf.ownerFamily;
-                configKey = DefaultConfig.configKeyForFamily(family);
+        if (category != null) {
+            family = categoryFamily(category);
+            configKey = DefaultConfig.configKeyForFamily(family);
+        } else {
+            String clean = expression.replace("[", "").replace("]", "");
+            if (clean.startsWith("*-")) {
+                String firstTag = clean.substring(2).split("\\s+")[0];
+                BlockFamilyParser.SubFamily sf = BlockFamilyParser.SubFamily.byTag(firstTag);
+                if (sf != null) {
+                    family = sf.ownerFamily;
+                    configKey = DefaultConfig.configKeyForFamily(family);
+                }
             }
         }
 
         if (family != null && configKey != null) {
-            cfg.enableFamily(family, configKey, expression, player);
+            cfg.toggleFamily(family, configKey, expression, player);
         } else {
-            player.sendMessage(Component.text("Could not determine family for " + expression)
-                .color(NamedTextColor.RED));
+            String msg = Translator.get(TranslationKey.MESSAGES__LOCKABLES__FAMILY_UNKNOWN)
+                .replace("{expression}", expression);
+            player.sendMessage(Component.text(msg).color(NamedTextColor.RED));
         }
-    }
-
-    @Nullable
-    private static BlockFamilyParser.Family deduceFamilyForCategory(@NotNull String expression) {
-        for (Map.Entry<Category, String> entry : CATEGORY_TOKENS.entrySet()) {
-            if (entry.getValue().equals(expression)) return categoryFamily(entry.getKey());
-        }
-        return null;
     }
 
     @Nullable
@@ -237,13 +288,6 @@ public final class LockablesInventory extends BlockProtInventory {
             case DOORS -> BlockFamilyParser.Family.DOORS;
             case ENTITIES -> BlockFamilyParser.Family.ENTITIES;
         };
-    }
-
-    private static final Map<Category, String> CATEGORY_TOKENS = new LinkedHashMap<>();
-    static {
-        for (Category c : Category.values()) {
-            CATEGORY_TOKENS.put(c, familyTokenForCategory(c));
-        }
     }
 
     @Override
@@ -277,17 +321,22 @@ public final class LockablesInventory extends BlockProtInventory {
         }
 
         for (List<Entry> list : grouped.values()) {
-            list.sort(Comparator
-                .<Entry, Boolean>comparing(e -> e.active())
-                .thenComparing(e -> e.material() != null ? e.material().name() : ""));
+            list.sort(Comparator.comparing(e -> e.material() != null ? e.material().name() : ""));
         }
 
+        boolean modern = cfg.isModernFamilyBlocks();
         List<Entry> result = new ArrayList<>();
         for (Map.Entry<Category, List<Entry>> entry : grouped.entrySet()) {
             if (entry.getValue().isEmpty()) continue;
-            result.add(Entry.separator(entry.getKey().label));
-            String allToken = familyTokenForCategory(entry.getKey());
-            if (allToken != null) result.add(Entry.selectAll(allToken));
+            result.add(Entry.separator(Translator.get(entry.getKey().labelKey)));
+            Category cat = entry.getKey();
+            String allToken = familyTokenForCategory(cat);
+            if (allToken != null) {
+                var catEntries = entry.getValue();
+                long active = catEntries.stream().filter(Entry::active).count();
+                long total = catEntries.size();
+                result.add(Entry.selectAll(allToken, cat, active, total));
+            }
             result.addAll(entry.getValue());
         }
         if (!result.isEmpty() && result.get(0).material() == null) result.remove(0);
@@ -303,10 +352,11 @@ public final class LockablesInventory extends BlockProtInventory {
         if (n.contains("FENCE_GATE"))                                  return Category.GATES;
         if (n.contains("FURNACE") || n.equals("SMOKER")
             || n.equals("BLAST_FURNACE"))                              return Category.FURNACES;
+        if (n.contains("CHEST") || n.equals("ENDER_CHEST"))            return Category.CHESTS;
         if (n.endsWith("_SIGN") || n.endsWith("_WALL_SIGN")
             || n.endsWith("_HANGING_SIGN")
             || n.endsWith("_WALL_HANGING_SIGN"))                       return Category.SIGNS;
-        if (n.contains("CHEST") || n.equals("BARREL") || n.equals("ENDER_CHEST")
+        if (n.equals("BARREL")
             || n.endsWith("_SHELF") || n.equals("DECORATED_POT")
             || n.equals("CHISELED_BOOKSHELF") || n.equals("CRAFTER")
             || n.equals("BREWING_STAND") || n.equals("HOPPER")
@@ -339,14 +389,30 @@ public final class LockablesInventory extends BlockProtInventory {
     }
 
     @NotNull
-    private static ItemStack selectAllItem(@NotNull String token) {
-        ItemStack stack = new ItemStack(Material.NETHER_STAR);
+    private static ItemStack selectAllItem(@NotNull String token,
+                                           long activeCount, long totalCount,
+                                           boolean modern) {
+        Material icon = modern ? Material.NETHER_STAR : Material.TRIPWIRE_HOOK;
+        ItemStack stack = new ItemStack(icon);
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text("Enable all: " + token).color(NamedTextColor.AQUA));
+            meta.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TOGGLE_FAMILY) + token).color(NamedTextColor.AQUA));
+            NamedTextColor statusColor;
+            String statusLabel;
+            if (activeCount == 0) {
+                statusColor = NamedTextColor.RED;
+                statusLabel = Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_INACTIVE);
+            } else if (activeCount == totalCount) {
+                statusColor = NamedTextColor.GREEN;
+                statusLabel = Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_ACTIVE);
+            } else {
+                statusColor = NamedTextColor.GOLD;
+                statusLabel = activeCount + "/" + totalCount;
+            }
             meta.lore(List.of(
-                Component.text("Click to copy to clipboard").color(NamedTextColor.GRAY),
-                Component.text(token).color(NamedTextColor.DARK_AQUA)
+                Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TOGGLE_FAMILY_HINT)).color(NamedTextColor.YELLOW),
+                Component.text(token).color(NamedTextColor.DARK_AQUA),
+                Component.text(statusLabel).color(statusColor)
             ));
             stack.setItemMeta(meta);
         }
@@ -358,7 +424,7 @@ public final class LockablesInventory extends BlockProtInventory {
         ItemStack sep = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = sep.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text("── " + label + " ──").color(NamedTextColor.AQUA));
+            meta.displayName(Component.text(label).color(NamedTextColor.AQUA));
             meta.lore(List.of());
             sep.setItemMeta(meta);
         }
@@ -378,14 +444,17 @@ public final class LockablesInventory extends BlockProtInventory {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             NamedTextColor nameColor = active ? NamedTextColor.WHITE : NamedTextColor.DARK_GRAY;
-            String suffix = active ? "" : " §8[OFF]";
+            String suffix = active ? "" : Translator.get(TranslationKey.INVENTORIES__LOCKABLES__OFF_SUFFIX);
             meta.displayName(Component.text(friendlyName(mat) + suffix).color(nameColor));
             List<Component> lore = new ArrayList<>();
             lore.add(Component.text(mat.name()).color(NamedTextColor.DARK_GRAY));
-            lore.add(Component.text(active ? "Status: ACTIVE" : "Status: INACTIVE")
+            String status = active
+                ? Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_ACTIVE)
+                : Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_INACTIVE);
+            lore.add(Component.text(status)
                 .color(active ? NamedTextColor.GREEN : NamedTextColor.RED));
-            lore.add(Component.text("Left-click: copy name to clipboard").color(NamedTextColor.GREEN));
-            lore.add(Component.text("Right-click: copy -name to clipboard").color(NamedTextColor.RED));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__LEFT_CLICK_HINT)).color(NamedTextColor.GREEN));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__RIGHT_CLICK_HINT)).color(NamedTextColor.RED));
             meta.lore(lore);
             stack.setItemMeta(meta);
         }
@@ -442,7 +511,8 @@ public final class LockablesInventory extends BlockProtInventory {
         String client = resolveClientVersion(player);
         String server = VersionCompat.getVersionString();
         String suffix = client.equals(server) ? server : server + "/" + client;
-        return "Lockables [" + suffix + "]" + (page > 0 ? " p" + (page + 1) + "/" + total : "");
+        String base = Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TITLE);
+        return base + " [" + suffix + "]" + (page > 0 ? " p" + (page + 1) + "/" + total : "");
     }
 
     /**
@@ -461,5 +531,19 @@ public final class LockablesInventory extends BlockProtInventory {
             if (!w.isEmpty()) sb.append(Character.toUpperCase(w.charAt(0))).append(w.substring(1)).append(' ');
         }
         return sb.toString().trim();
+    }
+
+    private static void copyToClipboard(@NotNull Player player, @NotNull String token) {
+        net.kyori.adventure.text.event.ClickEvent copyEvent =
+            net.kyori.adventure.text.event.ClickEvent.copyToClipboard(token);
+        net.kyori.adventure.text.event.HoverEvent<?> hoverEvent =
+            net.kyori.adventure.text.event.HoverEvent.showText(
+                Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__COPY_HOVER)).color(NamedTextColor.GRAY));
+        Component msg = Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__COPY_MESSAGE)).color(NamedTextColor.DARK_GRAY)
+            .append(Component.text(token)
+                .color(NamedTextColor.RED)
+                .clickEvent(copyEvent)
+                .hoverEvent(hoverEvent));
+        player.sendMessage(msg);
     }
 }

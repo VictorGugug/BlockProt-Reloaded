@@ -100,7 +100,8 @@ public final class WorldsConfig {
         "lockable_shulker_boxes",
         "lockable_blocks",
         "lockable_doors",
-        "lockable_entities"
+        "lockable_entities",
+        "lockable_counts"
     );
 
     /**
@@ -173,19 +174,13 @@ public final class WorldsConfig {
             if (!disk.contains(key)) {
                 disk.set(key + ".enabled", true);
                 disk.set(key + ".auto_drop_to_inventory_enabled", true);
-                if (defaultConfig != null) {
-                    for (String listKey : List.of("lockable_tile_entities", "lockable_shulker_boxes",
-                                                  "lockable_blocks", "lockable_doors", "lockable_entities")) {
-                        copyFromBlocksConfig(disk, key, listKey, defaultConfig, globalConfig);
-                    }
-                } else {
-                    for (String listKey : List.of("lockable_tile_entities", "lockable_shulker_boxes",
-                                                  "lockable_blocks", "lockable_doors", "lockable_entities")) {
-                        copyList(disk, globalConfig, key, listKey);
-                    }
+                for (String listKey : List.of("lockable_tile_entities", "lockable_shulker_boxes",
+                                              "lockable_blocks", "lockable_doors", "lockable_entities")) {
+                    disk.set(key + "." + listKey, Collections.emptyList());
                 }
+                disk.set(key + ".lockable_counts", Collections.emptyList());
                 BlockProtLogger.log("worlds-scan",
-                    "  + '" + world.getName() + "' added (enabled: true, lists inherited from blocks.yml)");
+                    "  + '" + world.getName() + "' added (enabled: true, empty lists).");
                 added++;
             } else {
                 ConfigurationSection ws = disk.getConfigurationSection(key);
@@ -194,18 +189,15 @@ public final class WorldsConfig {
                 boolean patching = false;
                 for (String required : REQUIRED_WORLD_KEYS) {
                     if (ws.contains(required)) continue;
-
                     patching = true;
                     if (required.equals("enabled")) {
                         disk.set(key + ".enabled", true);
                     } else if (required.equals("auto_drop_to_inventory_enabled")) {
                         disk.set(key + ".auto_drop_to_inventory_enabled", true);
+                    } else if (required.equals("lockable_counts")) {
+                        disk.set(key + ".lockable_counts", Collections.emptyList());
                     } else {
-                        if (defaultConfig != null) {
-                            copyFromBlocksConfig(disk, key, required, defaultConfig, globalConfig);
-                        } else {
-                            copyList(disk, globalConfig, key, required);
-                        }
+                        disk.set(key + "." + required, Collections.emptyList());
                     }
                     BlockProtLogger.log("worlds-scan",
                         "  ~ '" + world.getName() + "' patched missing key: " + required);
@@ -224,12 +216,12 @@ public final class WorldsConfig {
             }
         }
 
-        String summary = Translator.get(TranslationKey.WORLDS__SCAN_COMPLETE)
-            .replace("{count}", String.valueOf(serverWorlds.size()))
-            .replace("{added}", String.valueOf(added));
-        if (patched > 0) summary += " (" + patched + " patched)";
-        logger.info(summary);
-        BlockProtLogger.log("worlds-scan", summary);
+        if (added > 0 || patched > 0) {
+            String summary = serverWorlds.size() + " world(s) loaded, " + added + " added";
+            if (patched > 0) summary += ", " + patched + " patched to worlds.yml.";
+            logger.info(summary);
+            BlockProtLogger.log("worlds-scan", summary);
+        }
 
         return disk;
     }
@@ -348,6 +340,33 @@ public final class WorldsConfig {
     public boolean isAutoDropToInventoryEnabled(@NotNull World world) {
         WorldEntry e = resolveEntry(world);
         return e == null || e.autoDropEnabled();
+    }
+
+    /**
+     * Returns the locked block count for a specific world by querying the database.
+     * Returns -1 if the database is unavailable.
+     */
+    public int getLockedBlockCount(@NotNull World world) {
+        de.sean.blockprot.bukkit.storage.HybridDatabase db = de.sean.blockprot.bukkit.BlockProt.getHybridDatabase();
+        if (db == null || !db.isEnabled()) return -1;
+        return db.getBlockIndexByWorld(world.getName()).size();
+    }
+
+    /**
+     * Returns the map of world names to their locked block counts.
+     */
+    @NotNull
+    public java.util.Map<String, Integer> getAllWorldLockedCounts() {
+        de.sean.blockprot.bukkit.storage.HybridDatabase db = de.sean.blockprot.bukkit.BlockProt.getHybridDatabase();
+        java.util.Map<String, Integer> result = new java.util.LinkedHashMap<>();
+        if (db == null || !db.isEnabled()) {
+            for (World w : Bukkit.getWorlds()) result.put(w.getName(), -1);
+            return result;
+        }
+        for (World w : Bukkit.getWorlds()) {
+            result.put(w.getName(), db.getBlockIndexByWorld(w.getName()).size());
+        }
+        return result;
     }
 
     /**

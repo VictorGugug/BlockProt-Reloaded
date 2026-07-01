@@ -20,9 +20,6 @@
 
 package de.sean.blockprot.bukkit;
 
-import de.sean.blockprot.bukkit.BlockProtLogger;
-import de.sean.blockprot.bukkit.TranslationKey;
-import de.sean.blockprot.bukkit.Translator;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,29 +28,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-/**
- * Console helper that routes BlockProt messages through the Bukkit console sender.
- *
- * <p>During startup, messages are buffered via {@link #startupBuffer} and printed
- * together inside the ASCII chest banner at the end of {@code onEnable}.
- * After startup, all methods print immediately as plain text.
- */
 public final class BlockProtConsole {
 
-    /**
-     * When non-null, startup messages are collected here instead of being
-     * printed immediately. Flushed and cleared by {@link #printStartupBanner}.
-     */
     @Nullable
-    private static List<String> startupBuffer = null;
+    private static List<StartupLine> startupBuffer = null;
 
-    /**
-     * Plugin logger, set by {@link #beginStartup(java.util.logging.Logger)}.
-     * Used to print each banner line so every line gets the standard
-     * {@code [HH:MM:SS INFO]: [BlockProt] } prefix, exactly like SkinsRestorer.
-     */
     @Nullable
     private static Logger pluginLogger = null;
+
+    private record StartupLine(String message, boolean isWarning) {}
 
     private BlockProtConsole() {}
 
@@ -63,51 +46,85 @@ public final class BlockProtConsole {
     }
 
     public static void printStartupBanner(@NotNull String version) {
-        List<String> lines = startupBuffer != null ? startupBuffer : new ArrayList<>();
+        List<StartupLine> lines = startupBuffer != null ? startupBuffer : new ArrayList<>();
         startupBuffer = null;
+        if (pluginLogger == null) return;
 
-        log(Translator.get(TranslationKey.CONSOLE__STARTUP_COMPLETE)
-            .replace("{version}", version));
+        pluginLogger.info("  ██████╗ ██████╗  ██████╗ ");
+        pluginLogger.info("  ██╔══██╗██╔══██╗██╔══██╗");
+        pluginLogger.info("  ██████╔╝██████╔╝██████╔╝");
+        pluginLogger.info("  ██╔══██╗██╔═══╝ ██╔══██╗");
+        pluginLogger.info("  ██████╔╝██║     ██║  ██║");
+        pluginLogger.info("  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
+        pluginLogger.info("        BlockProt Reloaded");
+        pluginLogger.info("            v" + version);
 
-        for (String line : lines) {
-            BlockProtLogger.log("startup", line);
+        if (lines.isEmpty()) {
+            pluginLogger.info("  No startup messages.");
+            return;
+        }
+
+        for (StartupLine line : lines) {
+            if (line.isWarning()) {
+                pluginLogger.warning(line.message());
+            } else {
+                pluginLogger.info(line.message());
+            }
         }
     }
 
+    private static void bootLine(@NotNull String label, @NotNull String status, boolean isLast) {
+        String connector = isLast ? "└─" : "├─";
+        info("  " + connector + " " + label + "  " + status);
+    }
+
+    public static void boot(@NotNull String label, @NotNull String status) {
+        bootLine(label, status, false);
+    }
+
+    public static void bootLast(@NotNull String label, @NotNull String status) {
+        bootLine(label, status, true);
+    }
+
     public static void info(@NotNull String message) {
-        emit(message);
+        emit(message.startsWith("  ") ? message : "  " + message);
     }
 
     public static void success(@NotNull String message) {
-        emit(message);
+        emit(message.startsWith("  ") ? message : "  " + message);
     }
 
     public static void warn(@NotNull String message) {
-        if (pluginLogger != null) {
-            pluginLogger.warning(message);
+        String prefixed = message.startsWith("  ") ? message : "  " + message;
+        if (startupBuffer != null) {
+            startupBuffer.add(new StartupLine(prefixed, true));
+        } else if (pluginLogger != null) {
+            pluginLogger.warning(prefixed);
         } else {
-            Bukkit.getConsoleSender().sendMessage(Translator.get(TranslationKey.MESSAGES__CONSOLE_WARN_PREFIX) + message);
+            Bukkit.getConsoleSender().sendMessage(prefixed);
+        }
+    }
+
+    public static void error(@NotNull String message) {
+        String prefixed = message.startsWith("  ") ? message : "  " + message;
+        if (startupBuffer != null) {
+            startupBuffer.add(new StartupLine(prefixed, true));
+        } else if (pluginLogger != null) {
+            pluginLogger.severe(prefixed);
+        } else {
+            Bukkit.getConsoleSender().sendMessage(prefixed);
         }
     }
 
     public static void integrationEnabled(@NotNull String integrationName) {
-        emit(Translator.get(TranslationKey.CONSOLE__INTEGRATION_ENABLED)
-            .replace("{name}", integrationName));
-    }
-
-    private static void log(@NotNull String line) {
-        if (pluginLogger != null) {
-            pluginLogger.info(line);
-        } else {
-            Bukkit.getConsoleSender().sendMessage(line);
-        }
+        emit("  " + integrationName + " hooked");
     }
 
     private static void emit(@NotNull String message) {
         if (startupBuffer != null) {
-            startupBuffer.add(message);
-        } else {
-            log(message);
+            startupBuffer.add(new StartupLine(message, false));
+        } else if (pluginLogger != null) {
+            pluginLogger.info(message);
         }
     }
 }

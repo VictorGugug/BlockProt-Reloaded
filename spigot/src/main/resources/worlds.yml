@@ -1,16 +1,14 @@
-# worlds.yml — BlockProt Reloaded
+# worlds.yml -- BlockProt Reloaded
 # Per-world block configuration. Active when config.yml has: per_worlds_config: true
-# (Previously: worlds_config_enabled. Migrated automatically on first startup.)
-# Reference: docs/BLOCK_FAMILY_SYNTAX.md  |  docs/LOCKABLE_BLOCKS_REFERENCE.md
 #
-# Keys per world:
-#   enabled                        — true/false to enable protection in this world
-#   auto_drop_to_inventory_enabled — true/false for shulker auto-drop
-#   lockable_tile_entities         — chests, furnaces, barrels, etc.
-#   lockable_shulker_boxes         — shulker box variants
-#   lockable_blocks                — doors, trapdoors, gates, workstations, etc.
-#   lockable_doors                 — door variants (subset of lockable_blocks)
-#   lockable_entities              — chest boats, chest minecarts, hopper minecarts
-#                                    (leave as [] or omit to disable entity protection)
+# Each world entry has its own lockable block lists. The per-world GUI is
+# accessible from /bp lockables (MAP button, middle row) when per_worlds_config is true.
+# Lists use the same format as blocks.yml (flat names or family expressions).
+# When enabled: false, no blocks can be locked in that world.
+# If a world is NOT listed, the global blocks.yml lists apply.
+# Worlds auto-populate on first scan with empty lists.
+#
+# Docs: https://github.com/VictorGugug/BlockProt-Reloaded/tree/main/docs
+# Syntax: docs/BLOCK_FAMILY_SYNTAX.md
 
 worlds:

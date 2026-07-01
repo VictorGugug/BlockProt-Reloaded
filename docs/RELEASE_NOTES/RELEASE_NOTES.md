@@ -2,8 +2,6 @@
 
 This page lists what changed in each release, in the order it shipped. Each entry describes the final, working behavior - not the intermediate steps taken to get there.
 
-Hello everyone, I apologize for how long this release took. The main reason is my studies, but I am also running a server alone, developing 2 plugins and 1 mod, and managing 14 personal projects on top of this one. I want to thank everyone for the 100 downloads on Modrinth -- it is an honor to contribute to the Minecraft community and help people. I kindly ask for your patience with each release and its timing. I am just one person, Zar, working on this project alone. I do it for the love of the craft and to share my ideas in something as beautiful as this. I will keep an eye on all your issues and suggestions. I will soon open a Discord server where you can interact with me more directly and where I can assist you as attentively and accurately as I can. Thank you all very much. Below is a detailed changelog of everything added, fixed, changed, and more. This is a MAJOR UPDATE that adds a lot of new content. I strongly recommend reading it in full, as well as the following documents: [BLOCK FAMILY SYNTAX](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/BLOCK_FAMILY_SYNTAX.md) and [LOCKABLE BLOCKS REFERENCE](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/LOCKABLE_BLOCKS_REFERENCE.md). These documents will be updated periodically so I recommend keeping an eye on them. Since this is a major update, many more will follow. This update focuses on simplicity and explaining the entire project for better understanding and usability. Future 1.3.x / 1.x.x updates will focus on bug fixes, new features, and more. I hope you understand that I do what I can to offer something complete and that you understand the time it takes. Good night, and I hope that 1.3.3 will be published by late June or early to mid July 2026. Have a lovely night.
-
 ---
 
 ## 1.3.3
@@ -11,12 +9,15 @@ Hello everyone, I apologize for how long this release took. The main reason is m
 ### Breaking changes (0.1% of servers affected)
 
 - **All lockable lists are now empty by default.** On a fresh install, `blocks.yml` starts with `[]` for every list. The admin must configure lockable blocks via `/bp lockables` in-game or by editing `blocks.yml` directly. Existing servers upgrading are unaffected: their `blocks.yml` is never overwritten.
-- **Bidirectional blocks.yml startup conversion removed.** The `modern_family_blocks` flag no longer auto-converts `blocks.yml` on startup. The file is read as-is regardless of the flag. The flag now only controls the format used when `/bp lockables` modifies blocks.yml (flat list vs family expression). Manual edits to `blocks.yml` are never rewritten by the plugin.
-- **Console startup messages consolidated.** The file watcher now logs a single `"Config changed -> reloading..."` line followed by `"Reload done."` instead of two separate messages per change. World scan messages only appear when worlds are actually added or patched.
-- **Startup banner with ASCII art.** BlockProt Reloaded now prints a golden ASCII "BPR" chest logo on startup, followed by colored status lines (config loaded, integrations hooked, etc.).
-- **`/bp recommended` command.** A new console-only command that generates a sensible default configuration for `blocks.yml`. Run `bp recommended` in the console to populate all lockable lists with common block types. The file is written immediately; reload with `/bp reload`. The mention of this command appears in the session log on first run.
-- **Per-world lockable counts in worlds.yml.** Each world entry in `worlds.yml` now includes a `lockable_counts` key (populated at scan time) showing which block types are lockable in that world. Used by future GUI features.
-- **Translation key `console.modern_blocks_converted` removed.** No longer used since auto-conversion is removed.
+- **All lockable lists are empty by default.** blocks.yml ships with `[]` for every list. Admins must configure via `/bp lockables` GUI or edit blocks.yml. Existing servers are never overwritten.
+- **Bidirectional blocks.yml startup conversion re-added with guard.** The `modern_family_blocks` flag now auto-converts blocks.yml format on `/bp reload` (via `convertBlocksFormatIfNeeded()`), but only when the file format actually mismatches the flag. This conversion preserves all material selections — only the format changes. On the first reload after changing the flag, the file is converted; subsequent reloads are no-ops. Manual edits are preserved (materials are never dropped, only reformatted). The infinite-reload-loop bug is prevented by `suppressNext()` before every save.
+- **Config file writes only when dirty.** `cleanLegacyConfigKeys()` and `mergeMissingConfigKeys()` now only write to disk when a change was actually made. This stops the infinite auto-reload loop caused by the plugin overwriting its own config files.
+- **File watcher console spam reduced.** The watcher logs one short line to the console ("Configuration change detected; reloading...") and one line to the session log per change. Previously it logged two console lines. World scan messages only print when worlds are actually added or patched.
+- **Startup banner with ASCII art.** BlockProt prints a golden ASCII "BPR" logo on startup with colored status lines.
+- **`/bp recommended` console command.** Generates a sensible default blocks.yml. Console-only. Mentioned in the session log on first start.
+- **Per-world lockable GUI.** When `per_worlds_config: true`, the lockables GUI shows a MAP button (slot 48) that opens a world selection inventory. Each world shows its enabled/disabled status and protected block count. Click a world to configure its individual lockable lists.
+- **Auto-disable modern_family_blocks.** When all lockable lists become empty via GUI toggling, `modern_family_blocks` auto-sets to `false` in config.yml.
+- **Translation keys added:** `worlds.status`, `worlds.protected_count`, `worlds.no_worlds`, `worlds.world_config_hint`, `worlds.per_world_config`, `worlds.worlds`, `worlds.configured`.
 
 ## Additions
 
@@ -35,10 +36,6 @@ New methods in `DefaultConfig`: `toggleAutoDropMaterial()`, `toggleAutoDropFamil
 ### Lockables GUI blocks no longer move on toggle
 
 The active-status sort was removed. Blocks stay in their family section sorted by name only. Toggling a block on or off no longer changes its position in the inventory.
-
-### Bidirectional blocks.yml startup conversion
-
-`modern_family_blocks` now controls conversion in both directions. When `true` and the file is flat, it converts flat→expressions (as before). When `false` and the file contains expressions, it converts expressions→flat at startup. Both conversions preserve the exact active material set. A log line is printed per converted key.
 
 ### Fixed crash on non-item materials in auto-drop sub-menu
 
@@ -279,6 +276,12 @@ Both the category-grouped entries and the entity entries in the lockables GUI ar
 
 ### Bug fixes
 
+- **`isKeyInExpressionFormat()` ignored `modern_family_blocks: false`**: when the flag was set to false but `blocks.yml` still contained family expressions like `- '[*-CHEST]'`, every GUI toggle stayed in expression format instead of converting to flat material names. The flag now determines the output format unconditionally: when `false`, all keys are written as flat sorted material lists regardless of the file's current format.
+- **`toggleLockable()` and `toggleFamily()` had two code paths**: the expression branch parsed both formats correctly, the flat branch only handled flat input. When `modern_family_blocks` toggled from true to false, the flat branch would not convert existing expressions — toggles silently did nothing. Both methods now use a unified path: parse the raw value (handles both formats), modify the material set, then write in the flag-determined format.
+- **`blocks.yml` key order shuffled**: SnakeYAML writes keys in insertion order, so any `blocksConfig.set()` call moved the modified key to the end. Repeated toggles left the file with keys in random order. Added `DefaultConfig.reorderBlocksKeys()` which returns a new `YamlConfiguration` with keys in the fixed order (`lockable_tile_entities`, `lockable_shulker_boxes`, `lockable_blocks`, `lockable_doors`, `lockable_entities`, `auto_drop_to_inventory`). Applied to all save paths: `saveBlocksConfig()`, `mergeMissingBlocksKeys()`, and `convertBlocksFormatIfNeeded()`.
+- **Auto-format conversion on reload**: new `convertBlocksFormatIfNeeded()` in BlockProt.java runs during every `reloadConfigAndTranslations()`. It reads blocks.yml, checks if the file's format matches `modern_family_blocks`, and if not, converts all 5 lockable keys to the correct format (expressions or flat names) while preserving every material selection. This means setting `modern_family_blocks: false` and doing `/bp reload` now correctly converts `- '[*-CHEST]'` to flat names like `- CHEST\n- TRAPPED_CHEST\n...`.
+- **Translation incomplete message spammed console on every reload and GUI toggle**: `loadFromConfigs()` logged the "N incomplete key(s)" message to `getLogger().info()` every time translations were loaded, which happened on every file-watcher-triggered reload (i.e., after every `/bp lockables` toggle). Changed to a static `translationIncompleteLogged` flag — the message is printed once per server session.
+- **Auto-reload console message was removed entirely**: the `ConfigFileWatcher` previously logged "Configuration change detected; reloading..." to the console but was changed to session-log-only to reduce spam. The message is restored to console (one line) — the session log retains the additional detail.
 - **Block Lock menu button shifting**: every button used a shared incrementing slot counter, so any block type missing one button (for example, no Redstone on a workstation) shifted every later button one slot to the left. The same menu rendered differently for a chest versus a workstation versus a door. Fixed by giving every button a fixed slot in both `fill()` and `fillForEntity()` - see "Fixed menu layout" above.
 - **StatHandler NBT save crash**: `Files.move(ATOMIC_MOVE)` failed on cross-device paths. Rewritten to temp-write, validate, backup, replace with fallback copy.
 - **Server freeze on stats purge**: `purgeStalePbsEntries` called `Block.getType()` on unloaded chunks, triggering synchronous chunk loads. Fixed with a `World.isChunkLoaded()` guard.

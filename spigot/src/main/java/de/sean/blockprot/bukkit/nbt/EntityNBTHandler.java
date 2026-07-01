@@ -54,7 +54,7 @@ import java.util.List;
  */
 public final class EntityNBTHandler {
 
-    // ── NamespacedKey constants ───────────────────────────────────────────────
+    // NamespacedKey constants
 
     private static final String NS = "blockprot";
 
@@ -68,7 +68,7 @@ public final class EntityNBTHandler {
     private static final String K_FRIENDS           = "friends";
     private static final String K_LINKED_BLOCK      = "linked_block";
 
-    // ── State ─────────────────────────────────────────────────────────────────
+    // State
 
     private final PersistentDataContainer pdc;
 
@@ -76,7 +76,7 @@ public final class EntityNBTHandler {
         this.pdc = entity.getPersistentDataContainer();
     }
 
-    // ── Owner ─────────────────────────────────────────────────────────────────
+    // Owner
 
     @NotNull
     public String getOwner() {
@@ -103,7 +103,7 @@ public final class EntityNBTHandler {
         pdc.remove(key(K_LINKED_BLOCK));
     }
 
-    // ── Item frame ↔ block link ─────────────────────────────────────────────
+    // Item frame ↔ block link
 
     /**
      * Returns the world+coordinates of the block this item frame is linked to,
@@ -129,7 +129,7 @@ public final class EntityNBTHandler {
         return !getLinkedBlock().isEmpty();
     }
 
-    // ── Friends ───────────────────────────────────────────────────────────────
+    // Friends
 
     /**
      * Returns true if {@code playerUuid} is the owner or a registered friend.
@@ -200,7 +200,7 @@ public final class EntityNBTHandler {
             .findFirst().orElse(null);
     }
 
-    // ── Redstone / hopper protection ──────────────────────────────────────────
+    // Redstone / hopper protection
 
     /**
      * Returns true if hopper pipelines should be blocked for this protected entity.
@@ -221,7 +221,7 @@ public final class EntityNBTHandler {
     }
 
 
-    // ── Friend serialisation ──────────────────────────────────────────────────
+    // Friend serialisation
 
     /**
      * Simple record holding one friend's manager flag. Mirrors the block-friend

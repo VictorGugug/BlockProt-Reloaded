@@ -78,11 +78,14 @@ public final class PlayerBlocksStatistic extends LocationListStatistic {
         int shown = 0;
         for (Map.Entry<Material, Integer> e : counts.entrySet()) {
             if (shown >= 10) {
-                lore.add("§8+ " + (counts.size() - shown) + " more...");
+                lore.add(Translator.get(TranslationKey.INVENTORIES__STATS__BREAKDOWN_MORE)
+                    .replace("{count}", String.valueOf(counts.size() - shown)));
                 break;
             }
             String name = toHumanReadable(e.getKey());
-            lore.add("§7" + name + "§8: §f" + e.getValue());
+            lore.add(Translator.get(TranslationKey.INVENTORIES__STATS__BREAKDOWN_ENTRY)
+                .replace("{name}", name)
+                .replace("{count}", String.valueOf(e.getValue())));
             shown++;
         }
         return lore;

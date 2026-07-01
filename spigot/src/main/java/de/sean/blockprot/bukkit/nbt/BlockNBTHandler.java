@@ -244,7 +244,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
         return exp > 0 && System.currentTimeMillis() > exp;
     }
 
-    // ── Item frame link (inverse of EntityNBTHandler#getLinkedBlock) ────────────
+    // Item frame link (inverse of EntityNBTHandler#getLinkedBlock)
 
     /**
      * Returns the UUID string of the item frame linked to this block (e.g. an

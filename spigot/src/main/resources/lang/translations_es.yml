@@ -1,7 +1,7 @@
 ---
 locale: es
-enabled: Activado
-disabled: Desactivado
+enabled: "§aActivado"
+disabled: "§7Desactivado"
 about:
   title: "§x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin"
   fork_maintainers: "§7Mantenedor: §fVickey §8(VictorGugug)"
@@ -45,7 +45,8 @@ inventories:
       read: Leer
       write: Escribir
       manager: Manager
-  # ── Grupos de protección ─────────────────────────────────────────────────
+      none: Sin acceso
+  # Grupos de protección
   groups:
     title: "§8[§bGrupo§8] §fGestionar"
     button: "§bGrupo de Protección"
@@ -69,6 +70,12 @@ inventories:
   stats:
     lore_tp: "§7[✓] Clic: Teletransportar al bloque"
     lore_no_tp: "§c[✗] Sin permiso (blockprot.blocks.tp)"
+    click_to_open: "§7Clic para abrir"
+    contents_item_format: "§8- {count}x {item}"
+    contents_more_format: "§8+ {count} más..."
+    breakdown_entry: "§7{name}§8: §f{count}"
+    breakdown_more: "§8+ {count} más..."
+    item_frame_entry: "§8{count}x {item}"
   audit:
     title: "Registro de Accesos"
     no_entries: "Sin registros."
@@ -81,7 +88,7 @@ inventories:
     action_opened: "§aAbrió"
     action_item_taken: "§eTomó artículo(s)"
     action_item_placed: "§2Colocó artículo(s)"
-  # ── Protección de mascotas ───────────────────────────────────────────────────
+  # Protección de mascotas
   entity_settings:
     settings: "§dAjustes de Mascota"
     protect: "§dProtección de mascota"
@@ -138,15 +145,65 @@ inventories:
     info_lore: "Cierra y usa /bp info <jugador> para ver sus bloques."
     close: "Cerrar"
     close_lore: "Cerrar este menú."
+    world_expiry: "§5Expiración por mundo"
+    world_expiry_lore: "Configura la expiración programada de protecciones por mundo."
+    lockables: "§fBloques bloqueables"
+    lockables_lore: "Ver y activar/desactivar los tipos de bloques bloqueables en este servidor."
+    auto_drop: "§bAuto-Drop"
+    auto_drop_lore: "Configura qué bloques entregan su contenido al romperlos directamente al inventario."
   # -- Lista de bloques del admin --
   admin_block_list:
     title: "Bloques de {player}"
+    linked_frame: "\u00a77Marco con \u00edtem vinculado: {item}"
   # -- /bp unlock <jugador> GUI --
   bp_unlock:
     title: "Desproteger: {player}"
     left_click_hint: "§7[✓] Clic izquierdo: ver contenido (solo lectura)"
     right_click_hint: "§c[!] Clic derecho: quitar protección"
-  # ─────────────────────────────────────────────────────────────────────────
+  world_expiry:
+    title: "Configuración de expiración por mundo"
+    world_lore: "§7Clic para configurar la duración de expiración"
+    disabled: "§7Desactivado"
+    duration_label: "Duración: "
+    environment_label: "Entorno: "
+  lockables:
+    title: "Bloqueos"
+    info_title: "Info de Bloqueos"
+    left_click_hint: "Clic izquierdo: activar / desactivar"
+    right_click_hint: "Clic derecho: copiar nombre"
+    toggle_family: "Activar/desactivar familia: "
+    toggle_family_hint: "Clic izquierdo: activar / desactivar toda la categoría"
+    status_active: "Estado: ACTIVO"
+    status_inactive: "Estado: INACTIVO"
+    off_suffix: " [APAGADO]"
+    copy_message: "[Copiar] "
+    copy_hover: "Clic para copiar al portapapeles"
+    info_server: "Servidor: "
+    info_client: "Cliente: "
+    info_active: "Activos: "
+    info_inactive: "Inactivos: "
+    info_page: "Página: "
+    category:
+      chests: "Cofres"
+      shulkers: "Cajas Shulker"
+      furnaces: "Hornos"
+      storage: "Almacenamiento"
+      signs: "Letreros"
+      doors: "Puertas"
+      trapdoors: "Trampillas"
+      gates: "Vallas"
+      workstations: "Estaciones de trabajo"
+      interactive: "Interactivos"
+      entities: "Entidades"
+      misc: "Varios"
+  auto_drop:
+    title: "Auto-Drop al Inventario"
+    family_title: "Auto-Drop: {family}"
+    left_click_hint: "Clic izquierdo: seleccionar bloques individuales"
+    right_click_hint: "Clic derecho: activar/desactivar toda la familia"
+    status_active: "Estado: ACTIVO"
+    status_inactive: "Estado: INACTIVO"
+
 messages:
   permission_granted: Protegido.
   unlocked: Desprotegido.
@@ -175,7 +232,7 @@ messages:
   only_players: "Solo los jugadores pueden usar este comando."
   reload_done: "§aBlockProt se recargó correctamente."
   integrations_enabled: "§7Integraciones activas ({count}): {integrations}"
-  # ── Mensajes nuevos BPR ───────────────────────────────
+  # Mensajes nuevos BPR
   transfer_success: "§aPropiedad transferida a §f{player}§a. Fuiste añadido como amigo."
   transfer_usage: "§cUso: /bp transfer <jugador>  (mira un bloque tuyo)"
   transfer_not_owner: "§cNo eres el dueño de ese bloque."
@@ -221,6 +278,34 @@ messages:
   expiry_cleared: "§aExpiración eliminada. El bloque ya no se desprotegerá automáticamente."
   expiry_expired: "§eLa protección de este bloque ha caducado y ha sido eliminada."
   expiry_invalid_duration: "§cDuración inválida. Usa: 30s, 60m, 24h, 28d, 12mo, 1y (o combinado: 1d12h30m)."
+  world_expiry:
+    set: "§aExpiración configurada para §f{world} §aen §f{duration}§a."
+    cleared: "§cExpiración eliminada para §f{world}§c."
+    error: "§cDuración inválida: {input}. Usa formato como 30d, 12h, 45m."
+    usage: "§eIngresa una duración (ej. 30d, 12h, 45m) o 0 para desactivar."
+  update:
+    outdated: "§cBlockProt está desactualizado! Nueva versión: {version}"
+    ahead: "§eVersión de BlockProt por delante del lanzamiento ({version})"
+    up_to_date: "§aBlockProt está actualizado"
+    click_hint: "Haz clic para visitar la página de lanzamientos en GitHub"
+  lockables:
+    family_unknown: "No se pudo determinar la familia para {expression}"
+    toggle_feedback: "{action} {name} en blocks.yml"
+    toggle_family_feedback: "{action} {family} en blocks.yml"
+  auto_drop:
+    toggle_feedback: "{action} {name} en auto_drop_to_inventory"
+    toggle_family_feedback: "{action} {family} en auto_drop_to_inventory"
+  time:
+    days: "días"
+    day: "día"
+    hours: "horas"
+    hour: "hora"
+    minutes: "minutos"
+    minute: "minuto"
+  location:
+    locked_ago: "§8Bloqueado hace {time}"
+    just_now: "justo ahora"
+    empty_contents: "§8Vacío"
 console:
   config_change_detected: "Cambio detectado en la configuración; recargando..."
   config_reloaded: "Configuración recargada automáticamente."
@@ -254,11 +339,25 @@ console:
   not_paper: "El servidor no está ejecutando Paper. La búsqueda por chat se desactiva y se usará la GUI de yunque. Se recomienda Paper."
   typed_views_fallback: "Servidor Paper/Spigot 1.21.0-1.21.3 detectado, sin vistas de inventario tipadas. Se usarán fallbacks de AnvilInput."
   auto_reload_disabled: "Auto-recarga desactivada (auto_reload_configs: false). La configuración NO se recargará sola — usa /bp reload después de cada cambio."
-  modern_blocks_converted: "blocks.yml convertido a formato de expresiones familiares (modern_family_blocks: true). Los cambios manuales de ahora en adelante deben usar la sintaxis de expresiones."
+  boot_configuration: "Configuración"
+  boot_listeners: "Eventos"
+  boot_commands: "Comandos"
+  boot_startup_time: "Tiempo de inicio"
+  boot_loaded: "Cargado"
+  boot_registered: "Registrado"
+  boot_hooked: "Conectado"
+  boot_not_installed: "No instalado"
 worlds:
   scan_start: "Escaneando mundos... ({count} cargados)"
   scan_world_added: "Mundo '{world}' agregado a worlds.yml con proteccion activada."
   scan_complete: "Escaneo de mundos completado: {count} mundo(s) detectado(s), {added} agregado(s) a worlds.yml. Detalles en el log de sesion."
+  status: "Estado"
+  protected_count: "Bloques protegidos"
+  no_worlds: "No se encontraron mundos."
+  world_config_hint: "Tiene configuracion por mundo"
+  per_world_config: "Configurar por mundo"
+  worlds: "mundos"
+  configured: "Configurados"
 integrations:
   lands:
     protect_containers_flag_name: Proteger contenedores (BlockProt)

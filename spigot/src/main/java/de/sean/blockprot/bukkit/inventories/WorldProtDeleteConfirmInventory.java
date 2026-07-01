@@ -23,7 +23,9 @@ package de.sean.blockprot.bukkit.inventories;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.listeners.HopperEventListener;
 import de.sean.blockprot.bukkit.storage.HybridDatabase;
 import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
@@ -36,6 +38,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.TileState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -48,8 +51,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -90,9 +95,8 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
 
     @Override
     @NotNull String getTranslatedInventoryName() {
-        String t = Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__CONFIRM_TITLE);
-        if (t == null || t.isBlank()) t = "{world}";
-        return t.replace("{world}", worldName);
+        return Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__CONFIRM_TITLE)
+            .replace("{world}", worldName);
     }
 
     @Override
@@ -124,29 +128,24 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
     private void renderSlots(@NotNull Player player) {
         inventory.clear();
 
-        String confirmText = Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__CONFIRM_BUTTON);
-        if (confirmText == null || confirmText.isBlank()) confirmText = "§cConfirm Delete";
-        String confirmLore = Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__CONFIRM_LORE);
-        if (confirmLore == null) confirmLore = "§7Removes ALL protections in §e{world}";
         setItemStackWithLore(11, Material.TNT,
-            confirmText.replace("{world}", worldName),
-            confirmLore.replace("{world}", worldName));
+            Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__CONFIRM_BUTTON)
+                .replace("{world}", worldName),
+            Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__CONFIRM_LORE)
+                .replace("{world}", worldName));
 
         boolean hasSnapshot = UNDO_SNAPSHOTS.containsKey(player.getUniqueId())
             && !UNDO_SNAPSHOTS.get(player.getUniqueId()).isEmpty();
         if (hasSnapshot) {
-            String undoText = Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__UNDO_BUTTON);
-            if (undoText == null || undoText.isBlank()) undoText = "§aUndo Last Deletion";
-            String undoLore = Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__UNDO_LORE);
-            if (undoLore == null) undoLore = "§7Restores the protections removed in the last operation.";
-            setItemStackWithLore(13, Material.EMERALD, undoText, undoLore);
+            setItemStackWithLore(13, Material.EMERALD,
+                Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__UNDO_BUTTON),
+                Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__UNDO_LORE));
         } else {
-            setItemStack(13, Material.GRAY_STAINED_GLASS_PANE, "§7No undo available");
+            setItemStack(13, Material.GRAY_STAINED_GLASS_PANE, Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__NO_UNDO_AVAILABLE));
         }
 
-        String cancelText = Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__CANCEL_BUTTON);
-        if (cancelText == null || cancelText.isBlank()) cancelText = "§fCancel";
-        setItemStack(15, Material.BARRIER, cancelText);
+        setItemStack(15, Material.BARRIER,
+            Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__CANCEL_BUTTON));
     }
 
     private void executeDelete(@NotNull Player player) {
@@ -173,9 +172,25 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
         } else {
             Chunk[] chunks = world.getLoadedChunks();
             List<Location> locations = new ArrayList<>();
+            Set<Material> nonTileTypes = new HashSet<>();
+            for (BlockFamilyParser.Family f : BlockFamilyParser.Family.values()) {
+                if (f == BlockFamilyParser.Family.ENTITIES) continue;
+                nonTileTypes.addAll(BlockFamilyParser.getFamilyMembers(f));
+            }
             for (Chunk chunk : chunks) {
                 for (BlockState state : chunk.getTileEntities()) {
                     locations.add(state.getLocation());
+                }
+                for (int x = 0; x < 16; x++) {
+                    for (int z = 0; z < 16; z++) {
+                        for (int y = world.getMinHeight(); y < world.getMaxHeight(); y++) {
+                            Block block = chunk.getBlock(x, y, z);
+                            if (block.getState() instanceof TileState) continue;
+                            if (nonTileTypes.contains(block.getType())) {
+                                locations.add(block.getLocation());
+                            }
+                        }
+                    }
                 }
             }
             clearLocationsBatched(player, locations);
@@ -196,15 +211,26 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
                     processed++;
                     if (loc.getWorld() == null) continue;
                     Block block = loc.getBlock();
+                    String ownerUuid = null;
+                    boolean cleared = false;
                     try {
                         BlockNBTHandler handler = new BlockNBTHandler(block);
                         if (!handler.isProtected()) continue;
                         snapshots.add(snapshotOf(loc, handler));
+                        ownerUuid = handler.getOwner();
                         handler.clear();
+                        cleared = true;
+                        counter[0]++;
+                        try { handler.applyToOtherContainer(); } catch (RuntimeException ignored) {}
                         HopperEventListener.invalidate(block);
                         ProtectedBlockCache.unmark(block);
-                        counter[0]++;
                     } catch (RuntimeException ignored) {}
+                    if (cleared && ownerUuid != null && !ownerUuid.isEmpty()) {
+                        try {
+                            StatHandler.removeContainerByUuid(
+                                UUID.fromString(ownerUuid), loc.clone());
+                        } catch (IllegalArgumentException ignored) {}
+                    }
                 }
 
                 if (index[0] >= locations.size()) {
@@ -256,6 +282,10 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
                         }
                         handler.applyToOtherContainer();
                         ProtectedBlockCache.mark(block);
+                        try {
+                            StatHandler.addBlockByUuid(
+                                UUID.fromString(snap.ownerUuid()), snap.location().clone());
+                        } catch (IllegalArgumentException ignored) {}
                         restored[0]++;
                     } catch (RuntimeException ignored) {}
                 }

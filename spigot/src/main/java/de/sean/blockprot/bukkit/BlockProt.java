@@ -22,6 +22,7 @@ package de.sean.blockprot.bukkit;
 
 import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.commands.BlockProtCommand;
+import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
 import de.sean.blockprot.bukkit.config.WorldsConfig;
 import de.sean.blockprot.bukkit.integrations.*;
@@ -34,11 +35,14 @@ import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
 import de.sean.blockprot.bukkit.tasks.ConfigFileWatcher;
 import de.sean.blockprot.bukkit.tasks.BackupTask;
 import de.sean.blockprot.bukkit.tasks.InactivityCleanupTask;
+import de.sean.blockprot.bukkit.tasks.WorldExpiryTask;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
 import com.tcoded.folialib.FoliaLib;
 import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.Listener;
@@ -88,6 +92,17 @@ public final class BlockProt extends JavaPlugin {
 
     private Metrics metrics;
 
+    /** True when this server session is the very first start of BlockProt Reloaded. */
+    private static boolean firstStartThisSession = false;
+
+    /**
+     * Returns true for the entire first startup session.
+     * Useful for showing guides in JoinEventListener.
+     */
+    public static boolean isFirstStartThisSession() {
+        return firstStartThisSession;
+    }
+
     @NotNull
     public static FoliaLib getFoliaLib() {
         assert foliaLib != null;
@@ -104,6 +119,11 @@ public final class BlockProt extends JavaPlugin {
     public static DefaultConfig getDefaultConfig() throws AssertionError {
         assert defaultConfig != null : "default config should not be null.";
         return defaultConfig;
+    }
+
+    @Nullable
+    public ConfigFileWatcher getFileWatcher() {
+        return fileWatcher;
     }
 
     public List<PluginIntegration> getIntegrations() {
@@ -145,8 +165,6 @@ public final class BlockProt extends JavaPlugin {
     @Override
     public void onEnable() {
         if (isRunningCraftBukkit()) {
-            // Load translations minimally so we can emit a translated error message,
-            // then register the error listener and abort the rest of onEnable.
             this.saveDefaultConfig();
             this.reloadConfig();
             defaultConfig = new DefaultConfig(this.getConfig(), this.getDataFolder());
@@ -155,7 +173,7 @@ public final class BlockProt extends JavaPlugin {
                 InputStream s = this.getResource("lang/" + defaultLanguageFile);
                 if (s != null) {
                     YamlConfiguration cfg = YamlConfiguration.loadConfiguration(
-                        new java.io.BufferedReader(new java.io.InputStreamReader(s, java.nio.charset.StandardCharsets.UTF_8)));
+                        new java.io.BufferedReader(new java.io.InputStreamReader(s, StandardCharsets.UTF_8)));
                     Translator.loadFromConfigs(cfg, cfg);
                 }
             } catch (Exception ignored) {}
@@ -165,18 +183,20 @@ public final class BlockProt extends JavaPlugin {
             return;
         }
 
-        // Migrate data from legacy plugin folder names before anything else reads disk.
         migrateFromLegacyFolders();
-        // Migrate legacy blockprot_usercache.sqlite from server root to plugin folder.
         migrateLegacySqliteFile();
+
+        BlockProtConsole.beginStartup(this.getLogger());
 
         foliaLib = new FoliaLib(this);
         foliaLib.getScheduler().runAsync(task -> new UpdateChecker(BlockProt.getPluginVersion()).run());
         MinecraftVersion.disableUpdateCheck();
         this.saveDefaultConfig();
+        migrateOldLockableListsFromConfigYml();
         saveResourceSilent("blocks.yml", false);
         this.reloadConfigAndTranslations();
         this.flushMigrationLog();
+
         boolean sessionLogEnabled = defaultConfig.isSessionLogEnabled();
         BlockProtLogger.init(this.getDataFolder(), sessionLogEnabled);
         String version = BlockProt.getPluginVersion();
@@ -188,7 +208,10 @@ public final class BlockProt extends JavaPlugin {
             BlockProtLogger.log("Version scheme: " + VersionCompat.MAJOR + ".x year-based detected.");
         }
 
-        BlockProtConsole.beginStartup(this.getLogger());
+        BlockProtConsole.boot(
+            Translator.get(TranslationKey.CONSOLE__BOOT_CONFIGURATION),
+            Translator.get(TranslationKey.CONSOLE__BOOT_LOADED));
+
         StatHandler.enable();
 
         boolean hasUpgradeData = BackupTask.hasPriorData(this.getDataFolder());
@@ -207,7 +230,6 @@ public final class BlockProt extends JavaPlugin {
 
         try {
             auditLogger = new AuditLogger(this.getDataFolder());
-            BlockProtLogger.log(Translator.get(TranslationKey.CONSOLE__AUDIT_LOGGER_STARTED));
         } catch (Exception e) {
             BlockProtConsole.warn(Translator.get(TranslationKey.CONSOLE__AUDIT_LOGGER_FAILED)
                 .replace("{error}", e.getMessage()));
@@ -216,8 +238,6 @@ public final class BlockProt extends JavaPlugin {
         fileWatcher = new ConfigFileWatcher(this);
         if (defaultConfig.isAutoReloadEnabled()) {
             fileWatcher.start();
-        } else {
-            BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__AUTO_RELOAD_DISABLED));
         }
 
         int inactivityDays = this.getConfig().getInt("inactivity_cleanup_days", -1);
@@ -225,21 +245,13 @@ public final class BlockProt extends JavaPlugin {
             foliaLib.getScheduler().runAsync(task -> new InactivityCleanupTask(inactivityDays).run());
         }
 
-        metrics = new Metrics(this, pluginId);
-        metrics.addCustomChart(new IntegrationBarChart());
-
-        for (PluginIntegration integration : integrations) {
-            try {
-                integration.enable();
-                if (integration.isEnabled()) {
-                    BlockProtLogger.log("integration", "Enabled: " + integration.name);
-                }
-            } catch (NoClassDefFoundError ignored) {}
+        if (defaultConfig.isWorldExpiryEnabled()) {
+            int interval = Math.max(1, defaultConfig.getWorldExpiryCheckInterval());
+            new WorldExpiryTask().runTaskTimer(this, 0L, interval * 60L * 20L);
         }
 
-        BlockProtConsole.printStartupBanner(version);
-
-        new BlockProtAPI(this);
+        metrics = new Metrics(this, pluginId);
+        metrics.addCustomChart(new IntegrationBarChart());
 
         final PluginManager pm = getServer().getPluginManager();
         registerEvent(pm, new BlockEventListener(this));
@@ -252,32 +264,75 @@ public final class BlockProt extends JavaPlugin {
         registerEvent(pm, new PistonEventListener());
         registerEvent(pm, new RedstoneEventListener());
         registerEvent(pm, new LockEffectListener());
-
-        // Always registered so the config toggles are hot-reloadable (/bp reload).
-        // Each event handler checks its own enabled-flag at the top and returns
-        // immediately when disabled, adding zero overhead when the feature is off.
-        // EntityProtectionListener/EntityMenuOpenListener gate on isEntityProtectionEnabled();
-        // VillagerWorkstationProtectionListener gates separately on isVillagerWorkstationProtectionEnabled().
         registerEvent(pm, new EntityProtectionListener());
         registerEvent(pm, new EntityMenuOpenListener());
         registerEvent(pm, new VillagerWorkstationProtectionListener());
         registerEvent(pm, new ItemFrameListener());
         registerEvent(pm, new VehicleProtectionListener());
         registerEvent(pm, new RaidDetectionListener());
-
         if (defaultConfig.isWorldEditPasteAutolockEnabled()) {
             registerEvent(pm, new WorldEditPasteListener(this));
-            BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__WORLDEDIT_LISTENER_ENABLED));
         }
+
+        BlockProtConsole.boot(
+            Translator.get(TranslationKey.CONSOLE__BOOT_LISTENERS),
+            Translator.get(TranslationKey.CONSOLE__BOOT_REGISTERED));
 
         Objects.requireNonNull(this.getCommand("blockprot"))
             .setExecutor(new BlockProtCommand());
+
+        BlockProtConsole.boot(
+            Translator.get(TranslationKey.CONSOLE__BOOT_COMMANDS),
+            Translator.get(TranslationKey.CONSOLE__BOOT_REGISTERED));
+
+        for (PluginIntegration integration : integrations) {
+            try {
+                integration.enable();
+                if (integration.isEnabled()) {
+                    BlockProtConsole.boot(integration.name,
+                        Translator.get(TranslationKey.CONSOLE__BOOT_HOOKED));
+                } else {
+                    BlockProtConsole.boot(integration.name,
+                        Translator.get(TranslationKey.CONSOLE__BOOT_NOT_INSTALLED));
+                }
+            } catch (NoClassDefFoundError ignored) {
+                BlockProtConsole.boot(integration.name,
+                    Translator.get(TranslationKey.CONSOLE__BOOT_NOT_INSTALLED));
+            }
+        }
 
         if (defaultConfig.isProtectionExpiryEnabled() && defaultConfig.isExpiryScanOnStartup()) {
             foliaLib.getScheduler().runAsync(task -> runExpiryScan());
         }
 
         foliaLib.getScheduler().runAsync(task -> populateProtectedBlockCache());
+
+        // First-run guide in session log and console
+        if (isFirstStart()) {
+            BlockProtLogger.log("startup", Translator.get(TranslationKey.CONSOLE__FIRST_START__TITLE));
+            BlockProtLogger.log("startup", Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP1)
+                .replace("{command}", "/bp lockables"));
+            BlockProtLogger.log("startup", Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP2)
+                .replace("{file}", "blocks.yml"));
+            BlockProtLogger.log("startup", Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP3)
+                .replace("{url}", "https://github.com/VictorGugug/BlockProt-Reloaded"));
+            BlockProtLogger.log("startup", Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP4)
+                .replace("{command}", "/bp recommended"));
+
+            getLogger().info("--- BlockProt Reloaded First Start Guide ---");
+            getLogger().info("Use /bp lockables to configure locked blocks in-game.");
+            getLogger().info("Documentation: https://github.com/VictorGugug/BlockProt-Reloaded");
+            getLogger().info("Use /bp recommended in console for a recommended blocks.yml.");
+            getLogger().info("----------------------------------------------");
+            markFirstStartDone();
+        }
+
+        BlockProtConsole.bootLast(
+            Translator.get(TranslationKey.CONSOLE__BOOT_STARTUP_TIME),
+            "§f" + java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() + " ms");
+        BlockProtConsole.printStartupBanner(version);
+
+        new BlockProtAPI(this);
 
         super.onEnable();
     }
@@ -302,6 +357,7 @@ public final class BlockProt extends JavaPlugin {
         this.cleanLegacyConfigKeys();
         this.mergeMissingConfigKeys();
         this.mergeMissingBlocksKeys();
+        this.convertBlocksFormatIfNeeded();
         saveResourceSilent("mysql/mysql.yml", false);
         saveResourceSilent("worlds.yml", false);
         this.reloadConfig();
@@ -339,16 +395,12 @@ public final class BlockProt extends JavaPlugin {
             worldsConfig = new WorldsConfig(worldsDisk);
         } else {
             worldsConfig = null;
-            BlockProtLogger.log("worlds-scan", "per_worlds_config=false; using global config.yml lockable lists.");
         }
 
         for (PluginIntegration integration : integrations) {
             integration.reload();
         }
 
-        // Honour the auto_reload_configs flag at runtime:
-        // start the watcher if it was disabled but the flag is now on,
-        // stop it if it was running but the flag is now off.
         if (fileWatcher != null) {
             boolean shouldRun = defaultConfig.isAutoReloadEnabled();
             boolean isRunning = fileWatcher.isRunning();
@@ -358,10 +410,6 @@ public final class BlockProt extends JavaPlugin {
                 fileWatcher.stop();
                 BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__AUTO_RELOAD_DISABLED));
             }
-        }
-
-        if (defaultConfig.wasBlocksFileConverted()) {
-            BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__MODERN_BLOCKS_CONVERTED));
         }
     }
 
@@ -438,10 +486,13 @@ public final class BlockProt extends JavaPlugin {
         YamlConfiguration template = YamlConfiguration.loadConfiguration(
             new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
 
+        boolean dirty = false;
+
         // worlds_config_enabled → per_worlds_config (renamed for clarity)
         if (userValues.contains("worlds_config_enabled") && !userValues.contains("per_worlds_config")) {
             userValues.set("per_worlds_config", userValues.getBoolean("worlds_config_enabled", false));
             userValues.set("worlds_config_enabled", null);
+            dirty = true;
             BlockProtLogger.log("config-migrate", "Migrated 'worlds_config_enabled' -> 'per_worlds_config'");
         }
         if (userValues.contains("pet_protection") && !userValues.contains("entity_protection")) {
@@ -453,6 +504,7 @@ public final class BlockProt extends JavaPlugin {
             userValues.set("entity_protection.villager_locate_seconds",
                 userValues.getInt("pet_protection.villager_locate_seconds", 6));
             userValues.set("pet_protection", null);
+            dirty = true;
             BlockProtLogger.log("config-migrate", "Migrated 'pet_protection' -> 'entity_protection'");
         }
 
@@ -463,10 +515,13 @@ public final class BlockProt extends JavaPlugin {
             if (!userValues.contains(key)) {
                 userValues.set(key, template.get(key));
                 added++;
+                dirty = true;
             }
         }
 
+        if (!dirty) return;
         try {
+            if (fileWatcher != null) fileWatcher.suppressNext();
             userValues.save(diskFile);
             BlockProtLogger.log("config-clean",
                 "config.yml merged: all user values preserved" +
@@ -476,9 +531,10 @@ public final class BlockProt extends JavaPlugin {
         }
     }
 
-    /** Keys managed by separate files — never merged back into config.yml. */
+    /** Keys managed by separate files - never merged back into config.yml. */
     private static final Set<String> EXTERNAL_CONFIG_KEYS = Set.of(
         "lockable_tile_entities", "lockable_shulker_boxes", "lockable_blocks", "lockable_doors",
+        "lockable_entities", "auto_drop_to_inventory",
         "mysql.enabled", "mysql.host", "mysql.port", "mysql.database",
         "mysql.username", "mysql.password", "mysql.jdbc_url",
         "mysql.pool.maximum_pool_size", "mysql.pool.minimum_idle", "mysql.pool.connection_timeout_ms",
@@ -492,65 +548,277 @@ public final class BlockProt extends JavaPlugin {
         InputStream jarStream = this.getResource("blocks.yml");
         if (jarStream == null) return;
 
-        YamlConfiguration jarConfig  = YamlConfiguration.loadConfiguration(new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
-        YamlConfiguration diskConfig = YamlConfiguration.loadConfiguration(diskFile);
+        YamlConfiguration jarConfig = YamlConfiguration.loadConfiguration(new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
 
-        boolean diskIsModern = isBlocksFileModern(diskConfig);
+        YamlConfiguration diskConfig = new YamlConfiguration();
+        try {
+            diskConfig.load(diskFile);
+        } catch (IOException | InvalidConfigurationException ex) {
+            handleCorruptBlocksYaml(diskFile, jarConfig, ex);
+            return;
+        }
+        this.processBlocksMerge(diskFile, jarConfig, diskConfig);
+    }
+
+    private void processBlocksMerge(@NotNull File diskFile, @NotNull YamlConfiguration jarConfig, @NotNull YamlConfiguration diskConfig) {
         int added = 0;
 
         for (String key : jarConfig.getKeys(false)) {
             if (!diskConfig.contains(key)) {
-                // Entire section missing — add it wholesale.
                 diskConfig.set(key, jarConfig.get(key));
                 added++;
-                BlockProtLogger.log("blocks-merge", "blocks.yml — added missing section: " + key);
-            } else if (!diskIsModern) {
-                // Section exists and file is in legacy flat-list mode.
-                // Append individual entries from the JAR that are not yet on disk.
-                Object jarRaw  = jarConfig.get(key);
-                Object diskRaw = diskConfig.get(key);
-                if (!(jarRaw instanceof List<?> jarList) || !(diskRaw instanceof List<?>)) continue;
-
-                // Only merge flat string lists (lockable_* block lists).
-                // Skip non-string lists and sub-section keys (auto_drop_to_inventory).
-                if (!key.startsWith("lockable_")) continue;
-
-                @SuppressWarnings("unchecked")
-                List<String> diskList = new ArrayList<>((List<String>) diskRaw);
-                Set<String> diskSet = new HashSet<>(diskList);
-
-                for (Object entry : jarList) {
-                    if (!(entry instanceof String s)) continue;
-                    String trimmed = s.trim();
-                    if (!diskSet.contains(trimmed)) {
-                        diskList.add(trimmed);
-                        diskSet.add(trimmed);
-                        added++;
-                        BlockProtLogger.log("blocks-merge", "blocks.yml — added new entry to " + key + ": " + trimmed);
-                    }
-                }
-                diskConfig.set(key, diskList);
+                BlockProtLogger.log("blocks-merge", "blocks.yml: added missing section " + key);
             }
         }
 
-        if (added == 0) return;
+        // Clean up any "[ ]" or "[]" string artifacts from old broken blocks.yml
+        boolean cleaned = false;
+        String[] listKeys = {"lockable_tile_entities", "lockable_shulker_boxes",
+            "lockable_blocks", "lockable_doors", "lockable_entities",
+            "auto_drop_to_inventory.blocks"};
+        for (String key : listKeys) {
+            if (!diskConfig.contains(key)) continue;
+            List<?> raw = diskConfig.getList(key);
+            if (raw == null || raw.isEmpty()) continue;
+            List<Object> filtered = new ArrayList<>();
+            for (Object o : raw) {
+                if (o instanceof String s) {
+                    String t = s.trim();
+                    if (t.equals("[]") || t.equals("[ ]")) continue;
+                }
+                filtered.add(o);
+            }
+            if (filtered.size() != raw.size()) {
+                diskConfig.set(key, filtered);
+                cleaned = true;
+                BlockProtLogger.log("blocks-clean", "Removed orphan '[]' strings from " + key);
+            }
+        }
+
+        if (added == 0 && !cleaned) return;
         try {
+            if (fileWatcher != null) fileWatcher.suppressNext();
+            diskConfig = de.sean.blockprot.bukkit.config.DefaultConfig.reorderBlocksKeys(diskConfig);
             diskConfig.save(diskFile);
-            BlockProtLogger.log("blocks-merge", "blocks.yml — merged " + added + " new entry/section(s) from JAR.");
+            if (added > 0) {
+                BlockProtLogger.log("blocks-merge", "blocks.yml: merged " + added + " new section(s) from JAR.");
+            }
         } catch (IOException e) {
             BlockProtLogger.warn("Failed to save blocks.yml after merge: " + e.getMessage());
         }
     }
 
-    private static boolean isBlocksFileModern(@NotNull YamlConfiguration cfg) {
-        for (String key : List.of("lockable_tile_entities", "lockable_shulker_boxes",
-                                  "lockable_blocks", "lockable_doors", "lockable_entities")) {
-            Object raw = cfg.get(key);
-            if (raw instanceof String s && s.trim().startsWith("[")) return true;
-            if (raw instanceof List<?> list && !list.isEmpty()
-                    && list.get(0) instanceof String s && s.trim().startsWith("[")) return true;
+    /**
+     * Handles a corrupted blocks.yml: logs a CRITICAL SEVERE entry with the error line,
+     * attempts line-by-line recovery, merges any jar defaults that are still missing,
+     * saves the result, and logs whether the repair succeeded or failed.
+     * If recovery is impossible, directs the admin to file a bug report.
+     */
+    private void handleCorruptBlocksYaml(@NotNull File diskFile, @NotNull YamlConfiguration jarConfig, @NotNull Exception ex) {
+        int errorLine = getErrorLine(ex.getMessage());
+        String lineInfo = errorLine > 0 ? " at line " + errorLine : "";
+        getLogger().severe("[BlockProt] CRITICAL: blocks.yml is corrupted" + lineInfo + ".");
+        getLogger().severe("[BlockProt] Cause: " + ex.getMessage());
+        getLogger().severe("[BlockProt] Attempting intelligent repair...");
+        BlockProtLogger.log("yaml-repair", "CRITICAL: blocks.yml corrupted" + lineInfo + ". Cause: " + ex.getMessage());
+
+        YamlConfiguration recovered = attemptYamlRecovery(diskFile, jarConfig);
+        if (recovered == null) {
+            getLogger().severe("[BlockProt] Repair FAILED: unable to recover any data from blocks.yml.");
+            getLogger().severe("[BlockProt] Manually restore blocks.yml from backup. Report this bug at: https://github.com/VictorGugug/BlockProt-Reloaded/issues");
+            BlockProtLogger.log("yaml-repair", "Repair FAILED. No data could be recovered. Report as bug: https://github.com/VictorGugug/BlockProt-Reloaded/issues");
+            return;
         }
-        return false;
+
+        for (String key : jarConfig.getKeys(false)) {
+            if (!recovered.contains(key)) recovered.set(key, jarConfig.get(key));
+        }
+
+        try {
+            if (fileWatcher != null) fileWatcher.suppressNext();
+            recovered = DefaultConfig.reorderBlocksKeys(recovered);
+            recovered.save(diskFile);
+            getLogger().warning("[BlockProt] blocks.yml repaired" + lineInfo + ". Corrupted file saved as blocks.yml.corrupted.*. Verify blocks.yml content.");
+            BlockProtLogger.log("yaml-repair", "Repair SUCCESS" + lineInfo + ". Corrupted file backed up as blocks.yml.corrupted.*");
+        } catch (IOException e) {
+            getLogger().severe("[BlockProt] Repair FAILED: could not write repaired blocks.yml: " + e.getMessage());
+            getLogger().severe("[BlockProt] Manually fix blocks.yml. Report this bug at: https://github.com/VictorGugug/BlockProt-Reloaded/issues");
+            BlockProtLogger.log("yaml-repair", "Repair FAILED: write error: " + e.getMessage() + ". Report as bug.");
+        }
+    }
+
+    /**
+     * Extracts the line number from a YAML error message.
+     * Format example: "while parsing a block collection in 'reader', line 2, column 1"
+     */
+    private int getErrorLine(@Nullable String errorMsg) {
+        if (errorMsg == null) return -1;
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile("line (\\d+)");
+        java.util.regex.Matcher m = p.matcher(errorMsg);
+        return m.find() ? Integer.parseInt(m.group(1)) : -1;
+    }
+
+    /**
+     * Attempts to recover valid content from a corrupted blocks.yml file.
+     * Reads the file line by line, extracting valid list entries for known keys.
+     * Creates a backup of the corrupted file before any modifications.
+     */
+    @Nullable
+    private YamlConfiguration attemptYamlRecovery(@NotNull File corruptedFile, @NotNull YamlConfiguration jarTemplate) {
+        backupCorruptedFile(corruptedFile);
+
+        YamlConfiguration recovered = new YamlConfiguration();
+        recovered.set("lockable_tile_entities", List.of());
+        recovered.set("lockable_shulker_boxes", List.of());
+        recovered.set("lockable_blocks", List.of());
+        recovered.set("lockable_doors", List.of());
+        recovered.set("lockable_entities", List.of());
+        recovered.set("auto_drop_to_inventory.enabled", true);
+        recovered.set("auto_drop_to_inventory.blocks", List.of());
+
+        String[] listKeys = {"lockable_tile_entities", "lockable_shulker_boxes",
+            "lockable_blocks", "lockable_doors", "lockable_entities",
+            "auto_drop_to_inventory.blocks"};
+
+        try {
+            List<String> lines = Files.readAllLines(corruptedFile.toPath(), StandardCharsets.UTF_8);
+            String currentKey = null;
+            boolean inAutoDropSection = false;
+            List<String> recoveredValues = new ArrayList<>();
+
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                String trimmed = line.trim();
+
+                for (String key : listKeys) {
+                    if (trimmed.equals(key + ":") || trimmed.startsWith(key + ":")) {
+                        currentKey = key;
+                        inAutoDropSection = key.startsWith("auto_drop_to_inventory");
+                        if (!trimmed.endsWith(":") || trimmed.length() > key.length() + 1) {
+                            String inlineValue = trimmed.substring(trimmed.indexOf(':') + 1).trim();
+                            if (!inlineValue.isEmpty() && !inlineValue.equals("[]")) {
+                                recoveredValues.add(inlineValue);
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                if (currentKey != null && (trimmed.startsWith("- ") || (!trimmed.isEmpty() && !trimmed.contains(":")))) {
+                    String value = trimmed.startsWith("- ") ? trimmed.substring(2).trim() : trimmed;
+                    value = value.replaceAll("^\"|\"$", "");
+                    value = value.replaceAll("^'|\'$", "");
+                    if (!value.isEmpty() && !value.equals("[]")) {
+                        recoveredValues.add(value);
+                    }
+                }
+
+                boolean isNewKey = false;
+                for (String key : jarTemplate.getKeys(false)) {
+                    if (trimmed.equals(key + ":")) {
+                        isNewKey = true;
+                        break;
+                    }
+                }
+                if (isNewKey || (trimmed.contains(":") && !trimmed.startsWith("-") && !trimmed.startsWith("#"))) {
+                    if (!recoveredValues.isEmpty() && currentKey != null) {
+                        recovered.set(currentKey, new ArrayList<>(recoveredValues));
+                        BlockProtLogger.log("blocks-recover", "Recovered " + recoveredValues.size() + " entries for: " + currentKey);
+                        recoveredValues.clear();
+                    }
+                    currentKey = null;
+                    inAutoDropSection = false;
+                }
+            }
+
+            if (!recoveredValues.isEmpty() && currentKey != null) {
+                recovered.set(currentKey, new ArrayList<>(recoveredValues));
+                BlockProtLogger.log("blocks-recover", "Recovered " + recoveredValues.size() + " entries for: " + currentKey);
+            }
+
+            return recovered;
+        } catch (IOException e) {
+            BlockProtLogger.warn("Failed to read corrupted blocks.yml for recovery: " + e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Creates a backup of a corrupted config file with timestamp suffix.
+     */
+    private void backupCorruptedFile(@NotNull File originalFile) {
+        try {
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd-HHmmss").format(new java.util.Date());
+            File backup = new File(originalFile.getParentFile(), originalFile.getName() + ".corrupted." + timestamp);
+            Files.copy(originalFile.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            getLogger().warning("[BlockProt] Corrupted blocks.yml backed up as: " + backup.getName());
+        } catch (IOException e) {
+            BlockProtLogger.warn("Failed to backup corrupted blocks.yml: " + e.getMessage());
+        }
+    }
+
+    private void convertBlocksFormatIfNeeded() {
+        String blocksPath = this.getConfig().getString("blocks_file", "blocks.yml");
+        File diskFile = new File(this.getDataFolder(), blocksPath);
+        if (!diskFile.exists()) return;
+
+        File configFile = new File(this.getDataFolder(), "config.yml");
+        boolean modern = false;
+        if (configFile.exists()) {
+            modern = YamlConfiguration.loadConfiguration(configFile).getBoolean("modern_family_blocks", false);
+        }
+        YamlConfiguration diskConfig = YamlConfiguration.loadConfiguration(diskFile);
+
+        Map<String, BlockFamilyParser.Family> keyFamilies = new LinkedHashMap<>();
+        keyFamilies.put("lockable_tile_entities", BlockFamilyParser.Family.TILE_ENTITIES);
+        keyFamilies.put("lockable_shulker_boxes", BlockFamilyParser.Family.SHULKER_BOXES);
+        keyFamilies.put("lockable_blocks", BlockFamilyParser.Family.BLOCKS);
+        keyFamilies.put("lockable_doors", BlockFamilyParser.Family.DOORS);
+        keyFamilies.put("lockable_entities", BlockFamilyParser.Family.ENTITIES);
+
+        boolean needsConversion = false;
+        for (String key : keyFamilies.keySet()) {
+            if (!diskConfig.contains(key)) continue;
+            Object raw = diskConfig.get(key);
+            if (raw instanceof List<?> list && !list.isEmpty()) {
+                for (Object o : list) {
+                    if (o instanceof String s) {
+                        boolean isExpr = BlockFamilyParser.isFamilyExpression(s.trim());
+                        if (isExpr != modern) { needsConversion = true; break; }
+                    }
+                }
+                if (needsConversion) break;
+            }
+        }
+
+        if (!needsConversion) return;
+
+        for (Map.Entry<String, BlockFamilyParser.Family> entry : keyFamilies.entrySet()) {
+            String key = entry.getKey();
+            BlockFamilyParser.Family family = entry.getValue();
+            if (!diskConfig.contains(key)) continue;
+            Set<Material> materials = BlockFamilyParser.parse(diskConfig.get(key), family);
+            if (modern) {
+                String expr = BlockFamilyParser.toFamilyExpression(materials, family);
+                if (expr != null) {
+                    diskConfig.set(key, List.of(expr));
+                } else {
+                    diskConfig.set(key, materials.stream().map(Material::name).sorted().toList());
+                }
+            } else {
+                diskConfig.set(key, materials.stream().map(Material::name).sorted().toList());
+            }
+        }
+
+        try {
+            if (fileWatcher != null) fileWatcher.suppressNext();
+            diskConfig = DefaultConfig.reorderBlocksKeys(diskConfig);
+            diskConfig.save(diskFile);
+            BlockProtLogger.log("blocks-convert",
+                "blocks.yml: converted format to " + (modern ? "family expressions" : "flat names") + ".");
+        } catch (IOException e) {
+            BlockProtLogger.warn("Failed to save blocks.yml after format conversion: " + e.getMessage());
+        }
     }
 
     private void mergeMissingConfigKeys() {
@@ -574,6 +842,7 @@ public final class BlockProt extends JavaPlugin {
 
         if (added == 0) return;
         try {
+            if (fileWatcher != null) fileWatcher.suppressNext();
             diskConfig.save(diskFile);
             BlockProtLogger.log("config-merge", "config.yml — added " + added + " missing option(s).");
         } catch (IOException e) {
@@ -603,9 +872,16 @@ public final class BlockProt extends JavaPlugin {
                     de.sean.blockprot.bukkit.nbt.BlockNBTHandler handler =
                         new de.sean.blockprot.bukkit.nbt.BlockNBTHandler(block);
                     if (handler.isExpired()) {
+                        String ownerUuid = handler.getOwner();
                         handler.clear();
                         handler.applyToOtherContainer();
                         de.sean.blockprot.bukkit.listeners.HopperEventListener.invalidate(block);
+                        if (ownerUuid != null && !ownerUuid.isEmpty()) {
+                            try {
+                                de.sean.blockprot.bukkit.nbt.StatHandler.removeContainerByUuid(
+                                    java.util.UUID.fromString(ownerUuid), loc.clone());
+                            } catch (IllegalArgumentException ignored) {}
+                        }
                         cleared++;
                     }
                 } catch (RuntimeException ignored) {}
@@ -784,6 +1060,83 @@ public final class BlockProt extends JavaPlugin {
         } catch (IOException e) {
             getLogger().warning("[BlockProt] Failed to move blockprot_usercache.sqlite: " + e.getMessage());
         }
+    }
+
+    /**
+     * Migrates lockable block lists from the old config.yml format (pre-1.3.3)
+     * to a dedicated blocks.yml file.
+     *
+     * <p>In BlockProt 1.3.2 and earlier, lockable lists were direct children
+     * of config.yml (e.g. {@code lockable_tile_entities: [CHEST, ...]}).
+     * Starting from 1.3.3 they live in blocks.yml.
+     *
+     * <p>This method runs once: if blocks.yml already exists, or if config.yml
+     * has no lockable lists, it is a no-op.
+     */
+    private void migrateOldLockableListsFromConfigYml() {
+        File configFile = new File(this.getDataFolder(), "config.yml");
+        if (!configFile.exists()) return;
+
+        File blocksFile = new File(this.getDataFolder(), "blocks.yml");
+        if (blocksFile.exists()) return;
+
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(configFile);
+
+        String[] lockableKeys = {
+            "lockable_tile_entities", "lockable_shulker_boxes",
+            "lockable_blocks", "lockable_doors", "lockable_entities"
+        };
+
+        boolean hasAny = false;
+        for (String key : lockableKeys) {
+            Object val = cfg.get(key);
+            if (val instanceof List<?> list && !list.isEmpty()) { hasAny = true; break; }
+        }
+        if (!hasAny) return;
+
+        YamlConfiguration blocks = new YamlConfiguration();
+        for (String key : lockableKeys) {
+            blocks.set(key, cfg.getList(key, Collections.emptyList()));
+        }
+        blocks.set("auto_drop_to_inventory.enabled",
+            cfg.getBoolean("auto_drop_to_inventory.enabled", true));
+        blocks.set("auto_drop_to_inventory.blocks",
+            cfg.getList("auto_drop_to_inventory.blocks", Collections.emptyList()));
+
+        try {
+            blocks.save(blocksFile);
+            BlockProtLogger.log("migrate-blocks",
+                "Created blocks.yml with lockable lists migrated from config.yml.");
+
+            boolean changed = false;
+            for (String key : lockableKeys) {
+                if (cfg.contains(key)) { cfg.set(key, null); changed = true; }
+            }
+            if (cfg.contains("auto_drop_to_inventory")) {
+                cfg.set("auto_drop_to_inventory", null);
+                changed = true;
+            }
+            if (changed) {
+                cfg.save(configFile);
+                BlockProtLogger.log("migrate-blocks",
+                    "Cleaned up lockable lists from config.yml (now in blocks.yml).");
+            }
+        } catch (IOException e) {
+            BlockProtLogger.warn("Failed to migrate lockable lists from config.yml: " + e.getMessage());
+        }
+    }
+
+    private static boolean isFirstStart() {
+        if (firstStartThisSession) return true;
+        File marker = new File(getInstance().getDataFolder(), ".first_start_done");
+        firstStartThisSession = !marker.exists();
+        return firstStartThisSession;
+    }
+
+    private static void markFirstStartDone() {
+        try {
+            new File(getInstance().getDataFolder(), ".first_start_done").createNewFile();
+        } catch (IOException ignored) {}
     }
 
     private static void copyDirectoryContents(@NotNull Path src, @NotNull Path dst) throws IOException {

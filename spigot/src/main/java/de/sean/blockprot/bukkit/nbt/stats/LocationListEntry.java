@@ -113,7 +113,10 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
                     String defaultName = toHumanReadable(liveMat);
                     // Only append the custom name when it differs from the default
                     if (nbtName != null && !nbtName.isEmpty() && !nbtName.equals(defaultName)) {
-                        return typeName + " \"§f" + nbtName + "§7\" " + coordinates;
+                        return Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__LOCATION_FORMAT)
+                            .replace("{type}", typeName)
+                            .replace("{nbtName}", nbtName)
+                            .replace("{coords}", coordinates);
                     }
                 } catch (RuntimeException ignored) {}
                 return typeName + " " + coordinates;
@@ -125,7 +128,7 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
     /** Converts a Material name like WHITE_SHULKER_BOX to §7White Shulker Box */
     private static String toHumanReadable(@NotNull Material mat) {
         String raw = mat.name().replace('_', ' ');
-        StringBuilder sb = new StringBuilder("§7");
+        StringBuilder sb = new StringBuilder(Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__LORE_PREFIX));
         boolean cap = true;
         for (char c : raw.toCharArray()) {
             if (c == ' ') { sb.append(c); cap = true; }
@@ -159,10 +162,10 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
         long minutes = secs / 60;
         long hours   = minutes / 60;
         long days    = hours / 24;
-        if (days   >= 1) return days   + (days   == 1 ? " day"    : " days");
-        if (hours  >= 1) return hours  + (hours  == 1 ? " hour"   : " hours");
-        if (minutes >= 1) return minutes + (minutes == 1 ? " minute" : " minutes");
-        return "just now";
+        if (days   >= 1) return days + " " + (days   == 1 ? Translator.get(TranslationKey.MESSAGES__TIME__DAY)    : Translator.get(TranslationKey.MESSAGES__TIME__DAYS));
+        if (hours  >= 1) return hours + " " + (hours  == 1 ? Translator.get(TranslationKey.MESSAGES__TIME__HOUR)   : Translator.get(TranslationKey.MESSAGES__TIME__HOURS));
+        if (minutes >= 1) return minutes + " " + (minutes == 1 ? Translator.get(TranslationKey.MESSAGES__TIME__MINUTE) : Translator.get(TranslationKey.MESSAGES__TIME__MINUTES));
+        return Translator.get(TranslationKey.MESSAGES__LOCATION__JUST_NOW);
     }
 
     /**
@@ -175,11 +178,13 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
             if (loc.getWorld() == null) return List.of();
             org.bukkit.block.BlockState state = loc.getBlock().getState();
 
-            // Special case for Jukeboxes since they don't implement InventoryHolder in some Spigot versions
             if (state instanceof org.bukkit.block.Jukebox jukebox) {
                 org.bukkit.inventory.ItemStack record = jukebox.getRecord();
                 if (record != null && !record.getType().isAir()) {
-                    return List.of("§8- 1x " + toHumanReadable(record.getType()).substring(2));
+                    String typeName = toHumanReadable(record.getType()).substring(2);
+                    return List.of(Translator.get(TranslationKey.INVENTORIES__STATS__CONTENTS_ITEM_FORMAT)
+                        .replace("{count}", "1")
+                        .replace("{item}", typeName));
                 } else {
                     return List.of(Translator.get(TranslationKey.MESSAGES__LOCATION__EMPTY_CONTENTS));
                 }
@@ -200,12 +205,15 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
                 List<String> list = new ArrayList<>();
                 int count = 0;
                 for (Map.Entry<Material, Integer> e : itemCounts.entrySet()) {
-                    if (count >= 5) { // Limit to 5 lines of items to avoid giant lore boxes
-                        list.add("§8+ " + (itemCounts.size() - count) + " more...");
+                    if (count >= 5) {
+                        list.add(Translator.get(TranslationKey.INVENTORIES__STATS__CONTENTS_MORE_FORMAT)
+                            .replace("{count}", String.valueOf(itemCounts.size() - count)));
                         break;
                     }
-                    String typeName = toHumanReadable(e.getKey()).substring(2); // strip the §7 color code prefix
-                    list.add("§8- " + e.getValue() + "x " + typeName);
+                    String typeName = toHumanReadable(e.getKey()).substring(2);
+                    list.add(Translator.get(TranslationKey.INVENTORIES__STATS__CONTENTS_ITEM_FORMAT)
+                        .replace("{count}", String.valueOf(e.getValue()))
+                        .replace("{item}", typeName));
                     count++;
                 }
                 return list;

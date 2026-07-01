@@ -1,39 +1,32 @@
-# BlockProt Reloaded — config.yml
-# MySQL / Storage → mysql/mysql.yml   |   Block definitions → blocks.yml
+# BlockProt Reloaded -- config.yml
+# MySQL / Storage -> mysql/mysql.yml   |   Block definitions -> blocks.yml
+# All lockable lists default to empty. Configure via in-game /bp lockables GUI
+# or edit blocks.yml directly. See docs/BLOCK_FAMILY_SYNTAX.md for syntax.
+# Docs: https://github.com/VictorGugug/BlockProt-Reloaded/tree/main/docs
 
-# ── 1. General ───────────────────────────────────────────────────────────────
 language_file: translations_en.yml
 fallback_string: "Unknown translation"
 replace_translations: true
 notify_op_of_updates: false
 localized_command_aliases: true
 excluded_worlds: []
-# Renamed from worlds_config_enabled. Enables per-world protection configuration via worlds.yml.
 per_worlds_config: false
 bedrock_username_prefixes:
-  - "."
-  - "*"
-  - "_"
+- "."
+- "*"
+- "_"
 inactivity_cleanup_days: -1
 
-# ── Auto-reload ───────────────────────────────────────────────────────────────
-# true  (default) — BlockProt watches its config files and reloads when it detects
-#                   a change on disk (config.yml, blocks.yml, lang/*.yml).
-# false           — File watcher disabled. Config will NOT reload on its own;
-#                   use /bp reload after every edit. A notice is logged on startup.
 auto_reload_configs: true
 
-# ── Block format mode ─────────────────────────────────────────────────────────
-# false (default) → blocks.yml is read as a flat list of material names.
-# true            → on startup, flat lists in blocks.yml are auto-converted to
-#                   compact family expressions ([*], [*-CHEST], [-*SHULKERS], etc.).
-#                   A notice is logged to console when conversion runs.
-#                   See docs/BLOCK_FAMILY_SYNTAX.md for the full syntax.
-#                   Note: expressions are always parsed regardless of this flag;
-#                   it only controls the one-time auto-conversion on startup.
+# Controls the output format of blocks.yml when modified via /bp lockables.
+# false (default) -> flat material names (CHEST, FURNACE, ...).
+# true            -> compact family expressions ([*-CHEST], [*], etc.).
+# IMPORTANT: This flag NEVER reads or modifies blocks.yml on startup/reload.
+# blocks.yml is always read as-is. Expressions are parsed regardless of this flag.
+# When all lockable lists are empty, this flag auto-disables to false.
 modern_family_blocks: false
 
-# ── 2. Player & Protection Defaults ──────────────────────────────────────────
 lock_on_place_by_default: true
 public_is_friend_by_default: false
 player_max_locked_block_count: -1
@@ -42,82 +35,54 @@ friend_search_similarity: 0.5
 disable_friend_functionality: false
 redstone_disallowed_by_default: false
 
-# ── 3. Safety & Protection Behavior ──────────────────────────────────────────
 protect_locked_blocks_from_explosions: true
 block_protected_block_piston_movement: true
 clear_protection_on_shulker_break: false
 allow_break_protected_blocks: false
 respect_spawn_protection: true
 
-# ── 4. Pet Protection ────────────────────────────────────────────────────────
-# Renamed from pet_protection. Old pet_protection values are still read as fallback.
-# Master switch for entity protection. Players with blockprot.user.admin always bypass.
 entity_protection:
   enabled: false
   auto_protect_on_tame: true
   menu_item: STICK
   villager_locate_seconds: 6
 
-# ── 4b. Villager Workstation Protection ──────────────────────────────────────
-# Protects a villager linked to a protected workstation (job site block), and
-# the area around that workstation, from interaction/damage/block-break by
-# non-owners. This is independent from entity_protection.enabled above and can
-# be disabled on its own — it is intentionally powerful (it extends block
-# protection into open space around the workstation), so keep the radius small
-# on survival/SMP servers to avoid over-claiming shared areas.
 villager_workstation_protection:
   enabled: true
-  # Horizontal search radius in blocks (each direction). 0-8, default 2.
   radius: 2
-  # Vertical search radius in blocks (each direction). 0-4, default 1.
   vertical_radius: 1
 
-# ── 5. Effects ───────────────────────────────────────────────────────────────
 block_lock_effects: true
 block_lock_sounds: true
 
-# ── 6. Timed Access ──────────────────────────────────────────────────────────
-# Maximum duration (days) for GUI timed access. 0 or negative = no limit.
 timed_access_max_duration_days: 90
 
-# ── 7. WorldEdit Integration ─────────────────────────────────────────────────
-# Auto-locks blocks placed by a WorldEdit paste. Requires WorldEdit/FAWE.
 worldedit_paste_autolock:
   enabled: false
   radius: 24
   max_blocks_per_paste: 5000
   delay_ticks: 20
 
-# ── 8. Owner Notifications (server-wide defaults) ────────────────────────────
-# These are the server-wide default values for owner notifications.
-# Each player can override these individually via /bp settings.
-# notify_on_open   — notify when a friend opens the block
-# notify_on_take   — notify when a friend takes items
-# notify_on_place  — notify when a friend places items
 owner_notifications:
   enabled: true
   notify_on_open: true
   notify_on_take: true
   notify_on_place: true
 
-# ── 9. Menus & Commands ──────────────────────────────────────────────────────
-# true = GUI-only (/bp user, /bp admin). false = all CLI commands active.
 use_menus: false
 
-# ── 10. Protection Expiry ─────────────────────────────────────────────────────
-# Block owners can set an expiry date; block auto-unlocks when it expires.
+lockables_gui_click_to_toggle: false
+
 enable_protection_expiry: false
 expiry_scan_on_startup: true
 
-# ── 12. Raid Detection ───────────────────────────────────────────────────────
-# Monitors explosions near lockable blocks and alerts block owners.
-# Alerts are delivered in-game immediately when the owner is online,
-# or queued and sent as a chat message on next join when offline.
-# The teleport link in the alert requires blockprot.blocks.tp permission.
+world_expiry:
+  enabled: false
+  check_interval_minutes: 10
+  worlds: {}
+
 raid_detection:
   enabled: true
 
-# ── 11. Logging & Backups ─────────────────────────────────────────────────────
-# Logs → plugins/BlockProtReloaded/logs/   Backups → .../backups/
 enable_session_log: true
 enable_backups: true

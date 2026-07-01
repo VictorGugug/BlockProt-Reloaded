@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.tasks;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import org.jetbrains.annotations.NotNull;
@@ -152,11 +153,11 @@ public final class ConfigFileWatcher implements Runnable {
         BlockProt.getFoliaLib().getScheduler().runLaterAsync(() -> {
             long timeSinceLastEvent = System.currentTimeMillis() - lastEventTime.get();
             if (timeSinceLastEvent >= DEBOUNCE_MS - 100) {
+                BlockProtLogger.log("filewatch", "Config changed, reloading...");
                 plugin.getLogger().info(Translator.get(TranslationKey.CONSOLE__CONFIG_CHANGE_DETECTED));
                 new BackupTask(plugin.getDataFolder(), true).run();
                 BlockProt.getFoliaLib().getScheduler().runNextTick(t -> {
                     plugin.reloadConfigAndTranslations();
-                    plugin.getLogger().info(Translator.get(TranslationKey.CONSOLE__CONFIG_RELOADED));
                 });
             }
             reloadScheduled.set(false);

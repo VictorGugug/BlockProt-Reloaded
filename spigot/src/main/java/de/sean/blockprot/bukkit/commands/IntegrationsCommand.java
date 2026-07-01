@@ -46,7 +46,8 @@ public class IntegrationsCommand implements CommandExecutor {
             .toList();
 
         String names = enabledIntegrations.stream()
-            .map(integration -> "§6" + integration.name)
+            .map(integration -> Translator.get(TranslationKey.MESSAGES__INTEGRATIONS__NAME_COLORED)
+                .replace("{name}", integration.name))
             .reduce((left, right) -> left + Translator.get(TranslationKey.MESSAGES__INTEGRATIONS__SEPARATOR) + right)
             .orElse(Translator.get(TranslationKey.MESSAGES__INTEGRATIONS__NONE));
 

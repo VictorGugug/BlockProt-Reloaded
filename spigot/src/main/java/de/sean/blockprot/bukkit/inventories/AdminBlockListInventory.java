@@ -60,9 +60,8 @@ public final class AdminBlockListInventory extends BlockProtInventory {
 
     @Override
     @NotNull String getTranslatedInventoryName() {
-        String title = Translator.get(TranslationKey.INVENTORIES__ADMIN_BLOCK_LIST__TITLE);
-        if (title == null || title.isBlank()) title = "Blocks: {player}";
-        return title.replace("{player}", targetName);
+        return Translator.get(TranslationKey.INVENTORIES__ADMIN_BLOCK_LIST__TITLE)
+            .replace("{player}", targetName);
     }
 
     @Override

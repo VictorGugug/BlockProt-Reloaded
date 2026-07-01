@@ -1,0 +1,231 @@
+package de.sean.blockprot.bukkit.inventories;
+
+import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.config.BlockFamilyParser;
+import de.sean.blockprot.bukkit.config.DefaultConfig;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.*;
+
+public final class AutoDropFamilyInventory extends BlockProtInventory {
+
+    private static final int CONTENT_SLOTS = 45;
+    private static final int SLOT_PREV = 47;
+    private static final int SLOT_NEXT = 49;
+    private static final int SLOT_BACK = 53;
+
+    private record Entry(@Nullable Material material, boolean active, @Nullable String sectionLabel) {
+        static Entry separator(String label) { return new Entry(null, false, label); }
+        static Entry block(Material m, boolean active) { return new Entry(m, active, null); }
+    }
+
+    private BlockFamilyParser.Family currentFamily;
+    private List<Entry> pagedList = List.of();
+    private int cachedPage = 0;
+
+    public AutoDropFamilyInventory() { super(false); }
+
+    @Override int getSize() { return InventoryConstants.sextupletLine; }
+
+    @Override
+    String getTranslatedInventoryName() { return Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__FAMILY_TITLE); }
+
+    @NotNull
+    public Inventory fill(@NotNull Player player, @NotNull BlockFamilyParser.Family family, int page,
+                          @NotNull InventoryState parentState) {
+        this.currentFamily = family;
+        DefaultConfig cfg = BlockProt.getDefaultConfig();
+        Set<Material> autoDropBlocks = cfg.getAutoDropToInventoryBlocks();
+
+        pagedList = buildEntries(family, autoDropBlocks);
+        int totalPages = Math.max(1, (int) Math.ceil(pagedList.size() / (double) CONTENT_SLOTS));
+        int safePage = Math.max(0, Math.min(page, totalPages - 1));
+        cachedPage = safePage;
+        int start = safePage * CONTENT_SLOTS;
+        int end = Math.min(start + CONTENT_SLOTS, pagedList.size());
+
+        String title = Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__FAMILY_TITLE)
+            .replace("{family}", friendlyName(family.name()));
+        inventory = createInventory(title);
+
+        for (int i = start; i < end; i++) {
+            Entry e = pagedList.get(i);
+            int slot = i - start;
+            if (e.material() != null) {
+                inventory.setItem(slot, blockItem(e.material(), e.active()));
+            } else {
+                inventory.setItem(slot, separatorItem(e.sectionLabel() != null ? e.sectionLabel() : ""));
+            }
+        }
+
+        if (safePage > 0) setItemStack(SLOT_PREV, Material.ARROW, Translator.get(TranslationKey.INVENTORIES__LAST_PAGE));
+        if (safePage < totalPages - 1) setItemStack(SLOT_NEXT, Material.ARROW, Translator.get(TranslationKey.INVENTORIES__NEXT_PAGE));
+
+        ItemStack backStack = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta backMeta = backStack.getItemMeta();
+        if (backMeta != null) {
+            backMeta.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__BACK)).color(NamedTextColor.RED));
+            backStack.setItemMeta(backMeta);
+        }
+        inventory.setItem(SLOT_BACK, backStack);
+
+        return inventory;
+    }
+
+    @Override
+    public void onClick(@NotNull InventoryClickEvent event, @NotNull InventoryState state) {
+        if (!(event.getWhoClicked() instanceof Player player)) return;
+        event.setCancelled(true);
+        int slot = event.getRawSlot();
+        if (slot < 0 || slot >= getSize()) return;
+
+        if (slot == SLOT_BACK) {
+            player.openInventory(new AutoDropInventory().fill(player));
+            return;
+        }
+
+        if (slot == SLOT_PREV && cachedPage > 0) {
+            player.openInventory(fill(player, currentFamily, cachedPage - 1, state));
+            return;
+        }
+
+        int totalPages = Math.max(1, (int) Math.ceil(pagedList.size() / (double) CONTENT_SLOTS));
+        if (slot == SLOT_NEXT && cachedPage < totalPages - 1) {
+            player.openInventory(fill(player, currentFamily, cachedPage + 1, state));
+            return;
+        }
+
+        if (slot < CONTENT_SLOTS) {
+            int absIdx = cachedPage * CONTENT_SLOTS + slot;
+            if (absIdx < pagedList.size()) {
+                Entry e = pagedList.get(absIdx);
+                if (e.material() != null) {
+                    BlockProt.getDefaultConfig().toggleAutoDropMaterial(e.material(), player);
+                    player.openInventory(fill(player, currentFamily, cachedPage, state));
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {}
+
+    @NotNull
+    private static List<Entry> buildEntries(@NotNull BlockFamilyParser.Family family,
+                                            @NotNull Set<Material> autoDropBlocks) {
+        Map<BlockFamilyParser.SubFamily, List<Material>> grouped = new LinkedHashMap<>();
+        List<Material> ungrouped = new ArrayList<>();
+
+        for (Material m : BlockFamilyParser.getFamilyMembers(family)) {
+            BlockFamilyParser.SubFamily sf = BlockFamilyParser.subFamilyOf(m);
+            if (sf != null && sf.ownerFamily == family) {
+                grouped.computeIfAbsent(sf, k -> new ArrayList<>()).add(m);
+            } else {
+                ungrouped.add(m);
+            }
+        }
+
+        for (List<Material> list : grouped.values()) {
+            list.sort(Comparator.comparing(Material::name));
+        }
+        ungrouped.sort(Comparator.comparing(Material::name));
+
+        List<Entry> result = new ArrayList<>();
+        for (Map.Entry<BlockFamilyParser.SubFamily, List<Material>> g : grouped.entrySet()) {
+            if (g.getValue().isEmpty()) continue;
+            result.add(Entry.separator(friendlyName(g.getKey().tag)));
+            for (Material m : g.getValue()) {
+                result.add(Entry.block(m, autoDropBlocks.contains(m)));
+            }
+        }
+        if (!ungrouped.isEmpty()) {
+            result.add(Entry.separator(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__MISC)));
+            for (Material m : ungrouped) {
+                result.add(Entry.block(m, autoDropBlocks.contains(m)));
+            }
+        }
+        if (!result.isEmpty() && result.get(0).material() == null) result.remove(0);
+        return result;
+    }
+
+    @NotNull
+    private static ItemStack separatorItem(@NotNull String label) {
+        ItemStack sep = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = sep.getItemMeta();
+        if (meta != null) {
+            meta.displayName(Component.text(label).color(NamedTextColor.AQUA));
+            meta.lore(List.of());
+            sep.setItemMeta(meta);
+        }
+        return sep;
+    }
+
+    @NotNull
+    private static ItemStack blockItem(@NotNull Material mat, boolean active) {
+        Material display = resolveDisplayMaterial(mat);
+        ItemStack stack;
+        try {
+            stack = new ItemStack(display, 1);
+            if (stack.getType() == Material.AIR) stack = new ItemStack(Material.PAPER, 1);
+        } catch (Exception e) {
+            stack = new ItemStack(Material.PAPER, 1);
+        }
+        ItemMeta meta = stack.getItemMeta();
+        if (meta != null) {
+            NamedTextColor nameColor = active ? NamedTextColor.WHITE : NamedTextColor.DARK_GRAY;
+            String suffix = active ? "" : " [OFF]";
+            meta.displayName(Component.text(friendlyName(mat.name()) + suffix).color(nameColor));
+            List<Component> lore = new ArrayList<>();
+            lore.add(Component.text(mat.name()).color(NamedTextColor.DARK_GRAY));
+            String status = active
+                ? Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__STATUS_ACTIVE)
+                : Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__STATUS_INACTIVE);
+            lore.add(Component.text(status).color(active ? NamedTextColor.GREEN : NamedTextColor.RED));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__LEFT_CLICK_HINT)).color(NamedTextColor.GREEN));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__RIGHT_CLICK_HINT)).color(NamedTextColor.RED));
+            meta.lore(lore);
+            stack.setItemMeta(meta);
+        }
+        return stack;
+    }
+
+    @NotNull
+    private static Material resolveDisplayMaterial(@NotNull Material mat) {
+        String name = mat.name();
+        if (name.equals("WATER_CAULDRON") || name.equals("LAVA_CAULDRON")
+                || name.equals("POWDER_SNOW_CAULDRON")) {
+            return Material.CAULDRON;
+        }
+        if (name.endsWith("_WALL_SIGN") && !name.endsWith("_HANGING_SIGN")) {
+            Material m = Material.matchMaterial(name.replace("_WALL_SIGN", "_SIGN"));
+            return m != null ? m : Material.OAK_SIGN;
+        }
+        if (name.endsWith("_WALL_HANGING_SIGN")) {
+            Material m = Material.matchMaterial(name.replace("_WALL_HANGING_SIGN", "_HANGING_SIGN"));
+            return m != null ? m : Material.OAK_HANGING_SIGN;
+        }
+        return mat;
+    }
+
+    @NotNull
+    private static String friendlyName(@NotNull String name) {
+        String[] words = name.toLowerCase().split("_");
+        StringBuilder sb = new StringBuilder();
+        for (String w : words) {
+            if (!w.isEmpty()) sb.append(Character.toUpperCase(w.charAt(0))).append(w.substring(1)).append(' ');
+        }
+        return sb.toString().trim();
+    }
+}

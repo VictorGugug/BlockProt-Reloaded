@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.*;
 import de.sean.blockprot.bukkit.events.BlockAccessEvent;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
+import de.sean.blockprot.bukkit.nbt.StatHandler;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -87,9 +88,17 @@ public class InteractEventListener implements Listener {
             } else if (!accessEvent.shouldBypassProtections()) {
                 BlockNBTHandler handler = new BlockNBTHandler(event.getClickedBlock());
                 if (BlockProt.getDefaultConfig().isProtectionExpiryEnabled() && handler.isExpired()) {
+                    String ownerUuid = handler.getOwner();
                     handler.clear();
                     handler.applyToOtherContainer();
                     HopperEventListener.invalidate(event.getClickedBlock());
+                    if (ownerUuid != null && !ownerUuid.isEmpty() && event.getClickedBlock() != null) {
+                        try {
+                            StatHandler.removeContainerByUuid(
+                                java.util.UUID.fromString(ownerUuid),
+                                event.getClickedBlock().getLocation().clone());
+                        } catch (IllegalArgumentException ignored) {}
+                    }
                     event.setCancelled(false);
                     return;
                 }

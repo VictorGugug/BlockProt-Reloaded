@@ -163,16 +163,6 @@ public final class Translator {
                 + " (" + missingInActive.size() + "): "
                 + String.join(", ", missingInActive));
         }
-
-        int total = missingInBoth.size() + missingInActive.size();
-        if (total > 0) {
-            BlockProt.getInstance().getLogger().info(
-                Translator.get(TranslationKey.CONSOLE__TRANSLATIONS_INCOMPLETE)
-                    .replace("{total}", String.valueOf(total))
-                    .replace("{file}", langFile)
-                    .replace("{fallback}", String.valueOf(missingInActive.size()))
-                    .replace("{missing}", String.valueOf(missingInBoth.size())));
-        }
     }
 
     private static boolean containsMiniMessage(@NotNull String text) {

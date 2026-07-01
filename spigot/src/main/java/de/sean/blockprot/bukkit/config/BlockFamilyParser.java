@@ -177,8 +177,11 @@ public final class BlockFamilyParser {
     }
 
     private static boolean isChestMaterial(@NotNull String n) {
-        return n.equals("CHEST") || n.equals("TRAPPED_CHEST") || n.equals("ENDER_CHEST")
-            || n.contains("COPPER_CHEST") || n.contains("COPPER_TRAPPED_CHEST");
+        if (n.equals("CHEST") || n.equals("TRAPPED_CHEST") || n.equals("ENDER_CHEST")) return true;
+        if (n.contains("COPPER")) {
+            return n.endsWith("_CHEST") || n.endsWith("_TRAPPED_CHEST");
+        }
+        return false;
     }
 
     private static boolean isFurnaceMaterial(@NotNull String n) {
@@ -242,12 +245,20 @@ public final class BlockFamilyParser {
         return SUBFAMILY_MEMBERS.getOrDefault(subFamily, Collections.emptySet());
     }
 
+    @Nullable
+    public static SubFamily subFamilyOf(@NotNull Material material) {
+        for (Map.Entry<SubFamily, Set<Material>> e : SUBFAMILY_MEMBERS.entrySet()) {
+            if (e.getValue().contains(material)) return e.getKey();
+        }
+        return null;
+    }
+
     @NotNull
     public static Set<Material> parse(@Nullable Object raw, @NotNull Family family) {
-        if (raw == null) return Collections.emptySet();
+        if (raw == null) return new LinkedHashSet<>();
 
         if (raw instanceof List<?> list) {
-            if (list.isEmpty()) return Collections.emptySet();
+            if (list.isEmpty()) return new LinkedHashSet<>();
             Set<Material> result = new LinkedHashSet<>();
             for (Object o : list) {
                 if (o instanceof String s) {
@@ -265,12 +276,13 @@ public final class BlockFamilyParser {
 
         if (raw instanceof String s) {
             String trimmed = s.trim();
-            if (isFamilyExpression(trimmed)) return parseFamilyExpression(trimmed, family);
+            if (isFamilyExpression(trimmed)) return new LinkedHashSet<>(parseFamilyExpression(trimmed, family));
             Material m = Material.matchMaterial(trimmed);
-            return m != null ? Set.of(m) : Collections.emptySet();
+            if (m != null) return new LinkedHashSet<>(Set.of(m));
+            return new LinkedHashSet<>();
         }
 
-        return Collections.emptySet();
+        return new LinkedHashSet<>();
     }
 
     public static boolean isFamilyExpression(@NotNull String s) {
@@ -295,7 +307,7 @@ public final class BlockFamilyParser {
     @NotNull
     public static Set<Material> parseFamilyExpression(@NotNull String expr, @NotNull Family family) {
         String inner = expr.substring(1, expr.length() - 1).trim();
-        if (inner.isEmpty()) return Collections.emptySet();
+        if (inner.isEmpty()) return new LinkedHashSet<>();
 
         Set<Material> allMembers = FAMILY_MEMBERS.getOrDefault(family, Collections.emptySet());
 
@@ -585,7 +597,7 @@ public final class BlockFamilyParser {
     @NotNull
     public static Set<Material> parseFamilyExpressionSilent(@NotNull String expr, @NotNull Family family) {
         String inner = expr.substring(1, expr.length() - 1).trim();
-        if (inner.isEmpty()) return Collections.emptySet();
+        if (inner.isEmpty()) return new LinkedHashSet<>();
 
         Set<Material> allMembers = FAMILY_MEMBERS.getOrDefault(family, Collections.emptySet());
         List<String>  tokens     = new ArrayList<>(Arrays.asList(inner.split("\\s+")));

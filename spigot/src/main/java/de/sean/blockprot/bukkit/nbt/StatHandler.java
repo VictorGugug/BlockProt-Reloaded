@@ -210,6 +210,25 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
     }
 
     /**
+     * Removes given block from the player's statistic by UUID, while also decrementing
+     * the global block count. Works for both online and offline players.
+     *
+     * <p>Must be called from the main server thread.
+     *
+     * @param uuid  the owner UUID (online or offline)
+     * @param block the location to remove
+     */
+    public static void removeContainerByUuid(@NotNull final UUID uuid, @NotNull final Location block) {
+        PlayerBlocksStatistic containersStatistic = new PlayerBlocksStatistic();
+        getStatsForPlayer(uuid.toString()).ifPresent(h -> h.updateStatistic(containersStatistic));
+        containersStatistic.remove(block);
+        BlockCountStatistic countStatistic = new BlockCountStatistic();
+        StatHandler.getStatistic(countStatistic);
+        countStatistic.decrement();
+        markDirty();
+    }
+
+    /**
      * Adds given block to given player's block statistic by UUID, while also incrementing the
      * global block count. Works for both online and offline players.
      *

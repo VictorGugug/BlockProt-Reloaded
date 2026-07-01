@@ -109,7 +109,7 @@ public enum BlockAccessFlag {
      */
     @NotNull
     public static List<String> accumulateAccessFlagLore(@NotNull final EnumSet<BlockAccessFlag> flags) {
-        if (flags.isEmpty()) return Collections.singletonList("No access");
+        if (flags.isEmpty()) return Collections.singletonList(Translator.get(TranslationKey.INVENTORIES__FRIENDS__PERMISSION__NONE));
         ArrayList<String> ret = new ArrayList<>();
         StringBuilder builder = new StringBuilder();
         for (BlockAccessFlag flag : flags) {

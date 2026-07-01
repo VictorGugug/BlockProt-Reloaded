@@ -185,9 +185,11 @@ public class BlockInfoInventory extends BlockProtInventory {
                 String itemName = frameItem.getType() == Material.AIR
                     ? "(empty)"
                     : frameItem.getType().name().toLowerCase().replace('_', ' ');
-                frameLore = "\u00a77Linked Item Frame: " + itemName;
+                frameLore = Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__LINKED_FRAME)
+                    .replace("{item}", itemName);
             } else {
-                frameLore = "\u00a77Linked Item Frame: " + linkedFrameUuid.substring(0, 8) + "...";
+                frameLore = Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__LINKED_FRAME)
+                    .replace("{item}", linkedFrameUuid.substring(0, 8) + "...");
             }
             ItemStack signSlot = new ItemStack(Material.OAK_SIGN, 1);
             org.bukkit.inventory.meta.ItemMeta signMeta = signSlot.getItemMeta();

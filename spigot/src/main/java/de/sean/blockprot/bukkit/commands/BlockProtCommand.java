@@ -70,6 +70,7 @@ public final class BlockProtCommand implements TabExecutor {
         cli("protdel",      new WorldProtDeleteCommand());
 
         admin("lockables",  new LockablesCommand());
+        admin("recommended", new RecommendedCommand());
     }
 
     private static void gui(String name, CommandExecutor exec) {

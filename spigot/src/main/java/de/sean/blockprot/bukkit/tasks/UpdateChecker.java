@@ -24,6 +24,8 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.util.SemanticVersion;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -161,20 +163,20 @@ public final class UpdateChecker implements Runnable {
         if (this.recipients != null && !this.recipients.isEmpty()) {
             String message;
             if (isOutdated) {
-                message = "BlockProt Reloaded v" + currentVersion
-                    + " is installed, but v" + latestVersion + " is available.";
+                message = Translator.get(TranslationKey.MESSAGES__UPDATE__OUTDATED)
+                    .replace("{version}", latestVersion.toString());
             } else if (latestVersion.compareTo(currentVersion) < 0) {
-                message = "BlockProt Reloaded is running v" + currentVersion
-                    + " (ahead of the latest release v" + latestVersion + ")";
+                message = Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD)
+                    .replace("{version}", latestVersion.toString());
             } else {
-                message = "BlockProt Reloaded is up to date (v" + currentVersion + ")";
+                message = Translator.get(TranslationKey.MESSAGES__UPDATE__UP_TO_DATE);
             }
             var comp = Component.text(message);
             if (isOutdated) {
                 comp = comp.color(NamedTextColor.YELLOW)
                     .clickEvent(ClickEvent.openUrl(RELEASE_URL))
                     .hoverEvent(HoverEvent.showText(
-                        Component.text("Click to visit the GitHub Releases page")));
+                        Component.text(Translator.get(TranslationKey.MESSAGES__UPDATE__CLICK_HINT))));
             }
             for (Player player : recipients) {
                 player.sendMessage(comp);
@@ -182,17 +184,16 @@ public final class UpdateChecker implements Runnable {
         } else {
             if (isOutdated) {
                 BlockProt.getInstance().getLogger().warning(
-                    "BlockProt Reloaded v" + currentVersion
-                        + " — update available: v" + latestVersion
-                        + " | " + RELEASE_URL);
+                    Translator.get(TranslationKey.CONSOLE__UPDATE__AVAILABLE)
+                        .replace("{version}", latestVersion.toString())
+                    + " | " + RELEASE_URL);
             } else if (latestVersion.compareTo(currentVersion) < 0) {
-                // Running ahead of latest release — do not warn, just log.
                 BlockProtLogger.log("update-checker",
-                    "BlockProt Reloaded v" + currentVersion
-                        + " is ahead of the latest release (v" + latestVersion + ").");
+                    Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD)
+                        .replace("{version}", latestVersion.toString()));
             } else {
                 BlockProtLogger.log("update-checker",
-                    "BlockProt Reloaded is up to date (v" + currentVersion + ")");
+                    Translator.get(TranslationKey.CONSOLE__UPDATE__UP_TO_DATE));
             }
         }
     }
