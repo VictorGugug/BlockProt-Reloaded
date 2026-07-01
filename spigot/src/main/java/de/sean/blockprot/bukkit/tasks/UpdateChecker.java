@@ -153,8 +153,7 @@ public final class UpdateChecker implements Runnable {
             UpdateChecker.latestVersion = best;
             this.sendMessage(currentVersion, best);
 
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) { }
     }
 
     private void sendMessage(SemanticVersion currentVersion, SemanticVersion latestVersion) {

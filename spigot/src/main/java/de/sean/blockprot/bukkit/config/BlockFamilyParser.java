@@ -54,7 +54,7 @@ import java.util.*;
  * {@code NAME} and {@code -NAME} tokens are validated against the family of the config key.
  * A material not belonging to the current family is rejected with a console warning and discarded.
  *
- * @see <a href="docs/BLOCK_FAMILY_SYNTAX.md">BLOCK_FAMILY_SYNTAX.md</a>
+ * @see <a href="docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md">BLOCK_FAMILY_SYNTAX.md</a>
  */
 public final class BlockFamilyParser {
 

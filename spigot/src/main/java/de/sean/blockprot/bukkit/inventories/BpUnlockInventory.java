@@ -128,8 +128,7 @@ public final class BpUnlockInventory extends BlockProtInventory {
                 InventoryState.set(player.getUniqueId(), blockState);
                 BlockInspectContentsInventory viewer = new BlockInspectContentsInventory(player);
                 player.openInventory(viewer.fill());
-            } catch (RuntimeException ignored) {
-            }
+            } catch (RuntimeException ignored) { }
 
         } else if (event.getClick() == ClickType.RIGHT || event.getClick() == ClickType.SHIFT_RIGHT) {
             BlockNBTHandler handler;

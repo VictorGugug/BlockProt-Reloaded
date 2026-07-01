@@ -307,29 +307,40 @@ public final class BlockProt extends JavaPlugin {
 
         foliaLib.getScheduler().runAsync(task -> populateProtectedBlockCache());
 
-        // First-run guide in session log and console
-        if (isFirstStart()) {
-            BlockProtLogger.log("startup", Translator.get(TranslationKey.CONSOLE__FIRST_START__TITLE));
-            BlockProtLogger.log("startup", Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP1)
-                .replace("{command}", "/bp lockables"));
-            BlockProtLogger.log("startup", Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP2)
-                .replace("{file}", "blocks.yml"));
-            BlockProtLogger.log("startup", Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP3)
-                .replace("{url}", "https://github.com/VictorGugug/BlockProt-Reloaded"));
-            BlockProtLogger.log("startup", Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP4)
-                .replace("{command}", "/bp recommended"));
-
-            getLogger().info("--- BlockProt Reloaded First Start Guide ---");
-            getLogger().info("Use /bp lockables to configure locked blocks in-game.");
-            getLogger().info("Documentation: https://github.com/VictorGugug/BlockProt-Reloaded");
-            getLogger().info("Use /bp recommended in console for a recommended blocks.yml.");
-            getLogger().info("----------------------------------------------");
-            markFirstStartDone();
-        }
-
         BlockProtConsole.bootLast(
             Translator.get(TranslationKey.CONSOLE__BOOT_STARTUP_TIME),
             "§f" + java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() + " ms");
+
+        // First-run guide: buffered so it prints directly under the banner, before the boot checklist.
+        if (isFirstStart()) {
+            String guideHeader = Translator.get(TranslationKey.CONSOLE__FIRST_START__HEADER);
+            String guideTitle  = Translator.get(TranslationKey.CONSOLE__FIRST_START__TITLE);
+            String guideStep1  = Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP1)
+                .replace("{command}", "/bp lockables");
+            String guideStep2  = Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP2)
+                .replace("{file}", "blocks.yml");
+            String guideStep3  = Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP3)
+                .replace("{url}", "https://github.com/VictorGugug/BlockProt-Reloaded");
+            String guideStep4  = Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP4)
+                .replace("{command}", "/bp recommended");
+            String guideFooter = Translator.get(TranslationKey.CONSOLE__FIRST_START__FOOTER);
+
+            BlockProtLogger.log("startup", guideTitle);
+            BlockProtLogger.log("startup", guideStep1);
+            BlockProtLogger.log("startup", guideStep2);
+            BlockProtLogger.log("startup", guideStep3);
+            BlockProtLogger.log("startup", guideStep4);
+
+            BlockProtConsole.guide(guideHeader);
+            BlockProtConsole.guide(guideTitle);
+            BlockProtConsole.guide(guideStep1);
+            BlockProtConsole.guide(guideStep2);
+            BlockProtConsole.guide(guideStep3);
+            BlockProtConsole.guide(guideStep4);
+            BlockProtConsole.guide(guideFooter);
+            markFirstStartDone();
+        }
+
         BlockProtConsole.printStartupBanner(version);
 
         new BlockProtAPI(this);
@@ -571,7 +582,10 @@ public final class BlockProt extends JavaPlugin {
             }
         }
 
-        // Clean up any "[ ]" or "[]" string artifacts from old broken blocks.yml
+        // Clean up any placeholder entries (blank lines, "[]", "[ ]") that ended up
+        // mixed in with real material names (e.g. after a broken merge). A list made
+        // up entirely of placeholders is left untouched: that is the shipped hint
+        // format telling the admin where to add block names, not corruption.
         boolean cleaned = false;
         String[] listKeys = {"lockable_tile_entities", "lockable_shulker_boxes",
             "lockable_blocks", "lockable_doors", "lockable_entities",
@@ -580,18 +594,24 @@ public final class BlockProt extends JavaPlugin {
             if (!diskConfig.contains(key)) continue;
             List<?> raw = diskConfig.getList(key);
             if (raw == null || raw.isEmpty()) continue;
+
+            boolean hasRealEntry = false;
+            for (Object o : raw) {
+                if (isPlaceholderEntry(o)) continue;
+                hasRealEntry = true;
+                break;
+            }
+            if (!hasRealEntry) continue;
+
             List<Object> filtered = new ArrayList<>();
             for (Object o : raw) {
-                if (o instanceof String s) {
-                    String t = s.trim();
-                    if (t.equals("[]") || t.equals("[ ]")) continue;
-                }
+                if (isPlaceholderEntry(o)) continue;
                 filtered.add(o);
             }
             if (filtered.size() != raw.size()) {
                 diskConfig.set(key, filtered);
                 cleaned = true;
-                BlockProtLogger.log("blocks-clean", "Removed orphan '[]' strings from " + key);
+                BlockProtLogger.log("blocks-clean", "Removed placeholder entries from " + key);
             }
         }
 
@@ -606,6 +626,19 @@ public final class BlockProt extends JavaPlugin {
         } catch (IOException e) {
             BlockProtLogger.warn("Failed to save blocks.yml after merge: " + e.getMessage());
         }
+    }
+
+    /**
+     * True for a blocks.yml list entry that carries no material name: a YAML null
+     * (blank template line), a blank string, or the legacy "[]" / "[ ]" hint text.
+     */
+    private static boolean isPlaceholderEntry(@Nullable Object o) {
+        if (o == null) return true;
+        if (o instanceof String s) {
+            String t = s.trim();
+            return t.isEmpty() || t.equals("[]") || t.equals("[ ]");
+        }
+        return false;
     }
 
     /**
@@ -708,7 +741,7 @@ public final class BlockProt extends JavaPlugin {
                     String value = trimmed.startsWith("- ") ? trimmed.substring(2).trim() : trimmed;
                     value = value.replaceAll("^\"|\"$", "");
                     value = value.replaceAll("^'|\'$", "");
-                    if (!value.isEmpty() && !value.equals("[]")) {
+                    if (!value.isEmpty() && !value.equals("[]") && !value.equals("-")) {
                         recoveredValues.add(value);
                     }
                 }
@@ -783,7 +816,11 @@ public final class BlockProt extends JavaPlugin {
             if (raw instanceof List<?> list && !list.isEmpty()) {
                 for (Object o : list) {
                     if (o instanceof String s) {
-                        boolean isExpr = BlockFamilyParser.isFamilyExpression(s.trim());
+                        String trimmed = s.trim();
+                        // Shipped "[]" placeholders hint at the entry format but carry
+                        // no material; they never trigger or block a format conversion.
+                        if (trimmed.equals("[]") || trimmed.equals("[ ]")) continue;
+                        boolean isExpr = BlockFamilyParser.isFamilyExpression(trimmed);
                         if (isExpr != modern) { needsConversion = true; break; }
                     }
                 }
@@ -797,6 +834,20 @@ public final class BlockProt extends JavaPlugin {
             String key = entry.getKey();
             BlockFamilyParser.Family family = entry.getValue();
             if (!diskConfig.contains(key)) continue;
+
+            // A list made up entirely of placeholders has nothing to convert;
+            // leave it as the shipped hint format instead of collapsing it to [].
+            Object rawValue = diskConfig.get(key);
+            if (rawValue instanceof List<?> rawList && !rawList.isEmpty()) {
+                boolean onlyPlaceholders = true;
+                for (Object o : rawList) {
+                    if (isPlaceholderEntry(o)) continue;
+                    onlyPlaceholders = false;
+                    break;
+                }
+                if (onlyPlaceholders) continue;
+            }
+
             Set<Material> materials = BlockFamilyParser.parse(diskConfig.get(key), family);
             if (modern) {
                 String expr = BlockFamilyParser.toFamilyExpression(materials, family);
@@ -970,12 +1021,19 @@ public final class BlockProt extends JavaPlugin {
             pendingMigrationLog = legacyName;
             try {
                 // This preserves any files the new plugin already created (e.g. defaults).
+                // config.yml is excluded here and rebuilt below from the current jar
+                // template, so migrated servers get the up-to-date structure and
+                // comments instead of a raw copy of the old file.
                 copyDirectoryContents(legacyFolder.toPath(), this.getDataFolder().toPath());
 
-                // Additionally merge the legacy config.yml into the new one key-by-key
-                // so that custom values the admin set are preserved even if the new
-                // template has a different structure.
-                mergeYamlUserValues(
+                // Write the current config.yml template, then overlay every value
+                // found in the legacy config.yml on top of it. This preserves the
+                // admin's settings, including old-named keys and lockable block
+                // lists still embedded in config.yml, while keeping the new
+                // structure. Downstream cleanLegacyConfigKeys() and
+                // migrateOldLockableListsFromConfigYml() finish the conversion.
+                this.saveResource("config.yml", true);
+                applyLegacyConfigValues(
                     new File(legacyFolder, "config.yml"),
                     new File(this.getDataFolder(), "config.yml")
                 );
@@ -994,11 +1052,34 @@ public final class BlockProt extends JavaPlugin {
 
                 Files.createFile(legacyFolder.toPath().resolve(".migrated"));
                 pendingMigrationSuccess = true;
+                // A migrated install is not a fresh install; skip the first-start guide.
+                markFirstStartDone();
             } catch (IOException e) {
                 pendingMigrationError = e.getMessage();
             }
             break;
         }
+    }
+
+    /**
+     * Overlays every scalar value found in a legacy config.yml onto a freshly
+     * written new-format config.yml, overwriting matching keys and adding
+     * keys the new template does not have (old-named keys, embedded lockable
+     * block lists). The new file's structure and comments are kept; only
+     * values change. cleanLegacyConfigKeys() and migrateOldLockableListsFromConfigYml()
+     * finish the conversion afterward.
+     */
+    private static void applyLegacyConfigValues(@NotNull File legacySrc, @NotNull File freshDst) throws IOException {
+        if (!legacySrc.exists() || !freshDst.exists()) return;
+        YamlConfiguration legacyCfg = YamlConfiguration.loadConfiguration(legacySrc);
+        YamlConfiguration freshCfg  = YamlConfiguration.loadConfiguration(freshDst);
+        boolean changed = false;
+        for (String key : legacyCfg.getKeys(true)) {
+            if (legacyCfg.isConfigurationSection(key)) continue;
+            freshCfg.set(key, legacyCfg.get(key));
+            changed = true;
+        }
+        if (changed) freshCfg.save(freshDst);
     }
 
     private static void mergeYamlUserValues(@NotNull File src, @NotNull File dst) throws IOException {
@@ -1152,6 +1233,9 @@ public final class BlockProt extends JavaPlugin {
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 // Never copy the migration marker itself.
                 if (file.getFileName().toString().equals(".migrated")) return FileVisitResult.CONTINUE;
+                // config.yml is rebuilt separately in migrateFromLegacyFolders() from the
+                // current jar template with legacy values overlaid, not copied raw.
+                if (src.relativize(file).toString().equals("config.yml")) return FileVisitResult.CONTINUE;
                 Path target = dst.resolve(src.relativize(file));
                 if (!Files.exists(target)) {
                     Files.copy(file, target, StandardCopyOption.COPY_ATTRIBUTES);

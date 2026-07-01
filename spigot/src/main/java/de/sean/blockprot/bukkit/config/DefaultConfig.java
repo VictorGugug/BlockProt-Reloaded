@@ -659,6 +659,24 @@ public final class DefaultConfig extends BlockProtConfig {
         "auto_drop_to_inventory"
     );
 
+    private static final List<String> LOCKABLE_LIST_KEYS = List.of(
+        "lockable_tile_entities", "lockable_shulker_boxes",
+        "lockable_blocks", "lockable_doors", "lockable_entities"
+    );
+
+    /**
+     * Header shared by both blocks.yml generation paths, so the comment text and the
+     * referenced doc path never drift apart from each other or from the shipped resource.
+     */
+    private static final List<String> BLOCKS_HEADER = List.of(
+        "# BlockProt Reloaded -- blocks.yml",
+        "# Add block or material names below each list, one per line, replacing the blank lines.",
+        "# Run /bp recommended for a ready-made starting selection instead of editing by hand.",
+        "# Format: flat names (CHEST) or family expressions ([*-CHEST]).",
+        "# See docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md for full syntax.",
+        "# This file is NEVER modified on startup/reload. Only GUI toggles write here."
+    );
+
     /**
      * Returns a new YamlConfiguration with all keys from the source, but
      * with top-level keys arranged in BLOCKS_YML_KEY_ORDER. Extra keys
@@ -711,23 +729,17 @@ public final class DefaultConfig extends BlockProtConfig {
      * Prepends the header comments to the blocks.yml file if missing.
      * Should be called after save().
      */
-    private void prependBlocksHeader(@NotNull File file) throws IOException {
+    public static void prependBlocksHeader(@NotNull File file) throws IOException {
         List<String> existingLines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
-        if (!existingLines.isEmpty() && existingLines.get(0).equals("# BlockProt Reloaded -- blocks.yml")) {
+        if (!existingLines.isEmpty() && existingLines.get(0).equals(BLOCKS_HEADER.get(0))) {
             return;
         }
-        List<String> header = List.of(
-            "# BlockProt Reloaded -- blocks.yml",
-            "# All lists are empty by default. Configure via /bp lockables GUI or edit here.",
-            "# Format: flat names (CHEST) or family expressions ([*-CHEST]).",
-            "# See docs/BLOCK_FAMILY_SYNTAX.md for full syntax.",
-            "# This file is NEVER modified on startup/reload. Only GUI toggles write here."
-        );
-        List<String> newLines = new ArrayList<>(header);
+        List<String> newLines = new ArrayList<>(BLOCKS_HEADER);
         newLines.add("");
+        int skipLimit = BLOCKS_HEADER.size() + 1;
         int skipCount = 0;
         for (String line : existingLines) {
-            if (line.startsWith("# BlockProt") || (line.isEmpty() && skipCount < 6)) {
+            if (line.startsWith("# BlockProt") || (line.isEmpty() && skipCount < skipLimit)) {
                 skipCount++;
                 continue;
             }
@@ -745,10 +757,18 @@ public final class DefaultConfig extends BlockProtConfig {
         if (!isModernFamilyBlocks()) return;
         if (blocksConfig == null) return;
         boolean allEmpty = true;
-        for (String key : List.of("lockable_tile_entities", "lockable_shulker_boxes",
-                                  "lockable_blocks", "lockable_doors", "lockable_entities")) {
+        outer:
+        for (String key : LOCKABLE_LIST_KEYS) {
             List<?> list = blocksConfig.getList(key);
-            if (list != null && !list.isEmpty()) { allEmpty = false; break; }
+            if (list == null) continue;
+            for (Object o : list) {
+                // Blank template placeholders (null or empty string) carry no material
+                // and do not count as configured content.
+                if (o instanceof String s && s.isBlank()) continue;
+                if (o == null) continue;
+                allEmpty = false;
+                break outer;
+            }
         }
         if (allEmpty) {
             File configFile = de.sean.blockprot.bukkit.BlockProt.getInstance().getDataFolder().toPath()
@@ -1081,21 +1101,13 @@ public final class DefaultConfig extends BlockProtConfig {
      * Used when the file does not exist yet.
      */
     private void createBlocksFileWithHeader(@NotNull File blocksFile) throws IOException {
-        List<String> header = List.of(
-            "# BlockProt Reloaded -- blocks.yml",
-            "# All lists are empty by default. Configure via /bp lockables GUI or edit here.",
-            "# Format: flat names (CHEST) or family expressions ([*-CHEST]).",
-            "# See docs/BLOCK_FAMILY_SYNTAX.md for full syntax.",
-            "# This file is NEVER modified on startup/reload. Only GUI toggles write here."
-        );
-        List<String> lines = new ArrayList<>();
-        lines.addAll(header);
+        List<String> lines = new ArrayList<>(BLOCKS_HEADER);
         lines.add("");
-        lines.add("lockable_tile_entities: []");
-        lines.add("lockable_shulker_boxes: []");
-        lines.add("lockable_blocks: []");
-        lines.add("lockable_doors: []");
-        lines.add("lockable_entities: []");
+        for (String key : LOCKABLE_LIST_KEYS) {
+            lines.add(key + ":");
+            lines.add("-");
+            lines.add("-");
+        }
         lines.add("");
         lines.add("auto_drop_to_inventory:");
         lines.add("  enabled: true");

@@ -221,8 +221,7 @@ public final class AuditInventory extends BlockProtInventory {
                     applyOwnerProfile(skullMeta, profile);
                     NamespacedKey key = new NamespacedKey(BlockProt.getInstance(), "audit_player_uuid");
                     skullMeta.getPersistentDataContainer().set(key, PersistentDataType.STRING, entry.playerUuid());
-                } catch (Exception ignored) {
-                }
+                } catch (Exception ignored) { }
 
                 String displayName;
                 List<net.kyori.adventure.text.Component> lore = new ArrayList<>();

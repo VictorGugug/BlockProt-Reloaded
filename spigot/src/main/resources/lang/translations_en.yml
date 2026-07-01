@@ -1,4 +1,4 @@
-# BlockProt Reloaded — translations_en.yml
+# BlockProt Reloaded - translations_en.yml
 # Reference English translation file.
 locale: en
 enabled: "§aEnabled"
@@ -311,12 +311,12 @@ messages:
   notify_opened: "§7{player} §fopened your §e{block}§f."
   notify_item_taken: "§7{player} §ftook §e{amount}x {item}§f from your §e{block}§f."
   notify_item_placed: "§7{player} §fput §e{amount}x {item}§f into your §e{block}§f."
-  raid_alert: "§c⚠ Possible raid! §e{block} §cat §e{world} [{x}, {y}, {z}]§c — Actor: §e{actor}"
+  raid_alert: "§c! Possible raid! §e{block} §cat §e{world} [{x}, {y}, {z}]§c - Actor: §e{actor}"
   raid_coords: "§c§l[BlockProt] §r§cPossible raid on your §e{block}§c at §f{world} [{x}, {y}, {z}]§c. Actor: §e{actor}"
   raid_tp_label: "§a[Teleport]"
   raid_pending: "§c§l[BlockProt] §r§cWhile you were offline, a possible raid was detected on your block §e{block}§c at §f{world} [{x}, {y}, {z}]§c. Actor: §e{actor}"
   no_permission_tp: "§c[✗] No permission: blockprot.blocks.tp"
-  remote_unlock_warning: "§e⚠ This will unlock the block remotely. Click again to confirm. To re-lock, visit the block directly."
+  remote_unlock_warning: "§e! This will unlock the block remotely. Click again to confirm. To re-lock, visit the block directly."
   admin_reload_done: "§aConfig and translations reloaded."
   admin_integrations: "§7Integrations ({count}): {integrations}"
   admin_info_hint: "§7Use §f/bp info <player>§7 to list their protected blocks."
@@ -370,7 +370,7 @@ messages:
     checks_passed_actionbar: "§a✔ All {passed} checks passed"
     checks_failed_actionbar: "§c✗ {failed} failed / {total}"
     checks_passed_chat: "§a§l[BlockProt] §r§aAll §l{passed}§r§a checks passed."
-    checks_failed_chat: "§c§l[BlockProt] §r§c{failed} check(s) FAILED — see log."
+    checks_failed_chat: "§c§l[BlockProt] §r§c{failed} check(s) FAILED - see log."
     log_path: "§7Log: §f{path}"
   time:
     days: "days"
@@ -440,18 +440,18 @@ console:
   typed_views_fallback: "Running Paper/Spigot 1.21.0-1.21.3 before typed inventory views. AnvilInput fallbacks will be used."
   stats_save_failed: "Statistics file could not be saved: {error}"
   migration_start: "Migrating data from {source} to {target}..."
-  migration_done: "Migration from {source} complete. Old folder left intact."
+  migration_done: "Migration from {source} complete. Previous configuration and block lists were preserved. Old folder left intact."
   migration_failed: "Migration from {source} failed: {error}"
   saving_statistics: "Saving statistics to disk..."
   update:
     available: "A newer version of BlockProt Reloaded is available: {version}"
     up_to_date: "BlockProt Reloaded is up-to-date"
-  viaversion_detected: "ViaVersion {version} detected — multi-version client support active."
-  viaversion_api_missing: "ViaVersion plugin present but API class not found — skipping."
+  viaversion_detected: "ViaVersion {version} detected - multi-version client support active."
+  viaversion_api_missing: "ViaVersion plugin present but API class not found - skipping."
   craftbukkit_unsupported: "This plugin does not support CraftBukkit. Please use Spigot or Paper."
   integration_enabled: "Integration enabled: {name}"
   startup_complete: "BlockProt v{version} enabled."
-  auto_reload_disabled: "Auto-reload is disabled (auto_reload_configs: false). Configuration will NOT reload on its own — use /bp reload after every edit."
+  auto_reload_disabled: "Auto-reload is disabled (auto_reload_configs: false). Configuration will NOT reload on its own - use /bp reload after every edit."
   boot_configuration: "Configuration"
   boot_listeners: "Listeners"
   boot_commands: "Commands"
@@ -468,11 +468,13 @@ console:
   recommended_failed: "§cFailed to write blocks.yml: {error}"
 
   first_start:
+    header: "§6  ------------------------------------------"
     title: "§6   BlockProt Reloaded - First Start Guide"
     step1: "§7   1. Use §e{command} §7to configure lockable blocks."
     step2: "§7   2. Or edit §e{file} §7manually in the plugin folder."
     step3: "§7   3. See docs: §e{url}"
     step4: "§7   4. Run §e{command} §7in console for a recommended config."
+    footer: "§6  ------------------------------------------"
 
   boot:
     configuration: "Configuration"

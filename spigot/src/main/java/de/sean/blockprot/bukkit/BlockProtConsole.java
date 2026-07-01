@@ -34,6 +34,9 @@ public final class BlockProtConsole {
     private static List<StartupLine> startupBuffer = null;
 
     @Nullable
+    private static List<String> guideBuffer = null;
+
+    @Nullable
     private static Logger pluginLogger = null;
 
     private record StartupLine(String message, boolean isWarning) {}
@@ -43,21 +46,40 @@ public final class BlockProtConsole {
     public static void beginStartup(@NotNull Logger logger) {
         pluginLogger = logger;
         startupBuffer = new ArrayList<>();
+        guideBuffer = new ArrayList<>();
+    }
+
+    /**
+     * Buffers a first-start guide line so it prints directly under the banner,
+     * before the boot checklist. Only relevant during {@link #beginStartup}.
+     */
+    public static void guide(@NotNull String message) {
+        if (guideBuffer != null) {
+            guideBuffer.add(message);
+        } else if (pluginLogger != null) {
+            pluginLogger.info(message);
+        }
     }
 
     public static void printStartupBanner(@NotNull String version) {
         List<StartupLine> lines = startupBuffer != null ? startupBuffer : new ArrayList<>();
+        List<String> guideLines = guideBuffer != null ? guideBuffer : new ArrayList<>();
         startupBuffer = null;
+        guideBuffer = null;
         if (pluginLogger == null) return;
 
-        pluginLogger.info("  ██████╗ ██████╗  ██████╗ ");
-        pluginLogger.info("  ██╔══██╗██╔══██╗██╔══██╗");
-        pluginLogger.info("  ██████╔╝██████╔╝██████╔╝");
-        pluginLogger.info("  ██╔══██╗██╔═══╝ ██╔══██╗");
-        pluginLogger.info("  ██████╔╝██║     ██║  ██║");
-        pluginLogger.info("  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
-        pluginLogger.info("        BlockProt Reloaded");
-        pluginLogger.info("            v" + version);
+        pluginLogger.info("§6  ██████╗ ██████╗  ██████╗ ");
+        pluginLogger.info("§6  ██╔══██╗██╔══██╗██╔══██╗");
+        pluginLogger.info("§6  ██████╔╝██████╔╝██████╔╝");
+        pluginLogger.info("§6  ██╔══██╗██╔═══╝ ██╔══██╗");
+        pluginLogger.info("§6  ██████╔╝██║     ██║  ██║");
+        pluginLogger.info("§6  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
+        pluginLogger.info("§6        BlockProt Reloaded");
+        pluginLogger.info("§e            v" + version);
+
+        for (String guideLine : guideLines) {
+            pluginLogger.info(guideLine);
+        }
 
         if (lines.isEmpty()) {
             pluginLogger.info("  No startup messages.");

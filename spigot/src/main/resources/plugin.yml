@@ -33,6 +33,10 @@ permissions:
     description: >
       Allows teleporting to a protected block from the statistics inventory
       (left-click on a location entry).
+  blockprot.debug:
+    default: op
+    description: >
+      Allows running diagnostic checks and viewing debug output via /bp debug.
 commands:
   blockprot:
     description: The main blockprot command

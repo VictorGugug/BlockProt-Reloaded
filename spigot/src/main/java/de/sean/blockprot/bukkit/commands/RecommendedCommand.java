@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
+import de.sean.blockprot.bukkit.config.DefaultConfig;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -105,6 +106,7 @@ public class RecommendedCommand implements CommandExecutor {
             }
 
             cfg.save(blocksFile);
+            DefaultConfig.prependBlocksHeader(blocksFile);
             sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_DONE));
             sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
         } catch (IOException e) {

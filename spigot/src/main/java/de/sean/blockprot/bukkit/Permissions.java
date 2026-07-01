@@ -62,6 +62,9 @@ public enum Permissions {
     /** Teleport to a protected block from the statistics inventory. */
     BLOCKS_TP("blockprot.blocks.tp"),
 
+    /** Run diagnostic checks and view debug output. */
+    DEBUG("blockprot.debug"),
+
     /**
      * @deprecated Use {@link #USER_ADMIN}. Kept as an alias so existing permission
      *             plugin entries and compiled code referencing {@code blockprot.bypass}

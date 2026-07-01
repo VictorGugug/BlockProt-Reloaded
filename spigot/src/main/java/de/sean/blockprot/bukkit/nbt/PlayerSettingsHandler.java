@@ -197,8 +197,7 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
             if (hybridDatabase != null) {
                 hybridDatabase.addGlobalTrust(player.getUniqueId(), UUID.fromString(friend));
             }
-        } catch (IllegalArgumentException ignored) {
-        }
+        } catch (IllegalArgumentException ignored) { }
     }
 
     @Override
@@ -209,8 +208,7 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
             if (hybridDatabase != null) {
                 hybridDatabase.removeGlobalTrust(player.getUniqueId(), UUID.fromString(friend));
             }
-        } catch (IllegalArgumentException ignored) {
-        }
+        } catch (IllegalArgumentException ignored) { }
     }
 
     /**

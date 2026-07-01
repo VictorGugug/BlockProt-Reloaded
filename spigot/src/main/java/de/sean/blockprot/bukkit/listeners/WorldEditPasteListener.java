@@ -115,8 +115,7 @@ public final class WorldEditPasteListener implements Listener {
                                 UUID.fromString(fh.getName()), player, block))
                             .forEach(handler::addFriend);
                         locked++;
-                    } catch (RuntimeException ignored) {
-                    }
+                    } catch (RuntimeException ignored) { }
                 }
             }
         }

@@ -45,8 +45,8 @@ public final class HelpCommand implements CommandExecutor {
 
         final boolean useMenus = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
         final boolean isOp = sender.isOp();
-        final boolean isAdmin = isOp || sender.hasPermission(Permissions.USER_ADMIN.key());
-        final boolean hasDebug = sender.hasPermission("blockprot.debug");
+        final boolean isAdmin = sender.hasPermission(Permissions.USER_ADMIN.key());
+        final boolean hasDebug = sender.hasPermission(Permissions.DEBUG.key());
 
         if (useMenus) {
             send(sender, Translator.get(TranslationKey.HELP__GUI_MODE_TITLE));
