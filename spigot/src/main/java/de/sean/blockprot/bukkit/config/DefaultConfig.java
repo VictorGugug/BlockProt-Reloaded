@@ -664,6 +664,57 @@ public final class DefaultConfig extends BlockProtConfig {
         "lockable_blocks", "lockable_doors", "lockable_entities"
     );
 
+    private static final String AUTO_DROP_BLOCKS_KEY = "auto_drop_to_inventory.blocks";
+
+    /**
+     * True for a blocks.yml list entry that carries no material name: a YAML null
+     * (blank template line), a blank string, or the legacy "[]" / "[ ]" hint text.
+     * Canonical implementation; other classes delegate to this one.
+     */
+    public static boolean isPlaceholderEntry(@Nullable Object o) {
+        if (o == null) return true;
+        if (o instanceof String s) {
+            String t = s.trim();
+            return t.isEmpty() || t.equals("[]") || t.equals("[ ]");
+        }
+        return false;
+    }
+
+    public static void sanitizeBlocksListsForSave(@NotNull YamlConfiguration cfg, boolean modernFormat) {
+        sanitizeListsForSave(cfg, "", modernFormat);
+    }
+
+    /**
+     * Sanitizes lists for saving to disk, supporting an optional key prefix (e.g. for worlds).
+     */
+    public static void sanitizeListsForSave(@NotNull YamlConfiguration cfg, @NotNull String prefix, boolean modernFormat) {
+        List<String> keys = new ArrayList<>(LOCKABLE_LIST_KEYS);
+        if (prefix.isEmpty()) {
+            keys.add(AUTO_DROP_BLOCKS_KEY);
+        }
+        for (String k : keys) {
+            String key = prefix + k;
+            if (!cfg.contains(key)) continue;
+            List<?> raw = cfg.getList(key);
+            if (raw == null) continue;
+
+            List<Object> real = new ArrayList<>();
+            for (Object o : raw) {
+                if (!isPlaceholderEntry(o)) real.add(o);
+            }
+
+            if (real.isEmpty()) {
+                if (k.equals(AUTO_DROP_BLOCKS_KEY)) {
+                    cfg.set(key, Collections.emptyList());
+                } else {
+                    cfg.set(key, modernFormat ? List.of("[]") : Arrays.asList(null, null));
+                }
+            } else if (real.size() != raw.size()) {
+                cfg.set(key, real);
+            }
+        }
+    }
+
     /**
      * Header shared by both blocks.yml generation paths, so the comment text and the
      * referenced doc path never drift apart from each other or from the shipped resource.
@@ -717,6 +768,7 @@ public final class DefaultConfig extends BlockProtConfig {
             if (plugin != null && plugin.getFileWatcher() != null) {
                 plugin.getFileWatcher().suppressNext();
             }
+            sanitizeBlocksListsForSave(blocksConfig, isModernFamilyBlocks());
             blocksConfig = reorderBlocksKeys(blocksConfig);
             blocksConfig.save(file);
             prependBlocksHeader(file);
@@ -725,13 +777,10 @@ public final class DefaultConfig extends BlockProtConfig {
         }
     }
 
-    /**
-     * Prepends the header comments to the blocks.yml file if missing.
-     * Should be called after save().
-     */
     public static void prependBlocksHeader(@NotNull File file) throws IOException {
         List<String> existingLines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
         if (!existingLines.isEmpty() && existingLines.get(0).equals(BLOCKS_HEADER.get(0))) {
+            cleanNullPlaceholderLines(file);
             return;
         }
         List<String> newLines = new ArrayList<>(BLOCKS_HEADER);
@@ -746,6 +795,31 @@ public final class DefaultConfig extends BlockProtConfig {
             newLines.add(line);
         }
         Files.write(file.toPath(), newLines, StandardCharsets.UTF_8);
+        cleanNullPlaceholderLines(file);
+    }
+
+    /**
+     * Replaces any occurrence of "- null" or "- 'null'" in the file with "- " (a blank entry).
+     * This is needed because Bukkit YamlConfiguration writes null list elements as "null".
+     */
+    public static void cleanNullPlaceholderLines(@NotNull File file) throws IOException {
+        List<String> lines = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+        List<String> newLines = new ArrayList<>();
+        boolean modified = false;
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (trimmed.equals("- null") || trimmed.equals("- 'null'")) {
+                int idx = line.indexOf('-');
+                String newLine = line.substring(0, idx + 1);
+                newLines.add(newLine);
+                modified = true;
+            } else {
+                newLines.add(line);
+            }
+        }
+        if (modified) {
+            Files.write(file.toPath(), newLines, StandardCharsets.UTF_8);
+        }
     }
 
     private void reloadBlocksAfterToggle() {
@@ -782,6 +856,24 @@ public final class DefaultConfig extends BlockProtConfig {
                     "All lockable lists empty, disabled modern_family_blocks.");
             }
         }
+    }
+
+    /**
+     * Returns true if there is at least one non-placeholder entry configured
+     * in the lockable block lists of blocks.yml.
+     */
+    public boolean hasConfiguredBlocks() {
+        if (blocksConfig == null) return false;
+        for (String key : LOCKABLE_LIST_KEYS) {
+            List<?> list = blocksConfig.getList(key);
+            if (list == null) continue;
+            for (Object o : list) {
+                if (!isPlaceholderEntry(o)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @Nullable
@@ -1090,6 +1182,7 @@ public final class DefaultConfig extends BlockProtConfig {
         if (dirty) {
             try {
                 bc.save(blocksFile);
+                prependBlocksHeader(blocksFile);
             } catch (IOException e) {
                 BlockProtLogger.warn("blocks.yml patch save failed: " + e.getMessage());
             }

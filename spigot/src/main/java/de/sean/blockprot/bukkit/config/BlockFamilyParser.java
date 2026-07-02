@@ -547,9 +547,7 @@ public final class BlockFamilyParser {
             }
             for (SubFamily sf : sfs) {
                 if (sfStatus.get(sf) == SfStatus.PARTIAL) {
-                    for (Material m : SUBFAMILY_MEMBERS.getOrDefault(sf, Collections.emptySet())) {
-                        if (!present.contains(m)) sb.append(" -").append(m.name());
-                    }
+                    appendPartialSubFamily(sb, sf, present, false);
                 }
             }
             for (Material m : ungroupedMissing) sb.append(" -").append(m.name());
@@ -567,12 +565,8 @@ public final class BlockFamilyParser {
             }
             for (SubFamily sf : sfs) {
                 if (sfStatus.get(sf) == SfStatus.PARTIAL) {
-                    if (!first) sb.append(" ");
-                    sb.append("*-").append(sf.tag);
+                    appendPartialSubFamily(sb, sf, present, first);
                     first = false;
-                    for (Material m : SUBFAMILY_MEMBERS.getOrDefault(sf, Collections.emptySet())) {
-                        if (!present.contains(m)) sb.append(" -").append(m.name());
-                    }
                 }
             }
             for (Material m : ungroupedPresent) {
@@ -582,6 +576,38 @@ public final class BlockFamilyParser {
             }
             sb.append("]");
             return first ? null : sb.toString();
+        }
+    }
+
+    /**
+     * Appends the compact representation of a PARTIAL sub-family: whichever of
+     * exclusion form ({@code *-TAG -missing...}) or direct inclusion form
+     * ({@code present1 present2...}) is shorter for that sub-family alone.
+     * {@code isFirstToken} controls whether a separating space is written before
+     * the first token in the builder.
+     */
+    private static void appendPartialSubFamily(
+            @NotNull StringBuilder sb, @NotNull SubFamily sf,
+            @NotNull Set<Material> present, boolean isFirstToken) {
+        Set<Material> sfMembers = SUBFAMILY_MEMBERS.getOrDefault(sf, Collections.emptySet());
+        List<Material> sfPresent = new ArrayList<>();
+        List<Material> sfMissing = new ArrayList<>();
+        for (Material m : sfMembers) {
+            if (present.contains(m)) sfPresent.add(m); else sfMissing.add(m);
+        }
+
+        if (!isFirstToken) sb.append(" ");
+
+        if (sfMissing.size() <= sfPresent.size()) {
+            sb.append("*-").append(sf.tag);
+            for (Material m : sfMissing) sb.append(" -").append(m.name());
+        } else {
+            boolean localFirst = true;
+            for (Material m : sfPresent) {
+                if (!localFirst) sb.append(" ");
+                sb.append(m.name());
+                localFirst = false;
+            }
         }
     }
 

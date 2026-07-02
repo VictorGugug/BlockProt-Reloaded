@@ -172,11 +172,13 @@ public final class WorldsConfig {
             String key = "worlds." + world.getName();
 
             if (!disk.contains(key)) {
+                boolean modern = defaultConfig != null && defaultConfig.isModernFamilyBlocks();
+                List<?> emptyLockableList = modern ? List.of("[]") : Arrays.asList(null, null);
                 disk.set(key + ".enabled", true);
                 disk.set(key + ".auto_drop_to_inventory_enabled", true);
                 for (String listKey : List.of("lockable_tile_entities", "lockable_shulker_boxes",
                                               "lockable_blocks", "lockable_doors", "lockable_entities")) {
-                    disk.set(key + "." + listKey, Collections.emptyList());
+                    disk.set(key + "." + listKey, emptyLockableList);
                 }
                 disk.set(key + ".lockable_counts", Collections.emptyList());
                 BlockProtLogger.log("worlds-scan",
@@ -197,7 +199,8 @@ public final class WorldsConfig {
                     } else if (required.equals("lockable_counts")) {
                         disk.set(key + ".lockable_counts", Collections.emptyList());
                     } else {
-                        disk.set(key + "." + required, Collections.emptyList());
+                        boolean modern = defaultConfig != null && defaultConfig.isModernFamilyBlocks();
+                        disk.set(key + "." + required, modern ? List.of("[]") : Arrays.asList(null, null));
                     }
                     BlockProtLogger.log("worlds-scan",
                         "  ~ '" + world.getName() + "' patched missing key: " + required);

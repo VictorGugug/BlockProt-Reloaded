@@ -9,8 +9,29 @@ flag in `config.yml`.
 - `false` -> any existing family expressions in the file are automatically converted to flat lists.
 It does not gate expression parsing (expressions are always parsed regardless of this flag).
 
+Flipping this flag runs a synchronous, forced sweep across every list key in `blocks.yml`
+(all 5 lockable lists plus `auto_drop_to_inventory.blocks`), not just the keys a GUI toggle
+happens to touch. A key that is empty or placeholder-only is still normalized, so the whole
+file always matches the current mode immediately after startup.
+
 They replace flat material lists with token-based expressions that resolve dynamically
 against the full family registry at startup and on `/bp reload`.
+
+## Compression
+
+When a key is saved in modern format, the plugin picks the shortest valid representation
+per sub-family independently: direct inclusion (`CHEST BARREL`) if the selected members are
+the minority, or exclusion (`*-CHEST -COPPER_CHEST`) if they are the majority. Selecting a
+single block from a large sub-family no longer produces a long exclusion list for the whole
+family; only that one sub-family's members are ever weighed against each other.
+
+## Empty lists
+
+An empty key is never written as a real empty YAML list (`[]`). In legacy (flat) mode it
+is saved as two blank template lines (`-` / `-`), inviting the user to type material names
+directly in their place. In modern mode it is saved as the single-element list
+`- '[]'`, which is the only representation SnakeYAML round-trips safely for "nothing selected"
+without corrupting the rest of the file's structure on the next save.
 
 ---
 

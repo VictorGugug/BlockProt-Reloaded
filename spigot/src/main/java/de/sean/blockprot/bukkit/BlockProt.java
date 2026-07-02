@@ -42,6 +42,7 @@ import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.HumanEntity;
@@ -312,7 +313,7 @@ public final class BlockProt extends JavaPlugin {
             "§f" + java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() + " ms");
 
         // First-run guide: buffered so it prints directly under the banner, before the boot checklist.
-        if (isFirstStart()) {
+        if (isFirstStart() && !defaultConfig.hasConfiguredBlocks()) {
             String guideHeader = Translator.get(TranslationKey.CONSOLE__FIRST_START__HEADER);
             String guideTitle  = Translator.get(TranslationKey.CONSOLE__FIRST_START__TITLE);
             String guideStep1  = Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP1)
@@ -618,8 +619,11 @@ public final class BlockProt extends JavaPlugin {
         if (added == 0 && !cleaned) return;
         try {
             if (fileWatcher != null) fileWatcher.suppressNext();
+            boolean modern = this.getConfig().getBoolean("modern_family_blocks", false);
+            de.sean.blockprot.bukkit.config.DefaultConfig.sanitizeBlocksListsForSave(diskConfig, modern);
             diskConfig = de.sean.blockprot.bukkit.config.DefaultConfig.reorderBlocksKeys(diskConfig);
             diskConfig.save(diskFile);
+            de.sean.blockprot.bukkit.config.DefaultConfig.prependBlocksHeader(diskFile);
             if (added > 0) {
                 BlockProtLogger.log("blocks-merge", "blocks.yml: merged " + added + " new section(s) from JAR.");
             }
@@ -629,16 +633,11 @@ public final class BlockProt extends JavaPlugin {
     }
 
     /**
-     * True for a blocks.yml list entry that carries no material name: a YAML null
-     * (blank template line), a blank string, or the legacy "[]" / "[ ]" hint text.
+     * True for a blocks.yml list entry that carries no material name. Delegates to
+     * {@link DefaultConfig#isPlaceholderEntry(Object)}, the canonical implementation.
      */
     private static boolean isPlaceholderEntry(@Nullable Object o) {
-        if (o == null) return true;
-        if (o instanceof String s) {
-            String t = s.trim();
-            return t.isEmpty() || t.equals("[]") || t.equals("[ ]");
-        }
-        return false;
+        return DefaultConfig.isPlaceholderEntry(o);
     }
 
     /**
@@ -669,8 +668,11 @@ public final class BlockProt extends JavaPlugin {
 
         try {
             if (fileWatcher != null) fileWatcher.suppressNext();
+            boolean modern = this.getConfig().getBoolean("modern_family_blocks", false);
+            DefaultConfig.sanitizeBlocksListsForSave(recovered, modern);
             recovered = DefaultConfig.reorderBlocksKeys(recovered);
             recovered.save(diskFile);
+            DefaultConfig.prependBlocksHeader(diskFile);
             getLogger().warning("[BlockProt] blocks.yml repaired" + lineInfo + ". Corrupted file saved as blocks.yml.corrupted.*. Verify blocks.yml content.");
             BlockProtLogger.log("yaml-repair", "Repair SUCCESS" + lineInfo + ". Corrupted file backed up as blocks.yml.corrupted.*");
         } catch (IOException e) {
@@ -790,18 +792,7 @@ public final class BlockProt extends JavaPlugin {
         }
     }
 
-    private void convertBlocksFormatIfNeeded() {
-        String blocksPath = this.getConfig().getString("blocks_file", "blocks.yml");
-        File diskFile = new File(this.getDataFolder(), blocksPath);
-        if (!diskFile.exists()) return;
-
-        File configFile = new File(this.getDataFolder(), "config.yml");
-        boolean modern = false;
-        if (configFile.exists()) {
-            modern = YamlConfiguration.loadConfiguration(configFile).getBoolean("modern_family_blocks", false);
-        }
-        YamlConfiguration diskConfig = YamlConfiguration.loadConfiguration(diskFile);
-
+    private boolean convertConfigurationListsIfNeeded(@NotNull YamlConfiguration cfg, @NotNull String prefix, boolean modern) {
         Map<String, BlockFamilyParser.Family> keyFamilies = new LinkedHashMap<>();
         keyFamilies.put("lockable_tile_entities", BlockFamilyParser.Family.TILE_ENTITIES);
         keyFamilies.put("lockable_shulker_boxes", BlockFamilyParser.Family.SHULKER_BOXES);
@@ -811,66 +802,149 @@ public final class BlockProt extends JavaPlugin {
 
         boolean needsConversion = false;
         for (String key : keyFamilies.keySet()) {
-            if (!diskConfig.contains(key)) continue;
-            Object raw = diskConfig.get(key);
-            if (raw instanceof List<?> list && !list.isEmpty()) {
-                for (Object o : list) {
-                    if (o instanceof String s) {
-                        String trimmed = s.trim();
-                        // Shipped "[]" placeholders hint at the entry format but carry
-                        // no material; they never trigger or block a format conversion.
-                        if (trimmed.equals("[]") || trimmed.equals("[ ]")) continue;
-                        boolean isExpr = BlockFamilyParser.isFamilyExpression(trimmed);
-                        if (isExpr != modern) { needsConversion = true; break; }
-                    }
+            String fullKey = prefix + key;
+            if (!cfg.contains(fullKey)) continue;
+            Object raw = cfg.get(fullKey);
+            if (!(raw instanceof List<?> list)) continue;
+
+            boolean hasRealEntry = false;
+            for (Object o : list) {
+                if (isPlaceholderEntry(o)) continue;
+                hasRealEntry = true;
+                if (o instanceof String s) {
+                    boolean isExpr = BlockFamilyParser.isFamilyExpression(s.trim());
+                    if (isExpr != modern) { needsConversion = true; break; }
                 }
-                if (needsConversion) break;
+            }
+            if (needsConversion) break;
+
+            if (!hasRealEntry) {
+                boolean alreadyNormalized = modern
+                    ? (list.size() == 1 && "[]".equals(String.valueOf(list.get(0)).trim()))
+                    : (list.size() == 2 && list.get(0) == null && list.get(1) == null);
+                if (!alreadyNormalized) { needsConversion = true; break; }
             }
         }
 
-        if (!needsConversion) return;
+        if (!needsConversion) return false;
 
         for (Map.Entry<String, BlockFamilyParser.Family> entry : keyFamilies.entrySet()) {
             String key = entry.getKey();
+            String fullKey = prefix + key;
             BlockFamilyParser.Family family = entry.getValue();
-            if (!diskConfig.contains(key)) continue;
+            if (!cfg.contains(fullKey)) continue;
 
-            // A list made up entirely of placeholders has nothing to convert;
-            // leave it as the shipped hint format instead of collapsing it to [].
-            Object rawValue = diskConfig.get(key);
-            if (rawValue instanceof List<?> rawList && !rawList.isEmpty()) {
-                boolean onlyPlaceholders = true;
-                for (Object o : rawList) {
-                    if (isPlaceholderEntry(o)) continue;
-                    onlyPlaceholders = false;
-                    break;
-                }
-                if (onlyPlaceholders) continue;
-            }
-
-            Set<Material> materials = BlockFamilyParser.parse(diskConfig.get(key), family);
+            Set<Material> materials = BlockFamilyParser.parse(cfg.get(fullKey), family);
             if (modern) {
                 String expr = BlockFamilyParser.toFamilyExpression(materials, family);
                 if (expr != null) {
-                    diskConfig.set(key, List.of(expr));
+                    cfg.set(fullKey, List.of(expr));
                 } else {
-                    diskConfig.set(key, materials.stream().map(Material::name).sorted().toList());
+                    cfg.set(fullKey, materials.stream().map(Material::name).sorted().toList());
                 }
             } else {
-                diskConfig.set(key, materials.stream().map(Material::name).sorted().toList());
+                cfg.set(fullKey, materials.stream().map(Material::name).sorted().toList());
+            }
+        }
+        return true;
+    }
+
+    private void convertBlocksFormatIfNeeded() {
+        File configFile = new File(this.getDataFolder(), "config.yml");
+        boolean modern = false;
+        if (configFile.exists()) {
+            modern = YamlConfiguration.loadConfiguration(configFile).getBoolean("modern_family_blocks", false);
+        }
+
+        // 1. Process blocks.yml
+        String blocksPath = this.getConfig().getString("blocks_file", "blocks.yml");
+        File blocksFile = new File(this.getDataFolder(), blocksPath);
+        if (blocksFile.exists()) {
+            YamlConfiguration blocksConfig = YamlConfiguration.loadConfiguration(blocksFile);
+            boolean blocksDirty = convertConfigurationListsIfNeeded(blocksConfig, "", modern);
+
+            // Special check for auto_drop_to_inventory.blocks
+            if (blocksConfig.contains(AUTO_DROP_BLOCKS_KEY_LOCAL)) {
+                Object raw = blocksConfig.get(AUTO_DROP_BLOCKS_KEY_LOCAL);
+                if (raw instanceof List<?> list) {
+                    boolean autoDropNeedsConversion = false;
+                    if (!modern) {
+                        for (Object o : list) {
+                            if (o instanceof String s && BlockFamilyParser.isFamilyExpression(s.trim())) {
+                                autoDropNeedsConversion = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (autoDropNeedsConversion) {
+                        Set<Material> autoDropMaterials = new LinkedHashSet<>();
+                        for (Object o : list) {
+                            if (isPlaceholderEntry(o)) continue;
+                            if (o instanceof String s) {
+                                String trimmed = s.trim();
+                                if (BlockFamilyParser.isFamilyExpression(trimmed)) {
+                                    for (BlockFamilyParser.Family f : BlockFamilyParser.Family.values()) {
+                                        autoDropMaterials.addAll(BlockFamilyParser.parseFamilyExpressionSilent(trimmed, f));
+                                    }
+                                } else {
+                                    Material m = Material.matchMaterial(trimmed);
+                                    if (m != null) autoDropMaterials.add(m);
+                                }
+                            }
+                        }
+                        blocksConfig.set(AUTO_DROP_BLOCKS_KEY_LOCAL,
+                            autoDropMaterials.stream().map(Material::name).sorted().toList());
+                        blocksDirty = true;
+                    }
+                }
+            }
+
+            if (blocksDirty) {
+                try {
+                    if (fileWatcher != null) fileWatcher.suppressNext();
+                    de.sean.blockprot.bukkit.config.DefaultConfig.sanitizeListsForSave(blocksConfig, "", modern);
+                    blocksConfig = de.sean.blockprot.bukkit.config.DefaultConfig.reorderBlocksKeys(blocksConfig);
+                    blocksConfig.save(blocksFile);
+                    de.sean.blockprot.bukkit.config.DefaultConfig.prependBlocksHeader(blocksFile);
+                    BlockProtLogger.log("blocks-convert",
+                        "blocks.yml: converted format to " + (modern ? "family expressions" : "flat names") + ".");
+                } catch (IOException e) {
+                    BlockProtLogger.warn("Failed to save blocks.yml after format conversion: " + e.getMessage());
+                }
             }
         }
 
-        try {
-            if (fileWatcher != null) fileWatcher.suppressNext();
-            diskConfig = DefaultConfig.reorderBlocksKeys(diskConfig);
-            diskConfig.save(diskFile);
-            BlockProtLogger.log("blocks-convert",
-                "blocks.yml: converted format to " + (modern ? "family expressions" : "flat names") + ".");
-        } catch (IOException e) {
-            BlockProtLogger.warn("Failed to save blocks.yml after format conversion: " + e.getMessage());
+        // 2. Process worlds.yml
+        File worldsFile = new File(this.getDataFolder(), "worlds.yml");
+        if (worldsFile.exists()) {
+            YamlConfiguration worldsConfig = YamlConfiguration.loadConfiguration(worldsFile);
+            ConfigurationSection worldsSection = worldsConfig.getConfigurationSection("worlds");
+            if (worldsSection != null) {
+                boolean worldsDirty = false;
+                for (String worldName : worldsSection.getKeys(false)) {
+                    String prefix = "worlds." + worldName + ".";
+                    if (convertConfigurationListsIfNeeded(worldsConfig, prefix, modern)) {
+                        de.sean.blockprot.bukkit.config.DefaultConfig.sanitizeListsForSave(worldsConfig, prefix, modern);
+                        worldsDirty = true;
+                    }
+                }
+                if (worldsDirty) {
+                    try {
+                        if (fileWatcher != null) fileWatcher.suppressNext();
+                        worldsConfig.save(worldsFile);
+                        de.sean.blockprot.bukkit.config.DefaultConfig.cleanNullPlaceholderLines(worldsFile);
+                        BlockProtLogger.log("worlds-convert",
+                            "worlds.yml: converted format to " + (modern ? "family expressions" : "flat names") + ".");
+                    } catch (IOException e) {
+                        BlockProtLogger.warn("Failed to save worlds.yml after format conversion: " + e.getMessage());
+                    }
+                }
+            }
         }
     }
+
+    private static final String AUTO_DROP_BLOCKS_KEY_LOCAL = "auto_drop_to_inventory.blocks";
 
     private void mergeMissingConfigKeys() {
         File diskFile = new File(this.getDataFolder(), "config.yml");

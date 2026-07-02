@@ -20,6 +20,7 @@
 
 package de.sean.blockprot.bukkit;
 
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,6 +30,21 @@ import java.util.List;
 import java.util.logging.Logger;
 
 public final class BlockProtConsole {
+
+    /**
+     * Manual identity prefix used on every line sent through {@link Bukkit#getConsoleSender()}.
+     * Emitting through the console sender (instead of {@link Logger}) bypasses the server's
+     * log4j {@code TerminalConsoleAppender}, whose Minecraft-color-to-ANSI translation only
+     * fires when a real terminal is detected. Wrappers that pipe stdout without a terminal
+     * (e.g. GSM on Windows) never get that translation and print the raw section-sign codes
+     * or mojibake instead. Bukkit's console sender does its own terminal-aware color
+     * downsampling and works consistently across CMD, GSM, Linux PTY/Bash, and hosting panels.
+     * This prefix replaces the {@code [HH:mm:ss INFO]: [BlockProt Reloaded]} line the
+     * standard logger would have added.
+     */
+    private static final String PREFIX = "§8[§bBlockProt Reloaded§8] §r";
+    private static final String WARN_TAG = "§e[WARN]§r ";
+    private static final String ERROR_TAG = "§c[ERROR]§r ";
 
     @Nullable
     private static List<StartupLine> startupBuffer = null;
@@ -57,7 +73,7 @@ public final class BlockProtConsole {
         if (guideBuffer != null) {
             guideBuffer.add(message);
         } else if (pluginLogger != null) {
-            pluginLogger.info(message);
+            raw(PREFIX + message);
         }
     }
 
@@ -68,31 +84,37 @@ public final class BlockProtConsole {
         guideBuffer = null;
         if (pluginLogger == null) return;
 
-        pluginLogger.info("§6  ██████╗ ██████╗  ██████╗ ");
-        pluginLogger.info("§6  ██╔══██╗██╔══██╗██╔══██╗");
-        pluginLogger.info("§6  ██████╔╝██████╔╝██████╔╝");
-        pluginLogger.info("§6  ██╔══██╗██╔═══╝ ██╔══██╗");
-        pluginLogger.info("§6  ██████╔╝██║     ██║  ██║");
-        pluginLogger.info("§6  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
-        pluginLogger.info("§6        BlockProt Reloaded");
-        pluginLogger.info("§e            v" + version);
+        raw("§6  ██████╗ ██████╗  ██████╗ ");
+        raw("§6  ██╔══██╗██╔══██╗██╔══██╗");
+        raw("§6  ██████╔╝██████╔╝██████╔╝");
+        raw("§6  ██╔══██╗██╔═══╝ ██╔══██╗");
+        raw("§6  ██████╔╝██║     ██║  ██║");
+        raw("§6  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
+        raw("§6        BlockProt Reloaded");
+        raw("§e            v" + version);
 
         for (String guideLine : guideLines) {
-            pluginLogger.info(guideLine);
+            raw(guideLine);
         }
 
         if (lines.isEmpty()) {
-            pluginLogger.info("  No startup messages.");
+            raw(PREFIX + "  No startup messages.");
             return;
         }
 
         for (StartupLine line : lines) {
-            if (line.isWarning()) {
-                pluginLogger.warning(line.message());
-            } else {
-                pluginLogger.info(line.message());
-            }
+            String tag = line.isWarning() ? WARN_TAG : "";
+            raw(PREFIX + tag + line.message());
         }
+    }
+
+    /**
+     * Sends a line straight through {@link Bukkit#getConsoleSender()} with no
+     * additional prefixing, used for pre-formatted lines (the banner art, and
+     * lines that already carry {@link #PREFIX} themselves).
+     */
+    private static void raw(@NotNull String message) {
+        Bukkit.getConsoleSender().sendMessage(LegacyComponentSerializer.legacySection().deserialize(message));
     }
 
     private static void bootLine(@NotNull String label, @NotNull String status, boolean isLast) {
@@ -120,10 +142,8 @@ public final class BlockProtConsole {
         String prefixed = message.startsWith("  ") ? message : "  " + message;
         if (startupBuffer != null) {
             startupBuffer.add(new StartupLine(prefixed, true));
-        } else if (pluginLogger != null) {
-            pluginLogger.warning(prefixed);
         } else {
-            Bukkit.getConsoleSender().sendMessage(prefixed);
+            raw(PREFIX + WARN_TAG + prefixed);
         }
     }
 
@@ -131,10 +151,8 @@ public final class BlockProtConsole {
         String prefixed = message.startsWith("  ") ? message : "  " + message;
         if (startupBuffer != null) {
             startupBuffer.add(new StartupLine(prefixed, true));
-        } else if (pluginLogger != null) {
-            pluginLogger.severe(prefixed);
         } else {
-            Bukkit.getConsoleSender().sendMessage(prefixed);
+            raw(PREFIX + ERROR_TAG + prefixed);
         }
     }
 
@@ -145,8 +163,8 @@ public final class BlockProtConsole {
     private static void emit(@NotNull String message) {
         if (startupBuffer != null) {
             startupBuffer.add(new StartupLine(message, false));
-        } else if (pluginLogger != null) {
-            pluginLogger.info(message);
+        } else {
+            raw(PREFIX + message);
         }
     }
 }

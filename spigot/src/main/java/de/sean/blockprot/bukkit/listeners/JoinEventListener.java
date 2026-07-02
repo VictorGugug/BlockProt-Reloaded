@@ -67,30 +67,32 @@ public class JoinEventListener implements Listener {
 
         // Show configuration guide on the very first server start
         if (BlockProt.isFirstStartThisSession() && player.isOp()) {
-            String line = Translator.get(TranslationKey.MESSAGES__FIRST_RUN__HEADER)
-                .replace("{line}", " ".repeat(48));
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(line));
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__FIRST_RUN__TITLE)));
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP1)
-                    .replace("{command}", "/bp lockables")));
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP1_CLICK)
-                    .replace("{command}", "/bp lockables"))
-                .clickEvent(ClickEvent.suggestCommand("/bp lockables")));
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP2)
-                    .replace("{file}", "blocks.yml")));
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP3)
-                    .replace("{url}", "https://github.com/VictorGugug/BlockProt-Reloaded")));
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP4)
-                    .replace("{command}", "/bp recommended")));
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__FIRST_RUN__FOOTER)
-                    .replace("{line}", " ".repeat(48))));
+            if (!BlockProt.getDefaultConfig().hasConfiguredBlocks()) {
+                String line = Translator.get(TranslationKey.MESSAGES__FIRST_RUN__HEADER)
+                    .replace("{line}", " ".repeat(48));
+                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(line));
+                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                    Translator.get(TranslationKey.MESSAGES__FIRST_RUN__TITLE)));
+                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                    Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP1)
+                        .replace("{command}", "/bp lockables")));
+                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                    Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP1_CLICK)
+                        .replace("{command}", "/bp lockables"))
+                    .clickEvent(ClickEvent.suggestCommand("/bp lockables")));
+                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                    Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP2)
+                        .replace("{file}", "blocks.yml")));
+                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                    Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP3)
+                        .replace("{url}", "https://github.com/VictorGugug/BlockProt-Reloaded")));
+                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                    Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP4)
+                        .replace("{command}", "/bp recommended")));
+                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                    Translator.get(TranslationKey.MESSAGES__FIRST_RUN__FOOTER)
+                        .replace("{line}", " ".repeat(48))));
+            }
         }
 
         // Deliver queued raid alerts to the owner on join.

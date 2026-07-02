@@ -35,7 +35,7 @@ lockable_entities:
 
 ## Quick reference
 
-All five lockable list keys are empty (`[]`) by default on a fresh install. Run `/bp recommended` (console only) to populate a sensible default set instead of configuring everything by hand. The table below shows what `/bp recommended` writes for each key when `modern_family_blocks: false` (flat mode).
+All five lockable list keys ship with two blank template lines (`-` / `-`) by default on a fresh install, ready for you to type material names directly in their place. Run `/bp recommended` (console only) to populate a sensible default set instead of configuring everything by hand. The table below shows what `/bp recommended` writes for each key when `modern_family_blocks: false` (flat mode).
 
 | Key | Family | `/bp recommended` default (flat mode) |
 |---|---|---|
