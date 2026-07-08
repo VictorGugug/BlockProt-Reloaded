@@ -41,9 +41,9 @@ repositories {
 dependencies {
     implementation(project(":common"))
 
-    // Compile against Paper 1.21.1 — the oldest version we actively support.
+    // Compile against Paper 1.21.1, the oldest version the plugin actively supports.
     // 1.20.x users receive bug fixes only (legacy support, no new features).
-    // Primary targets: Paper/Purpur 26.1.2 (80%+ of installs) and 1.21.1+.
+    // Primary targets: current Paper/Purpur 26.x line and 1.21.1+.
     // APIs introduced after 1.21.1 are accessed via VersionCompat checks and
     // reflection at runtime, never directly imported.
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
@@ -57,7 +57,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.14.4")
     testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.110.0")
 
-    // bStats — 3.2.1
+    // bStats: 3.2.1
     api("org.bstats:bstats-bukkit:3.2.1")
 
     // Dependencies
@@ -70,7 +70,7 @@ dependencies {
     implementation("com.zaxxer:HikariCP:7.1.0")
     implementation("com.mysql:mysql-connector-j:9.7.0")
 
-    // Integrations (soft-depend — provided at runtime by the server)
+    // Integrations (soft-depend, provided at runtime by the server)
     compileOnly("com.github.TownyAdvanced:Towny:$townyVersion")
     compileOnly("me.clip:placeholderapi:$papiVersion")
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:$worldGuardVersion")
@@ -154,7 +154,7 @@ tasks.runServer {
     downloadPlugins {
         url("https://download.luckperms.net/1561/bukkit/loader/LuckPerms-Bukkit-5.4.146.jar")
     }
-    minecraftVersion("26.1.2")
+    minecraftVersion("26.2")
 }
 
 publishing {

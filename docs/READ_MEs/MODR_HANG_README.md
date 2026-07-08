@@ -1,6 +1,6 @@
 # BlockProt Reloaded - Modrinth & Hangar Description
 
-BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper and Spigot servers (Minecraft 1.21.1 through 26.1.x). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
+BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper and Spigot servers (Minecraft 1.21.1 through the current 26.x line). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
 
 
 ## What it does
@@ -118,7 +118,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 
 | | |
 |---|---|
-| Minecraft | 1.21.1, 1.21.x, 26.1.x |
+| Minecraft | 1.21.1, 1.21.x, 26.x (no upper cap, detected numerically at runtime) |
 | Server software | Paper, Spigot, Purpur, Folia |
 | Java | 25+ required |
 | MySQL | MySQL 8+, MariaDB 10.5+ (optional) |

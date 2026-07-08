@@ -252,7 +252,7 @@ Sneak and right-click any lockable block to open the protection GUI. Add friends
 
 ### Java 25 and Paper 1.21.1 through 26.x Compatibility
 
-Compiles against the Paper 1.21.1 API and runs on every version from 1.21.1 through 26.1.x. 1.20.x received its last big update in 1.3.3. Both the classic `1.x` and the year-based `26.x` version schemes are detected at runtime.
+Compiles against the Paper 1.21.1 API and runs on every version from 1.21.1 through the current 26.x line, including 26.2 and later drops: version detection compares numbers rather than matching a fixed list, so new 26.x releases are recognized automatically. 1.20.x received its last big update in 1.3.3. Both the classic `1.x` and the year-based `26.x` version schemes are detected at runtime.
 
 ### Item Frame Protection
 
@@ -497,8 +497,8 @@ MySQL is configured separately in `mysql/mysql.yml`.
 
 | | |
 |---|---|
-| Minecraft | 1.21.1, 1.21.x, 26.1.x |
-| Server software | Paper, Spigot, Folia |
+| Minecraft | 1.21.1, 1.21.x, 26.x (no upper cap, detected numerically at runtime) |
+| Server software | Paper, Spigot, Purpur, Folia |
 | Java | 25+ required |
 | MySQL | MySQL 8+, MariaDB 10.5+ (optional) |
 | Languages | EN, ES, DE, FR, IT, PT-BR, RU, JA, KO, ZH-CN, ZH-TW, CS, SK, PL, TR |
