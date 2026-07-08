@@ -22,6 +22,7 @@ package de.sean.blockprot.bukkit.listeners;
 
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.config.IntegrationConfig;
 import de.sean.blockprot.bukkit.events.BlockProtLockEvent;
 import de.sean.blockprot.bukkit.integrations.PluginIntegration;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
@@ -56,12 +57,12 @@ public final class WorldEditPasteListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onWorldEditPasteCommand(@NotNull PlayerCommandPreprocessEvent event) {
-        if (!BlockProt.getDefaultConfig().isWorldEditPasteAutolockEnabled()) return;
+        if (!IntegrationConfig.getBoolean("worldedit.paste_autolock.enabled", false)) return;
         if (!isPasteCommand(event.getMessage())) return;
 
         Player player = event.getPlayer();
         Location origin = player.getLocation().clone();
-        long delay = BlockProt.getDefaultConfig().getWorldEditPasteAutolockDelayTicks();
+        long delay = IntegrationConfig.getLong("worldedit.paste_autolock.delay_ticks", 20L);
 
         Bukkit.getScheduler().runTaskLater(plugin, () -> scanAndLock(player, origin), delay);
         BlockProtLogger.log("worldedit-paste", "Detected paste command from " + player.getName()
@@ -85,8 +86,8 @@ public final class WorldEditPasteListener implements Listener {
         if (world == null || !player.isOnline()) return;
         if (BlockProt.getDefaultConfig().isWorldExcluded(world)) return;
 
-        int radius = BlockProt.getDefaultConfig().getWorldEditPasteAutolockRadius();
-        int maxBlocks = BlockProt.getDefaultConfig().getWorldEditPasteAutolockMaxBlocks();
+        int radius = IntegrationConfig.getInt("worldedit.paste_autolock.radius", 24);
+        int maxBlocks = IntegrationConfig.getInt("worldedit.paste_autolock.max_blocks_per_paste", 5000);
         int locked = 0;
         int scanned = 0;
 

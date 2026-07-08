@@ -55,6 +55,7 @@ public final class PlaceholderAPIIntegration extends PluginIntegration {
 
     @Override
     public void enable() {
+        if (!configuration.getBoolean("enabled", true)) return;
         final Plugin papi = getPlugin();
         if (papi == null || !papi.isEnabled()) return;
 

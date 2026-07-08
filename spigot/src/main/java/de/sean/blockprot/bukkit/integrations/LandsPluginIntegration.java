@@ -41,6 +41,8 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.UUID;
+
 /**
  * Lands integration. Registers a custom role-flag, "Protect Containers (BlockProt)",
  * that land owners can grant or deny per role. When configured to restrict access,
@@ -55,13 +57,18 @@ import org.jetbrains.annotations.Nullable;
 public final class LandsPluginIntegration extends PluginIntegration implements Listener {
 
     private static final String FLAG_NAME = "blockprot_protect_containers";
+    private static final String FRIENDS_FLAG_NAME = "blockprot_require_protect_for_friends";
     private static final String ALLOW_IN_WILDERNESS = "allow_protecting_containers_in_wilderness";
+    private static final String REQUIRE_PROTECT_FOR_FRIENDS = "require_protect_for_friends_flag";
 
     @Nullable
     private LandsIntegration lands;
 
     @Nullable
     private RoleFlag protectFlag;
+
+    @Nullable
+    private RoleFlag requireProtectForFriendsFlag;
 
     private boolean enabled = false;
 
@@ -82,16 +89,23 @@ public final class LandsPluginIntegration extends PluginIntegration implements L
             lands = LandsIntegration.of(BlockProt.getInstance());
             protectFlag = RoleFlag.of(lands, FlagTarget.PLAYER, RoleFlagCategory.ACTION, FLAG_NAME);
             BlockProtLogger.log("integration", "Lands: registered custom role-flag '" + FLAG_NAME + "'.");
+
+            if (isRequireProtectForFriendsEnabled()) {
+                requireProtectForFriendsFlag = RoleFlag.of(lands, FlagTarget.PLAYER, RoleFlagCategory.ACTION, FRIENDS_FLAG_NAME);
+                BlockProtLogger.log("integration", "Lands: registered custom role-flag '" + FRIENDS_FLAG_NAME + "'.");
+            }
         } catch (NoClassDefFoundError | IllegalStateException e) {
             // IllegalStateException: flag already registered by a prior BlockProt session
             // on this same server run (e.g. a plugin reload). Safe to ignore.
             lands = null;
             protectFlag = null;
+            requireProtectForFriendsFlag = null;
         }
     }
 
     @Override
     public void enable() {
+        if (!configuration.getBoolean("enabled", true)) return;
         final Plugin plugin = getPlugin();
         if (plugin == null || !plugin.isEnabled() || lands == null) {
             return;
@@ -99,6 +113,10 @@ public final class LandsPluginIntegration extends PluginIntegration implements L
         if (protectFlag != null) {
             protectFlag.setDisplayName(Translator.get(TranslationKey.INTEGRATIONS__LANDS__PROTECT_CONTAINERS_FLAG_NAME));
             protectFlag.setDescription(Translator.get(TranslationKey.INTEGRATIONS__LANDS__PROTECT_CONTAINERS_DESC));
+        }
+        if (requireProtectForFriendsFlag != null) {
+            requireProtectForFriendsFlag.setDisplayName(Translator.get(TranslationKey.INTEGRATIONS__LANDS__REQUIRE_PROTECT_FOR_FRIENDS_FLAG_NAME));
+            requireProtectForFriendsFlag.setDescription(Translator.get(TranslationKey.INTEGRATIONS__LANDS__REQUIRE_PROTECT_FOR_FRIENDS_DESC));
         }
         this.registerListener(this);
         enabled = true;
@@ -117,10 +135,18 @@ public final class LandsPluginIntegration extends PluginIntegration implements L
             protectFlag.setDisplayName(Translator.get(TranslationKey.INTEGRATIONS__LANDS__PROTECT_CONTAINERS_FLAG_NAME));
             protectFlag.setDescription(Translator.get(TranslationKey.INTEGRATIONS__LANDS__PROTECT_CONTAINERS_DESC));
         }
+        if (requireProtectForFriendsFlag != null) {
+            requireProtectForFriendsFlag.setDisplayName(Translator.get(TranslationKey.INTEGRATIONS__LANDS__REQUIRE_PROTECT_FOR_FRIENDS_FLAG_NAME));
+            requireProtectForFriendsFlag.setDescription(Translator.get(TranslationKey.INTEGRATIONS__LANDS__REQUIRE_PROTECT_FOR_FRIENDS_DESC));
+        }
     }
 
     private boolean isAllowedInWilderness() {
         return configuration.getBoolean(ALLOW_IN_WILDERNESS, true);
+    }
+
+    private boolean isRequireProtectForFriendsEnabled() {
+        return configuration.getBoolean(REQUIRE_PROTECT_FOR_FRIENDS, false);
     }
 
     /**
@@ -136,6 +162,23 @@ public final class LandsPluginIntegration extends PluginIntegration implements L
         var area = world.getArea(location);
         if (area == null) return isAllowedInWilderness();
         return area.hasRoleFlag(who, protectFlag, block.getType(), true);
+    }
+
+    @Override
+    protected boolean filterFriendByUuid(@NotNull final UUID friend,
+                                          @NotNull final Player player,
+                                          @NotNull final Block block) {
+        if (lands == null || requireProtectForFriendsFlag == null) return true;
+        Location location = block.getLocation();
+        LandWorld world = lands.getWorld(block.getWorld());
+        if (world == null) return true;
+        var area = world.getArea(location);
+        if (area == null) return true;
+        if (!area.hasRoleFlag(player, requireProtectForFriendsFlag, block.getType(), true)) return true;
+        var friendPlayer = lands.getLandPlayer(friend);
+        if (friendPlayer == null) return false;
+        return area.hasRoleFlag(player, protectFlag, block.getType(), true)
+            && area.hasRoleFlag(friendPlayer, protectFlag, block.getType(), true);
     }
 
     @EventHandler

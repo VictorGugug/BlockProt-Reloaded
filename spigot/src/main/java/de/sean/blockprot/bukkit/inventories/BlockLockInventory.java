@@ -402,13 +402,6 @@ public class BlockLockInventory extends BlockProtInventory {
             || n.endsWith("_SHELF");
     }
 
-    private static boolean isDisplayType(@NotNull Material m) {
-        String n = m.name();
-        return n.equals("LECTERN") || n.endsWith("_SIGN") || n.endsWith("_WALL_SIGN")
-            || n.endsWith("_HANGING_SIGN") || n.endsWith("_WALL_HANGING_SIGN")
-            || n.equals("BEEHIVE") || n.equals("BEE_NEST");
-    }
-
     private static boolean isTraversalType(@NotNull Material m) {
         String n = m.name();
         return (n.endsWith("_DOOR") && !n.contains("TRAP")) || n.contains("TRAPDOOR") || n.contains("FENCE_GATE");

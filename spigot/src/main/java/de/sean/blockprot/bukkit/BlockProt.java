@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.commands.BlockProtCommand;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.config.IntegrationConfig;
 import de.sean.blockprot.bukkit.config.WorldsConfig;
 import de.sean.blockprot.bukkit.integrations.*;
 import de.sean.blockprot.bukkit.listeners.*;
@@ -160,6 +161,7 @@ public final class BlockProt extends JavaPlugin {
         try { registerIntegration(new ViaVersionIntegration());     } catch (NoClassDefFoundError ignored) {}
         try { registerIntegration(new WorldGuardIntegration());     } catch (NoClassDefFoundError ignored) {}
         try { registerIntegration(new LandsPluginIntegration());    } catch (NoClassDefFoundError ignored) {}
+        try { registerIntegration(new ClaimChunkIntegration());    } catch (NoClassDefFoundError ignored) {}
         for (PluginIntegration integration : integrations) {
             try { integration.load(); } catch (NoClassDefFoundError ignored) {}
         }
@@ -273,9 +275,7 @@ public final class BlockProt extends JavaPlugin {
         registerEvent(pm, new ItemFrameListener());
         registerEvent(pm, new VehicleProtectionListener());
         registerEvent(pm, new RaidDetectionListener());
-        if (defaultConfig.isWorldEditPasteAutolockEnabled()) {
-            registerEvent(pm, new WorldEditPasteListener(this));
-        }
+        registerEvent(pm, new WorldEditPasteListener(this));
 
         BlockProtConsole.boot(
             Translator.get(TranslationKey.CONSOLE__BOOT_LISTENERS),
@@ -411,6 +411,7 @@ public final class BlockProt extends JavaPlugin {
             worldsConfig = null;
         }
 
+        IntegrationConfig.reload();
         for (PluginIntegration integration : integrations) {
             integration.reload();
         }

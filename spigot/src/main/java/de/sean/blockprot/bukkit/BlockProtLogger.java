@@ -24,6 +24,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -73,7 +74,7 @@ public final class BlockProtLogger {
         }
 
         try {
-            writer = new PrintWriter(new FileWriter(currentLogFile, false));
+            writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(currentLogFile), StandardCharsets.UTF_8));
             log("=== BlockProt Session Start ===");
         } catch (IOException e) {
             writer = null;
@@ -112,7 +113,7 @@ public final class BlockProtLogger {
     }
 
     public static void fail(@NotNull String check, @Nullable String reason) {
-        log("FAIL: " + check + (reason != null ? " \u2014 " + reason : ""));
+        log("FAIL: " + check + (reason != null ? " - " + reason : ""));
     }
 
     public static void warn(@NotNull String message) {

@@ -78,6 +78,7 @@ public final class TownyIntegration extends PluginIntegration implements Listene
 
     @Override
     public void enable() {
+        if (!configuration.getBoolean("enabled", true)) return;
         final Plugin plugin = getPlugin();
         if (plugin == null || !plugin.isEnabled()) {
             return;
@@ -173,7 +174,7 @@ public final class TownyIntegration extends PluginIntegration implements Listene
      */
     private boolean shouldCleanupAfterUnclaim() {
         return configuration.contains(CLEANUP_PLOTS_AFTER_UNCLAIM)
-            || configuration.getBoolean(CLEANUP_PLOTS_AFTER_UNCLAIM);
+            && configuration.getBoolean(CLEANUP_PLOTS_AFTER_UNCLAIM);
     }
 
     /**
@@ -184,7 +185,7 @@ public final class TownyIntegration extends PluginIntegration implements Listene
      */
     private boolean shouldBypassProtectionsInRuinedTowns() {
         return configuration.contains(BYPASS_PROTECTIONS_IN_RUINED_TOWNS)
-            || configuration.getBoolean(BYPASS_PROTECTIONS_IN_RUINED_TOWNS);
+            && configuration.getBoolean(BYPASS_PROTECTIONS_IN_RUINED_TOWNS);
     }
 
     private boolean residentEqualsPlayer(@Nullable final Resident resident,
@@ -315,7 +316,7 @@ public final class TownyIntegration extends PluginIntegration implements Listene
             if (town != null) {
                 Resident resident =
                     TownyAPI.getInstance().getResident(event.getPlayer().getUniqueId());
-                if (resident == null || town.hasResident(resident)) {
+                if (resident == null || !town.hasResident(resident)) {
                     event.setCancelled(true);
                 }
             }

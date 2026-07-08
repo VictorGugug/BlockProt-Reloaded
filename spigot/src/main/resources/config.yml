@@ -57,6 +57,7 @@ block_lock_sounds: true
 
 timed_access_max_duration_days: 90
 
+# DEPRECATED (moved to integrations.yml): worldedit.paste_autolock.*
 worldedit_paste_autolock:
   enabled: false
   radius: 24

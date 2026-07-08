@@ -111,8 +111,6 @@ public final class BlockProtAPI {
             event.addPermissions(
                     BlockAccessMenuEvent.MenuPermission.LOCK,
                     BlockAccessMenuEvent.MenuPermission.INFO);
-        } else if (player.hasPermission(Permissions.USER_ADMIN.key())) {
-            event.addPermission(BlockAccessMenuEvent.MenuPermission.INFO);
         }
 
         Optional<FriendHandler> friend;

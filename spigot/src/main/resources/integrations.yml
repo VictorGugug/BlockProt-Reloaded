@@ -1,0 +1,69 @@
+# Centralized integration config for BlockProt Reloaded
+# All external plugin integrations are configured from this single file.
+# Old per-integration files under integrations/ are no longer read.
+# You can safely remove plugins/BlockProtReloaded/integrations/ after verifying
+# your settings are reflected here.
+
+# Master toggle for every integration. Set enabled: false to keep an external
+# plugin installed but prevent BlockProt from interacting with it.
+
+worldguard:
+  enabled: true
+  # Enables the 'allow-blockprot' region flag. When disabled, WorldGuard
+  # is detected but its flag is never checked (BlockProt acts as if
+  # WorldGuard were not installed).
+  enable_flag_functionality: true
+
+lands:
+  enabled: true
+  # Whether players can protect containers in unclaimed wilderness.
+  allow_protecting_containers_in_wilderness: true
+  # Register the "Require 'Protect containers' for friends" role-flag.
+  # When enabled, land owners can grant/deny the ability to add friends
+  # based on whether the friend has the "Protect containers" flag.
+  require_protect_for_friends_flag: false
+
+towny:
+  enabled: true
+  # Clean up block protections when a plot is cleared, a town is
+  # unclaimed, or a town becomes ruined.
+  cleanup_plots_after_unclaim: true
+  # Restrict block access to town residents only. When enabled, only
+  # residents of the town where the block is located can access or
+  # lock it. Unlocked blocks in towns are also restricted.
+  restrict_access_to_residents: false
+  # Allow the town mayor to view block info (the /bp info command),
+  # similar to the blockprot.info permission.
+  allow_mayor_to_see_block_info: false
+  # Allow players to bypass protections (access blocked containers)
+  # in ruined towns.
+  bypass_protection_in_ruined_towns: true
+
+claimchunk:
+  enabled: true
+  # When enabled, block access is fully restricted to the chunk owner.
+  # Players who do not own the chunk cannot access locked or unlocked
+  # blocks inside it. When disabled (default), only locking is
+  # restricted to the chunk owner.
+  restrict_access_to_chunk_owner: false
+
+worldedit:
+  enabled: true
+  paste_autolock:
+    # Automatically lock all protectable blocks within radius after a
+    # WorldEdit //paste command. Moved from config.yml in v1.3.3.
+    enabled: false
+    # Radius (in blocks) around the paste origin to scan for lockable blocks.
+    radius: 24
+    # Maximum number of blocks to lock per paste (safety limit).
+    max_blocks_per_paste: 5000
+    # Delay in ticks before the scan starts (lets WorldEdit finish).
+    delay_ticks: 20
+
+placeholderapi:
+  enabled: true
+  # No configuration options currently available.
+
+viaversion:
+  enabled: true
+  # No configuration options currently available.

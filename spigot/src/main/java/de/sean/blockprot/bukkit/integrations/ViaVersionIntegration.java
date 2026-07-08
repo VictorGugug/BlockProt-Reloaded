@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.config.IntegrationConfig;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -66,6 +67,7 @@ public final class ViaVersionIntegration extends PluginIntegration {
 
     @Override
     public void enable() {
+        if (!IntegrationConfig.getBoolean("viaversion.enabled", true)) return;
         Plugin via = BlockProt.getInstance().getPlugin("ViaVersion");
         if (via == null || !via.isEnabled()) return;
 

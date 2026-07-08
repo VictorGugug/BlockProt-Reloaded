@@ -88,6 +88,7 @@ public final class WorldGuardIntegration extends PluginIntegration implements Li
 
     @Override
     public void enable() {
+        if (!configuration.getBoolean("enabled", true)) return;
         final Plugin plugin = getPlugin();
         if (plugin == null || !plugin.isEnabled()) {
             return;

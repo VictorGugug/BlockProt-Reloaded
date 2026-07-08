@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.integrations;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.config.IntegrationConfig;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -71,17 +72,17 @@ public abstract class PluginIntegration {
     /**
      * Creates a new plugin integration.
      *
-     * @param name      The name of the integration, as well as the name of the config file.
-     * @param hasConfig Whether this integration has an optional config file in integrations/.
-     *                  Pass {@code false} for integrations that need no config (e.g. ViaVersion)
-     *                  to avoid a console warning about a missing file.
+     * @param name      The name of the integration, as well as its section key in
+     *                  integrations.yml.
+     * @param hasConfig Whether this integration reads settings from integrations.yml.
+     *                  Pass {@code false} for integrations that need no config
+     *                  (e.g. ViaVersion) to avoid populating an empty section.
      * @since 0.4.0
      */
     public PluginIntegration(@NotNull final String name, boolean hasConfig) {
         this.name = name;
         if (hasConfig) {
-            configuration =
-                BlockProt.getInstance().saveAndLoadConfigFile("integrations/", name + ".yml", false);
+            configuration = IntegrationConfig.getSection(name);
         } else {
             configuration = new YamlConfiguration();
         }
@@ -89,9 +90,10 @@ public abstract class PluginIntegration {
     }
 
     /**
-     * Creates a new plugin integration that has a config file.
+     * Creates a new plugin integration that reads from integrations.yml.
      *
-     * @param name The name of the integration, as well as the name of the config file.
+     * @param name The name of the integration, as well as its section key in
+     *             integrations.yml.
      * @since 0.4.0
      */
     public PluginIntegration(@NotNull final String name) {
@@ -188,8 +190,7 @@ public abstract class PluginIntegration {
      * @since 1.0.7
      */
     public void reload() {
-        configuration =
-            BlockProt.getInstance().saveAndLoadConfigFile("integrations/", name + ".yml", false);
+        configuration = IntegrationConfig.getSection(name);
     }
 
     @Nullable
