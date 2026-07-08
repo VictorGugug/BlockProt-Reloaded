@@ -71,7 +71,7 @@ messages:
     '
   hint_hover_text: Откройте меню BlockProt или нажмите здесь, чтобы отключить подсказки.
   disabled_hints: §6Подсказки отключены!
-  chat_input_prompt: '§eВведите имя игрока §7(§bTab§7 подсказки · §aEnter§7 подтвердить · §c{cancel}§7 отмена):'
+  chat_input_prompt: '§eВведите имя игрока §7(§bTab§7 подсказки, §aEnter§7 подтвердить, §c{cancel}§7 отмена):'
   chat_input_cancel_word: отмена
   chat_input_cancelled: §cПоиск отменён.
   lock_on_place_success: §aБлок заперт!
@@ -122,7 +122,7 @@ worlds:
 claims:
   wand_pos_a: §bУгол A установлен в §f({x}, {y}, {z})§b. Теперь кликните правой кнопкой на угол B.
   wand_pos_b: §bУгол B установлен в §f({x}, {y}, {z})§b. Введите название в чат, чтобы создать участок.
-  created: '§aУчасток §6{name} §aсоздан! Область: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(мир: {world}).'
+  created: '§aУчасток §6{name} §aсоздан! Область: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(мир: {world}).'
   deleted: §aУчасток §6{name} §aудалён.
   no_claim_here: §cНа вашей текущей позиции нет участка.
   overlap: §cЭта область пересекается с участком другого игрока.

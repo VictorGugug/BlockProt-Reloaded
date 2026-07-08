@@ -38,13 +38,13 @@ import org.jetbrains.annotations.Nullable;
  * which protocol bridges are active.</p>
  *
  * <p>Protocol version lookup always goes through the ViaVersion API regardless of
- * whether ViaBackwards or ViaRewind are present — they share the same API surface.</p>
+ * whether ViaBackwards or ViaRewind are present: they share the same API surface.</p>
  */
 public final class ViaVersionIntegration extends PluginIntegration {
 
     private boolean enabled = false;
 
-    /** ViaVersion main API class — always present when ViaVersion is active. */
+    /** ViaVersion main API class: always present when ViaVersion is active. */
     private static final String VIA_API_CLASS = "com.viaversion.viaversion.api.Via";
 
     public ViaVersionIntegration() {
@@ -52,7 +52,7 @@ public final class ViaVersionIntegration extends PluginIntegration {
     }
 
     /**
-     * ViaVersion has no integration config file — skip the file load entirely.
+     * ViaVersion has no integration config file: skip the file load entirely.
      * Overriding reload() prevents the parent from trying to load integrations/viaversion.yml
      * on every /bp reload, which would produce a console warning.
      */
@@ -78,7 +78,7 @@ public final class ViaVersionIntegration extends PluginIntegration {
                 Translator.get(TranslationKey.CONSOLE__VIAVERSION_DETECTED)
                     .replace("{version}", viaVer));
 
-            // Log companion plugins — they extend ViaVersion but share its API.
+            // Log companion plugins: they extend ViaVersion but share its API.
             probeCompanion("ViaBackwards");
             probeCompanion("ViaRewind");
 
@@ -90,7 +90,7 @@ public final class ViaVersionIntegration extends PluginIntegration {
 
     /**
      * Logs a companion plugin (ViaBackwards, ViaRewind) if installed and enabled.
-     * Does not affect the enabled flag — detection is informational only.
+     * Does not affect the enabled flag: detection is informational only.
      */
     private void probeCompanion(@NotNull String pluginName) {
         Plugin plugin = BlockProt.getInstance().getPlugin(pluginName);
@@ -103,7 +103,7 @@ public final class ViaVersionIntegration extends PluginIntegration {
             String fallback = plugin.getDescription().getVersion();
             ver = fallback;
         }
-        BlockProtLogger.log("integration", pluginName + " detected — v" + ver
+        BlockProtLogger.log("integration", pluginName + " detected: v" + ver
             + " (extends ViaVersion protocol translation)");
     }
 

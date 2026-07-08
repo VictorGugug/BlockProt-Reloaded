@@ -74,7 +74,7 @@ public class ExplodeEventListener implements Listener {
             try {
                 handler = new BlockNBTHandler(b);
             } catch (RuntimeException ignored) {
-                // Block has no tile entity (e.g. a door or fence gate) — safe to skip.
+                // Block has no tile entity (e.g. a door or fence gate): safe to skip.
                 continue;
             }
 
@@ -90,7 +90,7 @@ public class ExplodeEventListener implements Listener {
                     "PROTECTED block saved from explosion: " + b.getType().name()
                     + " at " + locString(b) + " actor=" + actorName);
             } else {
-                // Lockable but unprotected — will be destroyed; evict cache.
+                // Lockable but unprotected: will be destroyed; evict cache.
                 HopperEventListener.invalidate(b);
 
                 BlockProtLogger.log("raid-detection",

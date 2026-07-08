@@ -70,7 +70,7 @@ messages:
     ici pour désactiver ces conseils).
   hint_hover_text: Ouvrez un menu à partir de BlockProt ou cliquez ici pour désactiver les conseils.
   disabled_hints: §6Indices désactivées !
-  chat_input_prompt: '§eTapez le nom du joueur §7(§bTab§7 suggestions · §aEntrée§7 confirmer · §c{cancel}§7 annuler):'
+  chat_input_prompt: '§eTapez le nom du joueur §7(§bTab§7 suggestions, §aEntrée§7 confirmer, §c{cancel}§7 annuler):'
   chat_input_cancel_word: annuler
   chat_input_cancelled: §cRecherche annulée.
   lock_on_place_success: §aBloc verrouillé !
@@ -121,7 +121,7 @@ worlds:
 claims:
   wand_pos_a: §bCoin A défini à §f({x}, {y}, {z})§b. Faites un clic droit sur le coin B.
   wand_pos_b: §bCoin B défini à §f({x}, {y}, {z})§b. Tapez un nom dans le chat pour créer la parcelle.
-  created: '§aParcelle §6{name} §acréée ! Région: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(monde: {world}).'
+  created: '§aParcelle §6{name} §acréée ! Région: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(monde: {world}).'
   deleted: §aParcelle §6{name} §asupprimée.
   no_claim_here: §cIl n'y a pas de parcelle à votre emplacement.
   overlap: §cCette zone chevauche la parcelle d'un autre joueur.

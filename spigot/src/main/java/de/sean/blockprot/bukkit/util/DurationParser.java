@@ -32,18 +32,18 @@ import java.util.regex.Pattern;
  *
  * <p>Accepted unit suffixes (case-insensitive):
  * <ul>
- *   <li>{@code s}          — seconds  (max: 60s)</li>
- *   <li>{@code m}          — minutes  (max: 60m)</li>
- *   <li>{@code h}          — hours    (max: 24h)</li>
- *   <li>{@code d}          — days     (max: 28d)</li>
- *   <li>{@code mo} / {@code mon} — months (language-dependent max, default 12mo)</li>
- *   <li>{@code y}          — years    (not recommended; max configurable)</li>
+ *   <li>{@code s}         : seconds  (max: 60s)</li>
+ *   <li>{@code m}         : minutes  (max: 60m)</li>
+ *   <li>{@code h}         : hours    (max: 24h)</li>
+ *   <li>{@code d}         : days     (max: 28d)</li>
+ *   <li>{@code mo} / {@code mon}: months (language-dependent max, default 12mo)</li>
+ *   <li>{@code y}         : years    (not recommended; max configurable)</li>
  * </ul>
  *
  * <p>Units may be combined freely: {@code 1d12h30m}, {@code 2mo3d}, {@code 1y6mo}.
  * The parser is order-independent (longest match wins per token).
  *
- * <p>Maximum values are <em>not</em> enforced by this class — they are the
+ * <p>Maximum values are <em>not</em> enforced by this class: they are the
  * responsibility of the caller (see {@link DurationLimits}).
  */
 public final class DurationParser {
@@ -53,13 +53,13 @@ public final class DurationParser {
      *
      * <p>Unit priority (longest suffix matched first to avoid "mo" being swallowed by "m"):
      * <ol>
-     *   <li>mon  → months</li>
-     *   <li>mo   → months</li>
-     *   <li>y    → years</li>
-     *   <li>d    → days</li>
-     *   <li>h    → hours</li>
-     *   <li>m    → minutes</li>
-     *   <li>s    → seconds</li>
+     *   <li>mon  -> months</li>
+     *   <li>mo   -> months</li>
+     *   <li>y    -> years</li>
+     *   <li>d    -> days</li>
+     *   <li>h    -> hours</li>
+     *   <li>m    -> minutes</li>
+     *   <li>s    -> seconds</li>
      * </ol>
      */
     private static final Pattern TOKEN_PATTERN = Pattern.compile(

@@ -74,7 +74,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
     private static @Nullable NBTFile nbtFile;
 
     /**
-     * Dirty flag — set to true whenever the in-memory NBT compound is modified.
+     * Dirty flag: set to true whenever the in-memory NBT compound is modified.
      * The periodic save task skips the disk write when false, avoiding unnecessary
      * I/O on idle servers. Always flushed synchronously in {@link #disable()}.
      */
@@ -170,11 +170,11 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
                 new NBTFile(temporarySwapFile);
             } catch (NbtApiException e) {
                 temporarySwapFile.delete();
-                BlockProt.getInstance().getLogger().warning("Stat save aborted — temp file failed validation.");
+                BlockProt.getInstance().getLogger().warning("Stat save aborted: temp file failed validation.");
                 return;
             }
 
-            // Step 3: rotate files — tmp -> backup, then tmp -> live
+            // Step 3: rotate files: tmp -> backup, then tmp -> live
             // Copy temp to backup (keeps a known-good copy)
             try {
                 Files.copy(temporarySwapFile.toPath(), backupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -186,7 +186,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
             try {
                 Files.move(temporarySwapFile.toPath(), nbtFile.getFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {
-                // Atomic move not supported on this OS/FS — copy then delete
+                // Atomic move not supported on this OS/FS: copy then delete
                 try {
                     Files.copy(temporarySwapFile.toPath(), nbtFile.getFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
                     temporarySwapFile.delete();
@@ -244,7 +244,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
         StatHandler.getStatistic(countStatistic);
         // Bind the containers statistic directly to this player's NBT compound.
         getStatsForPlayer(uuid.toString()).ifPresent(h -> h.updateStatistic(containersStatistic));
-        // Mutate both -- the changes are live because the statistic holds a reference to the NBT compound.
+        // Mutate both: statistic holds a reference to the NBT compound.
         countStatistic.increment();
         containersStatistic.add(block);
         markDirty();
@@ -347,7 +347,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
     }
 
     /**
-     * Load a PLAYER statistic using any UUID — works for offline players too.
+     * Load a PLAYER statistic using any UUID: works for offline players too.
      * Reads directly from the NBT file without requiring an online {@link Player}.
      *
      * @param statistic the statistic to populate (must be {@link StatisticType#PLAYER})
@@ -408,7 +408,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
      * block-place events. Calling {@link org.bukkit.block.Block#getType()} on a block whose
      * chunk is not in memory triggers a synchronous chunk load via
      * {@code ServerChunkCache.syncLoad()}, which parks the server thread until the chunk is
-     * fully loaded — causing the 20-second freeze observed in production logs.
+     * fully loaded: causing the 20-second freeze observed in production logs.
      *
      * <p>Fix: skip any entry whose chunk is not already loaded.
      * {@link World#isChunkLoaded(int, int)} is a pure in-memory lookup with no I/O side effects.
@@ -424,7 +424,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
                 Location loc = entry.get();
                 World world = loc.getWorld();
                 if (world == null) {
-                    // World is gone entirely — safe to remove without a chunk load.
+                    // World is gone entirely: safe to remove without a chunk load.
                     pbs.remove(loc);
                     removed++;
                     continue;
@@ -432,7 +432,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
                 // CRITICAL: only call getType() when the chunk is already resident in memory.
                 // isChunkLoaded() never triggers a chunk load; getType() / getBlock() would.
                 if (!world.isChunkLoaded(loc.getBlockX() >> 4, loc.getBlockZ() >> 4)) {
-                    continue; // chunk not loaded — skip this cycle, revisit later
+                    continue; // chunk not loaded: skip this cycle, revisit later
                 }
                 if (loc.getBlock().getType() == org.bukkit.Material.AIR) {
                     pbs.remove(loc);

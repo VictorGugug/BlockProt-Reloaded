@@ -87,7 +87,7 @@ public final class InactivityCleanupTask implements Runnable {
                     if (offline.getPlayer() != null) {
                         StatHandler.getStatistic(stat, offline.getPlayer());
                     } else {
-                        continue; // Offline without a loaded player object — skip.
+                        continue; // Offline without a loaded player object: skip.
                     }
 
                     for (var entry : stat.get()) {

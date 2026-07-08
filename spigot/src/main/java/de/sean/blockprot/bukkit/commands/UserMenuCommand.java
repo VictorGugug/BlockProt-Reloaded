@@ -37,7 +37,7 @@ import java.util.List;
 
 /**
  * Opens the user GUI. Usage: {@code /bp user}.
- * Requires {@code blockprot.user} (default: true — all players).
+ * Requires {@code blockprot.user} (default: true: all players).
  */
 public final class UserMenuCommand implements CommandExecutor {
 

@@ -45,12 +45,12 @@ import java.util.function.Consumer;
  * Opens the native sign editor so the player can type text on line 0.
  *
  * Compatible with Paper/Spigot 1.20.x through 26.1.x.
- * Zero NMS — uses only the public Bukkit API.
+ * Zero NMS: uses only the public Bukkit API.
  *
  * Strategy:
  *   1. Temporarily set a real OAK_WALL_SIGN at a safe location above the player.
  *   2. Set the prompt text on the sign's front side.
- *   3. Call player.openSign(sign, Side.FRONT) — public API since 1.20.
+ *   3. Call player.openSign(sign, Side.FRONT): public API since 1.20.
  *   4. Restore the original block type immediately after opening.
  *   5. Listen for SignChangeEvent to capture line 0 as the user's input.
  *   6. Cancel the event so no sign text is actually saved to the world.

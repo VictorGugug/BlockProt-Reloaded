@@ -72,7 +72,7 @@ messages:
     （点击此处关闭这些提示。）'
   hint_hover_text: 打开一个BlockProt的菜单或者点击此处关闭提示。
   disabled_hints: §6已关闭提示！
-  chat_input_prompt: '§e输入玩家名称 §7(§bTab§7 建议 · §aEnter§7 确认 · §c{cancel}§7 取消):'
+  chat_input_prompt: '§e输入玩家名称 §7(§bTab§7 建议，§aEnter§7 确认，§c{cancel}§7 取消):'
   chat_input_cancel_word: 取消
   chat_input_cancelled: §c搜索已取消。
   lock_on_place_success: §a方块已上锁！
@@ -83,12 +83,12 @@ messages:
   friends_list_title: §6你的信任者
 worlds:
   scan_start: '[BlockProt] 正在扫描世界... ({count} 已加载)'
-  scan_world_added: '[BlockProt] 世界 ''{world}'' 已添加到 worlds.yml — 保护默认禁用。请手动启用。'
+  scan_world_added: '[BlockProt] 世界 ''{world}'' 已添加到 worlds.yml，保护默认禁用。请手动启用。'
   scan_complete: '[BlockProt] 扫描完成。{added} 个新世界已注册。'
 claims:
   wand_pos_a: §b角落A已设置在 §f({x}, {y}, {z})§b。现在右键单击角落B。
   wand_pos_b: §b角落B已设置在 §f({x}, {y}, {z})§b。在聊天中输入名称以创建领地。
-  created: '§a领地 §6{name} §a已创建！区域: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(世界: {world})。'
+  created: '§a领地 §6{name} §a已创建！区域: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(世界: {world})。'
   deleted: §a领地 §6{name} §a已删除。
   no_claim_here: §c您当前位置没有领地。
   overlap: §c该区域与其他玩家的领地重叠。

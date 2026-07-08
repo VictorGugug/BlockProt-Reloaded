@@ -52,7 +52,7 @@ import java.util.regex.Pattern;
  * MiniMessage tags and are never passed to the MiniMessage parser.
  *
  * <p>If the raw string already contains section-symbol ({@code §}) color codes it
- * is returned as-is — no further processing is applied to avoid double-escaping or
+ * is returned as-is: no further processing is applied to avoid double-escaping or
  * passing pre-formatted strings to MiniMessage.
  *
  * <h3>BPR self-repair</h3>

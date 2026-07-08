@@ -142,24 +142,27 @@ public final class WorldLockableDetailInventory extends BlockProtInventory {
         File worldsFile = new File(BlockProt.getInstance().getDataFolder(), "worlds.yml");
         if (!worldsFile.exists()) return;
 
+        BlockFamilyParser.Family family = familyOf(material);
+        if (family == null) return;
+
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(worldsFile);
         String key = "worlds." + world.getName();
+        String listKey = key + "." + DefaultConfig.configKeyForFamily(family);
 
-        String listKey = key + "." + configKeyForMaterial(material);
-        if (listKey == null) return;
-
-        List<String> list = new ArrayList<>(cfg.getStringList(listKey));
-        String name = material.name();
-        boolean currentlyActive = list.contains(name);
-
+        Set<Material> active = new LinkedHashSet<>(BlockFamilyParser.parse(cfg.get(listKey), family));
+        boolean currentlyActive = active.contains(material);
         if (currentlyActive) {
-            list.remove(name);
-            list.remove("-" + name);
+            active.remove(material);
         } else {
-            list.remove("-" + name);
-            if (!list.contains(name)) list.add(name);
+            active.add(material);
         }
-        cfg.set(listKey, list);
+
+        // worlds.yml always uses the compact family-expression form, never a
+        // flat list of individual material names: a per-world list toggled one
+        // material at a time would otherwise grow into an unreadable wall of
+        // plain names across many worlds.
+        String expression = BlockFamilyParser.toFamilyExpression(active, family);
+        cfg.set(listKey, List.of(expression != null ? expression : "[]"));
 
         if (BlockProt.getInstance().getFileWatcher() != null) {
             BlockProt.getInstance().getFileWatcher().suppressNext();
@@ -174,22 +177,20 @@ public final class WorldLockableDetailInventory extends BlockProtInventory {
             ? Translator.get(TranslationKey.DISABLED)
             : Translator.get(TranslationKey.ENABLED);
         BlockProtLogger.log("world-lockables-toggle",
-            actionText + " " + name + " in world " + world.getName()
+            actionText + " " + material.name() + " in world " + world.getName()
                 + " (by " + who.getName() + ")");
         if (who.isOnline()) {
             who.sendActionBar(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__LOCKABLES__TOGGLE_FEEDBACK)
                     .replace("{action}", actionText)
-                    .replace("{name}", name + " §7(" + world.getName() + ")")));
+                    .replace("{name}", material.name() + " §7(" + world.getName() + ")")));
         }
     }
 
     @Nullable
-    private static String configKeyForMaterial(@NotNull Material m) {
+    private static BlockFamilyParser.Family familyOf(@NotNull Material m) {
         for (BlockFamilyParser.Family family : BlockFamilyParser.Family.values()) {
-            if (BlockFamilyParser.getFamilyMembers(family).contains(m)) {
-                return DefaultConfig.configKeyForFamily(family);
-            }
+            if (BlockFamilyParser.getFamilyMembers(family).contains(m)) return family;
         }
         return null;
     }
@@ -206,13 +207,15 @@ public final class WorldLockableDetailInventory extends BlockProtInventory {
             String configKey = DefaultConfig.configKeyForFamily(family);
             if (configKey == null) continue;
 
-            boolean worldHasList = wcfg != null && wcfg.contains("worlds." + world.getName() + "." + configKey);
-            List<String> worldList = worldHasList ? wcfg.getStringList("worlds." + world.getName() + "." + configKey) : List.of();
+            String fullKey = "worlds." + world.getName() + "." + configKey;
+            boolean worldHasList = wcfg != null && wcfg.contains(fullKey);
+            Set<Material> worldActive = worldHasList
+                ? BlockFamilyParser.parse(wcfg.get(fullKey), family)
+                : Set.of();
 
             for (Material m : BlockFamilyParser.getFamilyMembers(family)) {
                 boolean global = cfg.isLockable(m) || cfg.isLockableEntity(m);
-                boolean worldActive = worldList.contains(m.name());
-                boolean active = worldHasList ? worldActive : global;
+                boolean active = worldHasList ? worldActive.contains(m) : global;
                 result.add(new MaterialEntry(m, active));
             }
         }
@@ -222,8 +225,14 @@ public final class WorldLockableDetailInventory extends BlockProtInventory {
 
     @NotNull
     private static ItemStack blockItem(@NotNull Material mat, boolean active) {
-        ItemStack stack = new ItemStack(mat, 1);
-        if (stack.getType() == Material.AIR) stack = new ItemStack(Material.PAPER, 1);
+        Material display = resolveDisplayMaterial(mat);
+        ItemStack stack;
+        try {
+            stack = new ItemStack(display, 1);
+            if (stack.getType() == Material.AIR) stack = new ItemStack(Material.PAPER, 1);
+        } catch (Exception e) {
+            stack = new ItemStack(Material.PAPER, 1);
+        }
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             NamedTextColor nameColor = active ? NamedTextColor.WHITE : NamedTextColor.DARK_GRAY;
@@ -243,6 +252,25 @@ public final class WorldLockableDetailInventory extends BlockProtInventory {
             ));
         }
         return stack;
+    }
+
+    @NotNull
+    private static Material resolveDisplayMaterial(@NotNull Material mat) {
+        String name = mat.name();
+
+        if (name.endsWith("_WALL_SIGN") && !name.endsWith("_HANGING_SIGN")) {
+            Material m = Material.matchMaterial(name.replace("_WALL_SIGN", "_SIGN"));
+            return m != null ? m : Material.OAK_SIGN;
+        }
+        if (name.endsWith("_WALL_HANGING_SIGN")) {
+            Material m = Material.matchMaterial(name.replace("_WALL_HANGING_SIGN", "_HANGING_SIGN"));
+            return m != null ? m : Material.OAK_HANGING_SIGN;
+        }
+        if (name.equals("WATER_CAULDRON") || name.equals("LAVA_CAULDRON")
+                || name.equals("POWDER_SNOW_CAULDRON")) {
+            return Material.CAULDRON;
+        }
+        return mat;
     }
 
     @Override

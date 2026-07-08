@@ -81,7 +81,7 @@ public final class WorldsConfig {
             // Register an alias so lookups succeed whether the admin wrote "world"
             // or the server returns "minecraft:world" from world.getKey().asString().
             // e.g. "world" also registers "minecraft:world"; "world_nether" -> "minecraft:the_nether" is NOT added
-            // automatically here — only exact name-based aliases are safe without a live World instance.
+            // automatically here: only exact name-based aliases are safe without a live World instance.
             // The resolveEntry() method handles the fallback at query time.
             String namespacedAlias = "minecraft:" + name.toLowerCase();
             worlds.putIfAbsent(namespacedAlias, entry);
@@ -110,10 +110,10 @@ public final class WorldsConfig {
      * introduced in a newer plugin version).
      *
      * <ul>
-     *   <li>New world  — full entry written with all required keys inherited from blocks.yml.</li>
-     *   <li>Existing world missing keys — only the absent keys are appended; all present
+     *   <li>New world: full entry written with all required keys inherited from blocks.yml.</li>
+     *   <li>Existing world missing keys: only the absent keys are appended; all present
      *       values are left exactly as the admin configured them.</li>
-     *   <li>Existing world with all keys — skipped entirely (no write).</li>
+     *   <li>Existing world with all keys: skipped entirely (no write).</li>
      * </ul>
      *
      * @param file         The worlds.yml file on disk.
@@ -164,16 +164,16 @@ public final class WorldsConfig {
         BlockProtLogger.log("worlds-scan", Translator.get(TranslationKey.WORLDS__SCAN_START)
             .replace("{count}", String.valueOf(serverWorlds.size())));
 
-        de.sean.blockprot.bukkit.config.DefaultConfig dc = null;
-        try { dc = de.sean.blockprot.bukkit.BlockProt.getDefaultConfig(); } catch (AssertionError ignored) {}
-        final de.sean.blockprot.bukkit.config.DefaultConfig defaultConfig = dc;
-
         for (World world : serverWorlds) {
             String key = "worlds." + world.getName();
 
             if (!disk.contains(key)) {
-                boolean modern = defaultConfig != null && defaultConfig.isModernFamilyBlocks();
-                List<?> emptyLockableList = modern ? List.of("[]") : Arrays.asList(null, null);
+                // worlds.yml is always written in modern family-expression syntax,
+                // never the legacy/flat syntax, regardless of the global
+                // modern_family_blocks setting in config.yml. Per-world lists are
+                // an independent, individually-managed source of truth; blocks.yml
+                // is not consulted once a world has its own worlds.yml entry.
+                List<?> emptyLockableList = List.of("[]");
                 disk.set(key + ".enabled", true);
                 disk.set(key + ".auto_drop_to_inventory_enabled", true);
                 for (String listKey : List.of("lockable_tile_entities", "lockable_shulker_boxes",
@@ -199,8 +199,8 @@ public final class WorldsConfig {
                     } else if (required.equals("lockable_counts")) {
                         disk.set(key + ".lockable_counts", Collections.emptyList());
                     } else {
-                        boolean modern = defaultConfig != null && defaultConfig.isModernFamilyBlocks();
-                        disk.set(key + "." + required, modern ? List.of("[]") : Arrays.asList(null, null));
+                        // Always modern syntax, see note above.
+                        disk.set(key + "." + required, List.of("[]"));
                     }
                     BlockProtLogger.log("worlds-scan",
                         "  ~ '" + world.getName() + "' patched missing key: " + required);
@@ -229,35 +229,6 @@ public final class WorldsConfig {
         return disk;
     }
 
-    private static void copyList(@NotNull YamlConfiguration target, @NotNull FileConfiguration source,
-                                  @NotNull String worldKey, @NotNull String listKey) {
-        List<?> list = source.getList(listKey);
-        if (list != null && !list.isEmpty()) {
-            target.set(worldKey + "." + listKey, list);
-        } else {
-            target.set(worldKey + "." + listKey, Collections.emptyList());
-        }
-    }
-
-    private static void copyFromBlocksConfig(@NotNull YamlConfiguration target, @NotNull String worldKey,
-                                              @NotNull String listKey,
-                                              @NotNull de.sean.blockprot.bukkit.config.DefaultConfig dc,
-                                              @NotNull FileConfiguration fallback) {
-        de.sean.blockprot.bukkit.BlockProt bp = de.sean.blockprot.bukkit.BlockProt.getInstance();
-        File blocksFile = new File(bp.getDataFolder(),
-            bp.getConfig().getString("blocks_file", "blocks.yml"));
-        if (blocksFile.exists()) {
-            YamlConfiguration bc = YamlConfiguration.loadConfiguration(blocksFile);
-            Object raw = bc.get(listKey);
-            if (raw != null) {
-                target.set(worldKey + "." + listKey, raw instanceof List ? raw : List.of(raw.toString()));
-                return;
-            }
-        }
-        List<?> list = fallback.getList(listKey);
-        target.set(worldKey + "." + listKey, list != null ? list : Collections.emptyList());
-    }
-
     private Set<Material> loadMaterials(@NotNull ConfigurationSection section, @NotNull String key,
                                         @NotNull BlockFamilyParser.Family family) {
         Set<Material> result = new HashSet<>();
@@ -272,8 +243,8 @@ public final class WorldsConfig {
      * and year-based (26.x) naming schemes.
      *
      * Strategy:
-     *  1. Try world.getName() — always present, matches admin config most of the time.
-     *  2. If not found, try world.getKey().value() — the NamespacedKey value, which is
+     *  1. Try world.getName(): always present, matches admin config most of the time.
+     *  2. If not found, try world.getKey().value(): the NamespacedKey value, which is
      *     the stable identifier Paper 26.1 uses internally after the world-storage rework.
      *
      * This means admins can continue using plain world names ("world", "world_nether") in
@@ -379,7 +350,7 @@ public final class WorldsConfig {
      * <p>Example output: {@code worlds.yml.2026-05-16_14-30-broken}</p>
      *
      * <p>If the copy fails (disk full, permissions, etc.) a warning is logged
-     * and execution continues normally — the repair must not be blocked by the
+     * and execution continues normally; the repair must not be blocked by the
      * backup step.</p>
      */
     private static void backupBrokenFile(@NotNull File file, @NotNull Logger logger) {
@@ -389,11 +360,11 @@ public final class WorldsConfig {
             java.nio.file.Files.copy(file.toPath(), broken.toPath(),
                 java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             logger.warning("[BlockProt] Broken worlds.yml saved to: " + broken.getName()
-                + " — review it to recover your per-world settings.");
+                + "; review it to recover your per-world settings.");
             BlockProtLogger.log("worlds-repair", "Broken file backed up to: " + broken.getAbsolutePath());
         } catch (java.io.IOException ex) {
             logger.warning("[BlockProt] Could not back up broken worlds.yml: " + ex.getMessage()
-                + " — the file will be overwritten without a backup.");
+                + "; the file will be overwritten without a backup.");
             BlockProtLogger.log("worlds-repair", "Backup of broken file failed: " + ex.getMessage());
         }
     }

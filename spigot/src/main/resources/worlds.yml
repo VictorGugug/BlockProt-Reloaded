@@ -3,12 +3,18 @@
 #
 # Each world entry has its own lockable block lists. The per-world GUI is
 # accessible from /bp lockables (MAP button, middle row) when per_worlds_config is true.
-# Lists use the same format as blocks.yml (flat names or family expressions).
+# A listed world takes absolute, self-contained control of its lists: blocks.yml
+# is never consulted for that world once it has an entry here, even for a
+# category the entry leaves empty. A world with no entry here still uses the
+# global blocks.yml lists.
+# Every list here always uses the compact family-expression syntax
+# (for example "[*-CHEST]"), never a flat list of individual material names,
+# regardless of the global modern_family_blocks setting in config.yml. A flat
+# per-world list would turn into an unreadable wall of names across many worlds.
 # When enabled: false, no blocks can be locked in that world.
-# If a world is NOT listed, the global blocks.yml lists apply.
 # Worlds auto-populate on first scan with empty lists.
 #
 # Docs: https://github.com/VictorGugug/BlockProt-Reloaded/tree/main/docs
-# Syntax: docs/BLOCK_FAMILY_SYNTAX.md
+# Syntax: docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md
 
 worlds:

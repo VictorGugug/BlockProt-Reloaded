@@ -63,9 +63,9 @@ import java.util.stream.Collectors;
  *
  * <p>Layout (27 slots):
  * <ul>
- *   <li>Slot 11 — Confirm (TNT): executes deletion</li>
- *   <li>Slot 13 — Emerald: undo last deletion</li>
- *   <li>Slot 15 — Barrier: cancel / back to selector</li>
+ *   <li>Slot 11: Confirm (TNT): executes deletion</li>
+ *   <li>Slot 13: Emerald: undo last deletion</li>
+ *   <li>Slot 15: Barrier: cancel / back to selector</li>
  * </ul>
  *
  * <p>All NBT reads and writes happen on the main thread.

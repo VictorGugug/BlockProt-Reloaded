@@ -37,12 +37,12 @@ import java.util.UUID;
  *
  * <p>Keys stored (all under namespace {@code blockprot}):
  * <ul>
- *   <li>{@code entity_owner}     — UUID string of the BlockProt owner</li>
- *   <li>{@code entity_protected} — byte: 1 = protection active</li>
- *   <li>{@code no_damage}        — byte: 1 = block damage from other players/mobs</li>
- *   <li>{@code no_interact}      — byte: 1 = block right-click from others (feed, name…)</li>
- *   <li>{@code no_leash}         — byte: 1 = block leash/unleash from others</li>
- *   <li>{@code no_pickup}        — byte: 1 = block parrot-shoulder pickup from others</li>
+ *   <li>{@code entity_owner}    : UUID string of the BlockProt owner</li>
+ *   <li>{@code entity_protected}: byte: 1 = protection active</li>
+ *   <li>{@code no_damage}       : byte: 1 = block damage from other players/mobs</li>
+ *   <li>{@code no_interact}     : byte: 1 = block right-click from others (feed, name…)</li>
+ *   <li>{@code no_leash}        : byte: 1 = block leash/unleash from others</li>
+ *   <li>{@code no_pickup}       : byte: 1 = block parrot-shoulder pickup from others</li>
  * </ul>
  *
  * <p>Renamed from the original {@code pet_owner}/{@code pet_protected} keys used by
@@ -86,7 +86,7 @@ public final class EntityProtectionHandler {
      * One-time migration from the old "pet_*" PDC keys to the new "entity_*" keys.
      * Runs on every construction but is a no-op once migrated (modern key present).
      * {@code no_damage}/{@code no_interact}/{@code no_leash}/{@code no_pickup} keep
-     * their names unchanged — only the owner/protected flags were ever prefixed
+     * their names unchanged: only the owner/protected flags were ever prefixed
      * with {@code pet_}.
      */
     private void migrateLegacyKeysIfNeeded() {

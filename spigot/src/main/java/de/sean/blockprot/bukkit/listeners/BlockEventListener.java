@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.events.BlockLockOnPlaceEvent;
 import de.sean.blockprot.bukkit.events.BlockProtLockEvent;
 import de.sean.blockprot.bukkit.integrations.PluginIntegration;
@@ -283,7 +284,7 @@ public class BlockEventListener implements Listener {
             Bukkit.getScheduler().runTaskLater(
                 this.blockProt,
                 () -> {
-                    if (block.getType() == Material.CHEST || block.getType() == Material.TRAPPED_CHEST) {
+                    if (BlockFamilyParser.getSubFamilyMembers(BlockFamilyParser.SubFamily.CHEST).contains(block.getType())) {
                         final BlockState doubleChestState = BlockUtil.getDoubleChest(block);
                         if (doubleChestState != null) {
                             final BlockNBTHandler doubleChestHandler = new BlockNBTHandler(doubleChestState.getBlock());

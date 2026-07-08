@@ -32,22 +32,22 @@ import java.util.*;
  *
  * <h3>Syntax summary</h3>
  * <pre>
- *   [*]                        → all members of the family
- *   [* -CHEST]                 → all members except the CHEST material specifically
- *   [*-CHEST]                  → only the CHEST sub-family
- *   [*-CHEST -COPPER_CHEST]    → all chest sub-family members except COPPER_CHEST
- *   [* -FLETCHING_TABLE]         → ERROR: FLETCHING_TABLE not in TILE_ENTITIES family; discarded
- *   [CHEST BARREL]             → only CHEST and BARREL (empty base, explicit inclusions)
- *   [-*SHULKERS WHITE_SHULKER_BOX] → all family except shulkers, but WHITE_SHULKER_BOX added back
+ *   [*]                        -> all members of the family
+ *   [* -CHEST]                 -> all members except the CHEST material specifically
+ *   [*-CHEST]                  -> only the CHEST sub-family
+ *   [*-CHEST -COPPER_CHEST]    -> all chest sub-family members except COPPER_CHEST
+ *   [* -FLETCHING_TABLE]         -> ERROR: FLETCHING_TABLE not in TILE_ENTITIES family; discarded
+ *   [CHEST BARREL]             -> only CHEST and BARREL (empty base, explicit inclusions)
+ *   [-*SHULKERS WHITE_SHULKER_BOX] -> all family except shulkers, but WHITE_SHULKER_BOX added back
  * </pre>
  *
  * <h3>Token reference</h3>
  * <ul>
- *   <li>{@code *}       — include all members of the top-level family</li>
- *   <li>{@code *-TAG}   — include all members of the named sub-family</li>
- *   <li>{@code -*TAG}   — exclude all members of the named sub-family</li>
- *   <li>{@code NAME}    — include a specific material (must belong to this family)</li>
- *   <li>{@code -NAME}   — exclude a specific material (must belong to this family)</li>
+ *   <li>{@code *}      : include all members of the top-level family</li>
+ *   <li>{@code *-TAG}  : include all members of the named sub-family</li>
+ *   <li>{@code -*TAG}  : exclude all members of the named sub-family</li>
+ *   <li>{@code NAME}   : include a specific material (must belong to this family)</li>
+ *   <li>{@code -NAME}  : exclude a specific material (must belong to this family)</li>
  * </ul>
  *
  * <h3>Cross-family validation</h3>
@@ -294,11 +294,11 @@ public final class BlockFamilyParser {
      *
      * <h4>Token types</h4>
      * <ul>
-     *   <li>{@code *}       — include all members of the top-level family</li>
-     *   <li>{@code *-TAG}   — include all members of the named sub-family</li>
-     *   <li>{@code -*TAG}   — exclude all members of the named sub-family</li>
-     *   <li>{@code NAME}    — include a specific material (must belong to this family)</li>
-     *   <li>{@code -NAME}   — exclude a specific material (must belong to this family)</li>
+     *   <li>{@code *}      : include all members of the top-level family</li>
+     *   <li>{@code *-TAG}  : include all members of the named sub-family</li>
+     *   <li>{@code -*TAG}  : exclude all members of the named sub-family</li>
+     *   <li>{@code NAME}   : include a specific material (must belong to this family)</li>
+     *   <li>{@code -NAME}  : exclude a specific material (must belong to this family)</li>
      * </ul>
      *
      * Individual {@code NAME} and {@code -NAME} tokens are validated against the current family.
@@ -324,7 +324,7 @@ public final class BlockFamilyParser {
         for (String token : tokens) {
             if (token.equals("*")) continue;
 
-            // *-TAG — enable sub-family
+            // *-TAG: enable sub-family
             if (token.startsWith("*-")) {
                 String tag = token.substring(2).toUpperCase(Locale.ROOT);
                 SubFamily sf = SubFamily.byTag(tag);
@@ -336,14 +336,14 @@ public final class BlockFamilyParser {
                     BlockProtLogger.warn("Sub-family '" + tag + "' belongs to '"
                         + sf.ownerFamily.name().toLowerCase(Locale.ROOT)
                         + "', not '" + family.name().toLowerCase(Locale.ROOT)
-                        + "' — ignored in: " + expr);
+                        + "': ignored in: " + expr);
                     continue;
                 }
                 enabledSubFamilies.add(sf);
                 continue;
             }
 
-            // -*TAG — disable sub-family
+            // -*TAG: disable sub-family
             if (token.startsWith("-*")) {
                 String tag = token.substring(2).toUpperCase(Locale.ROOT);
                 SubFamily sf = SubFamily.byTag(tag);
@@ -355,7 +355,7 @@ public final class BlockFamilyParser {
                     BlockProtLogger.warn("Sub-family '" + tag + "' belongs to '"
                         + sf.ownerFamily.name().toLowerCase(Locale.ROOT)
                         + "', not '" + family.name().toLowerCase(Locale.ROOT)
-                        + "' — ignored in: " + expr);
+                        + "': ignored in: " + expr);
                     continue;
                 }
                 disabledSubFamilies.add(sf);
@@ -363,7 +363,7 @@ public final class BlockFamilyParser {
                 continue;
             }
 
-            // -NAME — explicit exclusion
+            // -NAME: explicit exclusion
             if (token.startsWith("-") && token.length() > 1) {
                 String name = token.substring(1).toUpperCase(Locale.ROOT);
                 Material m = Material.matchMaterial(name);
@@ -374,14 +374,14 @@ public final class BlockFamilyParser {
                 if (!allMembers.contains(m)) {
                     BlockProtLogger.warn("Material '" + name + "' does not belong to family '"
                         + family.name().toLowerCase(Locale.ROOT)
-                        + "' — ignored in: " + expr);
+                        + "': ignored in: " + expr);
                     continue;
                 }
                 explicitExclusions.add(m);
                 continue;
             }
 
-            // NAME — explicit inclusion
+            // NAME: explicit inclusion
             if (!token.isEmpty()) {
                 String name = token.toUpperCase(Locale.ROOT);
                 Material m = Material.matchMaterial(name);
@@ -392,7 +392,7 @@ public final class BlockFamilyParser {
                 if (!allMembers.contains(m)) {
                     BlockProtLogger.warn("Material '" + name + "' does not belong to family '"
                         + family.name().toLowerCase(Locale.ROOT)
-                        + "' — ignored in: " + expr);
+                        + "': ignored in: " + expr);
                     continue;
                 }
                 // If this material belongs to a disabled sub-family, treat it as an exception
@@ -452,7 +452,7 @@ public final class BlockFamilyParser {
             result.removeAll(explicitExclusions);
 
         } else {
-            // No star, no sub-families — explicit inclusions only
+            // No star, no sub-families: explicit inclusions only
             result.addAll(explicitInclusions);
         }
 

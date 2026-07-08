@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
  *
  * <p>Slots layout (54):
  * <ul>
- *   <li>0–50: world items (max 51 per page)</li>
+ *   <li>0-50: world items (max 51 per page)</li>
  *   <li>51: prev page</li>
  *   <li>52: next page</li>
  *   <li>53: close</li>

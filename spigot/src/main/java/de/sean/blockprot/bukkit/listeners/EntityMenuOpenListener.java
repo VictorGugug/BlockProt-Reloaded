@@ -45,7 +45,7 @@ import org.jetbrains.annotations.NotNull;
  * with normal interactions (feeding, sitting, etc.) which require specific items
  * or an empty hand.
  *
- * <p>Renamed from {@code PetMenuOpenListener} as part of the pet → entity protection
+ * <p>Renamed from {@code PetMenuOpenListener} as part of the pet -> entity protection
  * rename. Behaviour is unchanged.
  */
 public final class EntityMenuOpenListener implements Listener {

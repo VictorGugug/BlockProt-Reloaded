@@ -243,7 +243,7 @@ public final class StatisticListInventory extends BlockProtInventory {
 
     /**
      * A stats list entry for a protected entity (item frame, chest boat, minecart).
-     * Resolved live from the world — entity protection is stored in PDC, not NBT file.
+     * Resolved live from the world: entity protection is stored in PDC, not NBT file.
      */
     public static final class EntityListEntry extends ListStatisticItem<Entity, Material> {
         public EntityListEntry(@NotNull Entity entity) { super(entity); }

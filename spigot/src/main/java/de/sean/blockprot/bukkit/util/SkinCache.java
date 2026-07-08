@@ -46,13 +46,13 @@ import java.util.concurrent.ConcurrentHashMap;
  * Asynchronous Mojang-API skin resolver for offline/cracked servers.
  *
  * <p>On cracked (offline-mode) servers the player UUID is derived from the name
- * (offline UUID v3) and does not correspond to any Mojang profile — so skin
+ * (offline UUID v3) and does not correspond to any Mojang profile: so skin
  * fetches via the standard Bukkit profile API silently return no texture.
  *
  * <p>This cache resolves skins by username against the Mojang API:
  * <ol>
- *   <li>{@code GET https://api.mojang.com/users/profiles/minecraft/{name}} → real UUID</li>
- *   <li>{@code GET https://sessionserver.mojang.com/session/minecraft/profile/{uuid}?unsigned=false} → skin</li>
+ *   <li>{@code GET https://api.mojang.com/users/profiles/minecraft/{name}} -> real UUID</li>
+ *   <li>{@code GET https://sessionserver.mojang.com/session/minecraft/profile/{uuid}?unsigned=false} -> skin</li>
  * </ol>
  * Results are cached per username until the server restarts. The first time a
  * name is requested a placeholder profile is returned instantly and the real
@@ -67,7 +67,7 @@ public final class SkinCache {
 
     /** Cached resolved profiles, keyed by lowercase player name. */
     private static final ConcurrentHashMap<String, PlayerProfile> cache = new ConcurrentHashMap<>();
-    /** Names currently being fetched — prevents duplicate requests. */
+    /** Names currently being fetched: prevents duplicate requests. */
     private static final ConcurrentHashMap<String, Boolean> inflight = new ConcurrentHashMap<>();
 
     private static final HttpClient HTTP = HttpClient.newBuilder()
@@ -80,7 +80,7 @@ public final class SkinCache {
      * Returns the best available {@link PlayerProfile} for the given player.
      *
      * <p>If a cached profile with a skin is available it is returned immediately.
-     * Otherwise a plain profile is returned and an async skin fetch is kicked off —
+     * Otherwise a plain profile is returned and an async skin fetch is kicked off :
      * the next call after the fetch completes will return the skinned profile.
      *
      * @param name        The player's current username (case-insensitive).
@@ -116,7 +116,7 @@ public final class SkinCache {
             Class<?> providerClass = Class.forName("net.skinsrestorer.api.SkinsRestorerProvider");
             Object api = providerClass.getMethod("get").invoke(null);
             Object playerStorage = api.getClass().getMethod("getPlayerStorage").invoke(api);
-            // getSkinForPlayer blocks on HTTP if the skin is not cached — must be async.
+            // getSkinForPlayer blocks on HTTP if the skin is not cached: must be async.
             Object optional = playerStorage.getClass()
                 .getMethod("getSkinForPlayer", UUID.class, String.class)
                 .invoke(playerStorage, uuid, name);
@@ -162,18 +162,18 @@ public final class SkinCache {
                 return;
             }
 
-            // Step 2 — fetch the full profile with skin texture.
+            // Step 2: fetch the full profile with skin texture.
             String profileJson = fetchProfileJson(mojangUuid);
             if (profileJson == null) {
                 cache.put(key, Bukkit.getServer().createPlayerProfile(mojangUuid, name));
                 return;
             }
 
-            // Step 3 — parse the textures property and build a PlayerProfile.
+            // Step 3: parse the textures property and build a PlayerProfile.
             PlayerProfile profile = buildProfileFromJson(mojangUuid, name, profileJson);
             cache.put(key, profile);
         } catch (Exception ignored) {
-            // Network error, rate limit, etc. — silently skip; next call will retry.
+            // Network error, rate limit, etc.: silently skip; next call will retry.
         } finally {
             inflight.remove(key);
         }

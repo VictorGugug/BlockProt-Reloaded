@@ -71,7 +71,7 @@ messages:
     '
   hint_hover_text: Öffne ein Menü von BlockProt oder klick hier um Hinweise zu deaktivieren.
   disabled_hints: §6Hinweise deaktiviert!
-  chat_input_prompt: '§eGib den Spielernamen ein §7(§bTab§7 Vorschläge · §aEnter§7 bestätigen · §c{cancel}§7 abbrechen):'
+  chat_input_prompt: '§eGib den Spielernamen ein §7(§bTab§7 Vorschläge, §aEnter§7 bestätigen, §c{cancel}§7 abbrechen):'
   chat_input_cancel_word: abbrechen
   chat_input_cancelled: §cSuche abgebrochen.
   lock_on_place_success: §aBlock gesperrt!

@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Admin GUI — lists every block owned by a specific player.
+ * Admin GUI: lists every block owned by a specific player.
  * Similar to {@link StatisticListInventory} but works for offline players and
  * requires {@code blockprot.user.admin}.
  *

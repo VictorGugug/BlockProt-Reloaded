@@ -40,8 +40,8 @@ import org.jetbrains.annotations.NotNull;
  * Layout (9 slots, 0-8):
  *   0 = Lock on place   (BARRIER)
  *   1 = Hints toggle    (KNOWLEDGE_BOOK)
- *   2 = Notifications   (BELL)
- *   3 = Friends skull   (PLAYER_HEAD)
+ *   3 = Notifications   (BELL)
+ *   4 = Friends skull   (PLAYER_HEAD)
  *   8 = Back
  */
 public class UserSettingsInventory extends BlockProtInventory {

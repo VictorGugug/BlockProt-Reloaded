@@ -52,7 +52,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * /blockprot debug — diagnostics and manual test-bench.
+ * /blockprot debug: diagnostics and manual test-bench.
  */
 public class DebugCommand implements CommandExecutor {
 
@@ -113,7 +113,7 @@ public class DebugCommand implements CommandExecutor {
         AtomicInteger failed = new AtomicInteger(0);
 
         BlockProtLogger.separator();
-        BlockProtLogger.log("=== /blockprot debug run — " + java.time.LocalDateTime.now() + " ===");
+        BlockProtLogger.log("=== /blockprot debug run: " + java.time.LocalDateTime.now() + " ===");
         BlockProtLogger.log("Player : " + player.getName() + " (" + player.getUniqueId() + ")");
         BlockProtLogger.log("Server : " + Bukkit.getVersion());
         BlockProtLogger.log("API    : " + Bukkit.getBukkitVersion());
@@ -186,7 +186,7 @@ public class DebugCommand implements CommandExecutor {
     private void checkConfig(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var cfg = BlockProt.getDefaultConfig();
-            BlockProtLogger.pass("Config OK — friendDisabled=" + cfg.isFriendFunctionalityDisabled()
+            BlockProtLogger.pass("Config OK: friendDisabled=" + cfg.isFriendFunctionalityDisabled()
                 + " maxBlocks=" + cfg.getMaxLockedBlockCount()
                 + " lockEffects=" + cfg.isLockEffectEnabled()
                 + " lockSound=" + cfg.isLockSoundEnabled()
@@ -218,7 +218,7 @@ public class DebugCommand implements CommandExecutor {
                 BlockProtLogger.fail("BukkitCompat", "One or more fields resolved to null");
                 f.incrementAndGet(); return;
             }
-            BlockProtLogger.pass("BukkitCompat — PARTICLE_DUST=" + dust.name()
+            BlockProtLogger.pass("BukkitCompat: PARTICLE_DUST=" + dust.name()
                 + " TRANSITION=" + dustTransition.name()
                 + " GLOW=" + enchant.getKey().getKey()
                 + " newParticle=" + BukkitCompat.hasNewParticleNames()
@@ -242,7 +242,7 @@ public class DebugCommand implements CommandExecutor {
             }
         }
         if (errors == 0) {
-            BlockProtLogger.pass("Translations — " + TranslationKey.values().length + " keys OK, " + blank + " blank");
+            BlockProtLogger.pass("Translations: " + TranslationKey.values().length + " keys OK, " + blank + " blank");
             p.incrementAndGet();
         } else {
             BlockProtLogger.fail("Translations", errors + " key(s) threw exceptions"); f.incrementAndGet();
@@ -286,7 +286,7 @@ public class DebugCommand implements CommandExecutor {
 
             boolean configEmpty = active.isEmpty();
             if (configEmpty) {
-                BlockProtLogger.pass("Lockable entities: EMPTY — vehicle/frame protection disabled (correct per blocks.yml)");
+                BlockProtLogger.pass("Lockable entities: EMPTY: vehicle/frame protection disabled (correct per blocks.yml)");
                 if (cfg.isLockableEntity(Material.CHEST_MINECART)) {
                     BlockProtLogger.fail("Lockable entities", "CHEST_MINECART reports lockable but lockable_entities is empty");
                     f.incrementAndGet();
@@ -499,7 +499,7 @@ public class DebugCommand implements CommandExecutor {
     private void checkPlayerSettings(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var ps = new PlayerSettingsHandler(player);
-            BlockProtLogger.pass("PlayerSettings OK — lockOnPlace=" + ps.getLockOnPlace()
+            BlockProtLogger.pass("PlayerSettings OK: lockOnPlace=" + ps.getLockOnPlace()
                 + " hintsEnabled=" + !ps.hasPlayerInteractedWithMenu());
             p.incrementAndGet();
         } catch (Exception e) {
@@ -700,7 +700,7 @@ public class DebugCommand implements CommandExecutor {
             if (v == null || v.isBlank()) { BlockProtLogger.fail("Chat msg blank", k.name()); bad++; }
             else ok++;
         }
-        BlockProtLogger.log("Messages — " + ok + " OK, " + bad + " blank");
+        BlockProtLogger.log("Messages: " + ok + " OK, " + bad + " blank");
         if (bad == 0) { BlockProtLogger.pass("All message keys present"); p.incrementAndGet(); }
         else f.incrementAndGet();
     }

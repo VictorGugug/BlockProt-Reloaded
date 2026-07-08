@@ -37,9 +37,9 @@ import java.util.*;
  *
  * <p>Visibility rules:
  * <ul>
- *   <li><b>use_menus=true</b>  — tab-complete shows only {@code user} and {@code admin}.
+ *   <li><b>use_menus=true</b> : tab-complete shows only {@code user} and {@code admin}.
  *       Any other subcommand is blocked with a usage hint.</li>
- *   <li><b>use_menus=false</b> — tab-complete shows all CLI commands (help, settings,
+ *   <li><b>use_menus=false</b>: tab-complete shows all CLI commands (help, settings,
  *       friends, stats, etc.). {@code user} and {@code admin} are hidden and blocked.</li>
  * </ul>
  */

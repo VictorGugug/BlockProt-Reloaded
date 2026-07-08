@@ -72,7 +72,7 @@ messages:
     questi suggerimenti)'
   hint_hover_text: Apri un menù di BlockProt o clicca qui per disattivare i suggerimenti.
   disabled_hints: §6Suggerimenti disattivati!
-  chat_input_prompt: '§eInserisci il nome del giocatore §7(§bTab§7 suggerimenti · §aInvio§7 conferma · §c{cancel}§7 annulla):'
+  chat_input_prompt: '§eInserisci il nome del giocatore §7(§bTab§7 suggerimenti, §aInvio§7 conferma, §c{cancel}§7 annulla):'
   chat_input_cancel_word: annulla
   chat_input_cancelled: §cRicerca annullata.
   lock_on_place_success: §aBlocco bloccato!
@@ -123,7 +123,7 @@ worlds:
 claims:
   wand_pos_a: §bAngolo A impostato in §f({x}, {y}, {z})§b. Ora clicca col destro sull'angolo B.
   wand_pos_b: §bAngolo B impostato in §f({x}, {y}, {z})§b. Scrivi un nome in chat per creare la parcella.
-  created: '§aParcella §6{name} §acreata! Regione: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(mondo: {world}).'
+  created: '§aParcella §6{name} §acreata! Regione: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(mondo: {world}).'
   deleted: §aParcella §6{name} §aeliminata.
   no_claim_here: §cNon c'è nessuna parcella nella tua posizione attuale.
   overlap: §cQuest'area si sovrappone alla parcella di un altro giocatore.

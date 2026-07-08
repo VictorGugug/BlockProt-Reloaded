@@ -352,10 +352,6 @@ public final class DefaultConfig extends BlockProtConfig {
         return !config.getBoolean("use_menus", false);
     }
 
-    public boolean isLockablesGuiClickToToggle() {
-        return config.getBoolean("lockables_gui_click_to_toggle", false);
-    }
-
     public boolean shouldEnableAllOptionalFeatures() { return false; }
     public boolean isLocalizedCommandAliasesEnabled() { return config.getBoolean("localized_command_aliases", true); }
 
@@ -461,13 +457,13 @@ public final class DefaultConfig extends BlockProtConfig {
      *
      * <p>Each entry in the blocks list is resolved as follows:
      * <ul>
-     *   <li>Plain material name — resolved directly.</li>
-     *   <li>Family expression — resolved against every known family in order.
+     *   <li>Plain material name: resolved directly.</li>
+     *   <li>Family expression: resolved against every known family in order.
      *       Each family contributes independently; results are unioned.
      *       This means {@code [*]} expands to every lockable material across all families,
      *       and {@code [-*SHULKERS]} subtracts shulker boxes from the SHULKER_BOXES family
      *       (which is the only family that owns that sub-family), yielding an empty set for
-     *       that family — effectively disabling shulker auto-drop.</li>
+     *       that family: effectively disabling shulker auto-drop.</li>
      * </ul>
      *
      * <p>To disable auto-drop for shulkers while keeping it for everything else, list each
@@ -477,7 +473,7 @@ public final class DefaultConfig extends BlockProtConfig {
      *     - '[* -*SHULKERS]'   # all TILE_ENTITIES, none for SHULKER_BOXES (no star there)
      * </pre>
      * Note that {@code [-*SHULKERS]} alone yields an empty set because there is no base
-     * inclusion ({@code *}) before the exclusion — the result is intentionally empty.
+     * inclusion ({@code *}) before the exclusion: the result is intentionally empty.
      */
     @NotNull
     public Set<Material> getAutoDropToInventoryBlocks() {
@@ -1112,23 +1108,29 @@ public final class DefaultConfig extends BlockProtConfig {
         List<String> list;
         if (isModernFamilyBlocks()) {
             list = new ArrayList<>();
-            Set<Material> covered = new java.util.LinkedHashSet<>();
-            for (BlockFamilyParser.Family family : BlockFamilyParser.Family.values()) {
-                Set<Material> members = BlockFamilyParser.getFamilyMembers(family);
-                if (members.isEmpty()) continue;
-                Set<Material> activeForFamily = new java.util.LinkedHashSet<>(active);
-                activeForFamily.retainAll(members);
-                if (activeForFamily.isEmpty()) continue;
-                covered.addAll(members);
-                String expr = BlockFamilyParser.toFamilyExpression(activeForFamily, family);
-                if (expr != null && !expr.equals("[*]") && !expr.startsWith("[* ")) {
-                    list.add(expr);
-                } else {
-                    activeForFamily.stream().sorted().map(Material::name).forEach(list::add);
+
+            boolean allActive = true;
+            for (BlockFamilyParser.Family f : BlockFamilyParser.Family.values()) {
+                if (!active.containsAll(BlockFamilyParser.getFamilyMembers(f))) {
+                    allActive = false;
+                    break;
                 }
             }
-            for (Material m : active.stream().sorted().toList()) {
-                if (!covered.contains(m)) list.add(m.name());
+            if (allActive) {
+                list.add("[*]");
+            } else {
+                Set<Material> covered = new java.util.LinkedHashSet<>();
+                for (BlockFamilyParser.SubFamily sf : BlockFamilyParser.SubFamily.values()) {
+                    Set<Material> sfMembers = BlockFamilyParser.getSubFamilyMembers(sf);
+                    if (sfMembers.isEmpty()) continue;
+                    if (active.containsAll(sfMembers)) {
+                        list.add("[*-" + sf.tag + "]");
+                        covered.addAll(sfMembers);
+                    }
+                }
+                for (Material m : active.stream().sorted().toList()) {
+                    if (!covered.contains(m)) list.add(m.name());
+                }
             }
         } else {
             list = active.stream().map(Material::name).sorted().toList();

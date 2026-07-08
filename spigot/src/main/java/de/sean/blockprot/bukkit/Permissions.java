@@ -25,13 +25,13 @@ package de.sean.blockprot.bukkit;
  *
  * <p>Four active nodes (declared in plugin.yml):
  * <ul>
- *   <li>{@link #USER}       — all standard player actions. Default: true (everyone)</li>
- *   <li>{@link #USER_ADMIN} — all admin actions plus the ability to break any protected
+ *   <li>{@link #USER}      : all standard player actions. Default: true (everyone)</li>
+ *   <li>{@link #USER_ADMIN}: all admin actions plus the ability to break any protected
  *                             block or shulker, clearing the protection on break.
  *                             Implicitly grants USER. Default: op</li>
- *   <li>{@link #MAX_BLOCKS} — exempts the player from the player_max_locked_block_count
+ *   <li>{@link #MAX_BLOCKS}: exempts the player from the player_max_locked_block_count
  *                             cap in config.yml. Default: false</li>
- *   <li>{@link #BLOCKS_TP}  — teleport to a block from the statistics inventory.
+ *   <li>{@link #BLOCKS_TP} : teleport to a block from the statistics inventory.
  *                             Default: op</li>
  * </ul>
  *

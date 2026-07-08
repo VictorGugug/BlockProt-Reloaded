@@ -1,7 +1,7 @@
 name: Publish Release
 
 # Fires automatically when the release workflow publishes a GitHub Release,
-# OR manually from Actions → Publish Release → Run workflow.
+# OR manually from Actions -> Publish Release -> Run workflow.
 on:
   release:
     types: [published]
@@ -69,7 +69,7 @@ jobs:
 
   # ── Modrinth ───────────────────────────────────────────────────────────────
   publish_modrinth:
-    name: Publish → Modrinth
+    name: Publish -> Modrinth
     needs: build
     runs-on: ubuntu-latest
 
@@ -131,7 +131,7 @@ jobs:
 
   # ── Hangar ─────────────────────────────────────────────────────────────────
   publish_hangar:
-    name: Publish → Hangar
+    name: Publish -> Hangar
     needs: build
     runs-on: ubuntu-latest
 

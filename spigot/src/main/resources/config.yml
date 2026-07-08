@@ -71,8 +71,6 @@ owner_notifications:
 
 use_menus: false
 
-lockables_gui_click_to_toggle: false
-
 enable_protection_expiry: false
 expiry_scan_on_startup: true
 

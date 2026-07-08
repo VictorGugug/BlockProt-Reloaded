@@ -42,13 +42,13 @@ import java.util.List;
  *
  * <p>Data layout (NamespacedKey namespace = {@code "blockprot"}):
  * <pre>
- *   blockprot:owner              — String UUID of the owner
- *   blockprot:hopper_protection  — byte  1 = blocked (default), 0 = allowed
- *   blockprot:friends            — String, semicolon-delimited friend list
+ *   blockprot:owner             : String UUID of the owner
+ *   blockprot:hopper_protection : byte  1 = blocked (default), 0 = allowed
+ *   blockprot:friends           : String, semicolon-delimited friend list
  * </pre>
  *
  * <p>Friend list encoding (stored as a single String to avoid nested PDC complexity):
- * {@code "uuid1:0;uuid2:1"} — colon separates UUID from the manager flag (0 = regular
+ * {@code "uuid1:0;uuid2:1"}: colon separates UUID from the manager flag (0 = regular
  * friend, 1 = manager). This mirrors the simplified access model used for blocks,
  * where every friend can read/write and only the manager flag is meaningful.
  */
@@ -103,12 +103,12 @@ public final class EntityNBTHandler {
         pdc.remove(key(K_LINKED_BLOCK));
     }
 
-    // Item frame ↔ block link
+    // Item frame <-> block link
 
     /**
      * Returns the world+coordinates of the block this item frame is linked to,
      * encoded as {@code "world,x,y,z"}, or an empty string if not linked.
-     * Only meaningful for item frame entities — see
+     * Only meaningful for item frame entities: see
      * {@code BlockNBTHandler#getLinkedItemFrameUuid()} for the inverse link.
      */
     @NotNull
@@ -144,7 +144,7 @@ public final class EntityNBTHandler {
 
     /**
      * Returns true if {@code playerUuid} is the owner or any registered friend.
-     * Movement lock and inventory access use the same rule — friends always
+     * Movement lock and inventory access use the same rule: friends always
      * have full read/write, matching block-friend semantics.
      */
     public boolean canWrite(@NotNull String playerUuid) {

@@ -10,7 +10,7 @@
 [![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
 [![Paper](https://img.shields.io/badge/Paper-1.21.1%2B%20%7C%2026.x-white?style=flat-square)](https://papermc.io/)
 
-Java 25 · Paper 1.21.1 through 26.x · MySQL index · per-world config · access audit · entity protection · villager workstation protection · auto-backup · ownership transfer · item frame and vehicle protection
+Java 25, Paper 1.21.1 through 26.x, MySQL index, per-world config, access audit, entity protection, villager workstation protection, auto-backup, ownership transfer, item frame and vehicle protection
 
 </div>
 
@@ -18,7 +18,7 @@ Block protection plugin for Paper and Spigot servers. Players lock chests, furna
 
 ## Philosophy
 
-BlockProt Reloaded exists because the best ideas come from the community that uses the plugin. If you have a feature request, a bug report, or want to discuss improvements, open an issue on GitHub or join our Discord (link coming soon). If you are a developer, open a pull request. Fragmentation into multiple forks helps nobody; every improvement belongs in one place, shared with everyone.
+BlockProt Reloaded exists because the best ideas come from the community that uses the plugin. If you have a feature request, a bug report, or want to discuss improvements, open an issue on GitHub or join our [Discord](https://discord.gg/RRcjuMr9Jd). If you are a developer, open a pull request. Fragmentation into multiple forks helps nobody; every improvement belongs in one place, shared with everyone.
 
 ## Screenshots
 
@@ -85,16 +85,16 @@ cd BlockProt-Reloaded
 .\gradlew.bat :blockprot-spigot:shadowJar
 ```
 
-Output is placed at `spigot/build/libs/BlockProt-VERSION.jar`.
+Output is placed at `spigot/build/libs/BlockProtReloaded-VERSION.jar`.
 
 The version suffix is controlled by the `versionSuffix` property in `gradle.properties`:
 
 | Value | Output |
 |---|---|
-| *(blank)* | `BlockProt-1.3.3.jar` - stable release |
-| `SNAPSHOT` | `BlockProt-1.3.3-SNAPSHOT.jar` |
-| `beta.1` | `BlockProt-1.3.3-beta.1.jar` |
-| `rc.1` | `BlockProt-1.3.3-rc.1.jar` |
+| *(blank)* | `BlockProtReloaded-1.3.3.jar` - stable release |
+| `SNAPSHOT` | `BlockProtReloaded-1.3.3-SNAPSHOT.jar` |
+| `beta.1` | `BlockProtReloaded-1.3.3-beta.1.jar` |
+| `rc.1` | `BlockProtReloaded-1.3.3-rc.1.jar` |
 
 
 ## File Layout
@@ -163,7 +163,7 @@ Six-row paged GUI listing every block the plugin knows about, organized by categ
 
 Blocks with a green **Status: ACTIVE** label are currently lockable. Blocks with a red **Status: INACTIVE** label are recognized by the system but not enabled in `blocks.yml`. Left-click any entry to toggle its state: inactive blocks become active and vice versa, updating `blocks.yml` on disk and reloading automatically. Each category has a NETHER STAR entry that enables every material in that category at once. Right-click copies `-MATERIAL_NAME` to your clipboard for use as an exclusion token in a family expression.
 
-The info book shows your server version, your client version when ViaVersion is active, and a count of active vs inactive blocks. Full documentation of families and sub-families is in [`docs/LOCKABLE_BLOCKS_REFERENCE.md`](docs/LOCKABLE_BLOCKS_REFERENCE.md).
+The info book shows your server version, your client version when ViaVersion is active, and a count of active vs inactive blocks. Full documentation of families and sub-families is in [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](docs/MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md).
 
 ### Statistics List
 
@@ -295,7 +295,7 @@ lockable_entities:
   - "[*-CHEST_MINECARTS *-HOPPER_MINECARTS]"
 ```
 
-Full syntax reference: [`docs/BLOCK_FAMILY_SYNTAX.md`](docs/BLOCK_FAMILY_SYNTAX.md). Full block list: [`docs/LOCKABLE_BLOCKS_REFERENCE.md`](docs/LOCKABLE_BLOCKS_REFERENCE.md).
+Full syntax reference: [`docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md`](docs/MODERN%20SYNTAX%20AND%20LEGACY/BLOCK_FAMILY_SYNTAX.md). Full block list: [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](docs/MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md).
 
 ### Config and Blocks Auto-Merge
 
@@ -386,7 +386,7 @@ On first boot after a plugin rename, BlockProt Reloaded automatically copies dat
 
 ## Block Coverage
 
-All block lists are defined in `blocks.yml` and can be changed without restarting. Full details are in [`docs/LOCKABLE_BLOCKS_REFERENCE.md`](docs/LOCKABLE_BLOCKS_REFERENCE.md).
+All block lists are defined in `blocks.yml` and can be changed without restarting. Full details are in [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](docs/MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md).
 
 **Storage blocks:** all chest variants including all copper oxidation stages (1.21.9+), all 17 shulker box colors, furnace, smoker, blast furnace, hopper, dispenser, dropper, barrel, brewing stand, decorated pot, chiseled bookshelf, crafter, jukebox, lectern, beehive, bee nest, beacon, all 12 shelf variants, and all sign variants (standing, hanging, wall).
 
@@ -531,7 +531,7 @@ Language files are in `spigot/src/main/resources/lang/`. Both legacy color codes
 
 ## Documentation policy from 1.3.4 onward
 
-1.3.3 is the last release where this README is updated feature-by-feature in full detail. Starting with 1.3.4, this README will be condensed into a short summary of all current features, and `docs/RELEASE_NOTES.md` becomes the single place where what changed between versions is recorded in detail. This keeps documentation effort proportional to development time as the plugin grows. Check `docs/RELEASE_NOTES.md` for the complete version-by-version history going forward.
+1.3.3 is the last release where this README is updated feature-by-feature in full detail. Starting with 1.3.4, this README will be condensed into a short summary of all current features, and `docs/RELEASE_NOTES.md` becomes the single place where what changed between versions is recorded in detail. This keeps documentation effort proportional to development time as the plugin grows. Check [`docs/RELEASE_NOTES/1.3.3.RELEASE_NOTES.md`](docs/RELEASE_NOTES/1.3.3.RELEASE_NOTES.md) for the complete version-by-version history going forward.
 
 
 ## Contact and Support

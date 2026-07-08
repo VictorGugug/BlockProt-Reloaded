@@ -69,7 +69,7 @@ messages:
     yazarak kendi isteklerinize göre ayarları değiştirebilirsiniz. (Bu ipuçlarını devre dışı bırakmak için tıklayın)
   hint_hover_text: BlockProt menüsünü aç veya ipuçlarını devre dışı bırakmak için buraya tıkla.
   disabled_hints: §6İpuçları devre dışı bırakıldı!
-  chat_input_prompt: '§eOyuncu adını gir §7(§bTab§7 öneriler · §aEnter§7 onayla · §c{cancel}§7 iptal):'
+  chat_input_prompt: '§eOyuncu adını gir §7(§bTab§7 öneriler, §aEnter§7 onayla, §c{cancel}§7 iptal):'
   chat_input_cancel_word: iptal
   chat_input_cancelled: §cArama iptal edildi.
   lock_on_place_success: §aBlok kilitlendi!
@@ -80,13 +80,13 @@ messages:
   friends_list_title: §6Arkadaşların
 worlds:
   scan_start: '[BlockProt] Dünyalar taranıyor... ({count} yüklendi)'
-  scan_world_added: '[BlockProt] ''{world}'' dünyası worlds.yml''ye eklendi — koruma varsayılan olarak KAPALI. Manuel olarak
+  scan_world_added: '[BlockProt] ''{world}'' dünyası worlds.yml''ye eklendi, koruma varsayılan olarak KAPALI. Manuel olarak
     etkinleştir.'
   scan_complete: '[BlockProt] Tarama tamamlandı. {added} yeni dünya kaydedildi.'
 claims:
   wand_pos_a: §bA köşesi §f({x}, {y}, {z})§b konumuna ayarlandı. Şimdi B köşesine sağ tıkla.
   wand_pos_b: §bB köşesi §f({x}, {y}, {z})§b konumuna ayarlandı. Parsel oluşturmak için sohbete bir isim yaz.
-  created: '§a§6{name} §aparseli oluşturuldu! Bölge: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(dünya: {world}).'
+  created: '§a§6{name} §aparseli oluşturuldu! Bölge: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(dünya: {world}).'
   deleted: §a§6{name} §aparseli silindi.
   no_claim_here: §cBulunduğun konumda herhangi bir parsel yok.
   overlap: §cBu alan başka bir oyuncunun parseli ile çakışıyor.

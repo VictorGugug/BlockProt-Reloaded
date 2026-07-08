@@ -58,7 +58,7 @@ import java.util.Set;
  * <p>Item frames are never an independent protection unit when they are mounted
  * on a lockable storage block (chest, barrel, shulker box, etc.): they are
  * automatically <b>linked</b> to that block on placement (see {@link #onFramePlace}).
- * A linked frame has no owner/friends of its own — interacting with it opens the
+ * A linked frame has no owner/friends of its own: interacting with it opens the
  * underlying block's BlockLock menu, and the frame's protection follows the block's
  * exactly (same owner, same friends, locks and unlocks together). This avoids the
  * double-protection UX problem of a chest + its decorative item frame being two
@@ -91,7 +91,7 @@ public final class ItemFrameListener implements Listener {
         }
 
         if (player.isSneaking()) {
-            // Sneaking + empty hand → open protection menu.
+            // Sneaking + empty hand -> open protection menu.
             var mainHand = player.getInventory().getItemInMainHand();
             if (!mainHand.getType().isAir()) return;
 
@@ -125,7 +125,7 @@ public final class ItemFrameListener implements Listener {
             }
             player.openInventory(inv);
         } else {
-            // Normal right-click — block if protected and player is not owner/friend/admin.
+            // Normal right-click: block if protected and player is not owner/friend/admin.
             if (!handler.isProtected()) return;
             if (handler.canAccess(player.getUniqueId().toString())
                     || player.hasPermission(Permissions.USER_ADMIN.key())) return;
@@ -148,7 +148,7 @@ public final class ItemFrameListener implements Listener {
         try {
             blockHandler = new BlockNBTHandler(linkedBlock);
         } catch (RuntimeException e) {
-            return; // block no longer lockable/loaded — fall through to vanilla behaviour
+            return; // block no longer lockable/loaded: fall through to vanilla behaviour
         }
 
         if (player.isSneaking()) {
@@ -200,7 +200,7 @@ public final class ItemFrameListener implements Listener {
      * {@link de.sean.blockprot.bukkit.BlockProtAPI#getLockInventoryForBlock}. This is
      * required because the linked-frame menu opens the block's {@link BlockLockInventory}
      * directly, bypassing the normal {@link BlockAccessMenuEvent} flow that would
-     * otherwise compute these permissions — without it the menu would render with no
+     * otherwise compute these permissions: without it the menu would render with no
      * buttons at all, since {@link BlockLockInventory#fill} gates every action behind
      * {@code state.menuPermissions}.
      */
@@ -229,7 +229,7 @@ public final class ItemFrameListener implements Listener {
      * Resolves the block linked to this frame, if any, validating that the link
      * is still consistent (the frame must still be attached to that exact block).
      * Returns null if there is no link, or if the link is stale (block moved/changed
-     * since linking — defensive check against desync after world edits).
+     * since linking: defensive check against desync after world edits).
      */
     @Nullable
     private Block resolveLinkedBlock(@NotNull EntityNBTHandler handler) {
@@ -333,7 +333,7 @@ public final class ItemFrameListener implements Listener {
      *
      * <p>Two scenarios are covered:
      * <ol>
-     *   <li><b>Mounted on a lockable block</b> — the frame is automatically linked
+     *   <li><b>Mounted on a lockable block</b>: the frame is automatically linked
      *       to that block (bidirectional link via {@link EntityNBTHandler#setLinkedBlock}
      *       and {@link BlockNBTHandler#setLinkedItemFrameUuid}). From this point on the
      *       frame has no protection state of its own: it shares the block's owner,
@@ -341,13 +341,13 @@ public final class ItemFrameListener implements Listener {
      *       on someone's chest to visually interfere with it, and avoids the player
      *       having to separately protect a decorative frame next to a chest they
      *       already protected.</li>
-     *   <li><b>Not mounted on a lockable block</b> — frame remains a standalone
+     *   <li><b>Not mounted on a lockable block</b>: frame remains a standalone
      *       protectable entity. If the placing player has "lock on place" enabled
      *       (and is not sneaking), the frame is immediately locked to them, exactly
      *       mirroring the behaviour for lockable blocks.</li>
      * </ol>
      *
-     * <p>Linking always takes priority over scenario 2 — a frame mounted on a
+     * <p>Linking always takes priority over scenario 2: a frame mounted on a
      * lockable block is never given its own owner.</p>
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -359,7 +359,7 @@ public final class ItemFrameListener implements Listener {
         if (BlockProt.getDefaultConfig().isWorldExcluded(player.getWorld())) return;
 
         EntityNBTHandler frameHandler = new EntityNBTHandler(frame);
-        if (frameHandler.isProtected() || frameHandler.isLinkedToBlock()) return; // already owned/linked — do not overwrite
+        if (frameHandler.isProtected() || frameHandler.isLinkedToBlock()) return; // already owned/linked: do not overwrite
 
         // Scenario 1: link to the attached block, if it's lockable
         BlockFace attachedFace = frame.getAttachedFace();
@@ -371,8 +371,8 @@ public final class ItemFrameListener implements Listener {
                     attachedBlock.getType(), attachedBlock.getWorld())) {
                 try {
                     BlockNBTHandler blockHandler = new BlockNBTHandler(attachedBlock);
-                    // Only link if the block doesn't already have a different linked frame
-                    // (defensive — should not normally happen since one block face holds one frame).
+                    // Only link if the block doesn't already have a different linked frame.
+                    // Defensive: one block face holds at most one frame.
                     if (!blockHandler.hasLinkedItemFrame()) {
                         frameHandler.setLinkedBlock(attachedBlock.getWorld().getName(),
                             attachedBlock.getX(), attachedBlock.getY(), attachedBlock.getZ());
@@ -381,7 +381,7 @@ public final class ItemFrameListener implements Listener {
                             "LINKED frame " + frame.getUniqueId()
                             + " to " + attachedBlock.getType().name()
                             + " at " + attachedBlock.getX() + "," + attachedBlock.getY() + "," + attachedBlock.getZ());
-                        return; // linked — skip standalone auto-lock entirely
+                        return; // linked: skip standalone auto-lock entirely
                     }
                 } catch (RuntimeException ignored) {}
             }
@@ -395,7 +395,7 @@ public final class ItemFrameListener implements Listener {
         frameHandler.setOwner(player.getUniqueId().toString());
         player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
             Translator.get(TranslationKey.MESSAGES__LOCK_ON_PLACE_SUCCESS)));
-        // No session log for auto-lock — would spam on every frame placement.
+        // No session log for auto-lock: would spam on every frame placement.
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String text) {

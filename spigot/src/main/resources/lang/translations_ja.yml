@@ -70,7 +70,7 @@ messages:
     '
   hint_hover_text: ヒントを無効にするには、BlockProt からメニューを開くかここをクリックします。
   disabled_hints: §6ヒントが無効になりました。
-  chat_input_prompt: '§eプレイヤー名を入力してください §7(§bTab§7 候補 · §aEnter§7 確認 · §c{cancel}§7 キャンセル):'
+  chat_input_prompt: '§eプレイヤー名を入力してください §7(§bTab§7 候補, §aEnter§7 確認, §c{cancel}§7 キャンセル):'
   chat_input_cancel_word: cancel
   chat_input_cancelled: §c検索をキャンセルしました。
   lock_on_place_success: §aブロックをロックしました！
@@ -81,12 +81,12 @@ messages:
   friends_list_title: §6あなたのフレンド
 worlds:
   scan_start: '[BlockProt] ワールドをスキャン中... ({count} 読み込み済み)'
-  scan_world_added: '[BlockProt] ワールド ''{world}'' を worlds.yml に追加しました — 保護はデフォルトで無効です。手動で有効化してください。'
+  scan_world_added: '[BlockProt] ワールド ''{world}'' を worlds.yml に追加しました: 保護はデフォルトで無効です。手動で有効化してください。'
   scan_complete: '[BlockProt] スキャン完了。{added} 件の新しいワールドが登録されました。'
 claims:
   wand_pos_a: §bコーナーAを§f({x}, {y}, {z})§bに設定しました。次にコーナーBを右クリックしてください。
   wand_pos_b: §bコーナーBを§f({x}, {y}, {z})§bに設定しました。チャットに名前を入力してクレームを作成してください。
-  created: '§aクレーム§6{name}§aを作成しました！エリア: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(ワールド: {world})。'
+  created: '§aクレーム§6{name}§aを作成しました！エリア: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(ワールド: {world})。'
   deleted: §aクレーム§6{name}§aを削除しました。
   no_claim_here: §c現在の位置にクレームはありません。
   overlap: §cこのエリアは他のプレイヤーのクレームと重なっています。

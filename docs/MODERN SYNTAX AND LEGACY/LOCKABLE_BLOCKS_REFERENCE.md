@@ -26,8 +26,8 @@ Available in both menu mode and CLI mode - it is always accessible regardless of
 Clicking does not open anything or change any settings. It sends a clickable message to your chat.
 Click that message and the material name is copied to your clipboard, ready to paste into `blocks.yml`.
 
-- **Left-click** a block → copies `MATERIAL_NAME` (green) - paste directly as a flat entry or as an inclusion token in a family expression
-- **Right-click** a block → copies `-MATERIAL_NAME` (red) - the exclusion token to remove that material from an active sub-family
+- **Left-click** a block -> copies `MATERIAL_NAME` (green) - paste directly as a flat entry or as an inclusion token in a family expression
+- **Right-click** a block -> copies `-MATERIAL_NAME` (red) - the exclusion token to remove that material from an active sub-family
 
 The info book in slot 46 shows the server version, your client version (if ViaVersion is installed),
 and a count of how many blocks are currently active vs inactive.
@@ -45,7 +45,7 @@ and a count of how many blocks are currently active vs inactive.
 | `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES`            |
 
 `lockable_entities` uses entity NBT (persistent data container), not block NBT. Family expressions are fully supported.
-Item frames (`*-ITEM_FRAMES`) are **enabled by default**. Other entity sub-families are disabled — add them to enable.
+Item frames (`*-ITEM_FRAMES`) are **enabled by default**. Other entity sub-families are disabled: add them to enable.
 
 ---
 
@@ -335,7 +335,7 @@ Storage entities and item frames. Protection is stored in the entity's persisten
 being killed (the entity ceases to exist; protection data goes with it).
 
 **Default state:** empty (`[]`) on a fresh install, same as every other lockable list. Run `/bp recommended` for a sensible default that enables `ITEM_FRAME` and `GLOW_ITEM_FRAME`, or configure manually via `/bp lockables` or `blocks.yml`.
-Other entity types are disabled until an admin adds them to `blocks.yml`. This is intentional —
+Other entity types are disabled until an admin adds them to `blocks.yml`. This is intentional :
 entity protection has a higher performance profile than block protection because entities are not
 indexed by chunk the same way.
 

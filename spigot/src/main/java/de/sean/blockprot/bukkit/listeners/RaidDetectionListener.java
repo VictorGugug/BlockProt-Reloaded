@@ -63,7 +63,7 @@ import java.util.UUID;
  *       the player has {@code blockprot.blocks.tp} at join time.</li>
  * </ul>
  *
- * <p>This listener does NOT cancel or modify the explosion — that is handled
+ * <p>This listener does NOT cancel or modify the explosion: that is handled
  * by {@link ExplodeEventListener}. This listener only performs detection and
  * notification.
  *
@@ -77,7 +77,7 @@ public final class RaidDetectionListener implements Listener {
     /**
      * Pending raid alerts queued for offline players.
      * Key: owner UUID. Value: list of alert strings to send on next join.
-     * Persists across reloads in memory only — not written to disk.
+     * Persists across reloads in memory only: not written to disk.
      */
     private static final Map<UUID, java.util.List<String>> pendingAlerts = new HashMap<>();
     private static final UUID ENVIRONMENT_UUID = new UUID(0L, 0L);
@@ -120,7 +120,7 @@ public final class RaidDetectionListener implements Listener {
             String actorDisplay = resolveActor(source);
 
             String logLine = String.format(
-                "WARN: [raid-detection] Possible raid — %s at %s [%d, %d, %d] near explosion. Actor: %s",
+                "WARN: [raid-detection] Possible raid: %s at %s [%d, %d, %d] near explosion. Actor: %s",
                 material, world, x, y, z, actorDisplay);
             BlockProtLogger.log(logLine);
 

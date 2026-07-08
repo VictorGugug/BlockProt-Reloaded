@@ -1,3 +1,5 @@
+![LEGACY BLOCKS SYNTAX](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/docs/LEGACY%20BLOCKS%20SYNTAX.png)
+
 # blocks.yml -- Configuration Guide
 
 `blocks.yml` controls which blocks, entities, and containers players can protect on your server.
@@ -41,10 +43,12 @@ All five lockable list keys ship with two blank template lines (`-` / `-`) by de
 |---|---|---|
 | `lockable_tile_entities` | TILE_ENTITIES | All chests, furnaces, hoppers, barrels, shelves, etc. |
 | `lockable_shulker_boxes` | SHULKER_BOXES | All 17 shulker box variants |
-| `lockable_blocks` | BLOCKS | Anvils, cauldrons, workstations, fence gates, trapdoors |
-| `lockable_doors` | DOORS | All wood types + iron + copper |
+| `lockable_blocks` | BLOCKS | Anvils, cauldrons, workstations (grindstone, stonecutter, loom, cartography table, smithing table, enchanting table, fletching table), dragon egg, composter, bell, note block |
+| `lockable_doors` | DOORS | All wood types + iron |
 | `lockable_entities` | ENTITIES | ITEM_FRAME + GLOW_ITEM_FRAME only |
 | `auto_drop_to_inventory` | -- | Empty (`auto_drop_to_inventory.enabled: true`, `blocks: []`) even after `/bp recommended` in flat mode; only the modern-mode (`modern_family_blocks: true`) branch of `/bp recommended` populates it, with `[*-SHULKERS]` |
+
+Fence gates, trapdoors, and copper doors belong to the BLOCKS and DOORS families respectively and can be added with family expressions (e.g. `"[*-TRAPDOOR]"`, `"[*-FENCE_GATE]"`), but `/bp recommended` does not include them in its flat-mode defaults.
 
 ### Flat list -- per-material
 

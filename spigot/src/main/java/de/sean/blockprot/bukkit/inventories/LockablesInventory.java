@@ -362,7 +362,8 @@ public final class LockablesInventory extends BlockProtInventory {
             || n.equals("BREWING_STAND") || n.equals("HOPPER")
             || n.equals("DISPENSER") || n.equals("DROPPER")
             || n.equals("BEEHIVE") || n.equals("BEE_NEST")
-            || n.equals("JUKEBOX") || n.equals("LECTERN"))            return Category.STORAGE;
+            || n.equals("JUKEBOX") || n.equals("LECTERN")
+            || n.equals("BEACON"))                                    return Category.STORAGE;
         if (n.equals("GRINDSTONE") || n.equals("STONECUTTER")
             || n.equals("LOOM") || n.equals("CARTOGRAPHY_TABLE")
             || n.equals("SMITHING_TABLE") || n.equals("ENCHANTING_TABLE")
@@ -382,8 +383,8 @@ public final class LockablesInventory extends BlockProtInventory {
             case DOORS        -> "[*]";
             case TRAPDOORS    -> "[*-TRAPDOOR]";
             case GATES        -> "[*-FENCE_GATE]";
-            case WORKSTATIONS -> "[*-WORKSTATION]";
-            case INTERACTIVE  -> "[*-ANVIL *-CAULDRON]";
+            case WORKSTATIONS -> "[*-WORKSTATION *-ANVIL]";
+            case INTERACTIVE  -> "[*-CAULDRON]";
             case ENTITIES     -> "[*]";
         };
     }
@@ -518,7 +519,7 @@ public final class LockablesInventory extends BlockProtInventory {
     /**
      * Converts a {@link Material} name to a human-readable title-cased string.
      * Underscores are replaced with spaces and each word is capitalised.
-     * Example: {@code OAK_CHEST} → {@code "Oak Chest"}.
+     * Example: {@code OAK_CHEST} -> {@code "Oak Chest"}.
      *
      * @param mat The material whose name to format.
      * @return The formatted display name.

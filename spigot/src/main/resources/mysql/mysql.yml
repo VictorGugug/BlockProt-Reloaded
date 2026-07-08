@@ -1,4 +1,4 @@
-# BlockProt — MySQL / Storage
+# BlockProt: MySQL / Storage
 # BlockProt Reloaded (BPR)
 # When disabled, BlockProt uses NBT/PDC stored on the blocks
 # themselves. Enable MySQL to use a shared relational database.

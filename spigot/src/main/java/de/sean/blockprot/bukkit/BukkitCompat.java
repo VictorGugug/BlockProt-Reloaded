@@ -28,8 +28,8 @@ import org.jetbrains.annotations.NotNull;
  * Runtime compatibility shims for Bukkit API fields that were renamed
  * between MC 1.20 and 26.x.
  *
- * Particle.DUST  — added in 1.20.6; older servers use Particle.REDSTONE.
- * Enchantment.INFINITY — added/renamed in 1.20.6; older servers use ARROW_INFINITE.
+ * Particle.DUST : added in 1.20.6; older servers use Particle.REDSTONE.
+ * Enchantment.INFINITY: added/renamed in 1.20.6; older servers use ARROW_INFINITE.
  *
  * All fields are resolved once at class-load via Enum.valueOf so there is
  * zero overhead after the first access.
@@ -41,7 +41,7 @@ public final class BukkitCompat {
     public static final Enchantment GLOW_ENCHANT;
 
     static {
-        // 1.20.6+ → "DUST"   |   1.20.x → "REDSTONE"
+        // 1.20.6+ -> "DUST"   |   1.20.x -> "REDSTONE"
         Particle dust;
         try {
             dust = Particle.valueOf("DUST");
@@ -50,7 +50,7 @@ public final class BukkitCompat {
         }
         PARTICLE_DUST = dust;
 
-        // 1.20.6+ → "DUST_COLOR_TRANSITION"  |  1.20.x → "REDSTONE_TRANSITION" (some builds)
+        // 1.20.6+ -> "DUST_COLOR_TRANSITION"  |  1.20.x -> "REDSTONE_TRANSITION" (some builds)
         Particle dustTransition;
         try {
             dustTransition = Particle.valueOf("DUST_COLOR_TRANSITION");
@@ -63,7 +63,7 @@ public final class BukkitCompat {
         }
         PARTICLE_DUST_COLOR_TRANSITION = dustTransition;
 
-        // 1.20.6+ → "INFINITY"   |   1.20.x → "ARROW_INFINITE"
+        // 1.20.6+ -> "INFINITY"   |   1.20.x -> "ARROW_INFINITE"
         Enchantment glow;
         try {
             // Prefer field access (fastest, avoids keyed lookup issues across versions)
@@ -72,7 +72,7 @@ public final class BukkitCompat {
             try {
                 glow = (Enchantment) Enchantment.class.getField("ARROW_INFINITE").get(null);
             } catch (Exception e2) {
-                // Ultimate fallback — any common enchant works for the glow effect
+                // Ultimate fallback: any common enchant works for the glow effect
                 glow = Enchantment.UNBREAKING;
             }
         }

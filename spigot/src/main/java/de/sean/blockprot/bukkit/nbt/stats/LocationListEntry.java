@@ -71,15 +71,15 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
     private static @NotNull Material resolveDisplayMaterial(@NotNull Material type) {
         if (type == Material.AIR) return Material.CHEST;
         String name = type.name();
-        // Shulker boxes — keep their colour; all coloured variants are valid ItemStack materials.
+        // Shulker boxes: keep their colour; all coloured variants are valid ItemStack materials.
         // The generic SHULKER_BOX (no colour prefix) may not be a real block in all MC versions;
         // map it to the purple one which is always safe.
         if (name.equals("SHULKER_BOX")) return Material.PURPLE_SHULKER_BOX;
         if (name.endsWith("_SHULKER_BOX")) return type;
-        // Copper chests and shelves (1.21.9+) — show their own variant
+        // Copper chests and shelves (1.21.9+): show their own variant
         if (name.contains("COPPER_CHEST") || name.contains("COPPER_TRAPPED_CHEST")) return type;
         if (name.endsWith("_SHELF")) return type;
-        // Wall signs → sign item (wall variants aren't placeable as items)
+        // Wall signs -> sign item (wall variants aren't placeable as items)
         if (name.endsWith("_WALL_SIGN")) {
             Material m = Material.matchMaterial(name.replace("_WALL_SIGN", "_SIGN"));
             return m != null ? m : type;

@@ -48,7 +48,7 @@ import java.util.Optional;
  * <ul>
  *   <li>Slot 0: Player skull</li>
  *   <li>Slot 1: Remove friend (red glass)</li>
- *   <li>Slot 2: Timed access — CLOCK (only when viewing a block friend)</li>
+ *   <li>Slot 2: Timed access: CLOCK (only when viewing a block friend)</li>
  *   <li>Slot 8: Back button</li>
  * </ul>
  */

@@ -71,7 +71,7 @@ messages:
     '
   hint_hover_text: Otvor menu pre plugin BlockProt, alebo klikni sem pre zrušenie nápovedy.
   disabled_hints: §6Zrušené nápovedy!
-  chat_input_prompt: '§eZadaj meno hráča §7(§bTab§7 návrhy · §aEnter§7 potvrdiť · §c{cancel}§7 zrušiť):'
+  chat_input_prompt: '§eZadaj meno hráča §7(§bTab§7 návrhy, §aEnter§7 potvrdiť, §c{cancel}§7 zrušiť):'
   chat_input_cancel_word: zrusit
   chat_input_cancelled: §cHľadanie zrušené.
   lock_on_place_success: §aBlok uzamknutý!
@@ -82,12 +82,12 @@ messages:
   friends_list_title: §6Tvoji priatelia
 worlds:
   scan_start: '[BlockProt] Skenovanie svetov... ({count} načítaných)'
-  scan_world_added: '[BlockProt] Svet ''{world}'' pridaný do worlds.yml — ochrana VYPNUTÁ predvolene. Zapni ručne.'
+  scan_world_added: '[BlockProt] Svet ''{world}'' pridaný do worlds.yml: ochrana VYPNUTÁ predvolene. Zapni ručne.'
   scan_complete: '[BlockProt] Skenovanie dokončené. {added} nový/nové svety zaregistrované.'
 claims:
   wand_pos_a: §bRoh A nastavený na §f({x}, {y}, {z})§b. Teraz klikni pravým tlačidlom na roh B.
   wand_pos_b: §bRoh B nastavený na §f({x}, {y}, {z})§b. Napíš názov do chatu pre vytvorenie parcely.
-  created: '§aParcela §6{name} §avytvorená! Oblasť: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(svet: {world}).'
+  created: '§aParcela §6{name} §avytvorená! Oblasť: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(svet: {world}).'
   deleted: §aParcela §6{name} §aodstránená.
   no_claim_here: §cNa tvojej aktuálnej pozícii nie je žiadna parcela.
   overlap: §cTáto oblasť sa prekrýva s parcelou iného hráča.

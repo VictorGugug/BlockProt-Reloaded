@@ -71,7 +71,7 @@ messages:
     '
   hint_hover_text: Otevřete BlockProt menu nebo klikněte zde pro vypnutí nápovědy.
   disabled_hints: §6Nápověda vypnuta!
-  chat_input_prompt: '§eZadejte jméno hráče §7(§bTab§7 návrhy · §aEnter§7 potvrdit · §c{cancel}§7 zrušit):'
+  chat_input_prompt: '§eZadejte jméno hráče §7(§bTab§7 návrhy, §aEnter§7 potvrdit, §c{cancel}§7 zrušit):'
   chat_input_cancel_word: zrusit
   chat_input_cancelled: §cHledání zrušeno.
   lock_on_place_success: §aBlok uzamčen!
@@ -82,12 +82,12 @@ messages:
   friends_list_title: §6Vaši přátelé
 worlds:
   scan_start: '[BlockProt] Skenování světů... ({count} načteno)'
-  scan_world_added: '[BlockProt] Svět ''{world}'' přidán do worlds.yml — ochrana VYPNUTA. Zapněte ručně.'
+  scan_world_added: '[BlockProt] Svět ''{world}'' přidán do worlds.yml: ochrana VYPNUTA. Zapněte ručně.'
   scan_complete: '[BlockProt] Skenování dokončeno. {added} nový/nové světy registrovány.'
 claims:
   wand_pos_a: §bRoh A nastaven na §f({x}, {y}, {z})§b. Nyní klikněte pravým na roh B.
   wand_pos_b: §bRoh B nastaven na §f({x}, {y}, {z})§b. Napište název do chatu pro vytvoření nároku.
-  created: '§aNárok §6{name} §avytvořen! Oblast: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(svět: {world}).'
+  created: '§aNárok §6{name} §avytvořen! Oblast: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(svět: {world}).'
   deleted: §aNárok §6{name} §asmazán.
   no_claim_here: §cNa vaší pozici není žádný nárok.
   overlap: §cTato oblast se překrývá s nárokem jiného hráče.

@@ -22,6 +22,7 @@ package de.sean.blockprot.bukkit.nbt;
 
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
+import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.events.BlockProtLockEvent;
 import de.sean.blockprot.bukkit.events.BlockProtUnlockEvent;
 import de.sean.blockprot.bukkit.listeners.HopperEventListener;
@@ -249,7 +250,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
     /**
      * Returns the UUID string of the item frame linked to this block (e.g. an
      * item frame mounted on this chest), or an empty string if none is linked.
-     * A chest with a linked frame is treated as a single protection unit — the
+     * A chest with a linked frame is treated as a single protection unit: the
      * frame has no separate lock/friends UI, it shares this block's.
      */
     @NotNull
@@ -398,7 +399,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
         StatHandler.getStatistic(playerBlocksStatistic, player);
         if (player.hasPermission("blockprot.lockmax")) {
             // Use streams with parseInt try-catch instead of manual ArrayList copy + linear scan.
-            // On servers with 200–500 permission nodes (LuckPerms inheritance chains) this avoids
+            // On servers with 200-500 permission nodes (LuckPerms inheritance chains) this avoids
             // creating a full copy of the effective-permissions collection on every lock.
             java.util.OptionalInt limit = player.getEffectivePermissions().stream()
                 .filter(p -> p.getValue()
@@ -544,7 +545,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
             } else {
                 orElse.accept(otherDoorHandler);
             }
-        } else if (this.block.getType() == Material.CHEST || this.block.getType() == Material.TRAPPED_CHEST) {
+        } else if (BlockFamilyParser.getSubFamilyMembers(BlockFamilyParser.SubFamily.CHEST).contains(this.block.getType())) {
             final BlockState doubleChestState = BlockUtil.getDoubleChest(this.block);
             if (doubleChestState != null) {
                 final BlockNBTHandler doubleChestHandler = new BlockNBTHandler(doubleChestState.getBlock());
@@ -612,10 +613,10 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
 
     @Override
     public void pasteNbt(@NotNull NBTContainer container) {
-        // We remove the owner key for security reasons — owner must never change via paste.
+        // We remove the owner key for security reasons: owner must never change via paste.
         container.removeKey(OWNER_ATTRIBUTE);
-        // Clear existing friends so that paste REPLACES rather than appends.
-        // This matches GitHub #268: copy-paste should overwrite the friend list, not merge it.
+        // Clear friends before paste (replace, not append).
+        // Matches GitHub #268.
         this.setFriends(java.util.Collections.emptyList());
         super.pasteNbt(container);
         this.applyToOtherContainer();

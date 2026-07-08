@@ -111,13 +111,12 @@ public class InteractEventListener implements Listener {
                             de.sean.blockprot.bukkit.audit.AuditLogger.Action.ACCESS_DENIED);
                     }
                 } else {
-                    // Player has access — ensure the event is NOT cancelled regardless of what
+                    // Player has access: ensure the event is NOT cancelled regardless of what
                     // lower-priority listeners (vanilla Paper included) may have set.
                     event.setCancelled(false);
                     if (event.getClickedBlock().getType() == Material.LECTERN && !handler.isOwner(player.getUniqueId())) {
-                        // With Lecterns you place the books by interacting with the block. canAccess will return true because the
-                        // player has the READ permission, but this should not be allowed in this case. In the case that the player
-                        // wants to take the book from the lectern (hasBook returns true) we already listen for PlayerTakeLecternBookEvent.
+                        // Lectern: book placement uses InteractEvent; canAccess already checked.
+                        // Take-book case handled by PlayerTakeLecternBookEvent.
                         final var lectern = (Lectern)event.getClickedBlock().getBlockData();
                         if (!lectern.hasBook()) {
                             final var friend = handler.getFriend(player.getUniqueId().toString());
@@ -145,7 +144,7 @@ public class InteractEventListener implements Listener {
             }
         } else {
             if (event.hasItem()) return;
-            // Skip if the off-hand holds a placeable block — the player is placing, not menu-opening.
+            // Skip if the off-hand holds a placeable block: the player is placing, not menu-opening.
             var offHandItem = player.getInventory().getItemInOffHand();
             if (!offHandItem.getType().isAir() && offHandItem.getType().isBlock()) return;
             event.setCancelled(true);

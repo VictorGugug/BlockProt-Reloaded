@@ -71,7 +71,7 @@ messages:
     '
   hint_hover_text: Otwórz menu BlockProt lub kliknij tutaj, aby wyłączyć podpowiedzi.
   disabled_hints: §6Podpowiedzi wyłączone!
-  chat_input_prompt: '§eWpisz nazwę gracza §7(§bTab§7 podpowiedzi · §aEnter§7 potwierdź · §c{cancel}§7 anuluj):'
+  chat_input_prompt: '§eWpisz nazwę gracza §7(§bTab§7 podpowiedzi, §aEnter§7 potwierdź, §c{cancel}§7 anuluj):'
   chat_input_cancel_word: anuluj
   chat_input_cancelled: §cWyszukiwanie anulowane.
   lock_on_place_success: §aBlok zablokowany!
@@ -82,12 +82,12 @@ messages:
   friends_list_title: §6Twoi przyjaciele
 worlds:
   scan_start: '[BlockProt] Skanowanie światów... ({count} załadowano)'
-  scan_world_added: '[BlockProt] Świat ''{world}'' dodany do worlds.yml — ochrona WYŁĄCZONA domyślnie. Włącz ręcznie.'
+  scan_world_added: '[BlockProt] Świat ''{world}'' dodany do worlds.yml: ochrona WYŁĄCZONA domyślnie. Włącz ręcznie.'
   scan_complete: '[BlockProt] Skanowanie zakończone. {added} nowy/nowe światy zarejestrowane.'
 claims:
   wand_pos_a: §bRóg A ustawiony na §f({x}, {y}, {z})§b. Teraz kliknij prawym przyciskiem na róg B.
   wand_pos_b: §bRóg B ustawiony na §f({x}, {y}, {z})§b. Wpisz nazwę na czacie, aby utworzyć działkę.
-  created: '§aDziałka §6{name} §autworzona! Region: §f{x1},{y1},{z1} §a→ §f{x2},{y2},{z2} §7(świat: {world}).'
+  created: '§aDziałka §6{name} §autworzona! Region: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(świat: {world}).'
   deleted: §aDziałka §6{name} §ausunięta.
   no_claim_here: §cNa twojej aktualnej pozycji nie ma żadnej działki.
   overlap: §cTen obszar nakłada się z działką innego gracza.

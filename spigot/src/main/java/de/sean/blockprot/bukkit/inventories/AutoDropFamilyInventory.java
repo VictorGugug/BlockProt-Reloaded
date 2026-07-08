@@ -1,3 +1,23 @@
+/*
+ * Copyright (C) 2021 - 2026 spnda
+ * Modifications Copyright (C) 2025 - 2026 Zaynr (Zar)
+ * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
+ * Based on BlockProt <https://github.com/spnda/BlockProt>.
+ *
+ * BlockProt Reloaded is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * BlockProt Reloaded is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with BlockProt Reloaded. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
@@ -185,7 +205,7 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             NamedTextColor nameColor = active ? NamedTextColor.WHITE : NamedTextColor.DARK_GRAY;
-            String suffix = active ? "" : " [OFF]";
+            String suffix = active ? "" : Translator.get(TranslationKey.INVENTORIES__LOCKABLES__OFF_SUFFIX);
             meta.displayName(Component.text(friendlyName(mat.name()) + suffix).color(nameColor));
             List<Component> lore = new ArrayList<>();
             lore.add(Component.text(mat.name()).color(NamedTextColor.DARK_GRAY));
@@ -194,7 +214,6 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
                 : Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__STATUS_INACTIVE);
             lore.add(Component.text(status).color(active ? NamedTextColor.GREEN : NamedTextColor.RED));
             lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__LEFT_CLICK_HINT)).color(NamedTextColor.GREEN));
-            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__RIGHT_CLICK_HINT)).color(NamedTextColor.RED));
             meta.lore(lore);
             stack.setItemMeta(meta);
         }

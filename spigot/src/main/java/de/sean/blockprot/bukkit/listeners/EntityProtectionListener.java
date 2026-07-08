@@ -47,17 +47,17 @@ import java.util.UUID;
  *
  * <p>Protected events:
  * <ul>
- *   <li>Damage — from players or their projectiles (when no_damage is ON)</li>
- *   <li>Interact — right-click, feeding, naming (when no_interact is ON)</li>
- *   <li>Leash / Unleash — attach or remove leads (when no_leash is ON)</li>
- *   <li>Pickup — parrot shoulder pickup (when no_pickup is ON)</li>
- *   <li>Death message — notifies owner when a protected entity dies</li>
- *   <li>Auto-protect on tame — when global setting is enabled in config</li>
+ *   <li>Damage: from players or their projectiles (when no_damage is ON)</li>
+ *   <li>Interact: right-click, feeding, naming (when no_interact is ON)</li>
+ *   <li>Leash / Unleash: attach or remove leads (when no_leash is ON)</li>
+ *   <li>Pickup: parrot shoulder pickup (when no_pickup is ON)</li>
+ *   <li>Death message: notifies owner when a protected entity dies</li>
+ *   <li>Auto-protect on tame: when global setting is enabled in config</li>
  * </ul>
  *
  * <p>Players with {@code blockprot.admin} or {@code blockprot.bypass} always bypass protection.
  *
- * <p>Renamed from {@code PetProtectionListener} as part of the pet → entity protection
+ * <p>Renamed from {@code PetProtectionListener} as part of the pet -> entity protection
  * rename. Behaviour is unchanged.
  */
 public final class EntityProtectionListener implements Listener {
@@ -181,7 +181,7 @@ public final class EntityProtectionListener implements Listener {
             ProjectileSource source = proj.getShooter();
             if (source instanceof Player p) return p;
         }
-        // Wolf or other pet attacking on behalf of a player — intentionally ignored;
+        // Wolf or other pet attacking on behalf of a player: intentionally ignored;
         // pet-on-pet PvP is considered vanilla and not blocked by default.
         return null;
     }

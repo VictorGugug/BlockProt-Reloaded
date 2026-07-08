@@ -43,11 +43,11 @@ import java.util.List;
  * Plays a particle ring and sound around a block when it is locked or unlocked,
  * or when redstone/hopper/piston settings are toggled.
  *
- * <p>Lock    → green dust particles
- * <p>Unlock  → red dust particles
- * <p>Redstone toggle → red ↔ white transition particles
- * <p>Hopper toggle   → gray ↔ dark-gray transition particles
- * <p>Piston toggle   → brown ↔ gray transition particles
+ * <p>Lock    -> green dust particles
+ * <p>Unlock  -> red dust particles
+ * <p>Redstone toggle -> red <-> white transition particles
+ * <p>Hopper toggle   -> gray <-> dark-gray transition particles
+ * <p>Piston toggle   -> brown <-> gray transition particles
  *
  * <p>For double chests the ring spans both halves.
  *

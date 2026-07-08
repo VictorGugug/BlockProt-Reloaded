@@ -51,7 +51,7 @@ public final class VersionValidator {
         if (javaMajor < 21) {
             warn(Translator.get(TranslationKey.CONSOLE__JAVA_TOO_OLD)
                 .replace("{version}", javaVersion));
-            BlockProtLogger.warn("Java " + javaVersion + " detected — requires Java 21 or higher.");
+            BlockProtLogger.warn("Java " + javaVersion + " detected, requires Java 21 or higher.");
         }
 
         if (!isPaper) {
@@ -62,7 +62,7 @@ public final class VersionValidator {
 
         if (!hasTypedViews && VersionCompat.isAtLeast(1, 20, 0) && !VersionCompat.is26Family()) {
             warn(Translator.get(TranslationKey.CONSOLE__TYPED_VIEWS_FALLBACK));
-            BlockProtLogger.warn("Typed inventory views unavailable (1.21.0–1.21.3). Using fallback methods.");
+            BlockProtLogger.warn("Typed inventory views unavailable (1.21.0 to 1.21.3). Using fallback methods.");
         }
 
         if (javaMajor >= 21 && isPaper && (hasTypedViews || !VersionCompat.isAtLeast(1, 20, 0))) {

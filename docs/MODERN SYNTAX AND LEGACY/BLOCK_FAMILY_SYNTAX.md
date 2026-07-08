@@ -112,11 +112,11 @@ A material that does not belong to the current family is rejected with a warning
 
 ```yaml
 # lockable_tile_entities belongs to the TILE_ENTITIES family.
-# FLETCHING_TABLE is a BLOCKS (workstation) member — not a TILE_ENTITIES member — rejected.
+# FLETCHING_TABLE is a BLOCKS (workstation) member: not a TILE_ENTITIES member: rejected.
 lockable_tile_entities:
   - "[* -FLETCHING_TABLE]"           # ERROR: FLETCHING_TABLE not in TILE_ENTITIES -> discarded
 
-# COPPER_CHEST is a CHEST sub-family member — valid.
+# COPPER_CHEST is a CHEST sub-family member: valid.
 lockable_tile_entities:
   - "[*-CHEST -COPPER_CHEST]"        # OK: all chest variants except COPPER_CHEST
 ```

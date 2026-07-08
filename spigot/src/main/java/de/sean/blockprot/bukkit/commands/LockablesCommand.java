@@ -35,7 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * CLI command: /bp lockables — opens the lockable blocks browser.
+ * CLI command: /bp lockables: opens the lockable blocks browser.
  */
 public final class LockablesCommand implements CommandExecutor {
 

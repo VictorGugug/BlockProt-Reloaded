@@ -111,7 +111,7 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
 
     @Override
     protected void preFriendReadCallback() {
-        // Fast-path: migration already done for this player — skip all checks.
+        // Fast-path: migration already done for this player: skip all checks.
         if (container.hasTag(MIGRATION_DONE_FLAG)) return;
 
         if (container.hasTag(DEFAULT_FRIENDS_ATTRIBUTE)
@@ -234,7 +234,6 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
     public void mergeHandler(@NotNull NBTHandler<?> handler) {
         if (!(handler instanceof final PlayerSettingsHandler playerSettingsHandler)) return;
         this.setLockOnPlace(playerSettingsHandler.getLockOnPlace());
-        this.container.setString(DEFAULT_FRIENDS_ATTRIBUTE,
-            playerSettingsHandler.container.getString(DEFAULT_FRIENDS_ATTRIBUTE));
+        playerSettingsHandler.getFriends().forEach(this::addFriend);
     }
 }

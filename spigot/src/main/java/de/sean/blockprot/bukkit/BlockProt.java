@@ -147,7 +147,7 @@ public final class BlockProt extends JavaPlugin {
         pluginVersion = this.getDescription().getVersion();
         pluginAuthors = this.getDescription().getAuthors();
         try {
-            // Store the usercache inside the plugin data folder — not next to server.jar.
+            // Store the usercache inside the plugin data folder: not next to server.jar.
             File cacheFile = new File(this.getDataFolder(), "blockprot_usercache.sqlite");
             if (!cacheFile.getParentFile().exists()) cacheFile.getParentFile().mkdirs();
             playerProfileCache   = new SQLiteCache(cacheFile);
@@ -158,6 +158,8 @@ public final class BlockProt extends JavaPlugin {
         try { registerIntegration(new TownyIntegration());          } catch (NoClassDefFoundError ignored) {}
         try { registerIntegration(new PlaceholderAPIIntegration()); } catch (NoClassDefFoundError ignored) {}
         try { registerIntegration(new ViaVersionIntegration());     } catch (NoClassDefFoundError ignored) {}
+        try { registerIntegration(new WorldGuardIntegration());     } catch (NoClassDefFoundError ignored) {}
+        try { registerIntegration(new LandsPluginIntegration());    } catch (NoClassDefFoundError ignored) {}
         for (PluginIntegration integration : integrations) {
             try { integration.load(); } catch (NoClassDefFoundError ignored) {}
         }
@@ -472,14 +474,14 @@ public final class BlockProt extends JavaPlugin {
             if (!diskConfig.contains(key)) {
                 diskConfig.set(key, jarConfig.get(key));
                 added++;
-                BlockProtLogger.log("lang-merge", resource + " — added missing key: " + key);
+                BlockProtLogger.log("lang-merge", resource + ": added missing key: " + key);
             }
         }
 
         if (added > 0) {
             try {
                 diskConfig.save(diskFile);
-                BlockProtLogger.log("lang-merge", resource + " — added " + added + " missing key(s).");
+                BlockProtLogger.log("lang-merge", resource + ": added " + added + " missing key(s).");
             } catch (IOException e) {
                 BlockProtConsole.warn(Translator.get(TranslationKey.CONSOLE__LANG_KEYS_SAVE_FAILED)
                     .replace("{file}", resource).replace("{error}", e.getMessage()));
@@ -500,7 +502,7 @@ public final class BlockProt extends JavaPlugin {
 
         boolean dirty = false;
 
-        // worlds_config_enabled → per_worlds_config (renamed for clarity)
+        // worlds_config_enabled -> per_worlds_config (renamed for clarity)
         if (userValues.contains("worlds_config_enabled") && !userValues.contains("per_worlds_config")) {
             userValues.set("per_worlds_config", userValues.getBoolean("worlds_config_enabled", false));
             userValues.set("worlds_config_enabled", null);
@@ -961,7 +963,7 @@ public final class BlockProt extends JavaPlugin {
             if (!diskConfig.contains(key)) {
                 diskConfig.set(key, jarConfig.get(key));
                 added++;
-                BlockProtLogger.log("config-merge", "config.yml — added missing key: " + key);
+                BlockProtLogger.log("config-merge", "config.yml: added missing key: " + key);
             }
         }
 
@@ -969,7 +971,7 @@ public final class BlockProt extends JavaPlugin {
         try {
             if (fileWatcher != null) fileWatcher.suppressNext();
             diskConfig.save(diskFile);
-            BlockProtLogger.log("config-merge", "config.yml — added " + added + " missing option(s).");
+            BlockProtLogger.log("config-merge", "config.yml: added " + added + " missing option(s).");
         } catch (IOException e) {
             BlockProtConsole.warn(Translator.get(TranslationKey.CONSOLE__CONFIG_KEYS_SAVE_FAILED)
                 .replace("{error}", e.getMessage()));
@@ -1040,7 +1042,7 @@ public final class BlockProt extends JavaPlugin {
                 }
             }
         } else {
-            // No MySQL — iterate all player stat entries to collect protected locations.
+            // No MySQL: iterate all player stat entries to collect protected locations.
             if (de.sean.blockprot.bukkit.nbt.StatHandler.isLoaded()) {
                 java.util.Set<org.bukkit.Location> seen = new java.util.HashSet<>();
                 for (org.bukkit.OfflinePlayer op : Bukkit.getOfflinePlayers()) {
@@ -1204,7 +1206,7 @@ public final class BlockProt extends JavaPlugin {
         if (!legacyFile.exists()) return;
         File newFile = new File(this.getDataFolder(), "blockprot_usercache.sqlite");
         if (newFile.exists()) {
-            // Already present in new location — remove the orphan from server root.
+            // Already present in new location: remove the orphan from server root.
             if (!legacyFile.delete())
                 getLogger().warning("[BlockProt] Could not delete legacy blockprot_usercache.sqlite from server root.");
             return;

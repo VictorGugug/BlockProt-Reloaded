@@ -1,6 +1,6 @@
 name: Release
 
-# Trigger: manually from Actions → Release → Run workflow.
+# Trigger: manually from Actions -> Release -> Run workflow.
 # After it creates the GitHub Release, the publish workflow fires automatically.
 on:
   workflow_dispatch:

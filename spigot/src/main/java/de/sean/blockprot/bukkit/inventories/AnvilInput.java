@@ -66,7 +66,7 @@ public final class AnvilInput implements Listener {
             getRenameText = viewClass.getMethod("getRenameText");
             setRepairCost = viewClass.getMethod("setRepairCost", int.class);
         } catch (ClassNotFoundException | NoSuchMethodException ignored) {
-            // Pre-1.21.4 server — typed views not available.
+            // Pre-1.21.4 server: typed views not available.
         }
         ANVIL_VIEW_CLASS = viewClass;
         GET_RENAME_TEXT  = getRenameText;
@@ -86,7 +86,7 @@ public final class AnvilInput implements Listener {
                 return;
             } catch (Exception ignored) {}
         }
-        // Pre-1.21.4: InventoryView#setProperty exists since 1.9 and works on all older versions.
+        // Pre-1.21.4 fallback: setProperty works on all versions >= 1.9.
         try {
             view.setProperty(InventoryView.Property.REPAIR_COST, 0);
         } catch (Exception ignored) {}
@@ -118,7 +118,7 @@ public final class AnvilInput implements Listener {
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        // openAnvil exists since Bukkit 1.14 and returns InventoryView on all versions.
+        // openAnvil available since Bukkit 1.14.
         InventoryView view = player.openAnvil(null, true);
         if (view != null) {
             // Place paper in slot 0 so the client pre-fills the rename field.
@@ -167,7 +167,7 @@ public final class AnvilInput implements Listener {
 
     @NotNull
     private String extractRenameText(@NotNull InventoryClickEvent event) {
-        // 1. Typed AnvilView — 1.21.4+ only, accessed via reflection.
+        // 1. Typed AnvilView: 1.21.4+ only, accessed via reflection.
         if (hasTypedAnvilView()) {
             String renamed = tryGetRenameText(event.getView());
             if (renamed != null && !renamed.isEmpty()) return renamed;

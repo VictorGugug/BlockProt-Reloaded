@@ -30,20 +30,20 @@ import java.util.Objects;
  *
  * <p>Version format: {@code MAJOR.MINOR.PATCH[-SUFFIX[-N]]}
  *
- * <p>Pre-release order (lowest → highest within the same numeric version):
+ * <p>Pre-release order (lowest -> highest within the same numeric version):
  * <ol>
- *   <li>snapshot / dev (our rolling dev build — formerly "SNAPSHOT")</li>
+ *   <li>snapshot / dev (our rolling dev build: formerly "SNAPSHOT")</li>
  *   <li>alpha.N</li>
  *   <li>beta.N</li>
  *   <li>rc.N</li>
- *   <li>(no suffix) — clean release, highest rank</li>
+ *   <li>(no suffix): clean release, highest rank</li>
  * </ol>
  *
  * <p>Special suffixes (not ranked above release, treated as equal to their
  * base version for update-check purposes):
  * <ul>
- *   <li>patch.N / fix.N / hotfix.N — post-release corrections</li>
- *   <li>exp — experimental branches, never considered an update</li>
+ *   <li>patch.N / fix.N / hotfix.N: post-release corrections</li>
+ *   <li>exp: experimental branches, never considered an update</li>
  * </ul>
  *
  * @since 0.1.11
@@ -59,10 +59,10 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
     private final int[] numeric;   // e.g. [1, 3, 0]
     private final String suffix;   // e.g. "alpha.2", "snapshot", "" for release
     private final int suffixRank;  // pre-computed rank
-    private final int suffixN;     // numeric part of suffix (alpha.2 → 2), 0 if absent
+    private final int suffixN;     // numeric part of suffix (alpha.2 -> 2), 0 if absent
 
     public SemanticVersion(@NotNull final String version) {
-        // Split on first '-' only — keeps "SNAPSHOT-3" together as extension.
+        // Split on first '-' only: keeps "SNAPSHOT-3" together as extension.
         int dash = version.indexOf('-');
         String numericPart = dash == -1 ? version : version.substring(0, dash);
         String raw = dash == -1 ? "" : version.substring(dash + 1).toLowerCase(java.util.Locale.ENGLISH);
@@ -74,11 +74,11 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
             catch (NumberFormatException ignored) {}
         }
 
-        // Normalise suffix — "snapshot-3" and "snapshot" both become "snapshot".
-        // Strip trailing numeric counter (e.g. "SNAPSHOT-3" → "snapshot", "alpha.2" → "alpha").
+        // Normalise suffix: "snapshot-3" and "snapshot" both become "snapshot".
+        // Strip trailing numeric counter (e.g. "SNAPSHOT-3" -> "snapshot", "alpha.2" -> "alpha").
         String base = raw.replaceAll("-\\d+$", "").replaceAll("\\.\\d+$", "");
 
-        // Extract numeric part of suffix if present (e.g. alpha.2 → 2).
+        // Extract numeric part of suffix if present (e.g. alpha.2 -> 2).
         int n = 0;
         java.util.regex.Matcher m = java.util.regex.Pattern.compile("[.\\-](\\d+)$").matcher(raw);
         if (m.find()) { try { n = Integer.parseInt(m.group(1)); } catch (NumberFormatException ignored) {} }
@@ -107,9 +107,9 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
             int b = i < other.numeric.length ? other.numeric[i] : 0;
             if (a != b) return Integer.compare(a, b);
         }
-        // 2. Same numeric — compare suffix rank.
+        // 2. Same numeric: compare suffix rank.
         if (suffixRank != other.suffixRank) return Integer.compare(suffixRank, other.suffixRank);
-        // 3. Same rank — compare the suffix counter (alpha.1 < alpha.2).
+        // 3. Same rank: compare the suffix counter (alpha.1 < alpha.2).
         return Integer.compare(suffixN, other.suffixN);
     }
 

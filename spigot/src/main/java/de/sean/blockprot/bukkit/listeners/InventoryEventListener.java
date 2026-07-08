@@ -124,7 +124,7 @@ public class InventoryEventListener implements Listener {
                             event.setCancelled(true);
                         }
                     } else if (handler.isProtected() && handler.isOwner(playerUuid)) {
-                        // Owner — log item actions to audit
+                        // Owner: log item actions to audit
                         if (event.getClickedInventory() != null
                                 && event.getClickedInventory().equals(event.getInventory())) {
                             ItemStack item = event.getCurrentItem();
@@ -243,7 +243,7 @@ public class InventoryEventListener implements Listener {
                 BlockProtLogger.log("entity-protection", "ACCESS_DENIED inventory open: "
                     + entity.getType().name() + " entity=" + entity.getUniqueId() + " player=" + player.getName());
             } else if (!handler.isOwner(playerUuid)) {
-                // Log OPENED only for non-owner access (friends/admins) — routine
+                // Log OPENED only for non-owner access (friends/admins): routine
                 // access by the owner is not a security-relevant event.
                 AuditLogger audit = BlockProt.getAuditLogger();
                 if (audit != null) {
@@ -424,7 +424,7 @@ public class InventoryEventListener implements Listener {
     /**
      * Converts a material name string to a human-readable title-cased display name.
      * Underscores are replaced with spaces and each word is capitalised.
-     * Example: {@code "OAK_CHEST"} → {@code "Oak Chest"}.
+     * Example: {@code "OAK_CHEST"} -> {@code "Oak Chest"}.
      *
      * @param name The raw material name (e.g. from {@link org.bukkit.Material#name()}).
      * @return The formatted display name.

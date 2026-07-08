@@ -229,14 +229,14 @@ public final class AuditInventory extends BlockProtInventory {
                     List<AuditEntry> group = groupedEntries.get(entry.playerUuid());
                     int total = group == null ? 1 : group.size();
                     AuditEntry latest = group == null ? entry : group.get(0);
-                    displayName = actionLabel(latest.action()) + " — " + (latest.playerName() != null ? latest.playerName() : latest.playerUuid());
+                    displayName = actionLabel(latest.action()) + ": " + (latest.playerName() != null ? latest.playerName() : latest.playerUuid());
                     String actionCountLabel = Translator.get(TranslationKey.INVENTORIES__AUDIT__ACTION_COUNT).replace("{count}", String.valueOf(total));
-                    lore.add(LegacyComponentSerializer.legacySection().deserialize(DATE_FMT.format(new Date(latest.timestamp())) + " · " + actionCountLabel));
+                    lore.add(LegacyComponentSerializer.legacySection().deserialize(DATE_FMT.format(new Date(latest.timestamp())) + ", " + actionCountLabel));
                     lore.add(LegacyComponentSerializer.legacySection().deserialize(latest.world() + " " + latest.x() + "," + latest.y() + "," + latest.z()));
                     lore.add(LegacyComponentSerializer.legacySection().deserialize(Translator.get(TranslationKey.INVENTORIES__AUDIT__CLICK_HINT)));
                 } else {
-                    displayName = actionLabel(entry.action()) + " — " + (entry.playerName() != null ? entry.playerName() : entry.playerUuid());
-                    lore.add(LegacyComponentSerializer.legacySection().deserialize(DATE_FMT.format(new Date(entry.timestamp())) + " — " + actionLabel(entry.action())));
+                    displayName = actionLabel(entry.action()) + ": " + (entry.playerName() != null ? entry.playerName() : entry.playerUuid());
+                    lore.add(LegacyComponentSerializer.legacySection().deserialize(DATE_FMT.format(new Date(entry.timestamp())) + ": " + actionLabel(entry.action())));
                     lore.add(LegacyComponentSerializer.legacySection().deserialize(entry.world() + " " + entry.x() + "," + entry.y() + "," + entry.z()));
                 }
 

@@ -224,7 +224,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
         }
 
         assert meta != null;
-        // Use plain Component so Minecraft applies its default white colour — no colour injection.
+        // Use plain Component so Minecraft applies its default white colour: no colour injection.
         meta.displayName(Component.text(stripColors(text)));
         if (!lore.isEmpty()) {
             meta.lore(lore.stream()

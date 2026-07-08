@@ -88,7 +88,7 @@ public final class BackupTask implements Runnable {
         boolean hasPriorData = forced || hasPriorData(dataFolder);
 
         if (!hasPriorData) {
-            // Fresh installation — no backup needed.
+            // Fresh installation: no backup needed.
             return;
         }
 
@@ -115,7 +115,7 @@ public final class BackupTask implements Runnable {
         try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
             addDirectory(dataFolder, dataFolder.getName(), zos, backupDir);
 
-            // Write minimal metadata — no network calls on the main thread.
+            // Write minimal metadata: no network calls on the main thread.
             String meta = "plugin: BlockProt\nversion: " + version + "\n";
 
             // Use the cached latest-version result from UpdateChecker if available,

@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <h3>Self-write suppression</h3>
  * {@code reloadConfigAndTranslations()} writes several YAML files to disk
  * (merge, clean, lang). Without suppression those writes trigger new
- * {@code ENTRY_MODIFY} events that cause another reload — infinitely.
+ * {@code ENTRY_MODIFY} events that cause another reload: infinitely.
  *
  * Fix: before any plugin-initiated write, call {@link #suppressNext()} which
  * records the current timestamp. The watcher ignores any event that arrives
@@ -122,8 +122,7 @@ public final class ConfigFileWatcher implements Runnable {
                     String name  = changed.getFileName().toString();
 
                     if (name.equals("config.yml") || name.equals("worlds.yml") || name.endsWith(".yml")) {
-                        // Ignore events that arrived within the suppress window —
-                        // these were written by the plugin itself during a reload.
+                        // Ignore events within the suppress window: written by the plugin itself.
                         long now = System.currentTimeMillis();
                         if (now - lastSuppressTime.get() < SUPPRESS_WINDOW_MS) continue;
                         relevant = true;
@@ -138,7 +137,7 @@ public final class ConfigFileWatcher implements Runnable {
                 if (!key.reset()) break;
             }
         } catch (InterruptedException | ClosedWatchServiceException ignored) {
-            // Plugin shutdown or deliberate stop() — exit cleanly.
+            // Plugin shutdown or deliberate stop(): exit cleanly.
         } catch (Exception e) {
             plugin.getLogger().warning(Translator.get(TranslationKey.CONSOLE__FILEWATCHER_ERROR)
                 .replace("{error}", e.getMessage()));

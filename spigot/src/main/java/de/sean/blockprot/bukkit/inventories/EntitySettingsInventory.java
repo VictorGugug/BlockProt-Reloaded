@@ -54,7 +54,7 @@ import java.util.UUID;
  *  17 BACK / CLOSE (black glass pane)
  * </pre>
  *
- * <p>Renamed from {@code PetSettingsInventory} as part of the pet → entity protection
+ * <p>Renamed from {@code PetSettingsInventory} as part of the pet -> entity protection
  * rename. Behaviour is unchanged.
  */
 public final class EntitySettingsInventory extends BlockProtInventory {

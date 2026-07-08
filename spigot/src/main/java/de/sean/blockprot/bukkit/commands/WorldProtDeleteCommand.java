@@ -39,7 +39,7 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 /**
- * /bp protdel [world] — world protection deletion tool.
+ * /bp protdel [world]: world protection deletion tool.
  */
 public final class WorldProtDeleteCommand implements CommandExecutor {
 

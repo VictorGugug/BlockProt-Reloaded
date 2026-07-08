@@ -77,7 +77,7 @@ public final class VillagerLocateTask extends BukkitRunnable {
 
     private void spawnParticles(@NotNull Location loc) {
         try {
-            // DUST_COLOR_TRANSITION is available on 1.17+; use a magenta → white transition.
+            // DUST_COLOR_TRANSITION is available on 1.17+; use a magenta -> white transition.
             Particle.DustTransition transition = new Particle.DustTransition(
                 Color.fromRGB(255, 0, 200), Color.WHITE, 1.5f);
             viewer.spawnParticle(BukkitCompat.PARTICLE_DUST_COLOR_TRANSITION, loc,

@@ -70,7 +70,7 @@ messages:
     '
   hint_hover_text: 從 BlockProt 打開選單或點擊此處禁用提示。
   disabled_hints: §6已關閉提示！
-  chat_input_prompt: '§e輸入玩家名稱 §7(§bTab§7 建議 · §aEnter§7 確認 · §c{cancel}§7 取消):'
+  chat_input_prompt: '§e輸入玩家名稱 §7(§bTab§7 建議，§aEnter§7 確認，§c{cancel}§7 取消):'
   chat_input_cancel_word: 取消
   chat_input_cancelled: §c搜索已取消。
   lock_on_place_success: §a方塊已上鎖！
@@ -83,54 +83,6 @@ worlds:
   scan_start: '[BlockProt] 正在掃描世界... ({count} 已載入)'
   scan_world_added: '[BlockProt] 世界 ''{world}'' 已新增到 worlds.yml，保護預設禁用。請手動啟用。'
   scan_complete: '[BlockProt] 掃描完成。{added} 個新世界已註冊。'
-claims:
-  wand_pos_a: §b角落A已設置在 §f({x}, {y}, {z})§b。現在右鍵點擊角落B。
-  wand_pos_b: §b角落B已設置在 §f({x}, {y}, {z})§b。在聊天中輸入名稱以創建領地。
-  created: '§a領地 §6{name} §a已創建！區域: §f{x1},{y1},{z1} §a到 §f{x2},{y2},{z2} §7(世界: {world})。'
-  deleted: §a領地 §6{name} §a已刪除。
-  no_claim_here: §c您當前位置沒有領地。
-  overlap: §c該區域與其他玩家的領地重疊。
-  no_permission: §c您沒有修改此領地的權限。
-  list_header: '§6您的活躍領地:'
-  name_prompt: '§e在聊天中輸入領地名稱。§7(輸入 §c{cancel}§7 取消):'
-  name_cancel_word: 取消
-  name_cancelled: §c創建領地已取消。
-  name_too_long: §c名稱太長。最多 {max} 個字符。
-  name_invalid: §c無效名稱。只能使用字母、數字、空格、底線或連字符。
-  wand_removed: §7領地魔杖已移除。
-  timeout: §c操作超時。請重新使用魔杖。
-  flags:
-    title: 領地設置
-    fire: 火焰蔓延
-    tnt: TNT / 爆炸
-    redstone: 紅石 (被他人觸發)
-    pvp: PvP
-    flow: Water & Lava flow
-    leaf_decay: Leaf decay
-    mob_spawning: Mob spawning
-    chest: Container access (non-members)
-    door: Door / Trapdoor use (non-members)
-    lever_button: Lever & Button use (non-members)
-    use_bucket: Bucket use (non-members)
-    pet_spawning: Pet taming (non-members)
-    pet_riding: Pet riding (non-members)
-    pet_moving: Lead animals in (non-members)
-    invincible: Invincible zone (no damage)
-    deny_enderpearl: Allow ender pearl entry
-  welcome_set: §aWelcome message set for claim §6{name}§a.
-  welcome_cleared: §7Welcome message cleared for claim §6{name}§7.
-  welcome_prompt: '§eType the welcome message in chat (supports §r&§e colour codes). §7Type §c{cancel}§7 to abort:'
-  delete_confirm_title: §cConfirm deletion
-  delete_yes: §c§lDelete claim
-  delete_cancel: §a§lKeep claim
-  hub:
-    title: Claim Management
-    info: §6Claim Info
-    flags: §6Flags
-    delete: §cDelete Claim
-    wand: §eGet Wand
-    my_claims: §eMy Claims
-    welcome: §eWelcome Message
 integrations:
   lands:
     protect_containers_flag_name: 保護方塊 (BlockProt)
