@@ -85,8 +85,7 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
      * @since 0.2.3
      */
     public boolean getLockOnPlace() {
-        // We will default to 'true'. The default value for a boolean is 'false',
-        // which would also be the default value for NBTCompound#getBoolean
+        // Default to 'true'. The default value for NBTCompound#getBoolean would be 'false',
         if (!container.hasTag(LOCK_ON_PLACE_ATTRIBUTE))
             return BlockProt.getDefaultConfig().lockOnPlaceByDefault();
         return container.getBoolean(LOCK_ON_PLACE_ATTRIBUTE);
@@ -97,9 +96,9 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
     }
 
     /**
-     * We are switching to a similar system that {@link BlockNBTHandler}
-     * uses. To retain compatibility and upgradability with older versions
-     * we will try to remap the previous data to the new data structure.
+     * Migrates from the legacy friend-list storage format to the current compound format.
+     * Reads the old string-format list, remaps entries to the new structure, and writes a
+     * migration flag so subsequent reads skip the check entirely.
      * 
      * <p>A migration flag is written to NBT after the first successful migration so that
      * subsequent reads skip the compound-format check entirely. This avoids an unnecessary
@@ -119,7 +118,7 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
             final List<String> originalList = BlockProtUtil
                 .parseStringList(container.getString(DEFAULT_FRIENDS_ATTRIBUTE));
             
-            container.removeKey(DEFAULT_FRIENDS_ATTRIBUTE); // We have to remove the string to then add the compound.
+            container.removeKey(DEFAULT_FRIENDS_ATTRIBUTE); // Remove the old string before adding the compound.
             container.addCompound(DEFAULT_FRIENDS_ATTRIBUTE);
             originalList.forEach(this::addFriend);
         }
@@ -167,8 +166,7 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
     public void addPlayerToSearchHistory(@NotNull final UUID player) {
         List<String> history = getSearchHistory();
         if (!history.contains(player.toString())) {
-            // We want the list to not be bigger than MAX_HISTORY_SIZE,
-            // therefore we remove the first entry if we would exceed that size.
+            // Trim to MAX_HISTORY_SIZE by removing the oldest entry.
             if (history.size() == MAX_HISTORY_SIZE) {
                 history.remove(0);
             }

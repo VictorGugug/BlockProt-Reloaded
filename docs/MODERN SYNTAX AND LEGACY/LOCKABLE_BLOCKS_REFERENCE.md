@@ -335,7 +335,7 @@ Storage entities and item frames. Protection is stored in the entity's persisten
 being killed (the entity ceases to exist; protection data goes with it).
 
 **Default state:** empty (`[]`) on a fresh install, same as every other lockable list. Run `/bp recommended` for a sensible default that enables `ITEM_FRAME` and `GLOW_ITEM_FRAME`, or configure manually via `/bp lockables` or `blocks.yml`.
-Other entity types are disabled until an admin adds them to `blocks.yml`. This is intentional :
+Other entity types are disabled until an admin adds them to `blocks.yml`. This is intentional:
 entity protection has a higher performance profile than block protection because entities are not
 indexed by chunk the same way.
 

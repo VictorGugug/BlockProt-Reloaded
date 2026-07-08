@@ -77,7 +77,7 @@ public final class PlaceholderAPIIntegration extends PluginIntegration {
         }
 
         /**
-         * Essentially a prefix to every placeholder we serve.
+         * Prefix applied to every placeholder identifier.
          * Cannot contain any underscores.
          */
         @Override
