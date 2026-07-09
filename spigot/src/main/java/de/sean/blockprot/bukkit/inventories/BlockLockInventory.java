@@ -135,7 +135,7 @@ public class BlockLockInventory extends BlockProtInventory {
         }
 
         if (block == null) return;
-        if (BlockProt.getDefaultConfig().isLockable(block.getType()) && event.getSlot() == 0) {
+        if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld()) && event.getSlot() == 0) {
             applyChanges(player, (h) -> h.lockBlock(player), null);
             closeAndOpen(player, null);
         } else {

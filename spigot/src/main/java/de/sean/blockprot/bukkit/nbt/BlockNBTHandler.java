@@ -88,10 +88,10 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
         super(LOCK_ATTRIBUTE);
         this.block = block;
 
-        if (BlockProt.getDefaultConfig().isLockableBlock(this.block.getType())) {
+        if (BlockProt.getDefaultConfig().isLockableBlock(this.block.getType(), this.block.getWorld())) {
             isTileEntity = false;
             container = new NBTBlock(block).getData();
-        } else if (BlockProt.getDefaultConfig().isLockableTileEntity(this.block.getType())) {
+        } else if (BlockProt.getDefaultConfig().isLockableTileEntity(this.block.getType(), this.block.getWorld())) {
             isTileEntity = true;
             container = new NBTTileEntity(block.getState(true)).getPersistentDataContainer();
         } else {
@@ -513,7 +513,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
      * @since 0.4.10
      */
     public void applyToOtherContainer(@NotNull Predicate<BlockNBTHandler> condition, @NotNull Consumer<BlockNBTHandler> orElse) {
-        if (BlockProt.getDefaultConfig().isLockableDoor(block.getType())) {
+        if (BlockProt.getDefaultConfig().isLockableDoor(block.getType(), block.getWorld())) {
             final Block otherDoor = BlockUtil.getOtherDoorHalf(block.getState());
             if (otherDoor == null) return;
             // Guard: the adjacent door half may be in an unloaded chunk on large servers.

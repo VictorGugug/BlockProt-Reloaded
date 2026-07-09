@@ -57,7 +57,8 @@ public class InteractEventListener implements Listener {
 
         if (event.getClickedBlock() == null) return;
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getClickedBlock().getWorld())) return;
-        if (!BlockProt.getDefaultConfig().isLockable(event.getClickedBlock().getState().getType())) return;
+        if (!BlockProt.getDefaultConfig().isLockable(event.getClickedBlock().getState().getType(),
+            event.getClickedBlock().getWorld())) return;
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
         // Dragon Egg teleports on ANY click (left or right) and bypasses cancel in some Paper versions.

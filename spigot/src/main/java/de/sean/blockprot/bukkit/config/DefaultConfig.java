@@ -170,7 +170,7 @@ public final class DefaultConfig extends BlockProtConfig {
                     resolved.addAll(BlockFamilyParser.parseFamilyExpression(trimmed, family));
                 } else {
                     Material m = Material.matchMaterial(trimmed);
-                    if (m != null) resolved.add(m);
+                    if (m != null) BlockFamilyParser.addMaterialWithPlacementVariants(m, resolved);
                 }
             }
         } else if (rawValue instanceof String s) {
@@ -179,7 +179,7 @@ public final class DefaultConfig extends BlockProtConfig {
                 resolved.addAll(BlockFamilyParser.parseFamilyExpression(trimmed, family));
             } else {
                 Material m = Material.matchMaterial(trimmed);
-                if (m != null) resolved.add(m);
+                if (m != null) BlockFamilyParser.addMaterialWithPlacementVariants(m, resolved);
             }
         }
 
@@ -498,7 +498,7 @@ public final class DefaultConfig extends BlockProtConfig {
                 }
             } else {
                 Material m = Material.matchMaterial(trimmed);
-                if (m != null) result.add(m);
+                if (m != null) BlockFamilyParser.addMaterialWithPlacementVariants(m, result);
             }
         }
         return result;
@@ -591,6 +591,24 @@ public final class DefaultConfig extends BlockProtConfig {
         WorldsConfig wc = BlockProt.getWorldsConfig();
         if (isWorldsConfigEnabled() && wc != null && wc.hasWorldConfig(world)) return wc.isLockableShulkerBox(world, type);
         return isLockableShulkerBox(type);
+    }
+
+    public boolean isLockableBlock(@NotNull Material type, @NotNull World world) {
+        WorldsConfig wc = BlockProt.getWorldsConfig();
+        if (isWorldsConfigEnabled() && wc != null && wc.hasWorldConfig(world)) return wc.isLockableBlock(world, type);
+        return isLockableBlock(type);
+    }
+
+    public boolean isLockableTileEntity(@NotNull Material type, @NotNull World world) {
+        WorldsConfig wc = BlockProt.getWorldsConfig();
+        if (isWorldsConfigEnabled() && wc != null && wc.hasWorldConfig(world)) return wc.isLockableTileEntity(world, type) || wc.isLockableShulkerBox(world, type);
+        return isLockableTileEntity(type);
+    }
+
+    public boolean isLockableDoor(@NotNull Material type, @NotNull World world) {
+        WorldsConfig wc = BlockProt.getWorldsConfig();
+        if (isWorldsConfigEnabled() && wc != null && wc.hasWorldConfig(world)) return wc.isLockableDoor(world, type);
+        return isLockableDoor(type);
     }
 
     public boolean isLockableBlock(Material type)       { return lockableBlocks.contains(type); }

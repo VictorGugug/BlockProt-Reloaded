@@ -267,7 +267,7 @@ public final class BlockFamilyParser {
                         result.addAll(parseFamilyExpression(trimmed, family));
                     } else {
                         Material m = Material.matchMaterial(trimmed);
-                        if (m != null) result.add(m);
+                        if (m != null) addMaterialWithPlacementVariants(m, result);
                     }
                 }
             }
@@ -278,7 +278,11 @@ public final class BlockFamilyParser {
             String trimmed = s.trim();
             if (isFamilyExpression(trimmed)) return new LinkedHashSet<>(parseFamilyExpression(trimmed, family));
             Material m = Material.matchMaterial(trimmed);
-            if (m != null) return new LinkedHashSet<>(Set.of(m));
+            if (m != null) {
+                Set<Material> result = new LinkedHashSet<>();
+                addMaterialWithPlacementVariants(m, result);
+                return result;
+            }
             return new LinkedHashSet<>();
         }
 
@@ -287,6 +291,28 @@ public final class BlockFamilyParser {
 
     public static boolean isFamilyExpression(@NotNull String s) {
         return s.startsWith("[") && s.endsWith("]");
+    }
+
+    public static void addMaterialWithPlacementVariants(@NotNull Material material, @NotNull Set<Material> out) {
+        out.add(material);
+        addPlacementVariant(material.name(), out, "_WALL_HANGING_SIGN", "_HANGING_SIGN");
+        addPlacementVariant(material.name(), out, "_WALL_SIGN", "_SIGN");
+        addPlacementVariant(material.name(), out, "_WALL_BANNER", "_BANNER");
+        addPlacementVariant(material.name(), out, "_WALL_HEAD", "_HEAD");
+        addPlacementVariant(material.name(), out, "_WALL_SKULL", "_SKULL");
+    }
+
+    private static void addPlacementVariant(@NotNull String name, @NotNull Set<Material> out,
+                                            @NotNull String wallSuffix, @NotNull String standingSuffix) {
+        String variantName = null;
+        if (name.endsWith(wallSuffix)) {
+            variantName = name.substring(0, name.length() - wallSuffix.length()) + standingSuffix;
+        } else if (name.endsWith(standingSuffix) && !name.endsWith(wallSuffix)) {
+            variantName = name.substring(0, name.length() - standingSuffix.length()) + wallSuffix;
+        }
+        if (variantName == null) return;
+        Material variant = Material.matchMaterial(variantName);
+        if (variant != null) out.add(variant);
     }
 
     /**
