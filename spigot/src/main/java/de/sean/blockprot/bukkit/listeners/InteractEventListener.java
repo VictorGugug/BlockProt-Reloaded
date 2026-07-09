@@ -87,7 +87,13 @@ public class InteractEventListener implements Listener {
             } else if (!accessEvent.shouldBypassProtections()) {
                 BlockNBTHandler handler = new BlockNBTHandler(event.getClickedBlock());
                 if (handler.isProtected() && !handler.isOwner(player.getUniqueId())) {
-                    String ownerName = handler.getOwnerName();
+                    String ownerUuidStr = handler.getOwner();
+                    String ownerName = null;
+                    if (!ownerUuidStr.isEmpty()) {
+                        try {
+                            ownerName = org.bukkit.Bukkit.getOfflinePlayer(java.util.UUID.fromString(ownerUuidStr)).getName();
+                        } catch (IllegalArgumentException ignored) {}
+                    }
                     if (ownerName != null && !ownerName.isEmpty()) {
                         de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL) + " " + ownerName, 40);
                     }
