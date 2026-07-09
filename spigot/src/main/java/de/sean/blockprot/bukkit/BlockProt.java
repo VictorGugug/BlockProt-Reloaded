@@ -132,6 +132,9 @@ public final class BlockProt extends JavaPlugin {
         return Collections.unmodifiableList(integrations);
     }
 
+    private boolean integrationsLoaded = false;
+    private boolean integrationsEnabled = false;
+
     @NotNull public static String getPluginVersion() { return pluginVersion != null ? pluginVersion : ""; }
     @NotNull public static List<String> getPluginAuthors() { return pluginAuthors != null ? pluginAuthors : List.of(); }
 
@@ -165,6 +168,7 @@ public final class BlockProt extends JavaPlugin {
         for (PluginIntegration integration : integrations) {
             try { integration.load(); } catch (NoClassDefFoundError ignored) {}
         }
+        integrationsLoaded = true;
     }
 
     @Override
@@ -303,6 +307,8 @@ public final class BlockProt extends JavaPlugin {
                     Translator.get(TranslationKey.CONSOLE__BOOT_NOT_INSTALLED));
             }
         }
+        integrationsEnabled = true;
+        new BlockProtAPI(this);
 
         if (defaultConfig.isProtectionExpiryEnabled() && defaultConfig.isExpiryScanOnStartup()) {
             foliaLib.getScheduler().runAsync(task -> runExpiryScan());
@@ -345,8 +351,6 @@ public final class BlockProt extends JavaPlugin {
         }
 
         BlockProtConsole.printStartupBanner(version);
-
-        new BlockProtAPI(this);
 
         super.onEnable();
     }
@@ -435,6 +439,16 @@ public final class BlockProt extends JavaPlugin {
     void registerIntegration(@NotNull PluginIntegration integration) {
         this.integrations.add(integration);
         BlockProtLogger.log("integration", "Registered: " + integration.name);
+        try {
+            if (integrationsLoaded) {
+                integration.load();
+            }
+        } catch (NoClassDefFoundError ignored) {}
+        try {
+            if (integrationsEnabled) {
+                integration.enable();
+            }
+        } catch (NoClassDefFoundError ignored) {}
     }
 
     @Nullable

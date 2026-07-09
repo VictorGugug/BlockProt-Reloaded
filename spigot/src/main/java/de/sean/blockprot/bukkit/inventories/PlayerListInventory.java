@@ -210,8 +210,7 @@ public final class PlayerListInventory extends BlockProtInventory {
                     ItemStack skull = inventory.getItem(slot);
                     if (skull == null || skull.getType() != Material.PLAYER_HEAD) return;
                     if (!(skull.getItemMeta() instanceof SkullMeta meta)) return;
-                    //noinspection deprecation
-                    meta.setOwnerProfile(profile);
+                    meta.setPlayerProfile(profile);
                     skull.setItemMeta(meta);
                 });
             }

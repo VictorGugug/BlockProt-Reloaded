@@ -22,6 +22,7 @@ inventories:
     owner_lore: "§7Este bloque pertenece a §f{player}§7."
     friend_count: "§7Amigos: §f{count}"
     linked_frame: "§7Marco con ítem vinculado: {item}"
+    empty_frame: "§7(vacío)"
     location_format: "{type} \"§f{nbtName}§7\" {coords}"
     lore_prefix: "§7"
   lock: Proteger
@@ -182,10 +183,8 @@ inventories:
     sort_name_desc: "§fOrden: Nombre Z-A"
     sort_blocks_desc: "§fOrden: Más bloques"
     sort_blocks_asc: "§fOrden: Menos bloques"
-  # -- Lista de bloques del admin --
   admin_block_list:
     title: "Bloques de {player}"
-    linked_frame: "\u00a77Marco con \u00edtem vinculado: {item}"
   world_prot_del:
     title: "Eliminar Protecciones del Mundo"
     search_prompt: "§7Escribe el nombre de un mundo para filtrar..."
@@ -379,6 +378,7 @@ messages:
     checks_passed_chat: "§a§l[BlockProt] §r§aTodas las §l{passed}§r§a comprobaciones pasaron."
     checks_failed_chat: "§c§l[BlockProt] §r§c{failed} comprobación(es) FALLARON - ver log."
     log_path: "§7Log: §f{path}"
+    inventory_title: "§cBlockProt Debug"
   first_run:
     header: "§6§m{line}"
     title: "§6   BlockProt Reloaded - Guía de Primer Inicio"

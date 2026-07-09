@@ -25,6 +25,7 @@ inventories:
     owner_lore: "§7This block is owned by §f{player}§7."
     friend_count: "§7Friends: §f{count}"
     linked_frame: "§7Linked Item Frame: {item}"
+    empty_frame: "§7(empty)"
     location_format: "{type} \"§f{nbtName}§7\" {coords}"
     lore_prefix: "§7"
   lock: "Lock"
@@ -372,6 +373,7 @@ messages:
     checks_passed_chat: "§a§l[BlockProt] §r§aAll §l{passed}§r§a checks passed."
     checks_failed_chat: "§c§l[BlockProt] §r§c{failed} check(s) FAILED - see log."
     log_path: "§7Log: §f{path}"
+    inventory_title: "§cBlockProt Debug"
   time:
     days: "days"
     day: "day"

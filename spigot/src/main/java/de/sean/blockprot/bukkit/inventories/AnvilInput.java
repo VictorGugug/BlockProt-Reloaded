@@ -77,7 +77,7 @@ public final class AnvilInput implements Listener {
         return ANVIL_VIEW_CLASS != null;
     }
 
-    @SuppressWarnings("deprecation")
+    @SuppressWarnings({"deprecation", "removal"})
     private static void trySetRepairCost(@NotNull InventoryView view) {
         // 1.21.4+: use typed AnvilView#setRepairCost via reflection.
         if (SET_REPAIR_COST != null && ANVIL_VIEW_CLASS != null && ANVIL_VIEW_CLASS.isInstance(view)) {

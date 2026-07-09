@@ -69,7 +69,7 @@ public class InventoryEventListener implements Listener {
         InventoryAction.PICKUP_ONE, InventoryAction.PICKUP_SOME,
         InventoryAction.DROP_ALL_SLOT, InventoryAction.DROP_ONE_SLOT,
         InventoryAction.MOVE_TO_OTHER_INVENTORY,
-        InventoryAction.HOTBAR_MOVE_AND_READD, InventoryAction.HOTBAR_SWAP,
+        InventoryAction.HOTBAR_SWAP,
         InventoryAction.COLLECT_TO_CURSOR
     );
     private static final Set<InventoryAction> PLACE_ACTIONS = EnumSet.of(

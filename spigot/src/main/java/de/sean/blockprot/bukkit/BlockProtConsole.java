@@ -42,9 +42,20 @@ public final class BlockProtConsole {
      * This prefix replaces the {@code [HH:mm:ss INFO]: [BlockProt Reloaded]} line the
      * standard logger would have added.
      */
-    private static final String PREFIX = "§8[§bBlockProt Reloaded§8] §r";
+    private static final String BANNER_LIGHT = hex("D2B48C");
+
+    private static final String PREFIX = "§8[§rBlockProt Reloaded§8] §r";
     private static final String WARN_TAG = "§e[WARN]§r ";
     private static final String ERROR_TAG = "§c[ERROR]§r ";
+
+    /** Converts a 6-digit hex string to the extended section-sign hex format Adventure's legacy serializer accepts. */
+    private static String hex(@NotNull String rgb) {
+        StringBuilder sb = new StringBuilder("§x");
+        for (char c : rgb.toCharArray()) {
+            sb.append('§').append(c);
+        }
+        return sb.toString();
+    }
 
     @Nullable
     private static List<StartupLine> startupBuffer = null;
@@ -84,14 +95,14 @@ public final class BlockProtConsole {
         guideBuffer = null;
         if (pluginLogger == null) return;
 
-        raw("§6  ██████╗ ██████╗  ██████╗ ");
-        raw("§6  ██╔══██╗██╔══██╗██╔══██╗");
-        raw("§6  ██████╔╝██████╔╝██████╔╝");
-        raw("§6  ██╔══██╗██╔═══╝ ██╔══██╗");
-        raw("§6  ██████╔╝██║     ██║  ██║");
-        raw("§6  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
-        raw("§6        BlockProt Reloaded");
-        raw("§e            v" + version);
+        raw(BANNER_LIGHT + "  ██████╗ ██████╗  ██████╗ ");
+        raw(BANNER_LIGHT + "  ██╔══██╗██╔══██╗██╔══██╗");
+        raw(BANNER_LIGHT + "  ██████╔╝██████╔╝██████╔╝");
+        raw(BANNER_LIGHT + "  ██╔══██╗██╔═══╝ ██╔══██╗");
+        raw(BANNER_LIGHT + "  ██████╔╝██║     ██║  ██║");
+        raw(BANNER_LIGHT + "  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
+        raw("§r        BlockProt Reloaded");
+        raw("§r            v" + version);
 
         for (String guideLine : guideLines) {
             raw(guideLine);

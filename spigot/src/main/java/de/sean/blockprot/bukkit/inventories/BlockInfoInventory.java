@@ -149,7 +149,7 @@ public class BlockInfoInventory extends BlockProtInventory {
                     (org.bukkit.inventory.meta.SkullMeta) ownerSkull.getItemMeta();
                 if (skullMeta != null) {
                     var pp = BlockProtInventory.createPlayerProfile(profile.getUniqueId(), ownerName);
-                    skullMeta.setOwnerProfile(pp);
+                    skullMeta.setPlayerProfile(pp);
                     skullMeta.displayName(net.kyori.adventure.text.Component.text(
                         Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
                     skullMeta.lore(java.util.List.of(
@@ -183,7 +183,7 @@ public class BlockInfoInventory extends BlockProtInventory {
             if (frameEntity instanceof org.bukkit.entity.ItemFrame frame) {
                 org.bukkit.inventory.ItemStack frameItem = frame.getItem();
                 String itemName = frameItem.getType() == Material.AIR
-                    ? "(empty)"
+                    ? Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__EMPTY_FRAME)
                     : frameItem.getType().name().toLowerCase().replace('_', ' ');
                 frameLore = Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__LINKED_FRAME)
                     .replace("{item}", itemName);

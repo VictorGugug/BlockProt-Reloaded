@@ -56,7 +56,7 @@ public final class WorldLockableSelectionInventory extends BlockProtInventory {
 
     @Override
     String getTranslatedInventoryName() {
-        return "§6" + Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TITLE) + " §7- §eWorlds";
+        return "§6" + Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TITLE) + " §7- §e" + Translator.get(TranslationKey.WORLDS__WORLDS);
     }
 
     @NotNull

@@ -18,7 +18,7 @@ Block protection plugin for Paper and Spigot servers. Players lock chests, furna
 
 ## Philosophy
 
-BlockProt Reloaded exists because the best ideas come from the community that uses the plugin. If you have a feature request, a bug report, or want to discuss improvements, open an issue on GitHub or join our [Discord](https://discord.gg/RRcjuMr9Jd). If you are a developer, open a pull request. Fragmentation into multiple forks helps nobody; every improvement belongs in one place, shared with everyone.
+BlockProt Reloaded exists because the best ideas come from the community that uses the plugin. If you have a feature request, a bug report, or want to discuss improvements, open an issue on GitHub or join the [Discord](https://discord.gg/RRcjuMr9Jd). If you are a developer, open a pull request. Fragmentation into multiple forks helps nobody; every improvement belongs in one place, shared with everyone.
 
 ## Screenshots
 
@@ -241,7 +241,7 @@ Command visibility is controlled by `use_menus` in `config.yml`. With `use_menus
 | `blockprot.user.admin` | op | Admin features: player block-lists, unlock GUI, admin commands |
 | `blockprot.max_blocks` | false | Exempt from the `player_max_locked_block_count` limit |
 | `blockprot.blocks.tp` | op | Teleport to blocks from the statistics or admin block-list GUI |
-| `blockprot.debug` | false | Access to `/bp debug` diagnostics |
+| `blockprot.debug` | op | Access to `/bp debug` diagnostics |
 
 
 ## Features
@@ -454,12 +454,12 @@ block_lock_sounds: true
 # Timed access
 timed_access_max_duration_days: 90
 
-# WorldEdit
-worldedit_paste_autolock:
-  enabled: false
-  radius: 24
-  max_blocks_per_paste: 5000
-  delay_ticks: 20
+# WorldEdit (DEPRECATED — configured in integrations.yml under worldedit.paste_autolock)
+# worldedit_paste_autolock:
+#   enabled: false
+#   radius: 24
+#   max_blocks_per_paste: 5000
+#   delay_ticks: 20
 
 # Menus
 use_menus: false

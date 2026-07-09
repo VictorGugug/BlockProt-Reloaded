@@ -11,10 +11,10 @@ plugins {
     id("xyz.jpenilla.run-paper") version "3.0.2"
 }
 
-val nbtApiVersion: String by project
-val townyVersion: String by project
-val papiVersion: String by project
-val worldGuardVersion: String by project
+val nbtApiVersion = project.property("nbtApiVersion") as String
+val townyVersion = project.property("townyVersion") as String
+val papiVersion = project.property("papiVersion") as String
+val worldGuardVersion = project.property("worldGuardVersion") as String
 
 repositories {
     mavenCentral()
@@ -78,7 +78,7 @@ dependencies {
     compileOnly("com.cjburkey.claimchunk:claimchunk:0.0.25-FIX3")
 }
 
-val targetJavaVersion: String by project
+val targetJavaVersion = project.property("targetJavaVersion") as String
 
 java {
     toolchain {
@@ -91,6 +91,11 @@ java {
 }
 
 val pluginVersion: String = project.version.toString()
+
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("-Xlint:-deprecation")
+    options.compilerArgs.add("-Xlint:-removal")
+}
 
 tasks.processResources {
     inputs.property("version", pluginVersion)

@@ -510,7 +510,7 @@ public class DebugCommand implements CommandExecutor {
     private void checkInventoryCreation(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             Inventory inv = Bukkit.createInventory(null, 9,
-                net.kyori.adventure.text.Component.text("bp_debug"));
+                net.kyori.adventure.text.Component.text(Translator.get(TranslationKey.MESSAGES__DEBUG__INVENTORY_TITLE)));
             BlockProtLogger.pass("Bukkit.createInventory OK size=" + inv.getSize());
             p.incrementAndGet();
         } catch (Exception e) {

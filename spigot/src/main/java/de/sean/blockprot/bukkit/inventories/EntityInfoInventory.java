@@ -126,7 +126,7 @@ public final class EntityInfoInventory extends BlockProtInventory {
                 ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
                 SkullMeta meta = (SkullMeta) skull.getItemMeta();
                 if (meta != null) {
-                    meta.setOwnerProfile(
+                    meta.setPlayerProfile(
                         BlockProtInventory.createPlayerProfile(UUID.fromString(ownerUuid), ownerName));
                     meta.displayName(Component.text(
                         Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
@@ -154,7 +154,7 @@ public final class EntityInfoInventory extends BlockProtInventory {
             EntityNBTHandler.FriendEntry entry = handler.getFriendEntry(uuid);
             boolean isManager = entry != null && entry.manager();
             setItemStack(InventoryConstants.lineLength + i, Material.SKELETON_SKULL,
-                uuid + (isManager ? " [M]" : ""));
+                uuid + (isManager ? " " + Translator.get(TranslationKey.INVENTORIES__FRIENDS__PERMISSION__MANAGER) : ""));
             state.friendResultCache.add(UUID.fromString(uuid));
         }
 
@@ -174,11 +174,11 @@ public final class EntityInfoInventory extends BlockProtInventory {
                     ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
                     SkullMeta meta = (SkullMeta) skull.getItemMeta();
                     if (meta != null) {
-                        meta.setOwnerProfile(
+                        meta.setPlayerProfile(
                             BlockProtInventory.createPlayerProfile(profile.getUniqueId(), name));
                         EntityNBTHandler.FriendEntry entry = handler.getFriendEntry(profile.getUniqueId().toString());
                         boolean isManager = entry != null && entry.manager();
-                        meta.displayName(Component.text(name + (isManager ? " [M]" : "")));
+                        meta.displayName(Component.text(name + (isManager ? " " + Translator.get(TranslationKey.INVENTORIES__FRIENDS__PERMISSION__MANAGER) : "")));
                         skull.setItemMeta(meta);
                     }
                     inventory.setItem(InventoryConstants.lineLength + idx, skull);
