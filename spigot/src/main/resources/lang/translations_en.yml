@@ -461,13 +461,13 @@ console:
   recommended_failed: "§cFailed to write blocks.yml: {error}"
 
   first_start:
-    header: "§6  ------------------------------------------"
-    title: "§6   BlockProt Reloaded - First Start Guide"
-    step1: "§7   1. Use §e{command} §7to configure lockable blocks."
-    step2: "§7   2. Or edit §e{file} §7manually in the plugin folder."
-    step3: "§7   3. See docs: §e{url}"
-    step4: "§7   4. Run §e{command} §7in console for a recommended config."
-    footer: "§6  ------------------------------------------"
+    header: "§x§D§2§B§4§8§C  ------------------------------------------"
+    title: "§x§D§2§B§4§8§C   BlockProt Reloaded - First Start Guide"
+    step1: "§7   1. Use §x§8§F§E§3§B§0{command} §7to configure lockable blocks."
+    step2: "§7   2. Or edit §x§8§F§E§3§B§0{file} §7manually in the plugin folder."
+    step3: "§7   3. See docs: §x§8§F§E§3§B§0{url}"
+    step4: "§7   4. Run §x§8§F§E§3§B§0{command} §7in console for a recommended config."
+    footer: "§x§D§2§B§4§8§C  ------------------------------------------"
 
   boot:
     configuration: "Configuration"

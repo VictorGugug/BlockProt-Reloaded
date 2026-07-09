@@ -43,6 +43,10 @@ public final class BlockProtConsole {
      * standard logger would have added.
      */
     private static final String BANNER_LIGHT = hex("D2B48C");
+    private static final String ACCENT_MINT = hex("8FE3B0");
+    private static final String LABEL_GRAY = "§7";
+    private static final String CONNECTOR_GRAY = "§8";
+    private static final String INACTIVE_GRAY = "§8";
 
     private static final String PREFIX = "§8[§rBlockProt Reloaded§8] §r";
     private static final String WARN_TAG = "§e[WARN]§r ";
@@ -128,17 +132,22 @@ public final class BlockProtConsole {
         Bukkit.getConsoleSender().sendMessage(LegacyComponentSerializer.legacySection().deserialize(message));
     }
 
-    private static void bootLine(@NotNull String label, @NotNull String status, boolean isLast) {
+    private static void bootLine(@NotNull String label, @NotNull String status, @NotNull String statusColor, boolean isLast) {
         String connector = isLast ? "└─" : "├─";
-        info("  " + connector + " " + label + "  " + status);
+        info("  " + CONNECTOR_GRAY + connector + " " + LABEL_GRAY + label + "§r  " + statusColor + status);
     }
 
     public static void boot(@NotNull String label, @NotNull String status) {
-        bootLine(label, status, false);
+        bootLine(label, status, ACCENT_MINT, false);
     }
 
     public static void bootLast(@NotNull String label, @NotNull String status) {
-        bootLine(label, status, true);
+        bootLine(label, status, ACCENT_MINT, true);
+    }
+
+    /** Same as {@link #boot(String, String)} but for informational, non-active statuses (e.g. an integration that is not installed). */
+    public static void bootMuted(@NotNull String label, @NotNull String status) {
+        bootLine(label, status, INACTIVE_GRAY, false);
     }
 
     public static void info(@NotNull String message) {

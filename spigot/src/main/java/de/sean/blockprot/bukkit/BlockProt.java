@@ -299,11 +299,11 @@ public final class BlockProt extends JavaPlugin {
                     BlockProtConsole.boot(integration.name,
                         Translator.get(TranslationKey.CONSOLE__BOOT_HOOKED));
                 } else {
-                    BlockProtConsole.boot(integration.name,
+                    BlockProtConsole.bootMuted(integration.name,
                         Translator.get(TranslationKey.CONSOLE__BOOT_NOT_INSTALLED));
                 }
             } catch (NoClassDefFoundError ignored) {
-                BlockProtConsole.boot(integration.name,
+                BlockProtConsole.bootMuted(integration.name,
                     Translator.get(TranslationKey.CONSOLE__BOOT_NOT_INSTALLED));
             }
         }
@@ -314,7 +314,7 @@ public final class BlockProt extends JavaPlugin {
 
         BlockProtConsole.bootLast(
             Translator.get(TranslationKey.CONSOLE__BOOT_STARTUP_TIME),
-            "§f" + java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() + " ms");
+            java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() + " ms");
 
         // First-run guide: buffered so it prints directly under the banner, before the boot checklist.
         if (isFirstStart() && !defaultConfig.hasConfiguredBlocks()) {
