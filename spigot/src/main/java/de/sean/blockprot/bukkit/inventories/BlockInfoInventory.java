@@ -26,7 +26,6 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.FriendSupportingHandler;
 import de.sean.blockprot.bukkit.nbt.RedstoneSettingsHandler;
-import de.sean.blockprot.bukkit.util.SkinCache;
 import de.sean.blockprot.bukkit.util.BlockUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -175,24 +174,24 @@ public class BlockInfoInventory extends BlockProtInventory {
                     ));
                     ownerSkull.setItemMeta(skullMeta);
                     inventory.setItem(0, ownerSkull);
-                    // Schedule skin refresh for offline players.
-                    if (online == null && !BlockProtInventory.hasSkin(pp)) {
+                    // Schedule skin refresh for offline / non-cached players via Paper API.
+                    if (online == null) {
                         final UUID finalUuid = ownerUuid;
                         final String finalName = ownerName;
-                        SkinCache.getOrFetchAsync(finalName, finalUuid).thenAccept(freshProfile -> {
-                            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                        Bukkit.createProfile(finalUuid, finalName).update()
+                            .thenAcceptAsync(freshProfile -> {
                                 if (!player.isOnline()) return;
-                                Inventory top = player.getOpenInventory() != null ? player.getOpenInventory().getTopInventory() : null;
+                                Inventory top = player.getOpenInventory().getTopInventory();
                                 if (top == null || top.getHolder() != BlockInfoInventory.this) return;
                                 org.bukkit.inventory.ItemStack existing = top.getItem(0);
                                 if (existing == null || existing.getType() != Material.PLAYER_HEAD) return;
-                                org.bukkit.inventory.meta.SkullMeta sm = (org.bukkit.inventory.meta.SkullMeta) existing.getItemMeta();
+                                org.bukkit.inventory.meta.SkullMeta sm =
+                                    (org.bukkit.inventory.meta.SkullMeta) existing.getItemMeta();
                                 if (sm != null) {
                                     sm.setPlayerProfile(freshProfile);
                                     existing.setItemMeta(sm);
                                 }
-                            });
-                        });
+                            }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
                     }
                 } else {
                     inventory.setItem(0, ownerSkull);

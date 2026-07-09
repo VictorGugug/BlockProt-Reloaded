@@ -294,58 +294,37 @@ public abstract class BlockProtInventory implements InventoryHolder {
         inventory.setItem(index, stack);
     }
 
-    /**
+/**
      * Sets a player skull at {@code index} and, if no skin is yet cached, asynchronously
-     * fetches the real skin and refreshes the same slot once it arrives.
+     * fetches the real skin via Paper's {@code PlayerProfile.update()} and refreshes
+     * the same slot once it arrives.
      *
-     * <p>This is the preferred way to render a player head in any inventory: it guarantees
-     * the slot ends up with a textured head (or, on the rare offline fallback, a default
-     * Steve head) instead of leaving a placeholder indefinitely.
+     * <p>This is the preferred way to render a player head in any inventory.
      *
-     * @param index     Inventory slot index.
-     * @param player    Player who currently owns the slot, used to keep the inventory
-     *                  reference stable and to skip the refresh if the player has already
-     *                  closed it.
-     * @param uuid      Player UUID (real or offline).
-     * @param name      Player name to display on the skull and use as the cache key.
+     * @param index  Inventory slot index.
+     * @param player Player who owns this inventory; used to verify the inventory is still open.
+     * @param uuid   Player UUID.
+     * @param name   Player name to display on the skull.
      */
     public void setPlayerSkullAsync(int index, @NotNull Player player, @NotNull UUID uuid, @NotNull String name) {
-        PlayerProfile cached = null;
-        try {
-            cached = SkinCache.getOrFetch(name, uuid);
-        } catch (Exception ignored) {}
+        // Render a placeholder first so the slot is never empty.
+        setPlayerSkull(index, Bukkit.createProfile(uuid, name));
 
-        // Render whatever we have right now (placeholder if necessary).
-        setPlayerSkull(index, cached != null ? cached : createPlayerProfile(uuid, name));
-
-        // If the current cached profile is a placeholder (no skin), schedule a refresh.
-        final PlayerProfile finalCached = cached;
-        if (finalCached == null || !hasSkin(finalCached)) {
-            SkinCache.getOrFetchAsync(name, uuid).thenAccept(profile -> {
-                Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
-                    if (!player.isOnline()) return;
-                    Inventory top = player.getOpenInventory() != null ? player.getOpenInventory().getTopInventory() : null;
-                    if (top == null || top.getHolder() != BlockProtInventory.this) return;
-                    setPlayerSkull(index, profile);
-                });
-            });
-        }
+        SkinCache.getOrFetchAsync(name, uuid).thenAcceptAsync(freshProfile -> {
+            if (!player.isOnline()) return;
+            Inventory top = player.getOpenInventory().getTopInventory();
+            if (top == null || top.getHolder() != BlockProtInventory.this) return;
+            setPlayerSkull(index, freshProfile);
+        }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
     }
 
     public static boolean hasSkin(@Nullable PlayerProfile profile) {
-        if (profile == null) return false;
-        try {
-            return profile.getTextures() != null && profile.getTextures().getSkin() != null;
-        } catch (Exception ignored) {
-            return false;
-        }
+        return SkinCache.hasSkin(profile);
     }
 
     @NotNull
     public static PlayerProfile createPlayerProfile(@NotNull final UUID uuid, @NotNull final String name) {
-        // SkinCache handles both SkinsRestorer (async) and Mojang API (async).
-        // No blocking HTTP on the main thread.
-        return SkinCache.getOrFetch(name, uuid);
+        return Bukkit.createProfile(uuid, name);
     }
 
     protected void goBack(@NotNull final Player player, @NotNull final InventoryState state) {
