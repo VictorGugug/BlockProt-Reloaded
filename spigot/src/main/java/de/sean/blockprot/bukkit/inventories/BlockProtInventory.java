@@ -48,7 +48,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.PlayerProfile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -269,7 +269,6 @@ public abstract class BlockProtInventory implements InventoryHolder {
         inventory.setItem(index, stack);
     }
 
-    @SuppressWarnings("deprecation")
     public void setPlayerSkull(int index, @Nullable final PlayerProfile profile) {
         final var stack = new ItemStack(Material.PLAYER_HEAD, 1);
         var meta = (SkullMeta) stack.getItemMeta();
@@ -278,7 +277,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
 
         try {
             assert meta != null;
-            meta.setOwnerProfile(profile);
+            meta.setPlayerProfile(profile);
             if (profile != null && profile.getName() != null)
                 meta.displayName(Component.text(profile.getName()));
         } catch (Exception e) {
@@ -290,7 +289,6 @@ public abstract class BlockProtInventory implements InventoryHolder {
     }
 
     @NotNull
-    @SuppressWarnings("deprecation")
     public static PlayerProfile createPlayerProfile(@NotNull final UUID uuid, @NotNull final String name) {
         // SkinCache handles both SkinsRestorer (async) and Mojang API (async).
         // No blocking HTTP on the main thread.

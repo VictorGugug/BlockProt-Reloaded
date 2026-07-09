@@ -33,9 +33,9 @@ fun gitBranchName(): String {
 }
 
 val env: MutableMap<String, String> = System.getenv()
-val blockProtVersion: String by project
-val versionSuffix: String by project
-val targetJavaVersion: String by project
+val blockProtVersion: String = project.property("blockProtVersion") as String
+val versionSuffix: String = project.property("versionSuffix") as String
+val targetJavaVersion: String = project.property("targetJavaVersion") as String
 
 // Builds the full version from gradle.properties values.
 // Set blockProtVersion and versionSuffix manually in gradle.properties.

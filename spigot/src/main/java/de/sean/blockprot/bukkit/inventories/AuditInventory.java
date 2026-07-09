@@ -41,7 +41,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.profile.PlayerProfile;
+import com.destroystokyo.paper.profile.PlayerProfile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -285,10 +285,9 @@ public final class AuditInventory extends BlockProtInventory {
         };
     }
 
-    @SuppressWarnings("deprecation")
     private static void applyOwnerProfile(
             @NotNull org.bukkit.inventory.meta.SkullMeta meta,
             @NotNull PlayerProfile profile) {
-        meta.setOwnerProfile(profile);
+        meta.setPlayerProfile(profile);
     }
 }
