@@ -4,21 +4,29 @@
 # or edit blocks.yml directly. See docs/BLOCK_FAMILY_SYNTAX.md for syntax.
 # Docs: https://github.com/VictorGugug/BlockProt-Reloaded/tree/main/docs
 
+# -- Language --
 language_file: translations_en.yml
 fallback_string: "Unknown translation"
 replace_translations: true
-notify_op_of_updates: false
 localized_command_aliases: true
+
+# -- Worlds --
 excluded_worlds: []
 per_worlds_config: false
+
+# -- Players and friends --
 bedrock_username_prefixes:
 - "."
 - "*"
 - "_"
-inactivity_cleanup_days: -1
+lock_on_place_by_default: true
+public_is_friend_by_default: false
+player_max_locked_block_count: -1
+lock_hint_cooldown_in_seconds: 10
+friend_search_similarity: 0.5
+disable_friend_functionality: false
 
-auto_reload_configs: true
-
+# -- Blocks and locking behavior --
 # Controls the output format of blocks.yml when modified via /bp lockables.
 # false (default) -> flat material names (CHEST, FURNACE, ...).
 # true            -> compact family expressions ([*-CHEST], [*], etc.).
@@ -26,21 +34,18 @@ auto_reload_configs: true
 # blocks.yml is always read as-is. Expressions are parsed regardless of this flag.
 # When all lockable lists are empty, this flag auto-disables to false.
 modern_family_blocks: false
-
-lock_on_place_by_default: true
-public_is_friend_by_default: false
-player_max_locked_block_count: -1
-lock_hint_cooldown_in_seconds: 10
-friend_search_similarity: 0.5
-disable_friend_functionality: false
 redstone_disallowed_by_default: false
-
 protect_locked_blocks_from_explosions: true
 block_protected_block_piston_movement: true
 clear_protection_on_shulker_break: false
 allow_break_protected_blocks: false
 respect_spawn_protection: true
+block_lock_effects: true
+block_lock_sounds: true
+use_menus: false
+timed_access_max_duration_days: 90
 
+# -- Entity protection --
 entity_protection:
   enabled: false
   auto_protect_on_tame: true
@@ -52,36 +57,37 @@ villager_workstation_protection:
   radius: 2
   vertical_radius: 1
 
-block_lock_effects: true
-block_lock_sounds: true
-
-timed_access_max_duration_days: 90
-
-# DEPRECATED (moved to integrations.yml): worldedit.paste_autolock.*
-worldedit_paste_autolock:
+# -- Expiry --
+# Per-block manual expiry (an enable_protection_expiry option letting an
+# owner set an expiration time on one specific block) is planned for a
+# future release and is not available yet. World-level default expiry is
+# configured below.
+world_expiry:
   enabled: false
-  radius: 24
-  max_blocks_per_paste: 5000
-  delay_ticks: 20
+  check_interval_minutes: 10
+  worlds: {}
 
+# -- Raid detection --
+raid_detection:
+  enabled: true
+
+# -- Notifications --
+notify_op_of_updates: false
 owner_notifications:
   enabled: true
   notify_on_open: true
   notify_on_take: true
   notify_on_place: true
 
-use_menus: false
-
-enable_protection_expiry: false
-expiry_scan_on_startup: true
-
-world_expiry:
-  enabled: false
-  check_interval_minutes: 10
-  worlds: {}
-
-raid_detection:
-  enabled: true
-
+# -- Maintenance --
+inactivity_cleanup_days: -1
+auto_reload_configs: true
 enable_session_log: true
 enable_backups: true
+
+# -- Deprecated (moved to integrations.yml): worldedit.paste_autolock.* --
+worldedit_paste_autolock:
+  enabled: false
+  radius: 24
+  max_blocks_per_paste: 5000
+  delay_ticks: 20

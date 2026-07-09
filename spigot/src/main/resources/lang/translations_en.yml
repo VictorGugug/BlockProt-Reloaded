@@ -35,10 +35,6 @@ inventories:
   paste_configuration: "Paste configuration"
   set_block_name: "Set block name"
   inspect_contents: "Inspect contents"
-  block_lock_expiry_slot: "§eSet expiry (e.g. 30s, 60m, 24h, 28d, 12mo, 1y)"
-  block_lock_expiry_slot_lore: "Click to set an expiry duration. Block will auto-unlock when it expires."
-  block_lock_expiry_unset: "§7No expiry set"
-  block_lock_expiry_set: "§aExpiry active"
   redstone:
     settings: "Block Settings"
     redstone_protection: "Redstone protection"
@@ -329,10 +325,6 @@ messages:
   bp_unlock_usage: "§cUsage: /bp unlock <player>"
   bp_unlock_player_not_found: "§cPlayer not found: {player}"
   bp_unlock_no_blocks: "§7{player} owns no locked blocks."
-  expiry_set: "§aExpiry set: block will unlock in §f{duration}§a."
-  expiry_cleared: "§aExpiry removed. This block will no longer auto-unlock."
-  expiry_expired: "§eThis block's protection has expired and has been cleared."
-  expiry_invalid_duration: "§cInvalid duration. Use: 30s, 60m, 24h, 28d, 12mo, 1y (or combined: 1d12h30m)."
   world_expiry:
     set: "§aSet expiry for §f{world} §ato §f{duration}§a."
     cleared: "§cCleared expiry for §f{world}§c."

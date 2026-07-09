@@ -29,7 +29,6 @@ import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerInventoryClipboard;
 import de.sean.blockprot.bukkit.tasks.VillagerLocateTask;
-import de.sean.blockprot.bukkit.util.DurationParser;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -209,37 +208,6 @@ public class BlockLockInventory extends BlockProtInventory {
                             Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
                     }
                 }
-                case LIME_DYE -> {
-                    var handler = getNbtHandlerOrNull(block);
-                    if (handler != null && BlockProt.getDefaultConfig().isProtectionExpiryEnabled()) {
-                        handler.setExpiresAt(0L);
-                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                            Translator.get(TranslationKey.MESSAGES__EXPIRY_CLEARED)));
-                        closeAndOpen(player, fill(player, block.getType(), new BlockNBTHandler(block)));
-                    }
-                }
-                case HOPPER -> {
-                    if (!BlockProt.getDefaultConfig().isProtectionExpiryEnabled()) break;
-                    final Block expiryBlock = block;
-                    player.closeInventory();
-                    Consumer<String> handleExpiry = text -> {
-                        java.time.Duration dur = DurationParser.parse(text);
-                        if (dur == null || dur.isZero() || dur.isNegative()) {
-                            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                                Translator.get(TranslationKey.MESSAGES__EXPIRY_INVALID_DURATION)));
-                        } else {
-                            long exp = System.currentTimeMillis() + dur.toMillis();
-                            new BlockNBTHandler(expiryBlock).setExpiresAt(exp);
-                            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                                Translator.get(TranslationKey.MESSAGES__EXPIRY_SET)
-                                    .replace("{duration}", DurationParser.format(dur))));
-                        }
-                        Inventory inv = new BlockLockInventory().fill(player, expiryBlock.getType(), new BlockNBTHandler(expiryBlock));
-                        if (inv != null) player.openInventory(inv);
-                    };
-                    AnvilInput.open(player, BlockProt.getInstance(), "",
-                        Translator.get(TranslationKey.INVENTORIES__BLOCK_LOCK_EXPIRY_SLOT), handleExpiry);
-                }
                 case BARRIER -> closeAndOpen(player, null);
             }
         }
@@ -288,14 +256,6 @@ public class BlockLockInventory extends BlockProtInventory {
 
             if (state.getBlock() != null && isWorkstation(state.getBlock().getType())) {
                 setItemStack(5, Material.EMERALD, TranslationKey.INVENTORIES__LOCATE_VILLAGER);
-            }
-
-            if (isStorageBlock && BlockProt.getDefaultConfig().isProtectionExpiryEnabled()) {
-                long exp = handler.getExpiresAt();
-                setItemStack(6, exp > 0 ? Material.LIME_DYE : Material.HOPPER,
-                    exp > 0
-                        ? TranslationKey.INVENTORIES__BLOCK_LOCK_EXPIRY_SET
-                        : TranslationKey.INVENTORIES__BLOCK_LOCK_EXPIRY_UNSET);
             }
         }
 

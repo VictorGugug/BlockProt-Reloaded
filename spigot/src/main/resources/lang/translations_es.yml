@@ -32,10 +32,6 @@ inventories:
   paste_configuration: Pegar configuración
   set_block_name: Establecer el nombre del bloque
   inspect_contents: Inspeccionar contenido
-  block_lock_expiry_slot: "§eEstablecer expiración (ej. 30s, 60m, 24h, 28d, 12mo, 1y)"
-  block_lock_expiry_slot_lore: "Clic para establecer una duración de expiración. El bloque se desprotegerá automáticamente al expirar."
-  block_lock_expiry_unset: "§7Sin expiración configurada"
-  block_lock_expiry_set: "§aExpiración activa"
   redstone:
     settings: Configuración de Redstone
     redstone_protection: Protección contra redstone
@@ -328,11 +324,6 @@ messages:
   bp_unlock_usage: "§cUso: /bp unlock <jugador>"
   bp_unlock_player_not_found: "§cJugador no encontrado: {player}"
   bp_unlock_no_blocks: "§7{player} no tiene bloques protegidos."
-  # -- Expiración de protección --
-  expiry_set: "§aExpiración configurada: el bloque se desprotegerá en §f{duration}§a."
-  expiry_cleared: "§aExpiración eliminada. El bloque ya no se desprotegerá automáticamente."
-  expiry_expired: "§eLa protección de este bloque ha caducado y ha sido eliminada."
-  expiry_invalid_duration: "§cDuración inválida. Usa: 30s, 60m, 24h, 28d, 12mo, 1y (o combinado: 1d12h30m)."
   world_expiry:
     set: "§aExpiración configurada para §f{world} §aen §f{duration}§a."
     cleared: "§cExpiración eliminada para §f{world}§c."

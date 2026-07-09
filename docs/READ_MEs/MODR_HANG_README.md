@@ -5,7 +5,7 @@ BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/
 
 ## What it does
 
-Players sneak and right-click any lockable block or entity to open the protection GUI - no commands required. From the GUI they can lock or unlock, manage a per-block friend list with Read, Write, or Manager roles, control redstone and hopper access, inspect the access audit trail, copy and paste settings between blocks, and set an optional protection expiry timer.
+Players sneak and right-click any lockable block or entity to open the protection GUI - no commands required. From the GUI they can lock or unlock, manage a per-block friend list with Read, Write, or Manager roles, control redstone and hopper access, inspect the access audit trail, and copy and paste settings between blocks.
 
 Admins get a separate toolset: a paged block browser (`/bp lockables`), per-player block lists (`/bp info`), an unlock GUI (`/bp unlock`), diagnostics (`/bp debug run`), and a full audit log per protected block.
 
@@ -77,7 +77,6 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 ### Other additions
 - Ownership transfer: `/bp transfer <player>` and `/bp transfer all <player>`.
 - Timed friend access: grant a friend temporary access that auto-revokes when the timer expires.
-- Protection expiry: set an expiry timer on any lock from the GUI (`7d`, `1mo`, `2d12h`).
 - Per-world configuration via `worlds.yml` (`per_worlds_config: true`).
 - Auto-reload via `ConfigFileWatcher` (`auto_reload_configs`, default `true`).
 - Automatic backup zip on version upgrade.
@@ -111,7 +110,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 | `blockprot.user.admin` | op | Admin commands and GUIs |
 | `blockprot.max_blocks` | false | Exempt from block count limit |
 | `blockprot.blocks.tp` | op | Teleport to blocks from stats and admin GUIs |
-| `blockprot.debug` | false | Access to `/bp debug` |
+| `blockprot.debug` | op | Access to `/bp debug` |
 
 
 ## Compatibility

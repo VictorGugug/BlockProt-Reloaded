@@ -426,8 +426,6 @@ public final class DefaultConfig extends BlockProtConfig {
     public boolean shouldRespectSpawnProtection()          { return !config.contains("respect_spawn_protection") || config.getBoolean("respect_spawn_protection"); }
     public boolean isLockEffectEnabled()                   { return !config.contains("block_lock_effects") || config.getBoolean("block_lock_effects"); }
     public boolean isLockSoundEnabled()                    { return !config.contains("block_lock_sounds") || config.getBoolean("block_lock_sounds"); }
-    public boolean isProtectionExpiryEnabled()         { return config.getBoolean("enable_protection_expiry", false); }
-    public boolean isExpiryScanOnStartup()              { return config.getBoolean("expiry_scan_on_startup", true); }
     public boolean isWorldExpiryEnabled()               { return config.getBoolean("world_expiry.enabled", false); }
     public int getWorldExpiryCheckInterval()            { return config.getInt("world_expiry.check_interval_minutes", 10); }
     public java.util.Map<String, String> getWorldExpiryDurations() {

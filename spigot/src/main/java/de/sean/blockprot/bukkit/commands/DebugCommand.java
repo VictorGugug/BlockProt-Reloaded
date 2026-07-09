@@ -145,6 +145,8 @@ public class DebugCommand implements CommandExecutor {
             runGroup(player, passed, failed, "16. Inventory creation",    () -> checkInventoryCreation(player, passed, failed));
             runGroup(player, passed, failed, "17. All inventories",       () -> checkAllInventories(player, passed, failed));
             runGroup(player, passed, failed, "18. Messages",              () -> checkMessages(player, passed, failed));
+            runGroup(player, passed, failed, "19. blocks.yml integrity",  () -> checkBlocksYmlIntegrity(player, passed, failed));
+            runGroup(player, passed, failed, "20. worlds.yml integrity",  () -> checkWorldsYmlIntegrity(player, passed, failed));
 
             int p2 = passed.get(), f2 = failed.get(), total = p2 + f2;
             BlockProtLogger.separator();
@@ -703,6 +705,173 @@ public class DebugCommand implements CommandExecutor {
         BlockProtLogger.log("Messages: " + ok + " OK, " + bad + " blank");
         if (bad == 0) { BlockProtLogger.pass("All message keys present"); p.incrementAndGet(); }
         else f.incrementAndGet();
+    }
+
+    /** Family key -> BlockFamilyParser.Family, shared by both integrity checks below. */
+    private static final Map<String, BlockFamilyParser.Family> INTEGRITY_KEY_FAMILIES = new LinkedHashMap<>();
+    static {
+        INTEGRITY_KEY_FAMILIES.put("lockable_tile_entities", BlockFamilyParser.Family.TILE_ENTITIES);
+        INTEGRITY_KEY_FAMILIES.put("lockable_shulker_boxes", BlockFamilyParser.Family.SHULKER_BOXES);
+        INTEGRITY_KEY_FAMILIES.put("lockable_blocks", BlockFamilyParser.Family.BLOCKS);
+        INTEGRITY_KEY_FAMILIES.put("lockable_doors", BlockFamilyParser.Family.DOORS);
+        INTEGRITY_KEY_FAMILIES.put("lockable_entities", BlockFamilyParser.Family.ENTITIES);
+    }
+
+    /**
+     * Reads blocks.yml directly from disk and checks every list entry, block by block:
+     * family expressions must resolve to at least one material, flat names must match
+     * a real {@link Material}, and every resolved material must be reflected by
+     * {@link DefaultConfig#isLockable(Material)} / {@link DefaultConfig#isLockableEntity(Material)}.
+     */
+    private void checkBlocksYmlIntegrity(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
+            java.io.File dataFolder = BlockProt.getInstance().getDataFolder();
+            java.io.File blocksFile = new java.io.File(dataFolder, defaultConfig.getBlocksFilePath());
+            if (!blocksFile.exists()) {
+                BlockProtLogger.fail("blocks.yml integrity", "file not found at " + blocksFile.getPath());
+                f.incrementAndGet();
+                return;
+            }
+            org.bukkit.configuration.file.YamlConfiguration cfg =
+                org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(blocksFile);
+
+            int checked = 0, unresolved = 0, mismatched = 0;
+            for (Map.Entry<String, BlockFamilyParser.Family> e : INTEGRITY_KEY_FAMILIES.entrySet()) {
+                String key = e.getKey();
+                BlockFamilyParser.Family family = e.getValue();
+                if (!cfg.contains(key)) continue;
+                Object raw = cfg.get(key);
+                List<?> rawList = raw instanceof List<?> ? (List<?>) raw : List.of(raw);
+                for (Object o : rawList) {
+                    if (DefaultConfig.isPlaceholderEntry(o)) continue;
+                    if (!(o instanceof String s)) continue;
+                    String trimmed = s.trim();
+                    checked++;
+                    if (BlockFamilyParser.isFamilyExpression(trimmed)) {
+                        Set<Material> resolved = BlockFamilyParser.parseFamilyExpressionSilent(trimmed, family);
+                        if (resolved.isEmpty()) {
+                            BlockProtLogger.fail("blocks.yml entry", key + ": '" + trimmed + "' resolved to 0 materials");
+                            unresolved++;
+                        }
+                    } else {
+                        Material m = Material.matchMaterial(trimmed);
+                        if (m == null) {
+                            BlockProtLogger.fail("blocks.yml entry", key + ": '" + trimmed + "' is not a valid Material");
+                            unresolved++;
+                            continue;
+                        }
+                        boolean isEntitiesKey = key.equals("lockable_entities");
+                        boolean actual = isEntitiesKey ? defaultConfig.isLockableEntity(m) : defaultConfig.isLockable(m);
+                        if (!actual) {
+                            BlockProtLogger.fail("blocks.yml entry", key + ": '" + trimmed + "' listed but isLockable()=false");
+                            mismatched++;
+                        }
+                    }
+                }
+            }
+
+            BlockProtLogger.log("blocks.yml integrity: " + checked + " entries checked, "
+                + unresolved + " unresolved, " + mismatched + " mismatched");
+            if (unresolved == 0 && mismatched == 0) {
+                BlockProtLogger.pass("blocks.yml integrity OK (" + checked + " entries)");
+                p.incrementAndGet();
+            } else {
+                f.incrementAndGet();
+            }
+        } catch (Exception ex) {
+            BlockProtLogger.fail("blocks.yml integrity", ex.getMessage());
+            f.incrementAndGet();
+        }
+    }
+
+    /**
+     * Reads worlds.yml directly from disk and checks every per-world list entry the
+     * same way {@link #checkBlocksYmlIntegrity} checks blocks.yml. Skipped entirely
+     * when {@code per_worlds_config} is disabled, since worlds.yml is not consulted then.
+     */
+    private void checkWorldsYmlIntegrity(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
+            if (!defaultConfig.isPerWorldsConfigEnabled()) {
+                BlockProtLogger.log("worlds.yml integrity: per_worlds_config disabled, skipping");
+                p.incrementAndGet();
+                return;
+            }
+            java.io.File worldsFile = new java.io.File(BlockProt.getInstance().getDataFolder(), "worlds.yml");
+            if (!worldsFile.exists()) {
+                BlockProtLogger.fail("worlds.yml integrity", "file not found at " + worldsFile.getPath());
+                f.incrementAndGet();
+                return;
+            }
+            org.bukkit.configuration.file.YamlConfiguration cfg =
+                org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(worldsFile);
+            org.bukkit.configuration.ConfigurationSection worldsSection = cfg.getConfigurationSection("worlds");
+            if (worldsSection == null) {
+                BlockProtLogger.log("worlds.yml integrity: no 'worlds' section, nothing to check");
+                p.incrementAndGet();
+                return;
+            }
+
+            int checked = 0, unresolved = 0, mismatched = 0, worldsChecked = 0;
+            for (String worldName : worldsSection.getKeys(false)) {
+                org.bukkit.configuration.ConfigurationSection ws = worldsSection.getConfigurationSection(worldName);
+                if (ws == null) continue;
+                boolean enabled = ws.getBoolean("enabled", false);
+                org.bukkit.World world = Bukkit.getWorld(worldName);
+                worldsChecked++;
+
+                for (Map.Entry<String, BlockFamilyParser.Family> e : INTEGRITY_KEY_FAMILIES.entrySet()) {
+                    String key = e.getKey();
+                    BlockFamilyParser.Family family = e.getValue();
+                    if (!ws.contains(key)) continue;
+                    Object raw = ws.get(key);
+                    List<?> rawList = raw instanceof List<?> ? (List<?>) raw : List.of(raw);
+                    for (Object o : rawList) {
+                        if (DefaultConfig.isPlaceholderEntry(o)) continue;
+                        if (!(o instanceof String s)) continue;
+                        String trimmed = s.trim();
+                        checked++;
+                        if (BlockFamilyParser.isFamilyExpression(trimmed)) {
+                            Set<Material> resolved = BlockFamilyParser.parseFamilyExpressionSilent(trimmed, family);
+                            if (resolved.isEmpty()) {
+                                BlockProtLogger.fail("worlds.yml entry", worldName + "." + key + ": '" + trimmed + "' resolved to 0 materials");
+                                unresolved++;
+                            }
+                        } else {
+                            Material m = Material.matchMaterial(trimmed);
+                            if (m == null) {
+                                BlockProtLogger.fail("worlds.yml entry", worldName + "." + key + ": '" + trimmed + "' is not a valid Material");
+                                unresolved++;
+                                continue;
+                            }
+                            if (enabled && world != null) {
+                                boolean isEntitiesKey = key.equals("lockable_entities");
+                                boolean actual = isEntitiesKey
+                                    ? defaultConfig.isLockableEntity(m, world)
+                                    : defaultConfig.isLockable(m, world);
+                                if (!actual) {
+                                    BlockProtLogger.fail("worlds.yml entry", worldName + "." + key + ": '" + trimmed + "' listed but not reflected by isLockable(world)");
+                                    mismatched++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            BlockProtLogger.log("worlds.yml integrity: " + worldsChecked + " world(s), " + checked
+                + " entries checked, " + unresolved + " unresolved, " + mismatched + " mismatched");
+            if (unresolved == 0 && mismatched == 0) {
+                BlockProtLogger.pass("worlds.yml integrity OK");
+                p.incrementAndGet();
+            } else {
+                f.incrementAndGet();
+            }
+        } catch (Exception ex) {
+            BlockProtLogger.fail("worlds.yml integrity", ex.getMessage());
+            f.incrementAndGet();
+        }
     }
 
     private void inv(@NotNull AtomicInteger p, @NotNull AtomicInteger f,

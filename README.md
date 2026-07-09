@@ -136,7 +136,6 @@ Opened by sneaking and right-clicking any lockable block. Two-row inventory.
 | 3 | Name Tag | Set a custom block name |
 | 4 | Ender Pearl | Transfer block ownership |
 | 5 | Emerald | Locate the villager linked to this workstation *(workstation blocks only)* |
-| 6 | Hopper or Lime Dye | Protection expiry *(storage blocks only, and only when enabled in config)* |
 
 The redstone button is not shown for display-only blocks such as signs, lecterns, and workstations, because those have no hopper or redstone interaction to gate. Every button above lives in a fixed slot regardless of block type - a slot that does not apply to the current block is simply left empty, so the remaining buttons never shift position.
 
@@ -347,10 +346,6 @@ Set `inactivity_cleanup_days` to a positive number to remove protections owned b
 
 Automatically locks unprotected blocks near a WorldEdit paste origin. Disabled by default. Configurable radius and block limit per paste.
 
-### Protection Expiry
-
-Block owners can set an optional expiry date on their lock. When the timer elapses the block auto-unlocks. Open the Block Lock menu, click the Hopper slot, and type a duration such as `7d`, `1mo`, or `2d12h`. A green dye replaces the hopper when an expiry is already active - click it to clear. Disabled by default.
-
 ### Entity Protection (Tamed Animals)
 
 Protects tamed animals including wolves, cats, parrots, horses, and llamas. Right-click your pet while holding the configured menu item (default: Stick) to open the settings GUI. Disabled by default. This feature was renamed from `pet_protection` to `entity_protection` in `config.yml`; the old key name is still read automatically for servers upgrading from an earlier version, so no manual edit is required.
@@ -454,7 +449,7 @@ block_lock_sounds: true
 # Timed access
 timed_access_max_duration_days: 90
 
-# WorldEdit (DEPRECATED — configured in integrations.yml under worldedit.paste_autolock)
+# WorldEdit (DEPRECATED, configured in integrations.yml under worldedit.paste_autolock)
 # worldedit_paste_autolock:
 #   enabled: false
 #   radius: 24
@@ -464,9 +459,11 @@ timed_access_max_duration_days: 90
 # Menus
 use_menus: false
 
-# Protection expiry
-enable_protection_expiry: false
-expiry_scan_on_startup: true
+# World-level default expiry (per-block manual expiry is not implemented yet)
+world_expiry:
+  enabled: false
+  check_interval_minutes: 10
+  worlds: {}
 
 # Logging and backups
 enable_session_log: true

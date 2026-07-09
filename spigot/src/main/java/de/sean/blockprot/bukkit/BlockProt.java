@@ -310,10 +310,6 @@ public final class BlockProt extends JavaPlugin {
         integrationsEnabled = true;
         new BlockProtAPI(this);
 
-        if (defaultConfig.isProtectionExpiryEnabled() && defaultConfig.isExpiryScanOnStartup()) {
-            foliaLib.getScheduler().runAsync(task -> runExpiryScan());
-        }
-
         foliaLib.getScheduler().runAsync(task -> populateProtectedBlockCache());
 
         BlockProtConsole.bootLast(
@@ -1000,38 +996,6 @@ public final class BlockProt extends JavaPlugin {
         try {
             this.saveResource(name, replace);
         } catch (Exception ignored) {}
-    }
-
-    private void runExpiryScan() {
-        if (hybridDatabase == null || !hybridDatabase.isEnabled()) return;
-        int cleared = 0;
-        for (org.bukkit.World world : Bukkit.getWorlds()) {
-            var locations = hybridDatabase.getBlockIndexByWorld(world.getName());
-            for (org.bukkit.Location loc : locations) {
-                org.bukkit.block.Block block = loc.getBlock();
-                if (!BlockProt.getDefaultConfig().isLockable(block.getType())) continue;
-                try {
-                    de.sean.blockprot.bukkit.nbt.BlockNBTHandler handler =
-                        new de.sean.blockprot.bukkit.nbt.BlockNBTHandler(block);
-                    if (handler.isExpired()) {
-                        String ownerUuid = handler.getOwner();
-                        handler.clear();
-                        handler.applyToOtherContainer();
-                        de.sean.blockprot.bukkit.listeners.HopperEventListener.invalidate(block);
-                        if (ownerUuid != null && !ownerUuid.isEmpty()) {
-                            try {
-                                de.sean.blockprot.bukkit.nbt.StatHandler.removeContainerByUuid(
-                                    java.util.UUID.fromString(ownerUuid), loc.clone());
-                            } catch (IllegalArgumentException ignored) {}
-                        }
-                        cleared++;
-                    }
-                } catch (RuntimeException ignored) {}
-            }
-        }
-        if (cleared > 0) {
-            BlockProtLogger.log("expiry-scan", "Cleared " + cleared + " expired protection(s) on startup.");
-        }
     }
 
     /**

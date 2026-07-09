@@ -62,7 +62,6 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
 
     static final String NAME_ATTRIBUTE = "blockprot_name";
     static final String LOCKED_AT_ATTRIBUTE = "blockprot_locked_at";
-    static final String EXPIRY_ATTRIBUTE = "blockprot_expires_at";
     static final String LINKED_ITEM_FRAME_ATTRIBUTE = "blockprot_linked_item_frame";
 
     /**
@@ -224,25 +223,6 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
     public long getLockedAt() {
         if (!container.hasTag(LOCKED_AT_ATTRIBUTE)) return -1L;
         return container.getLong(LOCKED_AT_ATTRIBUTE);
-    }
-
-    public long getExpiresAt() {
-        if (!container.hasTag(EXPIRY_ATTRIBUTE)) return 0L;
-        return container.getLong(EXPIRY_ATTRIBUTE);
-    }
-
-    public void setExpiresAt(long epochMillis) {
-        if (isTileEntity) {
-            NBT.modify(block.getState(true), nbt -> {
-                nbt.setLong(EXPIRY_ATTRIBUTE, epochMillis);
-            });
-        }
-        container.setLong(EXPIRY_ATTRIBUTE, epochMillis);
-    }
-
-    public boolean isExpired() {
-        long exp = getExpiresAt();
-        return exp > 0 && System.currentTimeMillis() > exp;
     }
 
     // Item frame link (inverse of EntityNBTHandler#getLinkedBlock)
