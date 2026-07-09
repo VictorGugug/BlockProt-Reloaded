@@ -270,6 +270,12 @@ public abstract class BlockProtInventory implements InventoryHolder {
     }
 
     public void setPlayerSkull(int index, @Nullable final PlayerProfile profile) {
+        if (!Bukkit.isPrimaryThread()) {
+            // Inventory mutations must happen on the main thread. Defer.
+            Bukkit.getScheduler().runTask(BlockProt.getInstance(),
+                () -> setPlayerSkull(index, profile));
+            return;
+        }
         final var stack = new ItemStack(Material.PLAYER_HEAD, 1);
         var meta = (SkullMeta) stack.getItemMeta();
         if (meta == null)
@@ -286,6 +292,53 @@ public abstract class BlockProtInventory implements InventoryHolder {
 
         stack.setItemMeta(meta);
         inventory.setItem(index, stack);
+    }
+
+    /**
+     * Sets a player skull at {@code index} and, if no skin is yet cached, asynchronously
+     * fetches the real skin and refreshes the same slot once it arrives.
+     *
+     * <p>This is the preferred way to render a player head in any inventory: it guarantees
+     * the slot ends up with a textured head (or, on the rare offline fallback, a default
+     * Steve head) instead of leaving a placeholder indefinitely.
+     *
+     * @param index     Inventory slot index.
+     * @param player    Player who currently owns the slot, used to keep the inventory
+     *                  reference stable and to skip the refresh if the player has already
+     *                  closed it.
+     * @param uuid      Player UUID (real or offline).
+     * @param name      Player name to display on the skull and use as the cache key.
+     */
+    public void setPlayerSkullAsync(int index, @NotNull Player player, @NotNull UUID uuid, @NotNull String name) {
+        PlayerProfile cached = null;
+        try {
+            cached = SkinCache.getOrFetch(name, uuid);
+        } catch (Exception ignored) {}
+
+        // Render whatever we have right now (placeholder if necessary).
+        setPlayerSkull(index, cached != null ? cached : createPlayerProfile(uuid, name));
+
+        // If the current cached profile is a placeholder (no skin), schedule a refresh.
+        final PlayerProfile finalCached = cached;
+        if (finalCached == null || !hasSkin(finalCached)) {
+            SkinCache.getOrFetchAsync(name, uuid).thenAccept(profile -> {
+                Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                    if (!player.isOnline()) return;
+                    Inventory top = player.getOpenInventory() != null ? player.getOpenInventory().getTopInventory() : null;
+                    if (top == null || top.getHolder() != BlockProtInventory.this) return;
+                    setPlayerSkull(index, profile);
+                });
+            });
+        }
+    }
+
+    public static boolean hasSkin(@Nullable PlayerProfile profile) {
+        if (profile == null) return false;
+        try {
+            return profile.getTextures() != null && profile.getTextures().getSkin() != null;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     @NotNull

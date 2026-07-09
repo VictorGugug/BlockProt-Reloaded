@@ -519,6 +519,8 @@ help:
   disable_hints: "§7  /bp disablehints §f- Disable protection hint messages."
   debug: "§7  /bp debug <run|...> §f- Developer diagnostics."
   unlock: "§7  /bp unlock <player> §f- Open block unlock GUI for a player."
+  lockables: "§7  /bp lockables §f- Browse and toggle which blocks are lockable."
+  recommended: "§7  /bp recommended §f- Apply the recommended block protection defaults."
   world_prot_del: "§7  /bp protdel [world] §f- Delete all protections in a world."
   gui_mode_title: "§6► GUI Mode"
   gui_user: "§7  /bp user  §f- Open User Menu (settings, friends, stats, about)"

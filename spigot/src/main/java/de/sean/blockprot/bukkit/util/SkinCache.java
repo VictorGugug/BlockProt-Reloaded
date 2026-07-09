@@ -92,14 +92,71 @@ public final class SkinCache {
     public static PlayerProfile getOrFetch(@NotNull String name, @NotNull UUID offlineUuid) {
         String key = name.toLowerCase();
         PlayerProfile cached = cache.get(key);
-        if (cached != null) return cached;
+        if (cached != null && hasSkin(cached)) return cached;
 
         // Return a plain profile now; start async fetch (Mojang or SkinsRestorer) in background.
         PlayerProfile placeholder = Bukkit.getServer().createProfile(offlineUuid, name);
         if (inflight.putIfAbsent(key, Boolean.TRUE) == null) {
             CompletableFuture.runAsync(() -> fetchAndCache(key, name, offlineUuid));
         }
-        return placeholder;
+        return cached != null ? cached : placeholder;
+    }
+
+    /**
+     * Asynchronously returns a {@link PlayerProfile} with a resolved skin.
+     *
+     * <p>The returned future completes with a profile whose skin has been fetched
+     * (or the best available fallback if the network is unavailable). The caller
+     * is responsible for applying the result back on the main thread if it needs
+     * to mutate an inventory.
+     *
+     * @param name        The player's current username (case-insensitive).
+     * @param offlineUuid The offline UUID to use when no real UUID can be resolved.
+     * @return A future that always completes successfully.
+     */
+    @NotNull
+    public static CompletableFuture<PlayerProfile> getOrFetchAsync(@NotNull String name, @NotNull UUID offlineUuid) {
+        String key = name.toLowerCase();
+        PlayerProfile cached = cache.get(key);
+        if (cached != null && hasSkin(cached)) {
+            return CompletableFuture.completedFuture(cached);
+        }
+
+        CompletableFuture<PlayerProfile> future = new CompletableFuture<>();
+        if (inflight.putIfAbsent(key, Boolean.TRUE) == null) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    fetchAndCache(key, name, offlineUuid);
+                } finally {
+                    PlayerProfile result = cache.get(key);
+                    future.complete(result != null ? result : Bukkit.getServer().createProfile(offlineUuid, name));
+                }
+            });
+        } else {
+            // Another fetch is already running; wait for it to populate the cache.
+            CompletableFuture.runAsync(() -> {
+                long deadline = System.currentTimeMillis() + 10_000L;
+                while (System.currentTimeMillis() < deadline) {
+                    PlayerProfile p = cache.get(key);
+                    if (p != null && hasSkin(p)) {
+                        future.complete(p);
+                        return;
+                    }
+                    try { Thread.sleep(100L); } catch (InterruptedException e) { Thread.currentThread().interrupt(); break; }
+                }
+                PlayerProfile fallback = cache.get(key);
+                future.complete(fallback != null ? fallback : Bukkit.getServer().createProfile(offlineUuid, name));
+            });
+        }
+        return future;
+    }
+
+    private static boolean hasSkin(@NotNull PlayerProfile profile) {
+        try {
+            return profile.getTextures().getSkin() != null;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     /**

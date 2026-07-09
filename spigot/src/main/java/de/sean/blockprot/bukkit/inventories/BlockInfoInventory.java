@@ -26,6 +26,8 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.FriendSupportingHandler;
 import de.sean.blockprot.bukkit.nbt.RedstoneSettingsHandler;
+import de.sean.blockprot.bukkit.util.SkinCache;
+import de.sean.blockprot.bukkit.util.BlockUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -118,6 +120,10 @@ public class BlockInfoInventory extends BlockProtInventory {
 
         String owner = handler.getOwner();
         var friends = handler.getFriends();
+        final Material blockMaterial = handler.block != null ? handler.block.getType() : null;
+        final String blockTypeName = blockMaterial != null
+            ? de.sean.blockprot.bukkit.util.BlockUtil.getHumanReadableBlockName(blockMaterial)
+            : null;
 
         state.friendResultCache.clear();
         this.inventory.clear();
@@ -144,11 +150,16 @@ public class BlockInfoInventory extends BlockProtInventory {
                 assert profile != null;
                 final String ownerName = profile.getName() != null ? profile.getName() : owner.substring(0, 8);
                 final int friendCount = filteredFriends.size();
+                final UUID ownerUuid = profile.getUniqueId();
                 final ItemStack ownerSkull = new ItemStack(Material.PLAYER_HEAD, 1);
                 final org.bukkit.inventory.meta.SkullMeta skullMeta =
                     (org.bukkit.inventory.meta.SkullMeta) ownerSkull.getItemMeta();
                 if (skullMeta != null) {
-                    var pp = BlockProtInventory.createPlayerProfile(profile.getUniqueId(), ownerName);
+                    // Use the online player's profile if available (has real skin immediately).
+                    Player online = Bukkit.getPlayer(ownerUuid);
+                    final var pp = online != null
+                        ? online.getPlayerProfile()
+                        : BlockProtInventory.createPlayerProfile(ownerUuid, ownerName);
                     skullMeta.setPlayerProfile(pp);
                     skullMeta.displayName(net.kyori.adventure.text.Component.text(
                         Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
@@ -163,17 +174,39 @@ public class BlockInfoInventory extends BlockProtInventory {
                                     .replace("{count}", String.valueOf(friendCount)))
                     ));
                     ownerSkull.setItemMeta(skullMeta);
+                    inventory.setItem(0, ownerSkull);
+                    // Schedule skin refresh for offline players.
+                    if (online == null && !BlockProtInventory.hasSkin(pp)) {
+                        final UUID finalUuid = ownerUuid;
+                        final String finalName = ownerName;
+                        SkinCache.getOrFetchAsync(finalName, finalUuid).thenAccept(freshProfile -> {
+                            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                                if (!player.isOnline()) return;
+                                Inventory top = player.getOpenInventory() != null ? player.getOpenInventory().getTopInventory() : null;
+                                if (top == null || top.getHolder() != BlockInfoInventory.this) return;
+                                org.bukkit.inventory.ItemStack existing = top.getItem(0);
+                                if (existing == null || existing.getType() != Material.PLAYER_HEAD) return;
+                                org.bukkit.inventory.meta.SkullMeta sm = (org.bukkit.inventory.meta.SkullMeta) existing.getItemMeta();
+                                if (sm != null) {
+                                    sm.setPlayerProfile(freshProfile);
+                                    existing.setItemMeta(sm);
+                                }
+                            });
+                        });
+                    }
+                } else {
+                    inventory.setItem(0, ownerSkull);
                 }
-                inventory.setItem(0, ownerSkull);
             } catch (Exception e) {
                 BlockProt.getInstance().getLogger().warning("Failed to update PlayerProfile: " + e.getMessage());
             }
         }
-        setItemStack(
-            1,
-            Material.OAK_SIGN,
-            handler.getName().replaceAll("[§&][0-9a-fk-orx]", "")
-        );
+
+        // Slot 1: show the actual block type (CHEST, FURNACE, etc.) with its name.
+        Material blockMat = handler.block != null ? handler.block.getType() : Material.OAK_SIGN;
+        blockMat = getProperMaterial(blockMat);
+        final String cleanName = handler.getName().replaceAll("[§&][0-9a-fk-orx]", "");
+        final String blockDisplay = blockTypeName != null ? blockTypeName : cleanName;
 
         String linkedFrameUuid = handler.getLinkedItemFrameUuid();
         if (!linkedFrameUuid.isEmpty()) {
@@ -191,18 +224,35 @@ public class BlockInfoInventory extends BlockProtInventory {
                 frameLore = Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__LINKED_FRAME)
                     .replace("{item}", linkedFrameUuid.substring(0, 8) + "...");
             }
-            ItemStack signSlot = new ItemStack(Material.OAK_SIGN, 1);
-            org.bukkit.inventory.meta.ItemMeta signMeta = signSlot.getItemMeta();
-            if (signMeta != null) {
-                signMeta.displayName(net.kyori.adventure.text.Component.text(
-                    handler.getName().replaceAll("[§&][0-9a-fk-orx]", "")));
-                signMeta.lore(java.util.List.of(
-                    net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                        .legacySection().deserialize(frameLore)
-                ));
-                signSlot.setItemMeta(signMeta);
+            ItemStack item = new ItemStack(blockMat, 1);
+            org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.displayName(net.kyori.adventure.text.Component.text(blockDisplay));
+                java.util.List<net.kyori.adventure.text.Component> lore = new java.util.ArrayList<>();
+                if (blockTypeName != null && !blockTypeName.equalsIgnoreCase(cleanName) && !cleanName.isEmpty()) {
+                    lore.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                        .legacySection().deserialize("§7" + cleanName));
+                }
+                lore.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                    .legacySection().deserialize(frameLore));
+                meta.lore(lore);
+                item.setItemMeta(meta);
             }
-            inventory.setItem(1, signSlot);
+            inventory.setItem(1, item);
+        } else {
+            ItemStack item = new ItemStack(blockMat, 1);
+            org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.displayName(net.kyori.adventure.text.Component.text(blockDisplay));
+                if (blockTypeName != null && !blockTypeName.equalsIgnoreCase(cleanName) && !cleanName.isEmpty()) {
+                    meta.lore(java.util.List.of(
+                        net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                            .legacySection().deserialize("§7" + cleanName)
+                    ));
+                }
+                item.setItemMeta(meta);
+            }
+            inventory.setItem(1, item);
         }
 
         setItemStack(
@@ -237,6 +287,7 @@ public class BlockInfoInventory extends BlockProtInventory {
         );
         setBackButton(InventoryConstants.lineLength - 1);
 
+        // Resolve friend profiles and refresh their skulls (placeholder first, real skin once it arrives).
         Bukkit.getScheduler().runTaskAsynchronously(
             BlockProt.getInstance(),
             () -> {
@@ -248,9 +299,13 @@ public class BlockInfoInventory extends BlockProtInventory {
                     for (var profile : profiles) {
                         if (profile.getUniqueId().equals(FriendSupportingHandler.publicUuid)) continue;
                         if (i >= maxSkulls) break;
-                        setPlayerSkull(InventoryConstants.lineLength + offset + i,
-                            BlockProtInventory.createPlayerProfile(profile.getUniqueId(),
-                                profile.getName() != null ? profile.getName() : profile.getUniqueId().toString().substring(0, 8)));
+                        final int slot = InventoryConstants.lineLength + offset + i;
+                        final String pName = profile.getName() != null
+                            ? profile.getName()
+                            : profile.getUniqueId().toString().substring(0, 8);
+                        final UUID pUuid = profile.getUniqueId();
+                        Bukkit.getScheduler().runTask(BlockProt.getInstance(),
+                            () -> setPlayerSkullAsync(slot, player, pUuid, pName));
                         i++;
                     }
                 } catch (Exception e) {

@@ -77,6 +77,9 @@ public final class HelpCommand implements CommandExecutor {
                 send(sender, Translator.get(TranslationKey.HELP__INTEGRATIONS));
                 send(sender, Translator.get(TranslationKey.HELP__UPDATE));
                 send(sender, Translator.get(TranslationKey.HELP__RELOAD));
+                send(sender, Translator.get(TranslationKey.HELP__LOCKABLES));
+                send(sender, Translator.get(TranslationKey.HELP__RECOMMENDED));
+                send(sender, Translator.get(TranslationKey.HELP__WORLD_PROT_DEL));
             }
             if (hasDebug) {
                 send(sender, Translator.get(TranslationKey.HELP__DEBUG));
