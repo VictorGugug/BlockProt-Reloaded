@@ -35,6 +35,7 @@ disable_friend_functionality: false
 # When all lockable lists are empty, this flag auto-disables to false.
 modern_family_blocks: false
 redstone_disallowed_by_default: false
+simplified_hopper_logic: false
 protect_locked_blocks_from_explosions: true
 block_protected_block_piston_movement: true
 clear_protection_on_shulker_break: false

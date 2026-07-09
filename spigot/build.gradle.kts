@@ -76,6 +76,8 @@ dependencies {
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:$worldGuardVersion")
     compileOnly("com.github.angeschossen:LandsAPI:6.28.11")
     compileOnly("com.cjburkey.claimchunk:claimchunk:0.0.25-FIX3")
+    compileOnly("com.github.Zrips:Residence:6.0.0.1") { isTransitive = false }
+    compileOnly("com.github.GriefPrevention:GriefPrevention:16.18.2") { isTransitive = false }
 }
 
 val targetJavaVersion = project.property("targetJavaVersion") as String

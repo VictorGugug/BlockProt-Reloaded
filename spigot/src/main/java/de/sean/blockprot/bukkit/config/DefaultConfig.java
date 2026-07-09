@@ -421,7 +421,10 @@ public final class DefaultConfig extends BlockProtConfig {
         return config.contains("disable_friend_functionality") && config.getBoolean("disable_friend_functionality");
     }
 
+    public boolean isPistonProtectionEnabled() { return config.getBoolean("piston_protection", true); }
     public boolean shouldClearProtectionOnShulkerBreak()  { return config.getBoolean("clear_protection_on_shulker_break", false); }
+
+    public boolean isSimplifiedHopperLogic() { return config.getBoolean("simplified_hopper_logic", false); }
     public boolean shouldAllowBreakProtectedBlocks()       { return config.getBoolean("allow_break_protected_blocks", false); }
     public boolean shouldRespectSpawnProtection()          { return !config.contains("respect_spawn_protection") || config.getBoolean("respect_spawn_protection"); }
     public boolean isLockEffectEnabled()                   { return !config.contains("block_lock_effects") || config.getBoolean("block_lock_effects"); }

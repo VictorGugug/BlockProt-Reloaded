@@ -165,6 +165,8 @@ public final class BlockProt extends JavaPlugin {
         try { registerIntegration(new WorldGuardIntegration());     } catch (NoClassDefFoundError ignored) {}
         try { registerIntegration(new LandsPluginIntegration());    } catch (NoClassDefFoundError ignored) {}
         try { registerIntegration(new ClaimChunkIntegration());    } catch (NoClassDefFoundError ignored) {}
+        try { registerIntegration(new ResidenceIntegration());     } catch (NoClassDefFoundError ignored) {}
+        try { registerIntegration(new GriefPreventionIntegration()); } catch (NoClassDefFoundError ignored) {}
         for (PluginIntegration integration : integrations) {
             try { integration.load(); } catch (NoClassDefFoundError ignored) {}
         }

@@ -63,7 +63,7 @@ public class BlockInspectContentsInventory extends BlockProtInventory {
 
     @Override
     @Nullable final String getTranslatedInventoryName() {
-        return null;
+        return de.sean.blockprot.bukkit.Translator.get(de.sean.blockprot.bukkit.TranslationKey.INVENTORIES__INSPECT_CONTENTS);
     }
 
     @Override

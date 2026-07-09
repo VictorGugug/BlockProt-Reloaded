@@ -64,7 +64,12 @@ public class PistonEventListener implements Listener {
             return;
         }
         for (Block block : event.getBlocks()) {
-            if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
+            if (BlockProt.getDefaultConfig().isLockableShulkerBox(block.getType())) {
+                if (new BlockNBTHandler(block).isProtected()) {
+                    event.setCancelled(true);
+                    return;
+                }
+            } else if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
                 BlockNBTHandler nbtHandler = new BlockNBTHandler(block);
                 if (nbtHandler.isProtected()
                         && (BlockProt.getDefaultConfig().shouldBlockProtectedBlockPistonMovement()

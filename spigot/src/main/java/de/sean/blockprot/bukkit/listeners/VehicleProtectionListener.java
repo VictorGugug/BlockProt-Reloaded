@@ -178,6 +178,7 @@ public final class VehicleProtectionListener implements Listener {
         EntityNBTHandler handler = new EntityNBTHandler(entity);
         if (!handler.isProtected()) return;
         if (!handler.isHopperProtectionEnabled()) return;
+        if (BlockProt.getDefaultConfig().isSimplifiedHopperLogic()) return;
 
         event.setCancelled(true);
         BlockProtLogger.log("entity-protection", "BLOCKED hopper extraction from "

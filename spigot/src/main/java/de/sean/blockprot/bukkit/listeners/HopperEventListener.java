@@ -125,6 +125,8 @@ public class HopperEventListener implements Listener {
         // Early-exit: skip NBT if this location has never been protected.
         if (!ProtectedBlockCache.isProtected(source)) return;
 
+        if (BlockProt.getDefaultConfig().isSimplifiedHopperLogic()) return;
+
         CacheEntry sourceEntry = getEntry(source);
         if (sourceEntry == null || !sourceEntry.isProtected()) return;
 
