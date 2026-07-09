@@ -4,29 +4,64 @@
 # or edit blocks.yml directly. See docs/BLOCK_FAMILY_SYNTAX.md for syntax.
 # Docs: https://github.com/VictorGugug/BlockProt-Reloaded/tree/main/docs
 
+# -------------------------------------------------------------------
 # -- Language --
+# -------------------------------------------------------------------
+
+# The language file to use. (Available e.g., translations_en.yml, translations_es.yml)
 language_file: translations_en.yml
+
+# String to display when a translation key is missing.
 fallback_string: "Unknown translation"
+
+# Whether the plugin should automatically update translations with missing keys.
 replace_translations: true
+
+# Translate command aliases for the player's language if supported.
 localized_command_aliases: true
 
+# -------------------------------------------------------------------
 # -- Worlds --
+# -------------------------------------------------------------------
+
+# List of worlds where the plugin will be entirely disabled.
 excluded_worlds: []
+
+# Enable reading separate config/blocks configuration per world.
 per_worlds_config: false
 
+# -------------------------------------------------------------------
 # -- Players and friends --
+# -------------------------------------------------------------------
+
+# Prefixes for Bedrock players (using Geyser/Floodgate).
 bedrock_username_prefixes:
 - "."
 - "*"
 - "_"
+
+# Should blocks be locked automatically when a player places them?
 lock_on_place_by_default: true
+
+# Should public blocks be considered as friends by default?
 public_is_friend_by_default: false
+
+# Max number of locked blocks a player can have. (-1 for unlimited)
 player_max_locked_block_count: -1
+
+# Cooldown (in seconds) between showing lock hints (e.g., using a stick).
 lock_hint_cooldown_in_seconds: 10
+
+# Similarity threshold for finding friends by name (0.0 to 1.0).
 friend_search_similarity: 0.5
+
+# Globally disable the friends system if not needed.
 disable_friend_functionality: false
 
+# -------------------------------------------------------------------
 # -- Blocks and locking behavior --
+# -------------------------------------------------------------------
+
 # Controls the output format of blocks.yml when modified via /bp lockables.
 # false (default) -> flat material names (CHEST, FURNACE, ...).
 # true            -> compact family expressions ([*-CHEST], [*], etc.).
@@ -34,59 +69,124 @@ disable_friend_functionality: false
 # blocks.yml is always read as-is. Expressions are parsed regardless of this flag.
 # When all lockable lists are empty, this flag auto-disables to false.
 modern_family_blocks: false
+
+# Should redstone be disallowed from interacting with locked blocks by default?
 redstone_disallowed_by_default: false
+
+# Enable simpler hopper logic to save server performance.
 simplified_hopper_logic: false
+
+# Protect locked blocks from being destroyed by explosions.
 protect_locked_blocks_from_explosions: true
+
+# Prevent pistons from moving locked blocks.
 block_protected_block_piston_movement: true
+
+# Clear protection of a shulker box when it is broken.
 clear_protection_on_shulker_break: false
+
+# Allow players to break protected blocks they don't own. (Data stays).
 allow_break_protected_blocks: false
+
+# Respect the vanilla spawn protection.
 respect_spawn_protection: true
+
+# Show particle effects when interacting with a locked block.
 block_lock_effects: true
+
+# Play sounds when interacting with a locked block.
 block_lock_sounds: true
+
+# Use GUIs (menus) where possible, instead of chat messages.
 use_menus: false
+
+# Maximum duration (in days) when granting timed access to a player.
 timed_access_max_duration_days: 90
 
+# -------------------------------------------------------------------
 # -- Entity protection --
+# -------------------------------------------------------------------
+
 entity_protection:
+  # Enable entity protection feature (for animals, villagers, etc.).
   enabled: false
+  # Automatically protect entities when they are tamed.
   auto_protect_on_tame: true
+  # The item used for the entity protection menu.
   menu_item: STICK
+  # Seconds to locate a villager.
   villager_locate_seconds: 6
 
 villager_workstation_protection:
+  # Automatically protect workstations belonging to protected villagers.
   enabled: true
+  # Horizontal radius.
   radius: 2
+  # Vertical radius.
   vertical_radius: 1
 
+# -------------------------------------------------------------------
 # -- Expiry --
+# -------------------------------------------------------------------
 # Per-block manual expiry (an enable_protection_expiry option letting an
 # owner set an expiration time on one specific block) is planned for a
 # future release and is not available yet. World-level default expiry is
 # configured below.
+
 world_expiry:
+  # Enable global expiry of inactive block protections.
   enabled: false
+  # Interval in minutes to check for expirations.
   check_interval_minutes: 10
+  # World-specific expiry times.
   worlds: {}
 
+# -------------------------------------------------------------------
 # -- Raid detection --
+# -------------------------------------------------------------------
+
 raid_detection:
+  # Protect locked blocks or entities from raids.
   enabled: true
 
+# -------------------------------------------------------------------
 # -- Notifications --
+# -------------------------------------------------------------------
+
+# Send a notification to server operators when an update is available.
 notify_op_of_updates: false
+
 owner_notifications:
+  # Allow owners to receive notifications about their blocks.
   enabled: true
+  # Notify when someone opens their block.
   notify_on_open: true
+  # Notify when someone takes items from their block.
   notify_on_take: true
+  # Notify when someone places items in their block.
   notify_on_place: true
 
+# -------------------------------------------------------------------
 # -- Maintenance --
+# -------------------------------------------------------------------
+
+# Days of inactivity before a player's protections are automatically removed. (-1 to disable)
 inactivity_cleanup_days: -1
+
+# Automatically reload configurations if files are changed externally.
 auto_reload_configs: true
+
+# Enable session logging.
 enable_session_log: true
+
+# Create database backups automatically.
 enable_backups: true
 
-# -- Deprecated (moved to integrations.yml): worldedit.paste_autolock.* --
+# -------------------------------------------------------------------
+# -- Deprecated (moved to integrations.yml) --
+# -------------------------------------------------------------------
+# worldedit.paste_autolock.*
+
 worldedit_paste_autolock:
   enabled: false
   radius: 24
