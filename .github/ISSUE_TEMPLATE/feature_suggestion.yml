@@ -1,13 +1,24 @@
 name: Feature Suggestion
-description: Write a feature suggestion that you would like to see in a future version of the plugin.
+description: Write a feature suggestion that you would like to see in a future version of the plugin
 title: '[Feature]: '
 labels: [enhancement]
-assignees: spnda
+assignees: VictorGugug
 body:
-  - type: textarea
-    id: feature_description
-    attributes:
-      label: Feature description
-      description: Here you can write up your feature. Please be as clear and concise as possible and why you want this feature and what possible issues it might solve. If you want to, you can also add images or sketches of your ideas to further illustrate your idea.
-    validations:
-      required: true
+    - type: input
+      id: discord
+      attributes:
+          label: Discord Username (Optional)
+          description: Your Discord tag so I can identify you and give you credit.
+          placeholder: e.g. vicplaying
+    - type: textarea
+      id: feature_description
+      attributes:
+          label: Feature Description
+          description: Describe your feature idea. Be as clear and concise as possible about why you want this and what problem it solves. You can attach images or sketches to further illustrate your idea.
+      validations:
+          required: true
+    - type: textarea
+      id: additional_context
+      attributes:
+          label: Additional Context
+          description: Add any other context about the feature here.

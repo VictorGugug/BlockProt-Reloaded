@@ -1,13 +1,24 @@
 name: Question
-description: Create a issue with a question
+description: Create an issue to ask a question
 title: '[Question]: '
 labels: [question]
-assignees: spnda
+assignees: VictorGugug
 body:
-  - type: textarea
-    id: question
-    attributes:
-      label: Your question
-      description: Ask your question as good as possible. You can also add screenshots, videos or similar to further elaborate your issue.
-    validations:
-      required: true
+    - type: input
+      id: discord
+      attributes:
+          label: Discord Username (Optional)
+          description: Your Discord tag so I can identify you and give you credit.
+          placeholder: e.g. vicplaying
+    - type: textarea
+      id: question
+      attributes:
+          label: Your Question
+          description: Ask your question as clearly as possible. You can attach screenshots, videos, or similar to further illustrate your issue.
+      validations:
+          required: true
+    - type: textarea
+      id: additional_context
+      attributes:
+          label: Additional Context
+          description: Add any other context here.
