@@ -58,7 +58,7 @@ public final class EntityInspectContentsInventory extends BlockProtInventory {
 
     @Nullable
     @Override
-    String getTranslatedInventoryName() { return de.sean.blockprot.bukkit.Translator.get(de.sean.blockprot.bukkit.TranslationKey.INVENTORIES__ENTITY__INSPECT_CONTENTS); }
+    String getTranslatedInventoryName() { return de.sean.blockprot.bukkit.Translator.get(de.sean.blockprot.bukkit.TranslationKey.INVENTORIES__ENTITY__INSPECT_ENTITY); }
 
     @Override
     public void onClick(@NotNull InventoryClickEvent event, @NotNull InventoryState state) {

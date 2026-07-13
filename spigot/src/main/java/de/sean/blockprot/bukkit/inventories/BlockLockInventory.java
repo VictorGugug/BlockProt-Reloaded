@@ -330,7 +330,7 @@ public class BlockLockInventory extends BlockProtInventory {
             }
 
             if (hasInventory) {
-                setItemStack(9, Material.SPYGLASS, TranslationKey.INVENTORIES__ENTITY__INSPECT_CONTENTS);
+                setItemStack(9, Material.SPYGLASS, TranslationKey.INVENTORIES__ENTITY__INSPECT_ENTITY);
             }
 
             if (BlockProt.getAuditLogger() != null) {

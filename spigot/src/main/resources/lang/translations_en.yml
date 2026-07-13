@@ -113,8 +113,7 @@ inventories:
     no_pickup: "§bBlock pickup (parrot)"
   locate_villager: "§aLocate Linked Villager"
   entity:
-  inspect_contents: "Inspect contents"
-  inspect_contents_empty: "Empty"
+    inspect_entity: "Inspect contents"
     transfer_not_available: "§7Transfer is not available for this entity type."
   transfer:
     title: "Transfer: {player}"

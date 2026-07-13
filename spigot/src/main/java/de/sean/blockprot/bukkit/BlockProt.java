@@ -25,6 +25,7 @@ import de.sean.blockprot.bukkit.commands.BlockProtCommand;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
 import de.sean.blockprot.bukkit.config.IntegrationConfig;
+import de.sean.blockprot.bukkit.config.LangConfig;
 import de.sean.blockprot.bukkit.config.WorldsConfig;
 import de.sean.blockprot.bukkit.integrations.*;
 import de.sean.blockprot.bukkit.listeners.*;
@@ -386,6 +387,8 @@ public final class BlockProt extends JavaPlugin {
         this.convertBlocksFormatIfNeeded();
         saveResourceSilent("mysql/mysql.yml", false);
         saveResourceSilent("worlds.yml", false);
+        saveResourceSilent("lang.yml", false);
+        LangConfig.reload();
         this.reloadConfig();
         defaultConfig = new DefaultConfig(this.getConfig(), this.getDataFolder());
 
@@ -393,7 +396,11 @@ public final class BlockProt extends JavaPlugin {
         Translator.DEFAULT_FALLBACK = defaultConfig.getTranslationFallbackString();
 
         final String langFolder = "lang/";
+        final String activeLang = defaultConfig.getLanguageFile() == null
+            ? defaultLanguageFile : defaultConfig.getLanguageFile();
+
         for (String resource : Translator.DEFAULT_TRANSLATION_FILES) {
+            if (!LangConfig.isLanguageEnabled(resource) && !resource.equals(activeLang)) continue;
             File diskFile = new File(this.getDataFolder(), langFolder + resource);
             if (!diskFile.exists()) {
                 this.saveResource(langFolder + resource, false);
@@ -402,18 +409,18 @@ public final class BlockProt extends JavaPlugin {
             }
         }
 
-        InputStream defaultLanguageStream = this.getResource(langFolder + defaultLanguageFile);
-        if (defaultLanguageStream == null) {
-            throw new RuntimeException("Failed to load the default language file. The plugin JAR may be corrupt.");
+        String fallbackLang = LangConfig.getFallbackLanguage();
+        InputStream fallbackLanguageStream = this.getResource(langFolder + fallbackLang);
+        if (fallbackLanguageStream == null) {
+            fallbackLang = defaultLanguageFile;
+            fallbackLanguageStream = this.getResource(langFolder + fallbackLang);
         }
-        YamlConfiguration defaultLanguageConfig = YamlConfiguration.loadConfiguration(
-            new BufferedReader(new InputStreamReader(defaultLanguageStream, StandardCharsets.UTF_8)));
+        YamlConfiguration fallbackLanguageConfig = YamlConfiguration.loadConfiguration(
+            new BufferedReader(new InputStreamReader(fallbackLanguageStream, StandardCharsets.UTF_8)));
 
-        final String fileName = defaultConfig.getLanguageFile() == null
-            ? defaultLanguageFile : defaultConfig.getLanguageFile();
         YamlConfiguration wantedConfig = saveAndLoadConfigFile(
-            langFolder, fileName, BlockProt.defaultConfig.shouldReplaceTranslations());
-        Translator.loadFromConfigs(defaultLanguageConfig, wantedConfig);
+            langFolder, activeLang, BlockProt.defaultConfig.shouldReplaceTranslations());
+        Translator.loadFromConfigs(fallbackLanguageConfig, wantedConfig);
 
         if (defaultConfig.isPerWorldsConfigEnabled()) {
             File worldsFile = new File(this.getDataFolder(), "worlds.yml");

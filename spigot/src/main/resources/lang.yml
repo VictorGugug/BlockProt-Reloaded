@@ -1,0 +1,39 @@
+# BlockProt Reloaded -- lang.yml
+# Language configuration.
+
+# -------------------------------------------------------------------
+# -- Fallback language --
+# -------------------------------------------------------------------
+# When a translation key is missing from the active language file,
+# the plugin will look for it in this file before falling back to
+# the raw key name.
+fallback_language: translations_en.yml
+
+# -------------------------------------------------------------------
+# -- Language files --
+# -------------------------------------------------------------------
+# true  = enabled (loaded and merged on startup/reload)
+# false = disabled (skipped, not parsed)
+#
+# The active language set in config.yml (language_file) is always
+# loaded regardless of this setting, so existing configurations
+# are never broken.
+languages:
+  # Reference languages (actively maintained, always complete)
+  translations_en.yml: true
+  translations_es.yml: true
+
+  # Community translations (may have missing keys)
+  translations_cs.yml: false
+  translations_de.yml: false
+  translations_fr.yml: false
+  translations_it.yml: false
+  translations_ja.yml: false
+  translations_ko.yml: false
+  translations_pl.yml: false
+  translations_pt-br.yml: false
+  translations_ru.yml: false
+  translations_sk.yml: false
+  translations_tr.yml: false
+  translations_zh-CN.yml: false
+  translations_zh-TW.yml: false

@@ -112,8 +112,7 @@ inventories:
     no_pickup: "§bBloquear recoger (loro)"
   locate_villager: "§aLocalizar Aldeano Vinculado"
   entity:
-  inspect_contents: Inspeccionar contenido
-  inspect_contents_empty: Vacío
+    inspect_entity: Inspeccionar contenido
     transfer_not_available: "§7La transferencia no está disponible para este tipo de entidad."
   transfer:
     title: "§8[§dTransferir bloque§8] Buscar jugador"

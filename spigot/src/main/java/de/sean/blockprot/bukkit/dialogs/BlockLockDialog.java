@@ -364,7 +364,7 @@ public final class BlockLockDialog {
                 ));
 
                 actions.add(actionBtn(
-                    stripColor(Translator.get(TranslationKey.INVENTORIES__ENTITY__INSPECT_CONTENTS)),
+                    stripColor(Translator.get(TranslationKey.INVENTORIES__ENTITY__INSPECT_ENTITY)),
                     SOFT_BLUE,
                     p -> {
                         InventoryHolder holder = (InventoryHolder) entity;
@@ -385,7 +385,7 @@ public final class BlockLockDialog {
                                 stripColor(Translator.get(TranslationKey.INVENTORIES__INSPECT_CONTENTS_EMPTY)), SOFT_GRAY));
                         }
                         bridge.showNotice(p,
-                            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ENTITY__INSPECT_CONTENTS)),
+                            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ENTITY__INSPECT_ENTITY)),
                                 SOFT_BLUE, TextDecoration.BOLD),
                             inspectBody,
                             new DialogButton("exit",
