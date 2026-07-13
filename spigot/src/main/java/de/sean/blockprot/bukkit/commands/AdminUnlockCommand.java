@@ -20,9 +20,13 @@
 
 package de.sean.blockprot.bukkit.commands;
 
+import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
+import de.sean.blockprot.bukkit.dialogs.InfoDialog;
+import de.sean.blockprot.bukkit.dialogs.UnlockDialog;
 import de.sean.blockprot.bukkit.inventories.BpUnlockInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
@@ -65,6 +69,10 @@ public final class AdminUnlockCommand implements CommandExecutor {
         }
 
         if (args.length < 2) {
+            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+                InfoDialog.show(player, DialogOrigin.ADMIN_MENU);
+                return true;
+            }
             player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_USAGE)));
             return true;
@@ -90,6 +98,11 @@ public final class AdminUnlockCommand implements CommandExecutor {
             player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_NO_BLOCKS)
                     .replace("{player}", resolvedName)));
+            return true;
+        }
+
+        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            UnlockDialog.show(player, DialogOrigin.ADMIN_MENU, resolvedName, 0);
             return true;
         }
 

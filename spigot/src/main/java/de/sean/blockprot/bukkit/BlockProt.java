@@ -294,6 +294,16 @@ public final class BlockProt extends JavaPlugin {
             Translator.get(TranslationKey.CONSOLE__BOOT_COMMANDS),
             Translator.get(TranslationKey.CONSOLE__BOOT_REGISTERED));
 
+        if (VersionCompat.hasDialogApi()) {
+            BlockProtConsole.boot(
+                Translator.get(TranslationKey.CONSOLE__BOOT_DIALOG_API),
+                Translator.get(TranslationKey.CONSOLE__BOOT_AVAILABLE));
+        } else {
+            BlockProtConsole.bootMuted(
+                Translator.get(TranslationKey.CONSOLE__BOOT_DIALOG_API),
+                Translator.get(TranslationKey.CONSOLE__BOOT_NOT_AVAILABLE));
+        }
+
         for (PluginIntegration integration : integrations) {
             try {
                 integration.enable();
@@ -427,6 +437,12 @@ public final class BlockProt extends JavaPlugin {
                 fileWatcher.stop();
                 BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__AUTO_RELOAD_DISABLED));
             }
+        }
+
+        if (defaultConfig.isDialogsEnabled() && !VersionCompat.hasDialogApi()) {
+            String dialogsUnavailable = Translator.get(TranslationKey.CONSOLE__DIALOGS_UNAVAILABLE);
+            BlockProtConsole.warn(dialogsUnavailable);
+            BlockProtLogger.warn(dialogsUnavailable);
         }
     }
 

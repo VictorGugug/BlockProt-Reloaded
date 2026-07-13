@@ -26,6 +26,7 @@ import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
+import de.sean.blockprot.bukkit.dialogs.BlockLockDialog;
 import de.sean.blockprot.bukkit.inventories.BlockLockInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
@@ -139,15 +140,19 @@ public final class VehicleProtectionListener implements Listener {
                 return;
             }
 
-            InventoryState state = InventoryState.getOrCreate(player.getUniqueId());
-            state.entityUUID = entity.getUniqueId();
+            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+                BlockLockDialog.showForEntity(player, entity, handler);
+            } else {
+                InventoryState state = InventoryState.getOrCreate(player.getUniqueId());
+                state.entityUUID = entity.getUniqueId();
 
-            var inv = new BlockLockInventory().fillForEntity(player, entity, handler);
-            if (inv == null) {
-                sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
-                return;
+                var inv = new BlockLockInventory().fillForEntity(player, entity, handler);
+                if (inv == null) {
+                    sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+                    return;
+                }
+                player.openInventory(inv);
             }
-            player.openInventory(inv);
         } else {
             if (!handler.isProtected()) return;
             if (handler.canAccess(player.getUniqueId().toString())

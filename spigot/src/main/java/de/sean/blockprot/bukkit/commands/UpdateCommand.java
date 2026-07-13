@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.dialogs.UpdateDialog;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -37,17 +38,21 @@ import java.util.List;
 public class UpdateCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (canUseCommand(sender)) {
-            List<Player> recipients = (sender instanceof Player p)
-                ? java.util.Collections.singletonList(p)
-                : null;
-            Bukkit.getScheduler().runTaskAsynchronously(
-                BlockProt.getInstance(),
-                new UpdateChecker(BlockProt.getPluginVersion(), recipients)
-            );
+        if (!canUseCommand(sender)) return false;
+
+        if (sender instanceof Player player && BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            UpdateDialog.show(player);
             return true;
         }
-        return false;
+
+        List<Player> recipients = (sender instanceof Player p)
+            ? java.util.Collections.singletonList(p)
+            : null;
+        Bukkit.getScheduler().runTaskAsynchronously(
+            BlockProt.getInstance(),
+            new UpdateChecker(BlockProt.getPluginVersion(), recipients)
+        );
+        return true;
     }
 
     @Nullable

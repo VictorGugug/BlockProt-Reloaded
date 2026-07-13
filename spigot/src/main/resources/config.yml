@@ -97,8 +97,16 @@ block_lock_effects: true
 # Play sounds when interacting with a locked block.
 block_lock_sounds: true
 
-# Use GUIs (menus) where possible, instead of chat messages.
+# Consolidate all menus into a single GUI accessible via /bp user (players) and
+# /bp admin (admins with OP or blockprot.admin permission). When false, each
+# feature uses its dedicated subcommand (/bp settings, /bp friends, etc.).
 use_menus: false
+
+# Use Minecraft's native dialog system instead of inventories/anvils/chat
+# for interaction menus. Requires Paper 1.21.7 or later; if the running
+# server does not expose the dialog API, this falls back to the normal
+# menus automatically and a warning is logged.
+use_dialogs: false
 
 # Maximum duration (in days) when granting timed access to a player.
 timed_access_max_duration_days: 90

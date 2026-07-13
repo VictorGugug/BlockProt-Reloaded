@@ -20,10 +20,10 @@
 
 package de.sean.blockprot.bukkit.commands;
 
-import de.sean.blockprot.bukkit.TranslationKey;
-import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -121,8 +121,13 @@ public final class BlockProtCommand implements TabExecutor {
         } else {
             CommandExecutor exec = CLI_COMMANDS.get(sub);
             if (exec == null) {
-                CommandExecutor help = CLI_COMMANDS.get("help");
-                if (help != null) help.onCommand(sender, command, label, args);
+                if (GUI_COMMANDS.containsKey(sub)) {
+                    sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                        Translator.get(TranslationKey.MESSAGES__CMD_USAGE_CLI_GUI_ONLY)));
+                } else {
+                    sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                        Translator.get(TranslationKey.MESSAGES__CMD_USAGE_CLI)));
+                }
                 return true;
             }
             return exec.onCommand(sender, command, label, args);

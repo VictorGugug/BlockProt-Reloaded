@@ -38,6 +38,21 @@ repositories {
 
 }
 
+// --- dialogs source set: compiles against Paper 1.21.7+ for the dialog API ---
+sourceSets {
+    val dialogs = create("dialogs") {
+        java {
+            srcDir("src/dialogs/java")
+        }
+        compileClasspath += sourceSets.main.get().output
+        runtimeClasspath += sourceSets.main.get().output
+    }
+}
+
+configurations.named("dialogsCompileOnly") {
+    extendsFrom(configurations.compileOnly.get())
+}
+
 dependencies {
     implementation(project(":common"))
 
@@ -78,6 +93,8 @@ dependencies {
     compileOnly("com.cjburkey.claimchunk:claimchunk:0.0.25-FIX3")
     compileOnly("com.github.Zrips:Residence:6.0.0.1") { isTransitive = false }
     compileOnly("com.github.GriefPrevention:GriefPrevention:16.18.2") { isTransitive = false }
+
+    add("dialogsCompileOnly", "io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
 }
 
 val targetJavaVersion = project.property("targetJavaVersion") as String
@@ -146,11 +163,13 @@ tasks.shadowJar {
     val jarVersion = project.version as String
     val jarSuffix  = if (isMaster) "" else "-$branch"
     archiveFileName.set("BlockProtReloaded-${jarVersion}${jarSuffix}.jar")
+    from(sourceSets["dialogs"].output)
 }
 
 tasks.build {
     dependsOn(tasks["javadocJar"])
     dependsOn(tasks.shadowJar)
+    dependsOn(tasks.named("compileDialogsJava"))
 }
 
 tasks.test {

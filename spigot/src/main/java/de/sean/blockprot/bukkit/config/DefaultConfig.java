@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.tasks.ConfigFileWatcher;
 import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -352,6 +353,20 @@ public final class DefaultConfig extends BlockProtConfig {
         return !config.getBoolean("use_menus", false);
     }
 
+    public boolean isDialogsEnabled() {
+        return config.getBoolean("use_dialogs", false);
+    }
+
+    /**
+     * True only when use_dialogs is enabled in config.yml and the running
+     * server actually exposes the Paper dialog API. Call sites that open a
+     * dialog-based menu should check this instead of isDialogsEnabled()
+     * directly, so a server below the API floor always falls back safely.
+     */
+    public boolean shouldUseDialogs() {
+        return isDialogsEnabled() && VersionCompat.hasDialogApi();
+    }
+
     public boolean shouldEnableAllOptionalFeatures() { return false; }
     public boolean isLocalizedCommandAliasesEnabled() { return config.getBoolean("localized_command_aliases", true); }
 
@@ -444,6 +459,100 @@ public final class DefaultConfig extends BlockProtConfig {
         config.set("world_expiry.worlds." + worldName, duration);
         BlockProt.getInstance().saveConfig();
     }
+
+    public @NotNull FileConfiguration getBukkitConfig() {
+        return config;
+    }
+
+    public void setAndSave(@NotNull String key, @NotNull Object value) {
+        config.set(key, value);
+        BlockProt.getInstance().saveConfig();
+    }
+
+    public void setLockOnPlaceByDefault(boolean value) {
+        setAndSave("lock_on_place_by_default", value);
+    }
+
+    public void setPublicIsFriendByDefault(boolean value) {
+        setAndSave("public_is_friend_by_default", value);
+    }
+
+    public void setSimplifiedHopperLogic(boolean value) {
+        setAndSave("simplified_hopper_logic", value);
+    }
+
+    public void setProtectFromExplosions(boolean value) {
+        setAndSave("protect_locked_blocks_from_explosions", value);
+    }
+
+    public void setBlockPistonMovement(boolean value) {
+        setAndSave("block_protected_block_piston_movement", value);
+    }
+
+    public void setClearProtectionOnShulkerBreak(boolean value) {
+        setAndSave("clear_protection_on_shulker_break", value);
+    }
+
+    public void setAllowBreakProtectedBlocks(boolean value) {
+        setAndSave("allow_break_protected_blocks", value);
+    }
+
+    public void setRespectSpawnProtection(boolean value) {
+        setAndSave("respect_spawn_protection", value);
+    }
+
+    public void setLockEffects(boolean value) {
+        setAndSave("block_lock_effects", value);
+    }
+
+    public void setLockSounds(boolean value) {
+        setAndSave("block_lock_sounds", value);
+    }
+
+    public void setWorldExpiryEnabled(boolean value) {
+        setAndSave("world_expiry.enabled", value);
+    }
+
+    public void setEntityProtectionEnabled(boolean value) {
+        setAndSave("entity_protection.enabled", value);
+    }
+
+    public void setNotifyOpOfUpdates(boolean value) {
+        setAndSave("notify_op_of_updates", value);
+    }
+
+    public void setSessionLogEnabled(boolean value) {
+        setAndSave("enable_session_log", value);
+    }
+
+    public void setBackupsEnabled(boolean value) {
+        setAndSave("enable_backups", value);
+    }
+
+    public void setAutoReloadConfigs(boolean value) {
+        setAndSave("auto_reload_configs", value);
+    }
+
+    public void setRedstoneDisallowedByDefault(boolean value) {
+        setAndSave("redstone_disallowed_by_default", value);
+    }
+
+    public void setLanguageFile(@NotNull String value) {
+        setAndSave("language_file", value);
+    }
+
+    public void setPlayerMaxLockedBlockCount(int value) {
+        setAndSave("player_max_locked_block_count", value);
+    }
+
+    public void setLockHintCooldown(int value) {
+        setAndSave("lock_hint_cooldown_in_seconds", value);
+    }
+
+    public void setFriendSearchSimilarity(double value) {
+        setAndSave("friend_search_similarity", value);
+    }
+
     public boolean isOwnerNotificationsEnabled() { return config.getBoolean("owner_notifications.enabled", true); }
     public boolean isNotifyOnOpen()               { return isOwnerNotificationsEnabled() && config.getBoolean("owner_notifications.notify_on_open", true); }
     public boolean isNotifyOnTake()               { return isOwnerNotificationsEnabled() && config.getBoolean("owner_notifications.notify_on_take", true); }
@@ -986,6 +1095,20 @@ public final class DefaultConfig extends BlockProtConfig {
             }
         }
         return null;
+    }
+
+    /**
+     * Sets a single material to a specific lockable state in blocks.yml.
+     * Only saves if the state actually changes.
+     *
+     * @param material the material to set
+     * @param lockable true to enable, false to disable
+     * @param who      the player who initiated the change
+     */
+    public synchronized void setLockable(@NotNull Material material, boolean lockable, @NotNull Player who) {
+        boolean currentlyActive = isLockable(material) || isLockableEntity(material);
+        if (currentlyActive == lockable) return;
+        toggleLockable(material, who);
     }
 
     /**

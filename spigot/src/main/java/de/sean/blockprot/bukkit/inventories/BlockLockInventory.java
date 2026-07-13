@@ -124,7 +124,13 @@ public class BlockLockInventory extends BlockProtInventory {
                         state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
                         closeAndOpen(player, new AuditInventory().fillForEntity(player, entity));
                     }
-                    case BARRIER -> closeAndOpen(player, null);
+                case BARRIER -> {
+                    if (state.origin != InventoryState.MenuOrigin.NONE) {
+                        goBack(player, state);
+                    } else {
+                        closeAndOpen(player, null);
+                    }
+                }
                     default -> {}
                 }
             } else {
@@ -208,7 +214,13 @@ public class BlockLockInventory extends BlockProtInventory {
                             Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
                     }
                 }
-                case BARRIER -> closeAndOpen(player, null);
+                case BARRIER -> {
+                    if (state.origin != InventoryState.MenuOrigin.NONE) {
+                        goBack(player, state);
+                    } else {
+                        closeAndOpen(player, null);
+                    }
+                }
             }
         }
         event.setCancelled(true);
@@ -281,7 +293,11 @@ public class BlockLockInventory extends BlockProtInventory {
             setItemStack(16, Material.COMPASS, TranslationKey.INVENTORIES__BLOCK_INFO__TITLE);
         }
 
-        setItemStack(17, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
+        if (state.origin != InventoryState.MenuOrigin.NONE) {
+            setItemStack(17, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
+        } else {
+            setItemStack(17, Material.BARRIER, TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        }
         return inventory;
     }
 
@@ -324,7 +340,12 @@ public class BlockLockInventory extends BlockProtInventory {
             setItemStack(13, Material.COMPASS, TranslationKey.INVENTORIES__BLOCK_INFO__TITLE);
         }
 
-        setItemStack(17, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
+        InventoryState state = InventoryState.get(player.getUniqueId());
+        if (state != null && state.origin != InventoryState.MenuOrigin.NONE) {
+            setItemStack(17, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
+        } else {
+            setItemStack(17, Material.BARRIER, TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        }
         return inventory;
     }
 

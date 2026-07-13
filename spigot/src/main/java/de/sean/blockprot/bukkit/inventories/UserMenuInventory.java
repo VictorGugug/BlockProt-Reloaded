@@ -20,9 +20,11 @@
 
 package de.sean.blockprot.bukkit.inventories;
 
+import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -35,21 +37,20 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * GUI for regular user operations. Opened via /bp user or /bp settings.
- *
- * Layout (tripleLine = 27 slots, 4 items centred in row 1: slots 11-14).
- */
 public class UserMenuInventory extends BlockProtInventory {
 
-    private static final int SLOT_SETTINGS = 11;
-    private static final int SLOT_FRIENDS  = 12;
-    private static final int SLOT_STATS    = 13;
-    private static final int SLOT_ABOUT    = 14;
+    private static final int SLOT_SETTINGS   = 10;
+    private static final int SLOT_FRIENDS    = 11;
+    private static final int SLOT_STATS      = 12;
+    private static final int SLOT_TRANSFER   = 14;
+    private static final int SLOT_ABOUT      = 16;
+    private static final int SLOT_BACK       = 49;
+
+    private static final int[] SEPARATOR_SLOTS = {0,1,2,3,4,5,6,7,8, 9,13,17, 18,19,20,21,22,23,24,25,26, 27,28,29,30,31,32,33,34,35, 36,37,38,39,40,41,42,43,44, 45,46,47,48,50,51,52,53};
 
     public UserMenuInventory() { super(false); }
 
-    @Override int getSize() { return InventoryConstants.tripleLine; }
+    @Override int getSize() { return InventoryConstants.sextupletLine; }
 
     @Override
     String getTranslatedInventoryName() {
@@ -59,6 +60,7 @@ public class UserMenuInventory extends BlockProtInventory {
     @NotNull
     public Inventory fill(@NotNull Player player) {
         inventory = createInventory();
+        fillSeparators();
 
         inventory.setItem(SLOT_SETTINGS, item(Material.WRITABLE_BOOK,
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__SETTINGS),
@@ -69,13 +71,20 @@ public class UserMenuInventory extends BlockProtInventory {
         inventory.setItem(SLOT_STATS, item(Material.BOOK,
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__STATS),
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__STATS_LORE)));
+        inventory.setItem(SLOT_TRANSFER, item(Material.HOPPER,
+            Translator.get(TranslationKey.INVENTORIES__USER_MENU__TRANSFER),
+            Translator.get(TranslationKey.INVENTORIES__USER_MENU__TRANSFER_LORE)));
         inventory.setItem(SLOT_ABOUT, item(Material.NETHER_STAR,
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__ABOUT),
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__ABOUT_LORE)));
 
         InventoryState state = InventoryState.get(player.getUniqueId());
         if (state != null && state.origin != InventoryState.MenuOrigin.NONE) {
-            setBackButton(getSize() - 1);
+            setBackButton(SLOT_BACK);
+        } else {
+            inventory.setItem(SLOT_BACK, item(Material.BARRIER,
+                Translator.get(TranslationKey.INVENTORIES__USER_MENU__CLOSE),
+                Translator.get(TranslationKey.INVENTORIES__USER_MENU__CLOSE_LORE)));
         }
 
         return inventory;
@@ -108,16 +117,31 @@ public class UserMenuInventory extends BlockProtInventory {
             newState.origin = InventoryState.MenuOrigin.USER_MENU;
             InventoryState.set(player.getUniqueId(), newState);
             player.openInventory(new StatisticsInventory().fill(player));
+        } else if (slot == SLOT_TRANSFER) {
+            player.closeInventory();
+            player.performCommand("blockprot transferall");
         } else if (slot == SLOT_ABOUT) {
             player.closeInventory();
             player.performCommand("blockprot about");
-        } else if (slot == getSize() - 1) {
+        } else if (slot == SLOT_BACK) {
             goBack(player, state);
         }
     }
 
     @Override
     public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {}
+
+    private void fillSeparators() {
+        ItemStack sep = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = sep.getItemMeta();
+        if (meta != null) {
+            meta.displayName(net.kyori.adventure.text.Component.text(""));
+            sep.setItemMeta(meta);
+        }
+        for (int s : SEPARATOR_SLOTS) {
+            inventory.setItem(s, sep);
+        }
+    }
 
     private ItemStack item(Material mat, String name, String... lore) {
         ItemStack item = new ItemStack(mat);
@@ -126,8 +150,7 @@ public class UserMenuInventory extends BlockProtInventory {
         meta.displayName(net.kyori.adventure.text.Component.text(
             name.replaceAll("[§&][0-9a-fk-orx]", "")));
         List<net.kyori.adventure.text.Component> l = new ArrayList<>();
-        for (String s : lore) l.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-            .legacySection().deserialize(s));
+        for (String s : lore) l.add(LegacyComponentSerializer.legacySection().deserialize(s));
         meta.lore(l);
         item.setItemMeta(meta);
         return item;

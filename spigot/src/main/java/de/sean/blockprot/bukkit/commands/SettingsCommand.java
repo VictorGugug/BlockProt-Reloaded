@@ -20,6 +20,8 @@
 
 package de.sean.blockprot.bukkit.commands;
 
+import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.dialogs.UserSettingsDialog;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.UserSettingsInventory;
 import org.bukkit.command.Command;
@@ -30,13 +32,16 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-/**
- * Opens user settings inventory.
- */
 public class SettingsCommand implements CommandExecutor {
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) return false;
+
+        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            UserSettingsDialog.show(player);
+            return true;
+        }
 
         InventoryState state = new InventoryState(null);
         state.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;

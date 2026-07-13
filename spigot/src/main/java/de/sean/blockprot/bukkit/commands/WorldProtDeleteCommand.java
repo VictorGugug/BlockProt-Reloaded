@@ -20,9 +20,11 @@
 
 package de.sean.blockprot.bukkit.commands;
 
+import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.dialogs.ProtdelDialog;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.WorldProtDeleteConfirmInventory;
 import de.sean.blockprot.bukkit.inventories.WorldProtDeleteInventory;
@@ -72,12 +74,20 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
                         .replace("{world}", worldName)));
                 return true;
             }
+            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+                ProtdelDialog.show(player, world.getName());
+                return true;
+            }
             InventoryState.remove(player.getUniqueId());
             WorldProtDeleteConfirmInventory confirm = new WorldProtDeleteConfirmInventory();
             player.openInventory(confirm.fill(player, world.getName()));
             return true;
         }
 
+        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            ProtdelDialog.show(player, null);
+            return true;
+        }
         InventoryState.remove(player.getUniqueId());
         WorldProtDeleteInventory selector = new WorldProtDeleteInventory();
         player.openInventory(selector.fill(player, null));

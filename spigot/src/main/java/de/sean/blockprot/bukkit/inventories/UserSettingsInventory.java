@@ -166,7 +166,14 @@ public class UserSettingsInventory extends BlockProtInventory {
             );
         }
 
-        setBackButton();
+        InventoryState st = InventoryState.get(player.getUniqueId());
+        if (st != null && st.origin != InventoryState.MenuOrigin.NONE
+                && st.origin != InventoryState.MenuOrigin.USER_SETTINGS) {
+            setBackButton();
+        } else {
+            setItemStack(getSize() - 1, Material.BLACK_STAINED_GLASS_PANE,
+                TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        }
         return inventory;
     }
 }

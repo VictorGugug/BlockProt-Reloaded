@@ -20,13 +20,16 @@
 
 package de.sean.blockprot.bukkit.commands;
 
+import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtAPI;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.dialogs.IntegrationsDialog;
 import de.sean.blockprot.bukkit.integrations.PluginIntegration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,6 +43,11 @@ public class IntegrationsCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!canUseCommand(sender))
             return false;
+
+        if (sender instanceof Player player && BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            IntegrationsDialog.show(player);
+            return true;
+        }
 
         var enabledIntegrations = BlockProtAPI.getInstance().getIntegrations().stream()
             .filter(PluginIntegration::isEnabled)

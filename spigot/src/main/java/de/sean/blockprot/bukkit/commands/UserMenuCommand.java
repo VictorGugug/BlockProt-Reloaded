@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.dialogs.UserMenuDialog;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.UserMenuInventory;
 import org.bukkit.command.Command;
@@ -52,6 +53,10 @@ public final class UserMenuCommand implements CommandExecutor {
         if (!(sender instanceof Player player)) return false;
         if (!canUseCommand(sender)) {
             player.sendMessage(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            return true;
+        }
+        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            UserMenuDialog.show(player);
             return true;
         }
         if (BlockProt.getDefaultConfig().areExtraCommandsEnabled()) return false;

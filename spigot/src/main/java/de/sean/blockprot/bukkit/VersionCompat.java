@@ -102,6 +102,20 @@ public final class VersionCompat {
         }
     }
 
+    /**
+     * Returns true if the running server exposes Paper's dialog API (1.21.7+).
+     * Checked by class presence rather than version number so a non-Paper fork
+     * missing the class is also correctly reported as unavailable.
+     */
+    public static boolean hasDialogApi() {
+        try {
+            Class.forName("io.papermc.paper.dialog.Dialog");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
     @NotNull
     public static String getVersionString() {
         return Bukkit.getMinecraftVersion();

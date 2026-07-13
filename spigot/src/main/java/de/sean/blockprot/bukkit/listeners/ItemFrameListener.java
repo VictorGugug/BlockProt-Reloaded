@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.events.BlockAccessMenuEvent;
+import de.sean.blockprot.bukkit.dialogs.BlockLockDialog;
 import de.sean.blockprot.bukkit.inventories.BlockLockInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
@@ -115,15 +116,19 @@ public final class ItemFrameListener implements Listener {
                 return;
             }
 
-            InventoryState state = InventoryState.getOrCreate(player.getUniqueId());
-            state.entityUUID = frame.getUniqueId();
+            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+                BlockLockDialog.showForEntity(player, frame, handler);
+            } else {
+                InventoryState state = InventoryState.getOrCreate(player.getUniqueId());
+                state.entityUUID = frame.getUniqueId();
 
-            var inv = new BlockLockInventory().fillForEntity(player, frame, handler);
-            if (inv == null) {
-                sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
-                return;
+                var inv = new BlockLockInventory().fillForEntity(player, frame, handler);
+                if (inv == null) {
+                    sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+                    return;
+                }
+                player.openInventory(inv);
             }
-            player.openInventory(inv);
         } else {
             // Normal right-click: block if protected and player is not owner/friend/admin.
             if (!handler.isProtected()) return;
@@ -169,16 +174,20 @@ public final class ItemFrameListener implements Listener {
                 return;
             }
 
-            InventoryState state = new InventoryState(linkedBlock);
-            state.menuPermissions = resolveLinkedBlockMenuPermissions(player, blockHandler);
-            InventoryState.set(player.getUniqueId(), state);
+            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+                BlockLockDialog.show(player, linkedBlock, blockHandler);
+            } else {
+                InventoryState state = new InventoryState(linkedBlock);
+                state.menuPermissions = resolveLinkedBlockMenuPermissions(player, blockHandler);
+                InventoryState.set(player.getUniqueId(), state);
 
-            Inventory inv = new BlockLockInventory().fill(player, linkedBlock.getType(), blockHandler);
-            if (inv == null) {
-                sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
-                return;
+                Inventory inv = new BlockLockInventory().fill(player, linkedBlock.getType(), blockHandler);
+                if (inv == null) {
+                    sendActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+                    return;
+                }
+                player.openInventory(inv);
             }
-            player.openInventory(inv);
         } else {
             if (!blockHandler.isProtected()) return;
             if (blockHandler.canAccess(player.getUniqueId().toString())

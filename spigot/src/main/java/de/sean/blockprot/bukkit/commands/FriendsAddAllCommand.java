@@ -23,6 +23,7 @@ package de.sean.blockprot.bukkit.commands;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.dialogs.FriendManageDialog;
 import de.sean.blockprot.bukkit.inventories.FriendManageInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
@@ -75,6 +76,10 @@ public final class FriendsAddAllCommand implements CommandExecutor {
     }
 
     private void openFriendManageGui(@NotNull Player player) {
+        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            FriendManageDialog.show(player);
+            return;
+        }
         InventoryState state = new InventoryState(null);
         state.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
         InventoryState.set(player.getUniqueId(), state);

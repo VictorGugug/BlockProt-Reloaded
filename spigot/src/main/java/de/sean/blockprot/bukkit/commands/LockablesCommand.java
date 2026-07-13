@@ -20,9 +20,12 @@
 
 package de.sean.blockprot.bukkit.commands;
 
+import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
+import de.sean.blockprot.bukkit.dialogs.LockablesDialog;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.LockablesInventory;
 import org.bukkit.command.Command;
@@ -50,6 +53,10 @@ public final class LockablesCommand implements CommandExecutor {
         if (!(sender instanceof Player player)) return false;
         if (!canUseCommand(sender)) {
             player.sendMessage(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            return true;
+        }
+        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            LockablesDialog.show(player, DialogOrigin.ADMIN_MENU);
             return true;
         }
         InventoryState state = InventoryState.builder()

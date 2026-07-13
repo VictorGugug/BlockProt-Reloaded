@@ -72,6 +72,9 @@ public final class UpdateChecker implements Runnable {
     @Nullable
     private final List<Player> recipients;
 
+    @Nullable
+    private final Runnable onComplete;
+
     @NotNull
     private final String pluginVersion;
 
@@ -81,6 +84,7 @@ public final class UpdateChecker implements Runnable {
     public UpdateChecker(@NotNull final String version) {
         this.pluginVersion = version;
         this.recipients = null;
+        this.onComplete = null;
         this.currentVersion = new SemanticVersion(version);
     }
 
@@ -88,6 +92,7 @@ public final class UpdateChecker implements Runnable {
     public UpdateChecker(@NotNull final PluginDescriptionFile description) {
         this.pluginVersion = description.getVersion();
         this.recipients = null;
+        this.onComplete = null;
         this.currentVersion = new SemanticVersion(description.getVersion());
     }
 
@@ -96,6 +101,7 @@ public final class UpdateChecker implements Runnable {
                          @Nullable final List<Player> recipients) {
         this.recipients = recipients;
         this.pluginVersion = description.getVersion();
+        this.onComplete = null;
         this.currentVersion = new SemanticVersion(description.getVersion());
     }
 
@@ -103,6 +109,15 @@ public final class UpdateChecker implements Runnable {
                          @Nullable final List<Player> recipients) {
         this.recipients = recipients;
         this.pluginVersion = version;
+        this.onComplete = null;
+        this.currentVersion = new SemanticVersion(version);
+    }
+
+    public UpdateChecker(@NotNull final String version,
+                         @Nullable final Runnable onComplete) {
+        this.pluginVersion = version;
+        this.recipients = null;
+        this.onComplete = onComplete;
         this.currentVersion = new SemanticVersion(version);
     }
 
@@ -180,6 +195,11 @@ public final class UpdateChecker implements Runnable {
             for (Player player : recipients) {
                 player.sendMessage(comp);
             }
+            if (onComplete != null) {
+                onComplete.run();
+            }
+        } else if (onComplete != null) {
+            onComplete.run();
         } else {
             if (isOutdated) {
                 BlockProt.getInstance().getLogger().warning(

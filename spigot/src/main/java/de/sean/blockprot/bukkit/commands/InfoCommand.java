@@ -24,6 +24,8 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
+import de.sean.blockprot.bukkit.dialogs.InfoDialog;
 import de.sean.blockprot.bukkit.inventories.AdminBlockListInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.PlayerListInventory;
@@ -74,6 +76,10 @@ public final class InfoCommand implements CommandExecutor {
 
         if (args.length < 2) {
             if (sender instanceof Player player) {
+                if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+                    InfoDialog.show(player, DialogOrigin.ADMIN_MENU);
+                    return true;
+                }
                 InventoryState state = new InventoryState(null);
                 state.origin = InventoryState.MenuOrigin.ADMIN_MENU;
                 InventoryState.set(player.getUniqueId(), state);
@@ -111,6 +117,28 @@ public final class InfoCommand implements CommandExecutor {
                 StatHandler.getStatisticByUuid(stat, finalTarget.getUniqueId());
 
                 if (sender instanceof Player player) {
+                    if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+                        player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_HEADER)
+                                .replace("{player}", displayName)));
+                        for (LocationListEntry entry : stat.get()) {
+                            Location loc = entry.get();
+                            if (loc.getWorld() == null) continue;
+                            try {
+                                var block   = loc.getWorld().getBlockAt(loc);
+                                var handler = new BlockNBTHandler(block);
+                                if (!BlockProt.getDefaultConfig().isLockable(block.getType())) continue;
+                                if (!handler.isOwner(finalTarget.getUniqueId())) continue;
+                            } catch (RuntimeException ignored) { continue; }
+                            String line = Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_ENTRY)
+                                .replace("{world}", loc.getWorld().getName())
+                                .replace("{x}",     String.valueOf(loc.getBlockX()))
+                                .replace("{y}",     String.valueOf(loc.getBlockY()))
+                                .replace("{z}",     String.valueOf(loc.getBlockZ()));
+                            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(line));
+                        }
+                        return;
+                    }
                     InventoryState ns = new InventoryState(null);
                     ns.currentPageIndex = 0;
                     ns.origin = InventoryState.MenuOrigin.ADMIN_MENU;

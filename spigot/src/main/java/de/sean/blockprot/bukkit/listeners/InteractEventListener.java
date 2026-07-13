@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.listeners;
 
 import de.sean.blockprot.bukkit.*;
+import de.sean.blockprot.bukkit.dialogs.BlockLockDialog;
 import de.sean.blockprot.bukkit.events.BlockAccessEvent;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
@@ -151,14 +152,18 @@ public class InteractEventListener implements Listener {
                 return;
             }
 
-            BlockProtAPI api = BlockProtAPI.getInstance();
-            if (api == null) return;
-            Inventory inv = api.getLockInventoryForBlock(event.getClickedBlock(), player);
-            if (inv == null) {
-                sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+                BlockLockDialog.showBlock(player, event.getClickedBlock());
             } else {
-                new PlayerSettingsHandler(player).setHasPlayerInteractedWithMenu(true);
-                player.openInventory(inv);
+                BlockProtAPI api = BlockProtAPI.getInstance();
+                if (api == null) return;
+                Inventory inv = api.getLockInventoryForBlock(event.getClickedBlock(), player);
+                if (inv == null) {
+                    sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+                } else {
+                    new PlayerSettingsHandler(player).setHasPlayerInteractedWithMenu(true);
+                    player.openInventory(inv);
+                }
             }
         }
     }

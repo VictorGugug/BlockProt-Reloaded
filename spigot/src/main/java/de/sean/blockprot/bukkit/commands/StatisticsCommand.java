@@ -20,6 +20,9 @@
 
 package de.sean.blockprot.bukkit.commands;
 
+import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
+import de.sean.blockprot.bukkit.dialogs.StatsDialog;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.StatisticsInventory;
 import de.sean.blockprot.bukkit.TranslationKey;
@@ -41,6 +44,11 @@ public class StatisticsCommand implements CommandExecutor {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
             return false;
+        }
+
+        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            StatsDialog.show(player, DialogOrigin.USER_MENU);
+            return true;
         }
 
         final InventoryState state = new InventoryState(null);

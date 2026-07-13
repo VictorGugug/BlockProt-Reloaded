@@ -43,21 +43,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-/** Admin menu GUI. */
 public class AdminMenuInventory extends BlockProtInventory {
 
     private static final int SLOT_LOCKABLES     = 10;
-    private static final int SLOT_RELOAD        = 11;
-    private static final int SLOT_UPDATE        = 12;
-    private static final int SLOT_INTEGRATIONS  = 13;
-    private static final int SLOT_STATS         = 14;
-    private static final int SLOT_DEBUG         = 15;
-    private static final int SLOT_INFO          = 16;
-    private static final int SLOT_WORLD_EXPIRY  = 22;
+    private static final int SLOT_CONFIG        = 11;
+    private static final int SLOT_AUTO_DROP     = 12;
+    private static final int SLOT_RELOAD        = 14;
+    private static final int SLOT_UPDATE        = 15;
+    private static final int SLOT_INTEGRATIONS  = 19;
+    private static final int SLOT_STATS         = 20;
+    private static final int SLOT_DEBUG         = 21;
+    private static final int SLOT_INFO          = 22;
+    private static final int SLOT_ABOUT         = 23;
+    private static final int SLOT_WORLD_EXPIRY  = 28;
+    private static final int SLOT_PROT_DEL      = 29;
+    private static final int SLOT_BACK          = 49;
+
+    private static final int[] SEPARATOR_SLOTS = {0,1,2,3,4,5,6,7,8, 9,13,17, 18,26, 27,35, 36,37,38,39,40,41,42,43,44, 45,46,47,48,50,51,52,53};
 
     public AdminMenuInventory() { super(false); }
 
-    @Override int getSize() { return InventoryConstants.tripleLine; }
+    @Override int getSize() { return InventoryConstants.sextupletLine; }
 
     @Override
     String getTranslatedInventoryName() {
@@ -67,10 +73,17 @@ public class AdminMenuInventory extends BlockProtInventory {
     @NotNull
     public Inventory fill(@NotNull Player player) {
         inventory = createInventory();
+        fillSeparators();
 
         inventory.setItem(SLOT_LOCKABLES, item(Material.CHEST,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__LOCKABLES),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__LOCKABLES_LORE)));
+        inventory.setItem(SLOT_CONFIG, item(Material.REPEATER,
+            "§e" + stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CONFIG)),
+            stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CONFIG_LORE))));
+        inventory.setItem(SLOT_AUTO_DROP, item(Material.DROPPER,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP_LORE)));
         inventory.setItem(SLOT_RELOAD, item(Material.COMPARATOR,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD_LORE)));
@@ -89,13 +102,23 @@ public class AdminMenuInventory extends BlockProtInventory {
         inventory.setItem(SLOT_INFO, item(Material.PLAYER_HEAD,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO_LORE)));
+        inventory.setItem(SLOT_ABOUT, item(Material.NETHER_STAR,
+            "§f" + stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)),
+            stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT_LORE))));
         inventory.setItem(SLOT_WORLD_EXPIRY, item(Material.CLOCK,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY_LORE)));
+        inventory.setItem(SLOT_PROT_DEL, item(Material.BARRIER,
+            Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__TITLE),
+            ""));
 
         InventoryState state = InventoryState.get(player.getUniqueId());
         if (state != null && state.origin != InventoryState.MenuOrigin.NONE) {
-            setBackButton(getSize() - 1);
+            setBackButton(SLOT_BACK);
+        } else {
+            inventory.setItem(SLOT_BACK, item(Material.BARRIER,
+                Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE),
+                Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE_LORE)));
         }
 
         return inventory;
@@ -115,6 +138,14 @@ public class AdminMenuInventory extends BlockProtInventory {
             newState.currentPageIndex = 0;
             InventoryState.set(player.getUniqueId(), newState);
             player.openInventory(new LockablesInventory().fill(player, 0));
+
+        } else if (slot == SLOT_CONFIG) {
+            player.closeInventory();
+            player.performCommand("blockprot admin");
+
+        } else if (slot == SLOT_AUTO_DROP) {
+            player.closeInventory();
+            player.performCommand("blockprot admin");
 
         } else if (slot == SLOT_RELOAD) {
             player.closeInventory();
@@ -166,6 +197,18 @@ public class AdminMenuInventory extends BlockProtInventory {
             InventoryState.set(player.getUniqueId(), newState);
             player.openInventory(new WorldExpiryInventory().fill(player, 0));
 
+        } else if (slot == SLOT_PROT_DEL) {
+            InventoryState newState = InventoryState.builder()
+                .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                .build();
+            newState.currentPageIndex = 0;
+            InventoryState.set(player.getUniqueId(), newState);
+            player.openInventory(new WorldProtDeleteInventory().fill(player, ""));
+
+        } else if (slot == SLOT_ABOUT) {
+            player.closeInventory();
+            player.performCommand("blockprot about");
+
         } else if (slot == SLOT_INFO) {
             player.closeInventory();
             Consumer<String> handleName = inputName -> {
@@ -189,7 +232,6 @@ public class AdminMenuInventory extends BlockProtInventory {
                         String displayName = finalTarget.getName() != null ? finalTarget.getName() : inputName;
                         PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
                         StatHandler.getStatisticByUuid(stat, finalTarget.getUniqueId());
-
                         InventoryState ns = new InventoryState(null);
                         ns.currentPageIndex = 0;
                         ns.origin = InventoryState.MenuOrigin.ADMIN_MENU;
@@ -206,13 +248,34 @@ public class AdminMenuInventory extends BlockProtInventory {
                     Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO), handleName);
             }
 
-        } else if (slot == getSize() - 1) {
+        } else if (slot == SLOT_BACK) {
             goBack(player, state);
         }
     }
 
     @Override
     public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {}
+
+    private void fillSeparators() {
+        ItemStack sep = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta meta = sep.getItemMeta();
+        if (meta != null) {
+            meta.displayName(net.kyori.adventure.text.Component.text(""));
+            sep.setItemMeta(meta);
+        }
+        for (int s : SEPARATOR_SLOTS) {
+            inventory.setItem(s, sep);
+        }
+        ItemStack sectionHeader = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
+        ItemMeta hMeta = sectionHeader.getItemMeta();
+        if (hMeta != null) {
+            hMeta.displayName(net.kyori.adventure.text.Component.text(""));
+            sectionHeader.setItemMeta(hMeta);
+        }
+        inventory.setItem(9, sectionHeader);
+        inventory.setItem(18, sectionHeader);
+        inventory.setItem(27, sectionHeader);
+    }
 
     private ItemStack item(Material mat, String name, String... lore) {
         ItemStack item = new ItemStack(mat);
@@ -225,5 +288,9 @@ public class AdminMenuInventory extends BlockProtInventory {
         meta.lore(loreList);
         item.setItemMeta(meta);
         return item;
+    }
+
+    private static String stripColor(String s) {
+        return s.replaceAll("[§&][0-9a-fk-orx]", "");
     }
 }
