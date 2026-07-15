@@ -1,5 +1,6 @@
 ---
 locale: es
+language_name: Español
 enabled: "§aActivado"
 disabled: "§7Desactivado"
 about:
@@ -32,6 +33,7 @@ inventories:
   paste_configuration: Pegar configuración
   set_block_name: Establecer el nombre del bloque
   inspect_contents: Inspeccionar contenido
+  inspect_contents_empty: "§8Vacío"
   redstone:
     settings: Configuración de Redstone
     redstone_protection: Protección contra redstone
@@ -272,7 +274,7 @@ messages:
   lock_on_place_success: "§aBloque protegido!"
   friends_searching: "§eBuscando a §f{player}§e..."
   friends_addall_success: "§a§f{player}§a añadido como amigo en §f{count}§a bloque(s)."
-  friends_addall_usage: "§cUso: /blockprot friends addall <jugador> o /blockprot amigos agregartodos <jugador>"
+  friends_addall_usage: "§cUso: /blockprot friends addall <jugador>"
   inactivity_cleanup_done: "§eLimpieza de inactividad: §f{count}§e bloque(s) liberado(s)."
   friends_list_title: "§6Tus amigos"
   only_players: "Solo los jugadores pueden usar este comando."
@@ -560,6 +562,8 @@ dialogs:
   click_chat: "Haz clic para ver detalles en el chat."
   integrations:
     count: "{enabled}/{total} activadas"
+    enabled: "§7Activadas"
+    disabled: "§cDesactivadas"
     plugin: "Plugin: {name}"
     dependent: "Dependiente: {name}"
   update:
@@ -577,50 +581,7 @@ dialogs:
   return_admin_menu: "Volver al Menu de Admin."
   return_previous: "Volver al menu anterior."
 
-worlds:
-  scan_start: "Escaneando mundos... ({count} cargados)"
-  scan_world_added: "Mundo '{world}' agregado a worlds.yml con proteccion activada."
-  scan_complete: "Escaneo de mundos completado: {count} mundo(s) detectado(s), {added} agregado(s) a worlds.yml. Detalles en el log de sesion."
-  status: "Estado"
-  protected_count: "Bloques protegidos"
-  no_worlds: "No se encontraron mundos."
-  world_config_hint: "Tiene configuracion por mundo"
-  per_world_config: "Configurar por mundo"
-  worlds: "mundos"
-  configured: "Configurados"
-integrations:
-  lands:
-    protect_containers_flag_name: Proteger contenedores (BlockProt)
-    protect_containers_desc: Permitir a los jugadores a proteger cofres, hornos, ...
-    require_protect_for_friends_flag_name: "Requiere \"Proteger contenedores\" para amigos (BlockProt)"
-    require_protect_for_friends_desc: "Solo los jugadores que tienen el \"Proteger contenedores\" son elegibles para ser agregados a amigos."
-help:
-  header: "§6=== Ayuda de BlockProt ==="
-  footer: "§6=================="
-  block_protection_title: "§6Protección de bloques"
-  block_protection_settings: "§7  /bp §f- Abre tus ajustes personales de protección."
-  friends_title: "§6Amigos"
-  friends_gui: "§7  /bp friends §8(/bp amigos) §f- Abre el menú de amigos predeterminados."
-  friends_addall: "§7  /bp friends addall <jugador> §8(/bp amigos agregartodos) §f- Añade un amigo a todos tus bloques."
-  transfer: "§7  /bp transferall <jugador> §f- Transfiere todos tus bloques protegidos a otro jugador."
-  timed_access: "§7  /bp timed <jugador> <segundos> §f- Otorga acceso temporal a un bloque."
-  admin_info: "§7  /bp info <jugador> §f- Lista todos los bloques de un jugador. (admin)"
-  other_title: "§6Otros"
-  settings: "§7  /bp settings §8(/bp ajustes) §f- Ajustes personales."
-  stats: "§7  /bp stats §8(/bp estadisticas) §f- Ver estadísticas de bloques."
-  about: "§7  /bp about §8(/bp acerca) §f- Información del plugin y del fork."
-  integrations: "§7  /bp integrations §8(/bp integraciones) §f- Lista integraciones activas. (admin)"
-  update: "§7  /bp update §8(/bp actualizar) §f- Comprueba actualizaciones del plugin. (admin)"
-  reload: "§7  /bp reload §8(/bp recargar) §f- Recarga la configuración del plugin. (admin)"
-  disable_hints: "§7  /bp disablehints §8(/bp desactivarsugerencias) §f- Desactiva los mensajes de ayuda de protección."
-  debug: "§7  /bp debug §8(/bp depurar) <run|placeDebugChest|placeDebugShulker|clearSearchHistory> §f- Diagnóstico de desarrollo."
-  unlock: "§7  /bp unlock <jugador> §f- Abre la GUI de desproteger bloques de un jugador. (admin)"
-  lockables: "§7  /bp lockables §f- Explora y alterna qué bloques son protegibles."
-  recommended: "§7  /bp recommended §f- Aplica los ajustes recomendados de protección."
-  world_prot_del: "§7  /bp protdel [mundo] §f- Elimina todas las protecciones de un mundo. (admin)"
-  gui_mode_title: "§6► Modo GUI"
-  gui_user: "§7  /bp user  §f- Abre el Menú de Usuario (ajustes, amigos, estadísticas, acerca de)"
-  gui_admin: "§7  /bp admin §f- Abre el Menú de Admin (recargar, actualizar, integraciones, estadísticas, debug, info, bloqueables)"
+  category_label: "Categoría: "
 
   admin_config:
     title: "Config Admin"
@@ -643,7 +604,16 @@ help:
     language:
       language_file: "El archivo de idioma para traducciones."
       replace_translations: "Auto-actualizar traducciones faltantes."
-      localized_aliases: "Traducir alias de comandos por idioma."
+      status_header: "activado  desactivado  [ACTIVO] en config.yml"
+      toggle_all_enable: "Activar todos los idiomas en lang.yml"
+      toggle_all_disable: "Desactivar todos los idiomas en lang.yml"
+      toggle_all_hint: "Click para activar/desactivar todos"
+      lang_status: "lang.yml: {status}"
+      config_status_active: "activo"
+      config_status_inactive: "no activo"
+      click_disable: "Click para desactivar"
+      click_enable: "Click para activar + establecer como activo"
+      active_marker: "[ACTIVO]"
     worlds:
       per_worlds_config: "Config separada por mundo."
     players:
@@ -690,3 +660,48 @@ help:
       backups: "Crear copias de seguridad automáticas."
     deprecated:
       we_paste_enabled: "Auto-bloqueo de pegado de WorldEdit."
+
+worlds:
+  scan_start: "Escaneando mundos... ({count} cargados)"
+  scan_world_added: "Mundo '{world}' agregado a worlds.yml con proteccion activada."
+  scan_complete: "Escaneo de mundos completado: {count} mundo(s) detectado(s), {added} agregado(s) a worlds.yml. Detalles en el log de sesion."
+  status: "Estado"
+  protected_count: "Bloques protegidos"
+  no_worlds: "No se encontraron mundos."
+  world_config_hint: "Tiene configuracion por mundo"
+  per_world_config: "Configurar por mundo"
+  worlds: "mundos"
+  configured: "Configurados"
+integrations:
+  lands:
+    protect_containers_flag_name: Proteger contenedores (BlockProt)
+    protect_containers_desc: Permitir a los jugadores a proteger cofres, hornos, ...
+    require_protect_for_friends_flag_name: "Requiere \"Proteger contenedores\" para amigos (BlockProt)"
+    require_protect_for_friends_desc: "Solo los jugadores que tienen el \"Proteger contenedores\" son elegibles para ser agregados a amigos."
+help:
+  header: "§6=== Ayuda de BlockProt ==="
+  footer: "§6=================="
+  block_protection_title: "§6Protección de bloques"
+  block_protection_settings: "§7  /bp §f- Abre tus ajustes personales de protección."
+  friends_title: "§6Amigos"
+  friends_gui: "§7  /bp friends §8(/bp amigos) §f- Abre el menú de amigos predeterminados."
+  friends_addall: "§7  /bp friends addall <jugador> §f- Añade un amigo a todos tus bloques."
+  transfer: "§7  /bp transferall <jugador> §f- Transfiere todos tus bloques protegidos a otro jugador."
+  timed_access: "§7  /bp timed <jugador> <segundos> §f- Otorga acceso temporal a un bloque."
+  admin_info: "§7  /bp info <jugador> §f- Lista todos los bloques de un jugador. (admin)"
+  other_title: "§6Otros"
+  settings: "§7  /bp settings §8(/bp ajustes) §f- Ajustes personales."
+  stats: "§7  /bp stats §8(/bp estadisticas) §f- Ver estadísticas de bloques."
+  about: "§7  /bp about §8(/bp acerca) §f- Información del plugin y del fork."
+  integrations: "§7  /bp integrations §8(/bp integraciones) §f- Lista integraciones activas. (admin)"
+  update: "§7  /bp update §8(/bp actualizar) §f- Comprueba actualizaciones del plugin. (admin)"
+  reload: "§7  /bp reload §8(/bp recargar) §f- Recarga la configuración del plugin. (admin)"
+  disable_hints: "§7  /bp disablehints §8(/bp desactivarsugerencias) §f- Desactiva los mensajes de ayuda de protección."
+  debug: "§7  /bp debug §8(/bp depurar) <run|placeDebugChest|placeDebugShulker|clearSearchHistory> §f- Diagnóstico de desarrollo."
+  unlock: "§7  /bp unlock <jugador> §f- Abre la GUI de desproteger bloques de un jugador. (admin)"
+  lockables: "§7  /bp lockables §f- Explora y alterna qué bloques son protegibles."
+  recommended: "§7  /bp recommended §f- Aplica los ajustes recomendados de protección."
+  world_prot_del: "§7  /bp protdel [mundo] §f- Elimina todas las protecciones de un mundo. (admin)"
+  gui_mode_title: "§6► Modo GUI"
+  gui_user: "§7  /bp user  §f- Abre el Menú de Usuario (ajustes, amigos, estadísticas, acerca de)"
+  gui_admin: "§7  /bp admin §f- Abre el Menú de Admin (recargar, actualizar, integraciones, estadísticas, debug, info, bloqueables)"

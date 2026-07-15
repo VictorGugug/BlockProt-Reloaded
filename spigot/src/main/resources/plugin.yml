@@ -4,7 +4,7 @@ main: de.sean.blockprot.bukkit.BlockProt
 api-version: '1.21.1'
 authors: [ Zar ]
 description: Block protection plugin, BlockProt Reloaded
-prefix: BlockProt
+prefix: BlockProt Reloaded
 website: https://github.com/VictorGugug/BlockProt-Reloaded
 folia-supported: true
 permissions:

@@ -20,7 +20,6 @@
 
 package de.sean.blockprot.bukkit;
 
-import com.google.common.collect.Sets;
 import de.sean.blockprot.nbt.LockReturnValue;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -29,8 +28,9 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -63,13 +63,13 @@ import java.util.regex.Pattern;
  */
 public final class Translator {
 
-    public static final HashSet<String> DEFAULT_TRANSLATION_FILES = Sets.newHashSet(
+    public static final LinkedHashSet<String> DEFAULT_TRANSLATION_FILES = new LinkedHashSet<>(Arrays.asList(
         "translations_cs.yml", "translations_de.yml", "translations_en.yml",
         "translations_es.yml", "translations_fr.yml", "translations_it.yml",
         "translations_ja.yml", "translations_ko.yml", "translations_pl.yml",
         "translations_pt-br.yml", "translations_ru.yml", "translations_sk.yml",
         "translations_tr.yml", "translations_zh-CN.yml", "translations_zh-TW.yml"
-    );
+    ));
 
     @NotNull
     public static final Locale defaultLocale = Locale.UK;
@@ -79,8 +79,6 @@ public final class Translator {
 
     @NotNull
     private static Locale locale = defaultLocale;
-
-    static String DEFAULT_FALLBACK = "";
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
 
@@ -210,5 +208,38 @@ public final class Translator {
 
     public static void resetTranslations() {
         values.clear();
+    }
+
+    public static int computeCompletionPercentage(@NotNull YamlConfiguration langFile) {
+        int presentKeys = 0;
+        for (TranslationKey translation : TranslationKey.values()) {
+            String key = translation.toString();
+            if (langFile.isConfigurationSection(key)) continue;
+            Object value = langFile.get(key);
+            if (value instanceof String && !((String) value).isEmpty()) {
+                presentKeys++;
+            }
+        }
+        int totalKeys = TranslationKey.values().length;
+        if (totalKeys == 0) return 0;
+        return (int) Math.round(100.0 * presentKeys / totalKeys);
+    }
+
+    public static int countMissingKeys(@NotNull YamlConfiguration langFile, @NotNull YamlConfiguration reference) {
+        int missing = 0;
+        for (TranslationKey translation : TranslationKey.values()) {
+            String key = translation.toString();
+            if (reference.contains(key, true) && !reference.isConfigurationSection(key)) {
+                if (!langFile.contains(key, true) || langFile.isConfigurationSection(key)) {
+                    missing++;
+                } else {
+                    Object val = langFile.get(key);
+                    if (!(val instanceof String) || ((String) val).isEmpty()) {
+                        missing++;
+                    }
+                }
+            }
+        }
+        return missing;
     }
 }

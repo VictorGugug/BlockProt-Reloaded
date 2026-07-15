@@ -1,6 +1,7 @@
 # BlockProt Reloaded - translations_en.yml
 # Reference English translation file.
 locale: en
+language_name: English
 enabled: "§aEnabled"
 disabled: "§7Disabled"
 
@@ -35,6 +36,7 @@ inventories:
   paste_configuration: "Paste configuration"
   set_block_name: "Set block name"
   inspect_contents: "Inspect contents"
+  inspect_contents_empty: "§8Empty"
   redstone:
     settings: "Block Settings"
     redstone_protection: "Redstone protection"
@@ -501,6 +503,9 @@ dialogs:
     header: "Admin Menu"
   settings:
     header: "Settings"
+    auto_lock_desc: "Automatically lock blocks when placed."
+    hints_desc: "Show action bar hints for locked blocks."
+    notifications_desc: "Receive access notification messages."
   friends:
     header: "Friends"
     manage_hint: "Manage your default friends list:"
@@ -519,6 +524,8 @@ dialogs:
     server_total: "Server Total: "
   integrations:
     count: "{enabled}/{total} enabled"
+    enabled: "§aEnabled"
+    disabled: "§7Disabled"
     plugin: "Plugin: {name}"
     dependent: "Dependent: {name}"
   lockables:
@@ -636,7 +643,16 @@ dialogs:
     language:
       language_file: "The language file for translations."
       replace_translations: "Auto-update translations with missing keys."
-      localized_aliases: "Translate command aliases per language."
+      status_header: "enabled  disabled  [ACTIVE] in config.yml"
+      toggle_all_enable: "Enable all languages in lang.yml"
+      toggle_all_disable: "Disable all languages in lang.yml"
+      toggle_all_hint: "Click to toggle every language"
+      lang_status: "lang.yml: {status}"
+      config_status_active: "active"
+      config_status_inactive: "not active"
+      click_disable: "Click to disable"
+      click_enable: "Click to enable + set as active"
+      active_marker: "[ACTIVE]"
     worlds:
       per_worlds_config: "Separate config per world."
     players:

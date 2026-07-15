@@ -17,9 +17,6 @@ fallback_string: "Unknown translation"
 # Whether the plugin should automatically update translations with missing keys.
 replace_translations: true
 
-# Translate command aliases for the player's language if supported.
-localized_command_aliases: true
-
 # -------------------------------------------------------------------
 # -- Worlds --
 # -------------------------------------------------------------------
@@ -190,13 +187,3 @@ enable_session_log: true
 # Create database backups automatically.
 enable_backups: true
 
-# -------------------------------------------------------------------
-# -- Deprecated (moved to integrations.yml) --
-# -------------------------------------------------------------------
-# worldedit.paste_autolock.*
-
-worldedit_paste_autolock:
-  enabled: false
-  radius: 24
-  max_blocks_per_paste: 5000
-  delay_ticks: 20
