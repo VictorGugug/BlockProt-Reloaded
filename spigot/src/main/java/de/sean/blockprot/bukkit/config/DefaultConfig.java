@@ -368,8 +368,6 @@ public final class DefaultConfig extends BlockProtConfig {
     }
 
     public boolean shouldEnableAllOptionalFeatures() { return false; }
-    public boolean isLocalizedCommandAliasesEnabled() { return config.getBoolean("localized_command_aliases", true); }
-
     public long getTimedAccessMaxDurationSeconds() {
         int days = config.getInt("timed_access_max_duration_days", 90);
         if (days <= 0) return Long.MAX_VALUE;
@@ -413,16 +411,6 @@ public final class DefaultConfig extends BlockProtConfig {
     public boolean shouldBlockProtectedBlockPistonMovement() {
         return !config.contains("block_protected_block_piston_movement") || config.getBoolean("block_protected_block_piston_movement");
     }
-    @Deprecated
-    public boolean isWorldEditPasteAutolockEnabled() {
-        return config.getBoolean("worldedit_paste_autolock.enabled", false);
-    }
-    @Deprecated
-    public int    getWorldEditPasteAutolockRadius()       { return Math.max(1, config.getInt("worldedit_paste_autolock.radius", 24)); }
-    @Deprecated
-    public int    getWorldEditPasteAutolockMaxBlocks()    { return Math.max(1, config.getInt("worldedit_paste_autolock.max_blocks_per_paste", 5000)); }
-    @Deprecated
-    public long   getWorldEditPasteAutolockDelayTicks()   { return Math.max(1L, config.getLong("worldedit_paste_autolock.delay_ticks", 20L)); }
 
     @NotNull public List<String> getBedrockUsernamePrefixes() {
         return config.contains("bedrock_username_prefixes") ? config.getStringList("bedrock_username_prefixes") : List.of(".", "*", "_");

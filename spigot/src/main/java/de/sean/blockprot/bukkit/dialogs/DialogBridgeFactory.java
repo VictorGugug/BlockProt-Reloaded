@@ -28,17 +28,27 @@ import org.jetbrains.annotations.Nullable;
 public final class DialogBridgeFactory {
 
     private static @Nullable DialogBridge bridge;
+    private static boolean loggedNoApi = false;
 
     private DialogBridgeFactory() {}
 
     @Nullable
     public static DialogBridge getBridge() {
         if (bridge != null) return bridge;
-        if (!VersionCompat.hasDialogApi()) return null;
+        if (!VersionCompat.hasDialogApi()) {
+            if (!loggedNoApi) {
+                BlockProt.getInstance().getLogger().warning(
+                    "Dialog API not found (requires Paper 1.21.7+). Falling back to inventories.");
+                loggedNoApi = true;
+            }
+            return null;
+        }
         try {
             Class<?> clazz = Class.forName("de.sean.blockprot.bukkit.dialogs.impl.PaperDialogBridge");
             bridge = (DialogBridge) clazz.getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException e) {
+            BlockProt.getInstance().getLogger().severe(
+                "Failed to load PaperDialogBridge: " + e.getMessage());
             bridge = null;
         }
         return bridge;

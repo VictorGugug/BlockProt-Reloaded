@@ -24,10 +24,17 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.config.LangConfig;
 import de.sean.blockprot.bukkit.inventories.AnvilInput;
 import de.sean.blockprot.bukkit.inventories.SignInput;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import org.bukkit.configuration.file.YamlConfiguration;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -35,6 +42,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public final class AdminConfigDialog {
 
@@ -97,28 +105,120 @@ public final class AdminConfigDialog {
             PASTEL_GOLD, TextDecoration.BOLD);
 
         List<DialogBodyEntry> body = new ArrayList<>();
-        body.add(DialogBodyEntry.text(Component.text(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_LANGUAGE), SOFT_GRAY)));
+        body.add(DialogBodyEntry.text(Component.text(
+            stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__STATUS_HEADER)), SOFT_GRAY)));
+
+        BlockProt plugin = BlockProt.getInstance();
+        String currentLang = cfg.getLanguageFile();
+        String[] allLangs = Translator.DEFAULT_TRANSLATION_FILES.toArray(new String[0]);
 
         List<DialogButton> buttons = new ArrayList<>();
-        String lang = cfg.getLanguageFile();
-        buttons.add(valueBtn("language_file", "language_file",
-            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__LANGUAGE_FILE),
-            lang,
+
+        boolean anyDisabled = false;
+        for (String lang : allLangs) {
+            if (!LangConfig.isLanguageEnabled(lang)) {
+                anyDisabled = true;
+                break;
+            }
+        }
+        boolean allEnabled = !anyDisabled;
+        String toggleLabel = allEnabled
+            ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_DISABLE))
+            : stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_ENABLE));
+        String toggleHint = stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_HINT));
+        buttons.add(new DialogButton("toggle_all",
+            Component.text()
+                .append(Component.text(allEnabled ? "○ " : "● ", allEnabled ? PASTEL_CORAL : PASTEL_MINT))
+                .append(Component.text(toggleLabel, NamedTextColor.WHITE))
+                .build(),
+            Component.text(toggleHint, TextColor.color(0x888888)),
             p -> {
-                String next = lang.contains("es") ? "translations_en.yml" : "translations_es.yml";
-                cfg.setLanguageFile(next);
+                for (String lang : allLangs) {
+                    LangConfig.setLanguageEnabled(lang, !allEnabled);
+                }
                 showLanguage(p, backOrigin);
             }));
+
+        for (String lang : allLangs) {
+            boolean isConfigLang = lang.equals(currentLang);
+            boolean isEnabled = LangConfig.isLanguageEnabled(lang);
+            String label = getLanguageLabel(plugin, lang);
+
+            TextColor c = isEnabled ? PASTEL_MINT : PASTEL_CORAL;
+            Component labelComp = isConfigLang
+                ? Component.text().append(Component.text(label, isEnabled ? NamedTextColor.WHITE : SOFT_GRAY))
+                    .append(Component.text(" "
+                        + stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__ACTIVE_MARKER)),
+                        PASTEL_GOLD)).build()
+                : Component.text(label, isEnabled ? NamedTextColor.WHITE : SOFT_GRAY);
+            String langStatus = isEnabled ? "enabled" : "disabled";
+            String configStatus = isConfigLang
+                ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CONFIG_STATUS_ACTIVE))
+                : stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CONFIG_STATUS_INACTIVE));
+            String clickAction = isEnabled
+                ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CLICK_DISABLE))
+                : stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CLICK_ENABLE));
+            buttons.add(new DialogButton("lang_" + lang,
+                Component.text()
+                    .append(Component.text(isEnabled ? "● " : "○ ", c))
+                    .append(labelComp)
+                    .build(),
+                Component.join(JoinConfiguration.newlines(),
+                    Component.text(stripColor(Translator.get(
+                        TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__LANG_STATUS))
+                        .replace("{status}", langStatus), c),
+                    Component.text("config.yml: " + configStatus, isConfigLang ? PASTEL_GOLD : SOFT_GRAY),
+                    Component.text(clickAction, TextColor.color(0x888888))),
+                p -> {
+                    if (isEnabled) {
+                        LangConfig.setLanguageEnabled(lang, false);
+                    } else {
+                        LangConfig.setLanguageEnabled(lang, true);
+                        cfg.setLanguageFile(lang);
+                    }
+                    showLanguage(p, backOrigin);
+                }));
+        }
+
         buttons.add(toggleBtn("replace_translations", "replace_translations",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__REPLACE_TRANSLATIONS),
             cfg.shouldReplaceTranslations(),
             p -> { cfg.setAndSave("replace_translations", !cfg.shouldReplaceTranslations()); showLanguage(p, backOrigin); }));
-        buttons.add(toggleBtn("localized_command_aliases", "localized_command_aliases",
-            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__LOCALIZED_ALIASES),
-            cfg.isLocalizedCommandAliasesEnabled(),
-            p -> { cfg.setAndSave("localized_command_aliases", !cfg.isLocalizedCommandAliasesEnabled()); showLanguage(p, backOrigin); }));
 
         bridgeReturn(player, bridge, title, body, buttons, backOrigin);
+    }
+
+    private static @Nullable YamlConfiguration loadLanguageFile(@NotNull BlockProt plugin, @NotNull String fileName) {
+        File diskFile = new File(plugin.getDataFolder(), "lang/" + fileName);
+        try {
+            if (diskFile.exists()) {
+                return YamlConfiguration.loadConfiguration(diskFile);
+            }
+            InputStream jarStream = plugin.getResource("lang/" + fileName);
+            if (jarStream == null) return null;
+            return YamlConfiguration.loadConfiguration(
+                new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private static String getLanguageName(@NotNull BlockProt plugin, @NotNull String fileName) {
+        YamlConfiguration langFile = loadLanguageFile(plugin, fileName);
+        if (langFile == null) return fileName;
+        String name = langFile.getString("language_name");
+        if (name != null && !name.isEmpty()) return name;
+        return langFile.getString("locale", fileName);
+    }
+
+    private static int computeCompletion(@NotNull BlockProt plugin, @NotNull String fileName) {
+        YamlConfiguration langFile = loadLanguageFile(plugin, fileName);
+        if (langFile == null) return 0;
+        return Translator.computeCompletionPercentage(langFile);
+    }
+
+    private static String getLanguageLabel(@NotNull BlockProt plugin, @NotNull String fileName) {
+        return getLanguageName(plugin, fileName) + " (" + computeCompletion(plugin, fileName) + "%)";
     }
 
     // -- Worlds --
@@ -537,21 +637,6 @@ public final class AdminConfigDialog {
             handler);
     }
 
-    private static DialogButton cycleBtn(String id, String configKey, String label, String currentValue,
-                                          String[] options, DialogButton.DialogClickHandler handler) {
-        return new DialogButton(id,
-            Component.text()
-                .append(Component.text(configKey, NamedTextColor.WHITE))
-                .append(Component.text(": ", SOFT_GRAY))
-                .append(Component.text(currentValue, NamedTextColor.WHITE))
-                .build(),
-            Component.join(JoinConfiguration.newlines(),
-                Component.text(label, SOFT_GRAY),
-                Component.text("Current: " + currentValue, TextColor.color(0x888888)),
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_CYCLE)) + " " + String.join(", ", options), TextColor.color(0x888888))),
-            handler);
-    }
-
     private static void bridgeReturn(@NotNull Player player, @NotNull DialogBridge bridge,
                                        @NotNull Component title, @NotNull List<DialogBodyEntry> body,
                                        @NotNull List<DialogButton> buttons, @NotNull DialogOrigin backOrigin) {
@@ -571,13 +656,6 @@ public final class AdminConfigDialog {
 
     private static Component returnHint() {
         return Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__RETURN_CATEGORIES)), TextColor.color(0x888888));
-    }
-
-    private static int indexOf(String[] arr, String value) {
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i].equals(value)) return i;
-        }
-        return -1;
     }
 
     private static String stripColor(String s) {

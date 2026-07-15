@@ -29,6 +29,7 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.config.LangConfig;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.integrations.PluginIntegration;
 import de.sean.blockprot.bukkit.integrations.ViaVersionIntegration;
@@ -39,6 +40,7 @@ import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -48,6 +50,8 @@ import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -127,6 +131,7 @@ public class DebugCommand implements CommandExecutor {
         runGroup(player, passed, failed, "1.  Config",              () -> checkConfig(player, passed, failed));
         runGroup(player, passed, failed, "2.  BukkitCompat",       () -> checkBukkitCompat(player, passed, failed));
         runGroup(player, passed, failed, "3.  Translations",       () -> checkTranslations(player, passed, failed));
+        runGroup(player, passed, failed, "3b. Language files",     () -> checkLanguages(player, passed, failed));
         runGroup(player, passed, failed, "4.  Lockable blocks",    () -> checkLockableMaterials(player, passed, failed));
         runGroup(player, passed, failed, "5.  Lockable entities",  () -> checkLockableEntities(player, passed, failed));
         runGroup(player, passed, failed, "6.  Item frame protect", () -> checkItemFrameProtection(player, passed, failed));
@@ -248,6 +253,82 @@ public class DebugCommand implements CommandExecutor {
             p.incrementAndGet();
         } else {
             BlockProtLogger.fail("Translations", errors + " key(s) threw exceptions"); f.incrementAndGet();
+        }
+    }
+
+    private void checkLanguages(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            BlockProt plugin = BlockProt.getInstance();
+            String active = BlockProt.getDefaultConfig().getLanguageFile();
+            String[] allLangs = Translator.DEFAULT_TRANSLATION_FILES.toArray(new String[0]);
+
+            int totalKeys = TranslationKey.values().length;
+            int langOk = 0, langFail = 0, skipped = 0;
+
+            for (String fileName : allLangs) {
+                if (!LangConfig.isLanguageEnabled(fileName)) {
+                    skipped++;
+                    continue;
+                }
+                boolean isActive = fileName.equals(active);
+                YamlConfiguration langFile = null;
+                File diskFile = new File(plugin.getDataFolder(), "lang/" + fileName);
+                try {
+                    if (diskFile.exists()) {
+                        langFile = YamlConfiguration.loadConfiguration(diskFile);
+                    } else {
+                        InputStream jarStream = plugin.getResource("lang/" + fileName);
+                        if (jarStream == null) {
+                            BlockProtLogger.fail("Language file", fileName + ": not found on disk or in jar");
+                            langFail++; continue;
+                        }
+                        langFile = YamlConfiguration.loadConfiguration(
+                            new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
+                    }
+                } catch (Exception e) {
+                    BlockProtLogger.fail("Language file", fileName + ": load error: " + e.getMessage());
+                    langFail++; continue;
+                }
+
+                int presentKeys = 0;
+                List<String> missingKeys = new ArrayList<>();
+                for (TranslationKey key : TranslationKey.values()) {
+                    String k = key.toString();
+                    if (langFile.isConfigurationSection(k)) continue;
+                    Object value = langFile.get(k);
+                    if (value instanceof String && !((String) value).isEmpty()) {
+                        presentKeys++;
+                    } else {
+                        missingKeys.add(key.name());
+                    }
+                }
+                int pct = totalKeys == 0 ? 0 : (int) Math.round(100.0 * presentKeys / totalKeys);
+                String status = isActive ? "ACTIVE" : "inactive";
+                BlockProtLogger.log("  [" + status + "] " + fileName + "  (" + pct + "% - " + presentKeys + "/" + totalKeys + ")");
+                if (pct < 100) {
+                    int totalMissing = missingKeys.size();
+                    int showCount = Math.min(totalMissing, 5);
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < showCount; i++) {
+                        if (i > 0) sb.append(" ");
+                        sb.append(missingKeys.get(i));
+                    }
+                    if (totalMissing > showCount) sb.append(" ...");
+                    BlockProtLogger.log("    missing=" + totalMissing + " ex: " + sb);
+                }
+                langOk++;
+            }
+
+            if (langFail == 0) {
+                BlockProtLogger.pass("Language files: " + langOk + " enabled/" + (allLangs.length - skipped) + " checked, " + skipped + " disabled (skipped)");
+                p.incrementAndGet();
+            } else {
+                BlockProtLogger.fail("Language files", langFail + " file(s) could not be loaded");
+                f.incrementAndGet();
+            }
+        } catch (Exception e) {
+            BlockProtLogger.fail("Language files", e.getMessage());
+            f.incrementAndGet();
         }
     }
 

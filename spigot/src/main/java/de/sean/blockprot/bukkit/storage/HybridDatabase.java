@@ -199,7 +199,7 @@ public final class HybridDatabase {
                 }
             }
         } catch (SQLException e) {
-            plugin.getLogger().warning("[BlockProt] getBlockIndexByWorld failed: " + e.getMessage());
+            plugin.getLogger().warning("getBlockIndexByWorld failed: " + e.getMessage());
         }
         return result;
     }

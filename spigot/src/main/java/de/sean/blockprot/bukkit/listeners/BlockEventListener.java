@@ -142,6 +142,7 @@ public class BlockEventListener implements Listener {
                     BlockCountStatistic countStat = new BlockCountStatistic();
                     StatHandler.getStatistic(countStat);
                     countStat.decrement();
+                    StatHandler.markDirty();
                 }
             }
             HopperEventListener.invalidate(event.getBlock());

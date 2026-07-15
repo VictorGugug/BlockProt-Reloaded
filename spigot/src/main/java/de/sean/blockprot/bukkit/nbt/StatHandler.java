@@ -92,7 +92,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
         .build();
 
     /** Marks the in-memory NBT as modified. Call after every addBlock / removeContainer. */
-    static void markDirty() { dirty = true; }
+    public static void markDirty() { dirty = true; }
 
     /** Internal constructor to copy the NBT compound. */
     private StatHandler(@NotNull final NBTCompound compound) {

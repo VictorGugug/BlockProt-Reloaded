@@ -25,7 +25,6 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.RedstoneSettingsHandler;
-import de.sean.blockprot.bukkit.util.BlockUtil;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -60,15 +59,6 @@ public class RedstoneSettingsInventory extends BlockProtInventory {
         ItemStack item = event.getCurrentItem();
         if (item == null) return;
         Player player = (Player) event.getWhoClicked();
-
-        // Slot 0 is the block material icon.
-        if (event.getSlot() == 0) {
-            BlockNBTHandler handler = getNbtHandlerOrNull(state.getBlock());
-            closeAndOpen(player,
-                handler == null ? null : new BlockLockInventory().fill(player, state.getBlock().getType(), handler));
-            event.setCancelled(true);
-            return;
-        }
 
         switch (item.getType()) {
             case REDSTONE -> {
@@ -147,39 +137,20 @@ public class RedstoneSettingsInventory extends BlockProtInventory {
         pistonProtection = redstoneHandler.getPistonProtection();
         hopperProtection = redstoneHandler.getHopperProtection();
 
-        // Slot 0: show the actual block type (CHEST, FURNACE, etc.)
-        Material blockMat = getProperMaterial(state.getBlock().getType());
-        String blockName = BlockUtil.getHumanReadableBlockName(state.getBlock().getType());
-        String custName = nbtHandler.getName().replaceAll("[§&][0-9a-fk-orx]", "");
-        net.kyori.adventure.text.Component displayName = net.kyori.adventure.text.Component.text(blockName);
-        org.bukkit.inventory.ItemStack blockItem = new org.bukkit.inventory.ItemStack(blockMat, 1);
-        org.bukkit.inventory.meta.ItemMeta blockMeta = blockItem.getItemMeta();
-        if (blockMeta != null) {
-            blockMeta.displayName(displayName);
-            if (!custName.isEmpty() && !blockName.equalsIgnoreCase(custName)) {
-                blockMeta.lore(java.util.List.of(
-                    net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                        .legacySection().deserialize("§7" + custName)
-                ));
-            }
-            blockItem.setItemMeta(blockMeta);
-        }
-        inventory.setItem(0, blockItem);
-
         setEnchantedOptionItemStack(
-            1,
+            0,
             Material.REDSTONE,
             TranslationKey.INVENTORIES__REDSTONE__REDSTONE_PROTECTION,
             currentProtection
         );
         setEnchantedOptionItemStack(
-            2,
+            1,
             Material.HOPPER,
             TranslationKey.INVENTORIES__REDSTONE__HOPPER_PROTECTION,
             hopperProtection
         );
         setEnchantedOptionItemStack(
-            3,
+            2,
             Material.PISTON,
             TranslationKey.INVENTORIES__REDSTONE__PISTON_PROTECTION,
             pistonProtection

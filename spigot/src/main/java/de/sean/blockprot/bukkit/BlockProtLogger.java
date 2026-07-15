@@ -44,10 +44,18 @@ public final class BlockProtLogger {
     private static final DateTimeFormatter FILE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
     private static final DateTimeFormatter LINE_FMT = DateTimeFormatter.ofPattern("HH:mm:ss");
 
+    private static final java.util.regex.Pattern COLOR_STRIP =
+        java.util.regex.Pattern.compile("(?i)§[0-9a-fk-orx]|§x(?:§[0-9a-f]){6}");
+
     @Nullable private static PrintWriter writer         = null;
     @Nullable private static File        currentLogFile = null;
+    @Nullable private static File        logsDir        = null;
 
     private static boolean enabled = true;
+    private static int rotationCount = 0;
+    private static long lastKnownLength = 0;
+
+    @Nullable private static String fileTimestamp = null;
 
     @Nullable private static java.util.function.Function<String, String> secondaryTranslator = null;
 
@@ -61,26 +69,60 @@ public final class BlockProtLogger {
         enabled = sessionLogEnabled;
         if (!enabled) return;
 
-        File logsDir = new File(dataFolder, "logs");
+        logsDir = new File(dataFolder, "logs");
         if (!logsDir.exists()) logsDir.mkdirs();
 
-        String timestamp = LocalDateTime.now().format(FILE_FMT);
-        currentLogFile = new File(logsDir, "blockprot-" + timestamp + ".log");
+        fileTimestamp = LocalDateTime.now().format(FILE_FMT);
+        rotationCount = 0;
+        openNewFile();
+    }
 
+    private static void openNewFile() {
+        if (writer != null) {
+            writer.flush();
+            writer.close();
+            writer = null;
+        }
+        if (logsDir == null || fileTimestamp == null) return;
+
+        String suffix = rotationCount > 0 ? "_" + rotationCount : "";
+        currentLogFile = new File(logsDir, "blockprot-" + fileTimestamp + suffix + ".log");
         int n = 1;
         while (currentLogFile.exists()) {
-            currentLogFile = new File(logsDir, "blockprot-" + timestamp + "_" + n + ".log");
+            suffix = "_" + n;
+            currentLogFile = new File(logsDir, "blockprot-" + fileTimestamp + suffix + ".log");
             n++;
         }
 
         try {
             writer = new PrintWriter(new OutputStreamWriter(new FileOutputStream(currentLogFile), StandardCharsets.UTF_8));
-            log("=== BlockProt Session Start ===");
+            lastKnownLength = 0;
+            rotationCount++;
+            String startMsg = rotationCount == 1
+                ? "=== BlockProt Session Start ==="
+                : "=== BlockProt Session Start (rotated) ===";
+            log(startMsg);
         } catch (IOException e) {
             writer = null;
             currentLogFile = null;
             java.util.logging.Logger.getLogger("BlockProt").severe(
                 "[BlockProt] CRITICAL: Failed to initialise plugin log file: " + e.getMessage());
+        }
+    }
+
+    private static void checkFile() {
+        if (writer == null || currentLogFile == null) return;
+        boolean needsRotation = false;
+        if (!currentLogFile.exists()) {
+            needsRotation = true;
+        } else {
+            long currentLength = currentLogFile.length();
+            if (currentLength < lastKnownLength) {
+                needsRotation = true;
+            }
+        }
+        if (needsRotation) {
+            openNewFile();
         }
     }
 
@@ -94,14 +136,18 @@ public final class BlockProtLogger {
     }
 
     public static void log(@NotNull String message) {
-        if (!enabled || writer == null) return;
-        String line = "[" + LocalDateTime.now().format(LINE_FMT) + "] " + message;
+        if (!enabled) return;
+        checkFile();
+        if (writer == null) return;
+        String line = "[" + LocalDateTime.now().format(LINE_FMT) + "] "
+            + COLOR_STRIP.matcher(message).replaceAll("");
         if (secondaryTranslator != null) {
             String alt = secondaryTranslator.apply(message);
             if (alt != null && !alt.equals(message)) line += "  |  " + alt;
         }
         writer.println(line);
         writer.flush();
+        lastKnownLength = currentLogFile != null ? currentLogFile.length() : 0;
     }
 
     public static void log(@NotNull String section, @NotNull String message) {

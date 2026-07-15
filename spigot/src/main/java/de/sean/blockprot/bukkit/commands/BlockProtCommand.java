@@ -105,12 +105,13 @@ public final class BlockProtCommand implements TabExecutor {
 
         String sub = args[0].toLowerCase(Locale.ROOT);
 
-        CommandExecutor adminExec = ADMIN_COMMANDS.get(sub);
-        if (adminExec != null) {
-            return adminExec.onCommand(sender, command, label, args);
-        }
-
         if (menusEnabled) {
+            CommandExecutor adminExec = ADMIN_COMMANDS.get(sub);
+            if (adminExec != null) {
+                sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                    Translator.get(TranslationKey.MESSAGES__CMD_USAGE_MENUS)));
+                return true;
+            }
             CommandExecutor exec = GUI_COMMANDS.get(sub);
             if (exec == null) {
                 sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
@@ -119,6 +120,10 @@ public final class BlockProtCommand implements TabExecutor {
             }
             return exec.onCommand(sender, command, label, args);
         } else {
+            CommandExecutor adminExec = ADMIN_COMMANDS.get(sub);
+            if (adminExec != null) {
+                return adminExec.onCommand(sender, command, label, args);
+            }
             CommandExecutor exec = CLI_COMMANDS.get(sub);
             if (exec == null) {
                 if (GUI_COMMANDS.containsKey(sub)) {
@@ -149,7 +154,9 @@ public final class BlockProtCommand implements TabExecutor {
         boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
         Map<String, CommandExecutor> visible = menusEnabled ? GUI_COMMANDS : CLI_COMMANDS;
         Map<String, CommandExecutor> combined = new LinkedHashMap<>(visible);
-        combined.putAll(ADMIN_COMMANDS);
+        if (!menusEnabled) {
+            combined.putAll(ADMIN_COMMANDS);
+        }
 
         String partial = args.length == 1 ? args[0].toLowerCase(Locale.ROOT) : "";
         List<String> result = new ArrayList<>();

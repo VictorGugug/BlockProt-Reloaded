@@ -65,7 +65,7 @@ public final class AdminMenuDialog {
         String reload = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD));
         String update = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE));
         String integrations = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS));
-        String config = "Config";
+        String config = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CONFIG));
         String stats = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS));
         String debug = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG));
         String info = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO));

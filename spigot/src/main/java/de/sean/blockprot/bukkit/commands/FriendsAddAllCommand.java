@@ -44,7 +44,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Handles the {@code /blockprot friends} subcommand.
@@ -182,7 +181,7 @@ public final class FriendsAddAllCommand implements CommandExecutor {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                                 @NotNull String alias, @NotNull String[] args) {
         if (args.length == 2)
-            return isAddAllAliasPrefix(args[1]) ? List.of(preferredAddAllAlias()) : Collections.emptyList();
+            return isAddAllAliasPrefix(args[1]) ? List.of("addall") : Collections.emptyList();
         if (args.length == 3 && isAddAllAlias(args[1]))
             return Bukkit.getOnlinePlayers().stream()
                 .map(Player::getName)
@@ -196,30 +195,10 @@ public final class FriendsAddAllCommand implements CommandExecutor {
     }
 
     private boolean isAddAllAlias(@NotNull String value) {
-        String normalized = value.toLowerCase(Locale.ROOT);
-        if (normalized.equals("addall")) return true;
-        try {
-            return BlockProt.getDefaultConfig().isLocalizedCommandAliasesEnabled()
-                && Translator.getLocale().getLanguage().equalsIgnoreCase("es")
-                && normalized.equals("agregartodos");
-        } catch (AssertionError ignored) {
-            return false;
-        }
+        return value.equalsIgnoreCase("addall");
     }
 
     private boolean isAddAllAliasPrefix(@NotNull String value) {
-        String normalized = value.toLowerCase(Locale.ROOT);
-        return preferredAddAllAlias().startsWith(normalized) || "addall".startsWith(normalized);
-    }
-
-    @NotNull
-    private String preferredAddAllAlias() {
-        try {
-            if (BlockProt.getDefaultConfig().isLocalizedCommandAliasesEnabled()
-                && Translator.getLocale().getLanguage().equalsIgnoreCase("es")) {
-                return "agregartodos";
-            }
-        } catch (AssertionError ignored) {}
-        return "addall";
+        return "addall".startsWith(value.toLowerCase(java.util.Locale.ROOT));
     }
 }

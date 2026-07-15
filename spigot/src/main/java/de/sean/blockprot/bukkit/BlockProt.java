@@ -387,20 +387,25 @@ public final class BlockProt extends JavaPlugin {
         this.convertBlocksFormatIfNeeded();
         saveResourceSilent("mysql/mysql.yml", false);
         saveResourceSilent("worlds.yml", false);
-        saveResourceSilent("lang.yml", false);
+        saveResourceSilent("lang/lang.yml", false);
         LangConfig.reload();
         this.reloadConfig();
         defaultConfig = new DefaultConfig(this.getConfig(), this.getDataFolder());
 
         Translator.resetTranslations();
-        Translator.DEFAULT_FALLBACK = defaultConfig.getTranslationFallbackString();
 
         final String langFolder = "lang/";
         final String activeLang = defaultConfig.getLanguageFile() == null
             ? defaultLanguageFile : defaultConfig.getLanguageFile();
 
         for (String resource : Translator.DEFAULT_TRANSLATION_FILES) {
-            if (!LangConfig.isLanguageEnabled(resource) && !resource.equals(activeLang)) continue;
+            if (!LangConfig.isLanguageEnabled(resource) && !resource.equals(activeLang)) {
+                File diskFile = new File(this.getDataFolder(), langFolder + resource);
+                if (diskFile.exists() && diskFile.delete()) {
+                    BlockProtLogger.log("lang-cleanup", "Deleted disabled language file: " + resource);
+                }
+                continue;
+            }
             File diskFile = new File(this.getDataFolder(), langFolder + resource);
             if (!diskFile.exists()) {
                 this.saveResource(langFolder + resource, false);
@@ -410,17 +415,32 @@ public final class BlockProt extends JavaPlugin {
         }
 
         String fallbackLang = LangConfig.getFallbackLanguage();
-        InputStream fallbackLanguageStream = this.getResource(langFolder + fallbackLang);
-        if (fallbackLanguageStream == null) {
-            fallbackLang = defaultLanguageFile;
-            fallbackLanguageStream = this.getResource(langFolder + fallbackLang);
+        YamlConfiguration fallbackLanguageConfig;
+        try (InputStream fallbackLanguageStream = this.getResource(langFolder + fallbackLang)) {
+            if (fallbackLanguageStream == null) {
+                fallbackLang = defaultLanguageFile;
+                try (InputStream retry = this.getResource(langFolder + fallbackLang)) {
+                    fallbackLanguageConfig = retry != null ? YamlConfiguration.loadConfiguration(
+                        new BufferedReader(new InputStreamReader(retry, StandardCharsets.UTF_8))) : new YamlConfiguration();
+                }
+            } else {
+                fallbackLanguageConfig = YamlConfiguration.loadConfiguration(
+                    new BufferedReader(new InputStreamReader(fallbackLanguageStream, StandardCharsets.UTF_8)));
+            }
+        } catch (IOException e) {
+            fallbackLanguageConfig = new YamlConfiguration();
+            getLogger().warning("Failed to load fallback language: " + e.getMessage());
         }
-        YamlConfiguration fallbackLanguageConfig = YamlConfiguration.loadConfiguration(
-            new BufferedReader(new InputStreamReader(fallbackLanguageStream, StandardCharsets.UTF_8)));
 
         YamlConfiguration wantedConfig = saveAndLoadConfigFile(
             langFolder, activeLang, BlockProt.defaultConfig.shouldReplaceTranslations());
         Translator.loadFromConfigs(fallbackLanguageConfig, wantedConfig);
+
+        updateLangCompletionPercentages(langFolder);
+
+        if (defaultConfig.isDialogsEnabled() && !VersionCompat.hasDialogApi()) {
+            getLogger().warning("use_dialogs=true but server does not support the Paper dialog API (Paper 1.21.7+ required). Falling back to inventories.");
+        }
 
         if (defaultConfig.isPerWorldsConfigEnabled()) {
             File worldsFile = new File(this.getDataFolder(), "worlds.yml");
@@ -497,31 +517,88 @@ public final class BlockProt extends JavaPlugin {
     }
 
     private void mergeMissingLangKeys(@NotNull String langFolder, @NotNull String resource, @NotNull File diskFile) {
-        InputStream jarStream = this.getResource(langFolder + resource);
-        if (jarStream == null) return;
+        try (InputStream jarStream = this.getResource(langFolder + resource)) {
+            if (jarStream == null) return;
 
-        YamlConfiguration jarConfig  = YamlConfiguration.loadConfiguration(new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
-        YamlConfiguration diskConfig = YamlConfiguration.loadConfiguration(diskFile);
+            YamlConfiguration jarConfig  = YamlConfiguration.loadConfiguration(
+                new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
+            YamlConfiguration diskConfig = YamlConfiguration.loadConfiguration(diskFile);
 
-        int added = 0;
-        for (String key : jarConfig.getKeys(true)) {
-            if (jarConfig.isConfigurationSection(key)) continue;
-            if (EXTERNAL_CONFIG_KEYS.contains(key)) continue;
-            if (!diskConfig.contains(key)) {
-                diskConfig.set(key, jarConfig.get(key));
-                added++;
-                BlockProtLogger.log("lang-merge", resource + ": added missing key: " + key);
+            int added = 0;
+            for (String key : jarConfig.getKeys(true)) {
+                if (jarConfig.isConfigurationSection(key)) continue;
+                if (!diskConfig.contains(key)) {
+                    diskConfig.set(key, jarConfig.get(key));
+                    added++;
+                    BlockProtLogger.log("lang-merge", resource + ": added missing key: " + key);
+                }
             }
+
+            if (added > 0) {
+                try {
+                    diskConfig.save(diskFile);
+                    BlockProtLogger.log("lang-merge", resource + ": added " + added + " missing key(s).");
+                } catch (IOException e) {
+                    BlockProtConsole.warn(Translator.get(TranslationKey.CONSOLE__LANG_KEYS_SAVE_FAILED)
+                        .replace("{file}", resource).replace("{error}", e.getMessage()));
+                }
+            }
+        } catch (IOException e) {
+            BlockProtLogger.warn("Failed to merge lang keys for " + resource + ": " + e.getMessage());
         }
+    }
 
-        if (added > 0) {
-            try {
-                diskConfig.save(diskFile);
-                BlockProtLogger.log("lang-merge", resource + ": added " + added + " missing key(s).");
-            } catch (IOException e) {
-                BlockProtConsole.warn(Translator.get(TranslationKey.CONSOLE__LANG_KEYS_SAVE_FAILED)
-                    .replace("{file}", resource).replace("{error}", e.getMessage()));
+    private void updateLangCompletionPercentages(@NotNull String langFolder) {
+        String activeLang = defaultConfig.getLanguageFile() != null
+            ? defaultConfig.getLanguageFile() : defaultLanguageFile;
+        File langYml = new File(this.getDataFolder(), "lang/lang.yml");
+        if (!langYml.exists()) return;
+        try {
+            Map<String, Integer> percentages = new HashMap<>();
+            for (String resource : Translator.DEFAULT_TRANSLATION_FILES) {
+                if (!LangConfig.isLanguageEnabled(resource) && !resource.equals(activeLang)) continue;
+                YamlConfiguration langFile = null;
+                File diskFile = new File(this.getDataFolder(), langFolder + resource);
+                if (diskFile.exists()) {
+                    langFile = YamlConfiguration.loadConfiguration(diskFile);
+                } else {
+                    try (InputStream jarStream = this.getResource(langFolder + resource)) {
+                        if (jarStream != null) {
+                            langFile = YamlConfiguration.loadConfiguration(
+                                new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
+                        }
+                    }
+                }
+                if (langFile == null) continue;
+                percentages.put(resource, Translator.computeCompletionPercentage(langFile));
             }
+
+            List<String> lines = new java.util.ArrayList<>();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new java.io.FileInputStream(langYml), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String trimmed = line.strip();
+                    if (trimmed.matches("^translations_.+\\.yml:\\s*(true|false)\\s*(#.*)?$")) {
+                        String fileName = trimmed.replaceFirst(":\\s*(true|false).*", "");
+                        int pct = percentages.getOrDefault(fileName, 0);
+                        String indent = line.substring(0, line.length() - line.stripLeading().length());
+                        lines.add(indent + fileName + ": " + (trimmed.contains("true") ? "true" : "false"));
+                        lines.add(indent + "# K: " + pct + "%");
+                    } else if (trimmed.matches("^# K:\\s*\\d+%\\s*$")) {
+                        continue;
+                    } else {
+                        lines.add(line);
+                    }
+                }
+            }
+            try (java.io.Writer writer = new java.io.OutputStreamWriter(new java.io.FileOutputStream(langYml), StandardCharsets.UTF_8)) {
+                for (int i = 0; i < lines.size(); i++) {
+                    writer.write(lines.get(i));
+                    if (i < lines.size() - 1) writer.write(System.lineSeparator());
+                }
+            }
+        } catch (IOException e) {
+            getLogger().warning("Failed to update lang.yml completion percentages: " + e.getMessage());
         }
     }
 
@@ -687,15 +764,15 @@ public final class BlockProt extends JavaPlugin {
     private void handleCorruptBlocksYaml(@NotNull File diskFile, @NotNull YamlConfiguration jarConfig, @NotNull Exception ex) {
         int errorLine = getErrorLine(ex.getMessage());
         String lineInfo = errorLine > 0 ? " at line " + errorLine : "";
-        getLogger().severe("[BlockProt] CRITICAL: blocks.yml is corrupted" + lineInfo + ".");
-        getLogger().severe("[BlockProt] Cause: " + ex.getMessage());
-        getLogger().severe("[BlockProt] Attempting intelligent repair...");
+        getLogger().severe("CRITICAL: blocks.yml is corrupted" + lineInfo + ".");
+        getLogger().severe("Cause: " + ex.getMessage());
+        getLogger().severe("Attempting intelligent repair...");
         BlockProtLogger.log("yaml-repair", "CRITICAL: blocks.yml corrupted" + lineInfo + ". Cause: " + ex.getMessage());
 
         YamlConfiguration recovered = attemptYamlRecovery(diskFile, jarConfig);
         if (recovered == null) {
-            getLogger().severe("[BlockProt] Repair FAILED: unable to recover any data from blocks.yml.");
-            getLogger().severe("[BlockProt] Manually restore blocks.yml from backup. Report this bug at: https://github.com/VictorGugug/BlockProt-Reloaded/issues");
+            getLogger().severe("Repair FAILED: unable to recover any data from blocks.yml.");
+            getLogger().severe("Manually restore blocks.yml from backup. Report this bug at: https://github.com/VictorGugug/BlockProt-Reloaded/issues");
             BlockProtLogger.log("yaml-repair", "Repair FAILED. No data could be recovered. Report as bug: https://github.com/VictorGugug/BlockProt-Reloaded/issues");
             return;
         }
@@ -711,11 +788,11 @@ public final class BlockProt extends JavaPlugin {
             recovered = DefaultConfig.reorderBlocksKeys(recovered);
             recovered.save(diskFile);
             DefaultConfig.prependBlocksHeader(diskFile);
-            getLogger().warning("[BlockProt] blocks.yml repaired" + lineInfo + ". Corrupted file saved as blocks.yml.corrupted.*. Verify blocks.yml content.");
+            getLogger().warning("blocks.yml repaired" + lineInfo + ". Corrupted file saved as blocks.yml.corrupted.*. Verify blocks.yml content.");
             BlockProtLogger.log("yaml-repair", "Repair SUCCESS" + lineInfo + ". Corrupted file backed up as blocks.yml.corrupted.*");
         } catch (IOException e) {
-            getLogger().severe("[BlockProt] Repair FAILED: could not write repaired blocks.yml: " + e.getMessage());
-            getLogger().severe("[BlockProt] Manually fix blocks.yml. Report this bug at: https://github.com/VictorGugug/BlockProt-Reloaded/issues");
+            getLogger().severe("Repair FAILED: could not write repaired blocks.yml: " + e.getMessage());
+            getLogger().severe("Manually fix blocks.yml. Report this bug at: https://github.com/VictorGugug/BlockProt-Reloaded/issues");
             BlockProtLogger.log("yaml-repair", "Repair FAILED: write error: " + e.getMessage() + ". Report as bug.");
         }
     }
@@ -824,7 +901,7 @@ public final class BlockProt extends JavaPlugin {
             String timestamp = new java.text.SimpleDateFormat("yyyyMMdd-HHmmss").format(new java.util.Date());
             File backup = new File(originalFile.getParentFile(), originalFile.getName() + ".corrupted." + timestamp);
             Files.copy(originalFile.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            getLogger().warning("[BlockProt] Corrupted blocks.yml backed up as: " + backup.getName());
+            getLogger().warning("Corrupted blocks.yml backed up as: " + backup.getName());
         } catch (IOException e) {
             BlockProtLogger.warn("Failed to backup corrupted blocks.yml: " + e.getMessage());
         }
@@ -1212,14 +1289,14 @@ public final class BlockProt extends JavaPlugin {
         if (newFile.exists()) {
             // Already present in new location: remove the orphan from server root.
             if (!legacyFile.delete())
-                getLogger().warning("[BlockProt] Could not delete legacy blockprot_usercache.sqlite from server root.");
+                getLogger().warning("Could not delete legacy blockprot_usercache.sqlite from server root.");
             return;
         }
         try {
             Files.move(legacyFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            getLogger().info("[BlockProt] Moved blockprot_usercache.sqlite into plugin data folder.");
+            getLogger().info("Moved blockprot_usercache.sqlite into plugin data folder.");
         } catch (IOException e) {
-            getLogger().warning("[BlockProt] Failed to move blockprot_usercache.sqlite: " + e.getMessage());
+            getLogger().warning("Failed to move blockprot_usercache.sqlite: " + e.getMessage());
         }
     }
 
