@@ -6,6 +6,8 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/VictorGugug/BlockProt-Reloaded/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/VictorGugug/BlockProt-Reloaded/actions)
 [![Release](https://img.shields.io/github/v/release/VictorGugug/BlockProt-Reloaded?style=flat-square&color=brightgreen&label=Release)](https://github.com/VictorGugug/BlockProt-Reloaded/releases)
 [![Modrinth](https://img.shields.io/modrinth/dt/C2ZYTu62?style=flat-square&color=00AF5C&logo=modrinth&label=Modrinth)](https://modrinth.com/plugin/blockprot-reloaded)
+[![CurseForge](https://img.shields.io/curseforge/dt/1565977?style=flat-square&color=FF6E1A&logo=curseforge&label=CurseForge)](https://www.curseforge.com/minecraft/bukkit-plugins/blockprot-reloaded)
+[![Hangar](https://img.shields.io/hangar/dt/BlockProt-Reloaded?style=flat-square&color=00D4A2&logo=papermc&label=Hangar)](https://hangar.papermc.io/VictorGugug/BlockProt-Reloaded/versions?channel=Release&platform=PAPER)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](LICENSE)
 [![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
 [![Paper](https://img.shields.io/badge/Paper-1.21.1%2B%20%7C%2026.x-white?style=flat-square)](https://papermc.io/)
