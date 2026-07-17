@@ -429,7 +429,7 @@ public final class BlockLockDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static String formatMaterialName(String name) {

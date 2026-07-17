@@ -573,19 +573,31 @@ public final class BlockProt extends JavaPlugin {
                 percentages.put(resource, Translator.computeCompletionPercentage(langFile));
             }
 
+            YamlConfiguration existing = YamlConfiguration.loadConfiguration(langYml);
             List<String> lines = new java.util.ArrayList<>();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(new java.io.FileInputStream(langYml), StandardCharsets.UTF_8))) {
                 String line;
+                boolean inLanguages = false;
                 while ((line = reader.readLine()) != null) {
                     String trimmed = line.strip();
-                    if (trimmed.matches("^translations_.+\\.yml:\\s*(true|false)\\s*(#.*)?$")) {
-                        String fileName = trimmed.replaceFirst(":\\s*(true|false).*", "");
-                        int pct = percentages.getOrDefault(fileName, 0);
-                        String indent = line.substring(0, line.length() - line.stripLeading().length());
-                        lines.add(indent + fileName + ": " + (trimmed.contains("true") ? "true" : "false"));
-                        lines.add(indent + "# K: " + pct + "%");
-                    } else if (trimmed.matches("^# K:\\s*\\d+%\\s*$")) {
-                        continue;
+                    if (trimmed.equals("languages:") || trimmed.startsWith("languages:")) {
+                        inLanguages = true;
+                        String langIndent = line.substring(0, line.length() - line.stripLeading().length());
+                        String indent = langIndent + "  ";
+                        lines.add(line);
+                        for (String fileName : Translator.DEFAULT_TRANSLATION_FILES) {
+                            boolean enabled = existing.getBoolean("languages." + fileName, false);
+                            int pct = percentages.getOrDefault(fileName, 0);
+                            lines.add(indent + fileName + ": " + enabled);
+                            lines.add(indent + "# K: " + pct + "%");
+                        }
+                    } else if (inLanguages) {
+                        if (trimmed.isEmpty()) continue;
+                        if (!trimmed.startsWith("#") && line.stripLeading().length() == line.length()
+                            && line.length() > 0) {
+                            inLanguages = false;
+                            lines.add(line);
+                        }
                     } else {
                         lines.add(line);
                     }

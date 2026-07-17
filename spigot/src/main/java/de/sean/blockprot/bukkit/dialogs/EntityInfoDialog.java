@@ -80,7 +80,7 @@ public final class EntityInfoDialog {
             String name = getPlayerName(friendUuid);
             boolean isManager = handler.isManager(friendUuid);
             body.add(DialogBodyEntry.text(Component.text(
-                "  " + (name != null ? name : friendUuid) + (isManager ? " [Manager]" : ""),
+                "  " + (name != null ? name : friendUuid) + (isManager ? stripColor(Translator.get(TranslationKey.DIALOGS__ENTITY__MANAGER_SUFFIX)) : ""),
                 TextColor.color(0x888888))));
         }
 
@@ -102,7 +102,7 @@ public final class EntityInfoDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static String formatMaterialName(String name) {

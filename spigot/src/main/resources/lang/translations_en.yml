@@ -114,9 +114,12 @@ inventories:
     no_leash: "§6Block leash"
     no_pickup: "§bBlock pickup (parrot)"
   locate_villager: "§aLocate Linked Villager"
+  lockable_selection:
+    blocks_suffix: " blocks"
   entity:
     inspect_entity: "Inspect contents"
     transfer_not_available: "§7Transfer is not available for this entity type."
+    manager_suffix: " [Manager]"
   transfer:
     title: "Transfer: {player}"
     search_prompt: "Player name"
@@ -261,6 +264,7 @@ messages:
   friend_removed: "Friend removed."
   friend_already_added: "Friend already added."
   friend_cant_be_removed: "Friend cannot be removed."
+  friend_player_not_found: "§cPlayer not found."
   redstone_added: "Redstone protection added."
   redstone_removed: "Redstone protection removed."
   exceeded_max_block_count: "You have exceeded the maximum lockable block count."
@@ -497,10 +501,16 @@ dialogs:
     description: "BlockProt Reloaded - a fork of BlockProt by spnda."
     maintainer: "Maintained by Zaynr (Zar)."
     report_issues: "Report issues:"
+    version_label: "Version: "
+    server_label: "Server: "
+    api_label: "API: "
+    java_label: "Java: "
+    issues_url: "github.com/VictorGugug/BlockProt-Reloaded/issues"
   user_menu:
     header: "User Menu"
   admin_menu:
     header: "Admin Menu"
+    config_tooltip: "Edit config.yml settings"
   settings:
     header: "Settings"
     auto_lock_desc: "Automatically lock blocks when placed."
@@ -531,6 +541,18 @@ dialogs:
   lockables:
     header: "Lockables"
     cat_prefix: "Category: "
+    categories:
+      chests: "Chests"
+      shulkers: "Shulkers"
+      furnaces: "Furnaces"
+      storage: "Storage"
+      signs: "Signs"
+      doors: "Doors"
+      trapdoors: "Trapdoors"
+      gates: "Gates"
+      workstations: "Workstations"
+      interactive: "Interactive"
+      entities: "Entities"
   info:
     header: "Players with Blocks"
     protected_blocks: "Blocks protected by"
@@ -538,6 +560,9 @@ dialogs:
     header: "Unlock Blocks"
     click_hint: "Click to unlock this block."
     location: "Location: "
+    material_label: "Material: "
+    owner_label: "Owner: "
+    friends_label: "Friends: "
     player_not_found: "Player not found: {player}"
     no_blocks: "{player} has no protected blocks."
     unlocked: "Unlocked block at {location}"
@@ -548,6 +573,7 @@ dialogs:
     world_hint: "Remove all protections in {world}."
     confirm: "Confirm - Delete All"
     cancel: "Cancel"
+    blocks_suffix: " blocks"
     undo_label: "Undo ({count} available)"
     undo_title: "Undo Deletions"
     no_history: "No undo history."
@@ -565,6 +591,15 @@ dialogs:
     check_now: "Check Now"
     checking: "Checking for updates..."
     download: "Download:"
+    version_prefix: " v"
+    latest_link_label: "releases/latest"
+  debug:
+    title: "Debug Info"
+    label_plugin: "BlockProt "
+    label_server: "Server: "
+    label_api: "API: "
+    label_java: "Java: "
+    run_separator: "=== /bp debug run ==="
   choose_option: "Choose an option:"
   admin_choose: "Select an administrative action:"
   click_to_open: "Click to open."
@@ -618,6 +653,11 @@ dialogs:
     value_click_edit: "Click to edit value."
     dialog_marker: "[ Dialog exclusive setting ]"
     return_categories: "Return to config categories."
+    config_yml_prefix: "config.yml: "
+    value_current: "Current: "
+    enter_new_value: "§7Current {key}: §f{value} §7- Enter new value:"
+    new_value_prompt: "new {key}"
+    invalid_number: "§cInvalid number: {input}"
     lock_on_place: "Auto-lock blocks when placed."
     public_is_friend: "Public blocks count as friends."
     redstone_disallowed: "Disallow redstone interaction by default."
@@ -659,8 +699,11 @@ dialogs:
       lock_on_place: "Auto-lock blocks when placed."
       public_is_friend: "Public blocks count as friends."
       max_blocks: "Max locked blocks per player (-1 = unlimited)."
+      max_blocks_hint: "Max blocks (-1 = unlimited)"
       hint_cooldown: "Cooldown between lock hints (seconds)."
+      hint_cooldown_hint: "Cooldown in seconds"
       friend_search: "Friend name similarity threshold (0.0-1.0)."
+      friend_search_hint: "Similarity (0.0 - 1.0)"
       disable_friends: "Globally disable the friends system."
     blocks:
       modern_family: "Use compact family expressions in blocks.yml."
@@ -676,6 +719,7 @@ dialogs:
       use_menus_de: "Consolidate menus into /bp user and /bp admin."
       use_dialogs_de: "Use Paper dialog system (requires Paper 1.21.7+)."
       timed_access: "Max timed access duration (days)."
+      timed_access_hint: "Max days"
     entity:
       protection_enabled: "Enable entity protection."
       auto_protect_tame: "Auto-protect entities when tamed."
@@ -684,6 +728,7 @@ dialogs:
     expiry:
       enabled: "Enable global expiry of inactive protections."
       check_interval: "Check interval (minutes)."
+      check_interval_hint: "Minutes between checks"
     raid:
       enabled: "Protect blocks from raids."
     notifications:

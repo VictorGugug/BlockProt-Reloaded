@@ -104,7 +104,7 @@ public final class InfoDialog {
             buttons.add(new DialogButton("player_" + entry.name,
                 Component.text("👤 " + entry.name, NamedTextColor.WHITE),
                 Component.join(JoinConfiguration.newlines(),
-                    Component.text(entry.blockCount + " protected blocks", SOFT_GRAY),
+                    Component.text(entry.blockCount + stripColor(Translator.get(TranslationKey.DIALOGS__INFO__PROTECTED_BLOCKS)), SOFT_GRAY),
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_CHAT)),
                         TextColor.color(0x888888))),
                 p -> UnlockDialog.show(p, DialogOrigin.INFO, entry.name, 0)
@@ -154,7 +154,7 @@ public final class InfoDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component backHint(DialogOrigin origin) {

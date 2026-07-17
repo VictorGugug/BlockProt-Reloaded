@@ -87,7 +87,7 @@ public final class EntityFriendManageDialog {
                 body.add(DialogBodyEntry.text(Component.text()
                     .append(Component.text(isManager ? "● " : "○ ", isManager ? PASTEL_MINT : PASTEL_CORAL))
                     .append(Component.text(name != null ? name : friendUuid, NamedTextColor.WHITE))
-                    .append(Component.text(isManager ? " [Manager]" : "", SOFT_GRAY))
+                    .append(Component.text(isManager ? stripColor(Translator.get(TranslationKey.DIALOGS__ENTITY__MANAGER_SUFFIX)) : "", SOFT_GRAY))
                     .build()));
             }
         }
@@ -110,7 +110,7 @@ public final class EntityFriendManageDialog {
                             Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> show(p, entity, handler));
                         } else {
                             p.sendActionBar(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(
-                                Translator.get(TranslationKey.MESSAGES__FRIEND_CANT_BE_REMOVED)));
+                                Translator.get(TranslationKey.MESSAGES__FRIEND_PLAYER_NOT_FOUND)));
                         }
                     });
                 };
@@ -152,6 +152,6 @@ public final class EntityFriendManageDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 }

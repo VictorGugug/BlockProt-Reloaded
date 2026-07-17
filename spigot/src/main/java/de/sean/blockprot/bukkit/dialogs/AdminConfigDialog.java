@@ -75,15 +75,15 @@ public final class AdminConfigDialog {
         body.add(DialogBodyEntry.text(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__HINT)), TextColor.color(0x888888))));
 
         List<DialogButton> buttons = new ArrayList<>();
-        buttons.add(catBtn(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_LANGUAGE), "Language", p -> showLanguage(p, backOrigin)));
-        buttons.add(catBtn(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_WORLDS), "Worlds", p -> showWorlds(p, backOrigin)));
-        buttons.add(catBtn(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_PLAYERS), "Players and friends", p -> showPlayers(p, backOrigin)));
-        buttons.add(catBtn(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_BLOCKS), "Blocks and locking", p -> showBlocks(p, backOrigin)));
-        buttons.add(catBtn(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_ENTITY), "Entity protection", p -> showEntity(p, backOrigin)));
-        buttons.add(catBtn(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_EXPIRY), "Expiry", p -> showExpiry(p, backOrigin)));
-        buttons.add(catBtn(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_RAID), "Raid detection", p -> showRaid(p, backOrigin)));
-        buttons.add(catBtn(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_NOTIFICATIONS), "Notifications", p -> showNotif(p, backOrigin)));
-        buttons.add(catBtn(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_MAINTENANCE), "Maintenance", p -> showMaintenance(p, backOrigin)));
+        buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_LANGUAGE)), p -> showLanguage(p, backOrigin)));
+        buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_WORLDS)), p -> showWorlds(p, backOrigin)));
+        buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_PLAYERS)), p -> showPlayers(p, backOrigin)));
+        buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_BLOCKS)), p -> showBlocks(p, backOrigin)));
+        buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_ENTITY)), p -> showEntity(p, backOrigin)));
+        buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_EXPIRY)), p -> showExpiry(p, backOrigin)));
+        buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_RAID)), p -> showRaid(p, backOrigin)));
+        buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_NOTIFICATIONS)), p -> showNotif(p, backOrigin)));
+        buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_MAINTENANCE)), p -> showMaintenance(p, backOrigin)));
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
         DialogButton backBtn = new DialogButton("back",
@@ -151,7 +151,9 @@ public final class AdminConfigDialog {
                         + stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__ACTIVE_MARKER)),
                         PASTEL_GOLD)).build()
                 : Component.text(label, isEnabled ? NamedTextColor.WHITE : SOFT_GRAY);
-            String langStatus = isEnabled ? "enabled" : "disabled";
+            String langStatus = isEnabled
+                ? stripColor(Translator.get(TranslationKey.DIALOGS__STATUS_ENABLED))
+                : stripColor(Translator.get(TranslationKey.DIALOGS__STATUS_DISABLED));
             String configStatus = isConfigLang
                 ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CONFIG_STATUS_ACTIVE))
                 : stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CONFIG_STATUS_INACTIVE));
@@ -167,7 +169,7 @@ public final class AdminConfigDialog {
                     Component.text(stripColor(Translator.get(
                         TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__LANG_STATUS))
                         .replace("{status}", langStatus), c),
-                    Component.text("config.yml: " + configStatus, isConfigLang ? PASTEL_GOLD : SOFT_GRAY),
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CONFIG_YML_PREFIX)) + configStatus, isConfigLang ? PASTEL_GOLD : SOFT_GRAY),
                     Component.text(clickAction, TextColor.color(0x888888))),
                 p -> {
                     if (isEnabled) {
@@ -270,7 +272,8 @@ public final class AdminConfigDialog {
         buttons.add(valueBtn("player_max_locked_block_count", "player_max_locked_block_count",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__MAX_BLOCKS),
             String.valueOf(maxBlocks),
-            p -> openIntInput(player, "player_max_locked_block_count", "Max blocks (-1 = unlimited)", v -> {
+            p -> openIntInput(player, "player_max_locked_block_count",
+                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__MAX_BLOCKS_HINT)), v -> {
                 cfg.setPlayerMaxLockedBlockCount(v);
                 showPlayers(p, backOrigin);
             })));
@@ -279,7 +282,8 @@ public final class AdminConfigDialog {
         buttons.add(valueBtn("lock_hint_cooldown_in_seconds", "lock_hint_cooldown_in_seconds",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__HINT_COOLDOWN),
             String.valueOf(cooldown),
-            p -> openIntInput(player, "lock_hint_cooldown_in_seconds", "Cooldown in seconds", v -> {
+            p -> openIntInput(player, "lock_hint_cooldown_in_seconds",
+                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__HINT_COOLDOWN_HINT)), v -> {
                 cfg.setLockHintCooldown(v);
                 showPlayers(p, backOrigin);
             })));
@@ -288,7 +292,8 @@ public final class AdminConfigDialog {
         buttons.add(valueBtn("friend_search_similarity", "friend_search_similarity",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__FRIEND_SEARCH),
             String.valueOf(similarity),
-            p -> openDoubleInput(player, "friend_search_similarity", "Similarity (0.0 - 1.0)", v -> {
+            p -> openDoubleInput(player, "friend_search_similarity",
+                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__FRIEND_SEARCH_HINT)), v -> {
                 cfg.setFriendSearchSimilarity(v);
                 showPlayers(p, backOrigin);
             })));
@@ -368,7 +373,8 @@ public final class AdminConfigDialog {
         buttons.add(valueBtn("timed_access_max_duration_days", "timed_access_max_duration_days",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__TIMED_ACCESS),
             String.valueOf(timedAccessDays),
-            p -> openIntInput(player, "timed_access_max_duration_days", "Max days", v -> {
+            p -> openIntInput(player, "timed_access_max_duration_days",
+                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__TIMED_ACCESS_HINT)), v -> {
                 cfg.setAndSave("timed_access_max_duration_days", v);
                 showBlocks(p, backOrigin);
             })));
@@ -437,7 +443,8 @@ public final class AdminConfigDialog {
         buttons.add(valueBtn("world_expiry.check_interval_minutes", "world_expiry.check_interval_minutes",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__CHECK_INTERVAL),
             String.valueOf(interval),
-            p -> openIntInput(player, "world_expiry.check_interval_minutes", "Minutes between checks", v -> {
+            p -> openIntInput(player, "world_expiry.check_interval_minutes",
+                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__CHECK_INTERVAL_HINT)), v -> {
                 cfg.setAndSave("world_expiry.check_interval_minutes", v);
                 showExpiry(p, backOrigin);
             })));
@@ -536,7 +543,7 @@ public final class AdminConfigDialog {
                 .build(),
             Component.join(JoinConfiguration.newlines(),
                 Component.text(label, SOFT_GRAY),
-                Component.text("Current: " + currentValue, TextColor.color(0x888888)),
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_CURRENT)) + currentValue, TextColor.color(0x888888)),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_CLICK_EDIT)), TextColor.color(0x888888))),
             clickAction);
     }
@@ -545,16 +552,20 @@ public final class AdminConfigDialog {
                                       @NotNull String hint,
                                       @NotNull java.util.function.Consumer<Integer> onSet) {
         String current = BlockProt.getDefaultConfig().getBukkitConfig().getString(configKey, "");
-        String prompt = "§7Current " + configKey + ": §f" + current + " §7- Enter new value:";
+        String prompt = stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTER_NEW_VALUE))
+            .replace("{key}", configKey).replace("{value}", current);
         player.closeInventory();
         if (SignInput.isSupported()) {
-            SignInput.open(player, BlockProt.getInstance(), "new " + configKey, input -> {
+            SignInput.open(player, BlockProt.getInstance(),
+                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NEW_VALUE_PROMPT))
+                    .replace("{key}", configKey), input -> {
                 if (input == null || input.isBlank()) return;
                 try {
                     int val = Integer.parseInt(input.trim());
                     onSet.accept(val);
                 } catch (NumberFormatException e) {
-                    player.sendMessage("§cInvalid number: " + input);
+                    player.sendMessage(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__INVALID_NUMBER))
+                        .replace("{input}", input));
                 }
             });
         } else {
@@ -564,7 +575,8 @@ public final class AdminConfigDialog {
                     int val = Integer.parseInt(input.trim());
                     onSet.accept(val);
                 } catch (NumberFormatException e) {
-                    player.sendMessage("§cInvalid number: " + input);
+                    player.sendMessage(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__INVALID_NUMBER))
+                        .replace("{input}", input));
                 }
             });
         }
@@ -576,13 +588,16 @@ public final class AdminConfigDialog {
         String current = BlockProt.getDefaultConfig().getBukkitConfig().getString(configKey, "");
         player.closeInventory();
         if (SignInput.isSupported()) {
-            SignInput.open(player, BlockProt.getInstance(), "new " + configKey, input -> {
+            SignInput.open(player, BlockProt.getInstance(),
+                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NEW_VALUE_PROMPT))
+                    .replace("{key}", configKey), input -> {
                 if (input == null || input.isBlank()) return;
                 try {
                     double val = Double.parseDouble(input.trim());
                     onSet.accept(val);
                 } catch (NumberFormatException e) {
-                    player.sendMessage("§cInvalid number: " + input);
+                    player.sendMessage(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__INVALID_NUMBER))
+                        .replace("{input}", input));
                 }
             });
         } else {
@@ -592,16 +607,17 @@ public final class AdminConfigDialog {
                     double val = Double.parseDouble(input.trim());
                     onSet.accept(val);
                 } catch (NumberFormatException e) {
-                    player.sendMessage("§cInvalid number: " + input);
+                    player.sendMessage(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__INVALID_NUMBER))
+                        .replace("{input}", input));
                 }
             });
         }
     }
 
-    private static DialogButton catBtn(String label, String desc, DialogButton.DialogClickHandler handler) {
+    private static DialogButton catBtn(String label, DialogButton.DialogClickHandler handler) {
         return new DialogButton(label.toLowerCase().replace(' ', '_'),
             Component.text(label, NamedTextColor.WHITE),
-            Component.text(desc, TextColor.color(0x888888)),
+            Component.text(label, TextColor.color(0x888888)),
             handler);
     }
 
@@ -659,6 +675,6 @@ public final class AdminConfigDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 }

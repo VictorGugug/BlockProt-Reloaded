@@ -109,7 +109,7 @@ public final class AdminMenuDialog {
 
         DialogButton configBtn = new DialogButton("config",
             Component.text("📝 " + config, NamedTextColor.WHITE),
-            tooltip("Edit config.yml settings", PASTEL_GOLD),
+            tooltip(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_MENU__CONFIG_TOOLTIP)), PASTEL_GOLD),
             p -> AdminConfigDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
@@ -170,7 +170,7 @@ public final class AdminMenuDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component tooltip(String description, TextColor accent) {

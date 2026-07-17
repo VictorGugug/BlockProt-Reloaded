@@ -171,7 +171,7 @@ public final class EntityFriendManageInventory extends BlockProtInventory {
                 try {
                     var profile = BlockProt.getProfileService().findByName(text);
                     if (profile == null) {
-                        sendActionBar(player, Translator.get(TranslationKey.MESSAGES__FRIEND_CANT_BE_REMOVED));
+                        sendActionBar(player, Translator.get(TranslationKey.MESSAGES__FRIEND_PLAYER_NOT_FOUND));
                         return;
                     }
                     Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {

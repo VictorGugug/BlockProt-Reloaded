@@ -158,7 +158,7 @@ public final class ProtdelDialog {
             int count = ub.snapshots().size();
             int idx = i;
             buttons.add(new DialogButton("undo_" + i,
-                Component.text("↩ " + dateStr + " (" + count + " blocks)", NamedTextColor.WHITE),
+                Component.text("↩ " + dateStr + " (" + count + stripColor(Translator.get(TranslationKey.DIALOGS__PROTDEL__BLOCKS_SUFFIX)) + ")", NamedTextColor.WHITE),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PROTDEL__RESTORE_HINT))
                     .replace("{count}", String.valueOf(count)), TextColor.color(0x888888)),
                 p -> {
@@ -360,6 +360,6 @@ public final class ProtdelDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 }

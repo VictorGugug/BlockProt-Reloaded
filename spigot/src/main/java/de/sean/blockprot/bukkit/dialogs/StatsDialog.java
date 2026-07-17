@@ -85,7 +85,7 @@ public final class StatsDialog {
                 body.add(DialogBodyEntry.text(Component.text(
                     stripColor(Translator.get(TranslationKey.DIALOGS__STATS__BREAKDOWN)), SOFT_GRAY)));
                 for (String line : breakdown) {
-                    String clean = line.replaceAll("[§&][0-9a-fk-orx]", "");
+                    String clean = line.replaceAll("[§&][0-9a-fk-orxA-F]", "");
                     body.add(DialogBodyEntry.text(Component.text("  " + clean, TextColor.color(0x888888))));
                 }
             } else {
@@ -125,7 +125,7 @@ public final class StatsDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component backHint(DialogOrigin origin) {

@@ -132,7 +132,7 @@ public final class FriendManageDialog {
                             Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> showForBlock(p, block, handler));
                         } else {
                             p.sendActionBar(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(
-                                Translator.get(TranslationKey.MESSAGES__FRIEND_CANT_BE_REMOVED)));
+                                Translator.get(TranslationKey.MESSAGES__FRIEND_PLAYER_NOT_FOUND)));
                         }
                     });
                 };
@@ -283,7 +283,7 @@ public final class FriendManageDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component originHint(DialogOrigin origin) {

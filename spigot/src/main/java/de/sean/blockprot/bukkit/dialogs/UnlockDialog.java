@@ -126,13 +126,13 @@ public final class UnlockDialog {
                             var handler = new BlockNBTHandler(loc.getWorld().getBlockAt(loc));
                             String ownerName = Bukkit.getOfflinePlayer(UUID.fromString(handler.getOwner())).getName();
                             Component info = Component.text()
-                                .append(Component.text("Material: ", SOFT_GRAY))
+                                .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__MATERIAL_LABEL)), SOFT_GRAY))
                                 .append(Component.text(loc.getBlock().getType().name(), NamedTextColor.WHITE))
                                 .append(Component.newline())
-                                .append(Component.text("Owner: ", SOFT_GRAY))
+                                .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__OWNER_LABEL)), SOFT_GRAY))
                                 .append(Component.text(ownerName != null ? ownerName : handler.getOwner(), NamedTextColor.WHITE))
                                 .append(Component.newline())
-                                .append(Component.text("Friends: ", SOFT_GRAY))
+                                .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__FRIENDS_LABEL)), SOFT_GRAY))
                                 .append(Component.text(String.valueOf(handler.getFriends().size()), NamedTextColor.WHITE))
                                 .build();
                             DialogBridge infoBridge = DialogBridgeFactory.getBridge();
@@ -206,7 +206,7 @@ public final class UnlockDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component backHint(DialogOrigin origin) {

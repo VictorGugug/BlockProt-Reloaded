@@ -67,7 +67,7 @@ public final class UpdateDialog {
         body.add(DialogBodyEntry.text(
             Component.text()
                 .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__CURRENT)), SOFT_GRAY))
-                .append(Component.text(" v" + pluginVersion, NamedTextColor.WHITE, TextDecoration.BOLD))
+                .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__VERSION_PREFIX)) + pluginVersion, NamedTextColor.WHITE, TextDecoration.BOLD))
                 .build()
         ));
 
@@ -79,7 +79,7 @@ public final class UpdateDialog {
             body.add(DialogBodyEntry.text(
                 Component.text()
                     .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__LATEST)), SOFT_GRAY))
-                    .append(Component.text(" v" + cached.toString(), NamedTextColor.WHITE, TextDecoration.BOLD))
+                    .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__VERSION_PREFIX)) + cached.toString(), NamedTextColor.WHITE, TextDecoration.BOLD))
                     .build()
             ));
 
@@ -90,7 +90,7 @@ public final class UpdateDialog {
                 body.add(DialogBodyEntry.text(
                     Component.text()
                         .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__DOWNLOAD)), SOFT_GRAY))
-                        .append(Component.text("releases/latest", SOFT_BLUE, TextDecoration.UNDERLINED)
+                        .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__LATEST_LINK_LABEL)), SOFT_BLUE, TextDecoration.UNDERLINED)
                             .clickEvent(ClickEvent.openUrl("https://github.com/VictorGugug/BlockProt-Reloaded/releases/latest"))
                             .hoverEvent(HoverEvent.showText(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), SOFT_GRAY))))
                         .build()
@@ -138,7 +138,7 @@ public final class UpdateDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component originHint(DialogOrigin origin) {

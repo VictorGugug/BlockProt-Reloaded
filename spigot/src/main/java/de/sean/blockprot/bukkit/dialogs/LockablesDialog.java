@@ -83,15 +83,16 @@ public final class LockablesDialog {
         for (CategoryEntry entry : pageEntries) {
             boolean active = entry.activeCount > 0;
             TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
+            String catLabel = translateCategory(entry.label);
             buttons.add(new DialogButton("cat_" + entry.label,
                 Component.text()
                     .append(Component.text(active ? "● " : "○ ", c))
-                    .append(Component.text(entry.label, NamedTextColor.WHITE))
+                    .append(Component.text(catLabel, NamedTextColor.WHITE))
                     .append(Component.text(" (" + entry.activeCount + "/" + entry.totalCount + ")", TextColor.color(0x888888)))
                     .build(),
                 Component.join(JoinConfiguration.newlines(),
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CAT_PREFIX)), SOFT_GRAY)
-                        .append(Component.text(entry.label, NamedTextColor.WHITE)),
+                        .append(Component.text(catLabel, NamedTextColor.WHITE)),
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE))
                         + " / " + stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE)), TextColor.color(0x888888))),
                 p -> LockableCategoryDialog.show(p, backOrigin, entry.label, entry.materials)
@@ -168,8 +169,25 @@ public final class LockablesDialog {
         return result;
     }
 
+    private static String translateCategory(String label) {
+        return switch (label) {
+            case "Chests" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__CHESTS));
+            case "Shulkers" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__SHULKERS));
+            case "Furnaces" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__FURNACES));
+            case "Storage" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__STORAGE));
+            case "Signs" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__SIGNS));
+            case "Doors" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__DOORS));
+            case "Trapdoors" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__TRAPDOORS));
+            case "Gates" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__GATES));
+            case "Workstations" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__WORKSTATIONS));
+            case "Interactive" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__INTERACTIVE));
+            case "Entities" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__ENTITIES));
+            default -> label;
+        };
+    }
+
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component backHint(DialogOrigin origin) {

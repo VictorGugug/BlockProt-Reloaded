@@ -79,26 +79,26 @@ public final class AboutDialog {
         body.add(DialogBodyEntry.text(Component.empty()));
 
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("Version: ", SOFT_GRAY))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__VERSION_LABEL)), SOFT_GRAY))
             .append(Component.text(version, PASTEL_GOLD, TextDecoration.BOLD))
             .build()));
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("Server: ", SOFT_GRAY))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__SERVER_LABEL)), SOFT_GRAY))
             .append(Component.text(serverVersion, TextColor.color(0x888888)))
             .build()));
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("API: ", SOFT_GRAY))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__API_LABEL)), SOFT_GRAY))
             .append(Component.text(bukkitVersion, TextColor.color(0x888888)))
             .build()));
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("Java: ", SOFT_GRAY))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__JAVA_LABEL)), SOFT_GRAY))
             .append(Component.text(javaVersion, TextColor.color(0x888888)))
             .build()));
         body.add(DialogBodyEntry.text(Component.empty()));
 
         body.add(DialogBodyEntry.text(Component.text()
             .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__REPORT_ISSUES)), SOFT_GRAY))
-            .append(Component.text("github.com/VictorGugug/BlockProt-Reloaded/issues",
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__ISSUES_URL)),
                 SOFT_BLUE, TextDecoration.UNDERLINED)
                 .clickEvent(ClickEvent.openUrl("https://github.com/VictorGugug/BlockProt-Reloaded/issues"))
                 .hoverEvent(HoverEvent.showText(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), SOFT_GRAY))))
@@ -116,7 +116,7 @@ public final class AboutDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component backHint(DialogOrigin origin) {

@@ -113,9 +113,12 @@ inventories:
     no_leash: "§6Bloquear correa"
     no_pickup: "§bBloquear recoger (loro)"
   locate_villager: "§aLocalizar Aldeano Vinculado"
+  lockable_selection:
+    blocks_suffix: " bloques"
   entity:
-    inspect_entity: Inspeccionar contenido
+    inspect_entity: "Inspeccionar contenido"
     transfer_not_available: "§7La transferencia no está disponible para este tipo de entidad."
+    manager_suffix: " [Manager]"
   transfer:
     title: "§8[§dTransferir bloque§8] Buscar jugador"
     search_prompt: "Nombre del jugador"
@@ -261,6 +264,7 @@ messages:
   friend_removed: Permiso eliminado.
   friend_already_added: Ya tiene permiso.
   friend_cant_be_removed: No se puede retirar el permiso.
+  friend_player_not_found: "§cJugador no encontrado."
   redstone_added: "Se ha añadido protección contra Redstone."
   redstone_removed: "Se ha eliminado la protección contra Redstone."
   exceeded_max_block_count: Has excedido el número máximo de bloques bloqueables.
@@ -490,10 +494,16 @@ dialogs:
     description: "BlockProt Reloaded - un fork de BlockProt por spnda."
     maintainer: "Mantenido por Zaynr (Zar)."
     report_issues: "Reportar problemas:"
+    version_label: "Versión: "
+    server_label: "Servidor: "
+    api_label: "API: "
+    java_label: "Java: "
+    issues_url: "github.com/VictorGugug/BlockProt-Reloaded/issues"
   user_menu:
     header: "Menu de Usuario"
   admin_menu:
     header: "Menu de Admin"
+    config_tooltip: "Editar configuracion de config.yml"
   settings:
     header: "Ajustes"
     auto_lock_desc: "Bloquear bloques automaticamente al colocarlos."
@@ -518,6 +528,18 @@ dialogs:
   lockables:
     header: "Bloqueables"
     cat_prefix: "Categoría: "
+    categories:
+      chests: "Cofres"
+      shulkers: "Shulkers"
+      furnaces: "Hornos"
+      storage: "Almacenamiento"
+      signs: "Carteles"
+      doors: "Puertas"
+      trapdoors: "Trampillas"
+      gates: "Puertas de Valla"
+      workstations: "Estaciones"
+      interactive: "Interactivos"
+      entities: "Entidades"
   info:
     header: "Jugadores con Bloques"
     protected_blocks: "Bloques protegidos de"
@@ -525,6 +547,9 @@ dialogs:
     header: "Desbloquear Bloques"
     click_hint: "Haz clic para desbloquear este bloque."
     location: "Ubicacion: "
+    material_label: "Material: "
+    owner_label: "Propietario: "
+    friends_label: "Amigos: "
     player_not_found: "Jugador no encontrado: {player}"
     no_blocks: "{player} no tiene bloques protegidos."
     unlocked: "Bloque desbloqueado en {location}"
@@ -535,6 +560,7 @@ dialogs:
     world_hint: "Eliminar todas las protecciones en {world}."
     confirm: "Confirmar - Eliminar Todo"
     cancel: "Cancelar"
+    blocks_suffix: " bloques"
     undo_label: "Deshacer ({count} disponibles)"
     undo_title: "Deshacer Eliminaciones"
     no_history: "No hay historial de deshacer."
@@ -577,6 +603,15 @@ dialogs:
     check_now: "Check Now"
     checking: "Comprobando actualizaciones..."
     download: "Descargar:"
+    version_prefix: " v"
+    latest_link_label: "releases/latest"
+  debug:
+    title: "Info de Depuración"
+    label_plugin: "BlockProt "
+    label_server: "Servidor: "
+    label_api: "API: "
+    label_java: "Java: "
+    run_separator: "=== /bp debug run ==="
   return_user_menu: "Volver al Menu de Usuario."
   return_admin_menu: "Volver al Menu de Admin."
   return_previous: "Volver al menu anterior."
@@ -601,6 +636,11 @@ dialogs:
     value_click_edit: "Click para editar valor."
     dialog_marker: "[ Exclusivo de diálogos ]"
     return_categories: "Volver a categorías."
+    config_yml_prefix: "config.yml: "
+    value_current: "Actual: "
+    enter_new_value: "§7Actual {key}: §f{value} §7- Ingresa nuevo valor:"
+    new_value_prompt: "nuevo {key}"
+    invalid_number: "§cNumero invalido: {input}"
     language:
       language_file: "El archivo de idioma para traducciones."
       replace_translations: "Auto-actualizar traducciones faltantes."
@@ -620,8 +660,11 @@ dialogs:
       lock_on_place: "Auto-bloquear al colocar bloques."
       public_is_friend: "Bloques públicos cuentan como amigos."
       max_blocks: "Máximo de bloques por jugador (-1 = ilimitado)."
+      max_blocks_hint: "Máx bloques (-1 = ilimitado)"
       hint_cooldown: "Cooldown entre ayudas (segundos)."
+      hint_cooldown_hint: "Cooldown en segundos"
       friend_search: "Umbral de similitud (0.0-1.0)."
+      friend_search_hint: "Similitud (0.0 - 1.0)"
       disable_friends: "Desactivar sistema de amigos globalmente."
     blocks:
       modern_family: "Usar expresiones compactas en blocks.yml."
@@ -637,6 +680,7 @@ dialogs:
       use_menus_de: "Unificar menús en /bp user y /bp admin."
       use_dialogs_de: "Usar sistema de diálogos (Paper 1.21.7+)."
       timed_access: "Duración máxima de acceso temporal (días)."
+      timed_access_hint: "Máx días"
     entity:
       protection_enabled: "Activar protección de entidades."
       auto_protect_tame: "Auto-proteger entidades al domesticar."
@@ -645,6 +689,7 @@ dialogs:
     expiry:
       enabled: "Activar expiración global de protecciones."
       check_interval: "Intervalo de revisión (minutos)."
+      check_interval_hint: "Minutos entre revisiones"
     raid:
       enabled: "Proteger bloques de incursiones."
     notifications:

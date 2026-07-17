@@ -84,7 +84,7 @@ public final class WorldLockableSelectionInventory extends BlockProtInventory {
                     + ": " + (enabled ? "§a" + Translator.get(TranslationKey.ENABLED)
                                       : "§c" + Translator.get(TranslationKey.DISABLED))));
                 lore.add(Component.text("§7" + Translator.get(TranslationKey.WORLDS__PROTECTED_COUNT)
-                    + ": §f" + (count >= 0 ? String.valueOf(count) : "?") + " blocks"));
+                    + ": §f" + (count >= 0 ? String.valueOf(count) : "?") + Translator.get(TranslationKey.INVENTORIES__LOCKABLE_SELECTION__BLOCKS_SUFFIX)));
                 if (wc != null && wc.hasWorldConfig(w)) {
                     lore.add(Component.text("§8" + Translator.get(TranslationKey.WORLDS__WORLD_CONFIG_HINT)));
                 }

@@ -56,25 +56,25 @@ public final class DebugDialog {
         String javaVer = System.getProperty("java.version");
 
         Component title = Component.text(
-            "Debug Info",
+            stripColor(Translator.get(TranslationKey.DIALOGS__DEBUG__TITLE)),
             PASTEL_CORAL, TextDecoration.BOLD
         );
 
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("BlockProt ", SOFT_GRAY))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__DEBUG__LABEL_PLUGIN)), SOFT_GRAY))
             .append(Component.text(version, NamedTextColor.WHITE))
             .build()));
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("Server: ", SOFT_GRAY))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__DEBUG__LABEL_SERVER)), SOFT_GRAY))
             .append(Component.text(serverVer, TextColor.color(0x888888)))
             .build()));
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("API: ", SOFT_GRAY))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__DEBUG__LABEL_API)), SOFT_GRAY))
             .append(Component.text(bukkitVer, TextColor.color(0x888888)))
             .build()));
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("Java: ", SOFT_GRAY))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__DEBUG__LABEL_JAVA)), SOFT_GRAY))
             .append(Component.text(javaVer, TextColor.color(0x888888)))
             .build()));
         body.add(DialogBodyEntry.text(Component.empty()));
@@ -88,7 +88,7 @@ public final class DebugDialog {
             Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG_LORE)),
                 TextColor.color(0x888888)),
             p -> {
-                p.sendMessage(Component.text("=== /bp debug run ===", PASTEL_GOLD));
+                p.sendMessage(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__DEBUG__RUN_SEPARATOR)), PASTEL_GOLD));
                 Bukkit.getScheduler().runTaskAsynchronously(
                     BlockProt.getInstance(),
                     () -> new DebugCommand().onCommand(
@@ -111,6 +111,6 @@ public final class DebugDialog {
     }
 
     private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orx]", "");
+        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 }
