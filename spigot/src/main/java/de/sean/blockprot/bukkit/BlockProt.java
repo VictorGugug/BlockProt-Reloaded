@@ -438,10 +438,6 @@ public final class BlockProt extends JavaPlugin {
 
         updateLangCompletionPercentages(langFolder);
 
-        if (defaultConfig.isDialogsEnabled() && !VersionCompat.hasDialogApi()) {
-            getLogger().warning("use_dialogs=true but server does not support the Paper dialog API (Paper 1.21.7+ required). Falling back to inventories.");
-        }
-
         if (defaultConfig.isPerWorldsConfigEnabled()) {
             File worldsFile = new File(this.getDataFolder(), "worlds.yml");
             YamlConfiguration worldsDisk = WorldsConfig.scanAndPopulate(worldsFile, this.getConfig(), this.getLogger());
@@ -470,6 +466,8 @@ public final class BlockProt extends JavaPlugin {
             String dialogsUnavailable = Translator.get(TranslationKey.CONSOLE__DIALOGS_UNAVAILABLE);
             BlockProtConsole.warn(dialogsUnavailable);
             BlockProtLogger.warn(dialogsUnavailable);
+            defaultConfig.setAndSave("use_dialogs", false);
+            BlockProtLogger.log("dialogs", "Auto-disabled use_dialogs in config.yml (Paper dialog API unavailable).");
         }
     }
 

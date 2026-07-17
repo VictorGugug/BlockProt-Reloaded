@@ -109,7 +109,7 @@ public final class StatsDialog {
         String nextPageKey = isPlayerPage ? KEY_GLOBAL : KEY_PLAYER;
 
         DialogButton toggleBtn = new DialogButton("toggle",
-            Component.text("📊 " + toggleLabel, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__STATS)) + toggleLabel, NamedTextColor.WHITE),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__SWITCH_VIEW)), TextColor.color(0x888888)),
             p -> show(p, backOrigin, nextPageKey)
         );

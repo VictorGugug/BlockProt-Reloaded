@@ -141,7 +141,7 @@ public final class UserSettingsDialog {
                                          TextColor onColor, TextColor offColor) {
         TextColor color = enabled ? onColor : offColor;
         return Component.text()
-            .append(Component.text(enabled ? "● " : "○ ", color))
+            .append(Component.text(stripColor(Translator.get(enabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), color))
             .append(Component.text(name, NamedTextColor.WHITE))
             .build();
     }

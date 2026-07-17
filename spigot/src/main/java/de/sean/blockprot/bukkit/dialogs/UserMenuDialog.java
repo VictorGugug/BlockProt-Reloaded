@@ -68,7 +68,7 @@ public final class UserMenuDialog {
             stripColor(Translator.get(TranslationKey.DIALOGS__CHOOSE_OPTION)), TextColor.color(0x888888))));
 
         DialogButton settingsBtn = new DialogButton("settings",
-            Component.text("⚙ " + settings, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__SETTINGS)) + settings, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__SETTINGS)), PASTEL_MINT),
             p -> {
                 new PlayerSettingsHandler(p).setHasPlayerInteractedWithMenu(true);
@@ -77,19 +77,19 @@ public final class UserMenuDialog {
         );
 
         DialogButton friendsBtn = new DialogButton("friends",
-            Component.text("👤 " + friends, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__FRIENDS)) + friends, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__FRIENDS)), SOFT_BLUE),
             p -> FriendManageDialog.show(p)
         );
 
         DialogButton statsBtn = new DialogButton("stats",
-            Component.text("📊 " + stats, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__STATS)) + stats, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__STATS)), PASTEL_PURPLE),
             p -> StatsDialog.show(p, DialogOrigin.USER_MENU)
         );
 
         DialogButton aboutBtn = new DialogButton("about",
-            Component.text("ℹ " + about, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__ABOUT)) + about, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__ABOUT)), PASTEL_GOLD),
             p -> AboutDialog.show(p)
         );

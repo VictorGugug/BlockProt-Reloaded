@@ -73,7 +73,7 @@ public final class IntegrationsDialog {
             TextColor c = enabled ? PASTEL_MINT : PASTEL_CORAL;
             buttons.add(new DialogButton("int_" + integration.name,
                 Component.text()
-                    .append(Component.text(enabled ? "● " : "○ ", c))
+                    .append(Component.text(stripColor(Translator.get(enabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
                     .append(Component.text(integration.name, NamedTextColor.WHITE))
                     .build(),
                 Component.join(JoinConfiguration.newlines(),

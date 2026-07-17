@@ -38,7 +38,7 @@ public final class DialogBridgeFactory {
         if (!VersionCompat.hasDialogApi()) {
             if (!loggedNoApi) {
                 BlockProt.getInstance().getLogger().warning(
-                    "Dialog API not found (requires Paper 1.21.7+). Falling back to inventories.");
+                    "Dialog API not found (requires Paper 1.21.7+). Falling back to inventories. Set use_dialogs: false in config.yml to suppress this warning, or the plugin will auto-disable it on next reload.");
                 loggedNoApi = true;
             }
             return null;

@@ -120,7 +120,7 @@ public final class BlockSettingsDialog {
         String label = stripColor(Translator.get(labelKey));
         return new DialogButton(id,
             Component.text()
-                .append(Component.text(active ? "● " : "○ ", c))
+                .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
                 .append(Component.text(label, NamedTextColor.WHITE))
                 .build(),
             Component.join(JoinConfiguration.newlines(),

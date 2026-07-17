@@ -102,7 +102,7 @@ public final class InfoDialog {
 
         for (PlayerEntry entry : pageEntries) {
             buttons.add(new DialogButton("player_" + entry.name,
-                Component.text("👤 " + entry.name, NamedTextColor.WHITE),
+                Component.text(stripColor(Translator.get(TranslationKey.ICON__INFO)) + entry.name, NamedTextColor.WHITE),
                 Component.join(JoinConfiguration.newlines(),
                     Component.text(entry.blockCount + stripColor(Translator.get(TranslationKey.DIALOGS__INFO__PROTECTED_BLOCKS)), SOFT_GRAY),
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_CHAT)),

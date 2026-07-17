@@ -86,7 +86,7 @@ public final class LockablesDialog {
             String catLabel = translateCategory(entry.label);
             buttons.add(new DialogButton("cat_" + entry.label,
                 Component.text()
-                    .append(Component.text(active ? "● " : "○ ", c))
+                    .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
                     .append(Component.text(catLabel, NamedTextColor.WHITE))
                     .append(Component.text(" (" + entry.activeCount + "/" + entry.totalCount + ")", TextColor.color(0x888888)))
                     .build(),

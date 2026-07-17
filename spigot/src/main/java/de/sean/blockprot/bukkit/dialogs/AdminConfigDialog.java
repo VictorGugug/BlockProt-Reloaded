@@ -128,7 +128,7 @@ public final class AdminConfigDialog {
         String toggleHint = stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_HINT));
         buttons.add(new DialogButton("toggle_all",
             Component.text()
-                .append(Component.text(allEnabled ? "○ " : "● ", allEnabled ? PASTEL_CORAL : PASTEL_MINT))
+                .append(Component.text(stripColor(Translator.get(allEnabled ? TranslationKey.ICON__TOGGLE_OFF : TranslationKey.ICON__TOGGLE_ON)), allEnabled ? PASTEL_CORAL : PASTEL_MINT))
                 .append(Component.text(toggleLabel, NamedTextColor.WHITE))
                 .build(),
             Component.text(toggleHint, TextColor.color(0x888888)),
@@ -162,7 +162,7 @@ public final class AdminConfigDialog {
                 : stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CLICK_ENABLE));
             buttons.add(new DialogButton("lang_" + lang,
                 Component.text()
-                    .append(Component.text(isEnabled ? "● " : "○ ", c))
+                    .append(Component.text(stripColor(Translator.get(isEnabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
                     .append(labelComp)
                     .build(),
                 Component.join(JoinConfiguration.newlines(),
@@ -626,12 +626,12 @@ public final class AdminConfigDialog {
         TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
         return new DialogButton(id,
             Component.text()
-                .append(Component.text(active ? "● " : "○ ", c))
+                .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
                 .append(Component.text(configKey, NamedTextColor.WHITE))
                 .build(),
             Component.join(JoinConfiguration.newlines(),
                 Component.text(label, SOFT_GRAY),
-                Component.text(active ? "● true" : "○ false", c),
+                Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TRUE : TranslationKey.ICON__FALSE)), c),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_BOOL)), TextColor.color(0x888888))),
             handler);
     }
@@ -642,13 +642,13 @@ public final class AdminConfigDialog {
         String marker = stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__DIALOG_MARKER));
         return new DialogButton(id,
             Component.text()
-                .append(Component.text(active ? "● " : "○ ", c))
+                .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
                 .append(Component.text(configKey, NamedTextColor.WHITE))
                 .build(),
             Component.join(JoinConfiguration.newlines(),
                 Component.text(marker, PASTEL_GOLD),
                 Component.text(label, SOFT_GRAY),
-                Component.text(active ? "● true" : "○ false", c),
+                Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TRUE : TranslationKey.ICON__FALSE)), c),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_BOOL)), TextColor.color(0x888888))),
             handler);
     }

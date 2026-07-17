@@ -101,8 +101,8 @@ use_menus: false
 
 # Use Minecraft's native dialog system instead of inventories/anvils/chat
 # for interaction menus. Requires Paper 1.21.7 or later; if the running
-# server does not expose the dialog API, this falls back to the normal
-# menus automatically and a warning is logged.
+# server does not expose the dialog API, this is auto-disabled to false
+# and a warning is logged. Set to true only on Paper 1.21.7+.
 use_dialogs: false
 
 # Maximum duration (in days) when granting timed access to a player.

@@ -113,7 +113,7 @@ public final class UnlockDialog {
                 + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ();
 
             buttons.add(new DialogButton("block_" + safePage + "_" + buttons.size(),
-                Component.text((backOrigin == DialogOrigin.INFO ? "🔍 " : "🔓 ") + desc, NamedTextColor.WHITE),
+                Component.text(stripColor(Translator.get(backOrigin == DialogOrigin.INFO ? TranslationKey.ICON__SEARCH : TranslationKey.ICON__UNLOCK)) + desc, NamedTextColor.WHITE),
                 Component.join(JoinConfiguration.newlines(),
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__CLICK_HINT)),
                         TextColor.color(0x888888)),

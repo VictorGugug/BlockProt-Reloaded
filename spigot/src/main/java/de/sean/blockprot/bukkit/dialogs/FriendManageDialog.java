@@ -112,7 +112,7 @@ public final class FriendManageDialog {
         TextColor statusColor = isPublic ? PASTEL_MINT : PASTEL_CORAL;
         body.add(DialogBodyEntry.text(Component.text()
             .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__STATUS_LABEL)), SOFT_GRAY))
-            .append(Component.text("● " + statusStr, statusColor))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.ICON__TOGGLE_ON)) + statusStr, statusColor))
             .build()));
 
         List<DialogButton> buttons = new ArrayList<>();
@@ -213,11 +213,11 @@ public final class FriendManageDialog {
         TextColor statusColor = isPublic ? PASTEL_MINT : PASTEL_CORAL;
         body.add(DialogBodyEntry.text(Component.text()
             .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__STATUS_LABEL)), SOFT_GRAY))
-            .append(Component.text("● " + statusStr, statusColor))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.ICON__TOGGLE_ON)) + statusStr, statusColor))
             .build()));
 
         DialogButton searchBtn = new DialogButton("search",
-            Component.text("🔍 " + search, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__SEARCH)) + search, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH)), SOFT_BLUE),
             p -> {
                 p.closeInventory();
@@ -226,7 +226,7 @@ public final class FriendManageDialog {
         );
 
         DialogButton historyBtn = new DialogButton("history",
-            Component.text("📖 " + history, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__HISTORY)) + history, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH_HISTORY)), PASTEL_GOLD),
             p -> {
                 List<String> historyList = new PlayerSettingsHandler(p).getSearchHistory();
@@ -304,7 +304,7 @@ public final class FriendManageDialog {
                                          TextColor onColor, TextColor offColor) {
         TextColor color = enabled ? onColor : offColor;
         return Component.text()
-            .append(Component.text(enabled ? "● " : "○ ", color))
+            .append(Component.text(stripColor(Translator.get(enabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), color))
             .append(Component.text(name, NamedTextColor.WHITE))
             .build();
     }

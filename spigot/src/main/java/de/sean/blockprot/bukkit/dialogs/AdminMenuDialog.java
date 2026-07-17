@@ -78,13 +78,13 @@ public final class AdminMenuDialog {
             stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CHOOSE)), TextColor.color(0x888888))));
 
         DialogButton lockablesBtn = new DialogButton("lockables",
-            Component.text("📦 " + lockables, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__LOCKABLES)) + lockables, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__LOCKABLES)), PASTEL_MINT),
             p -> LockablesDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
         DialogButton reloadBtn = new DialogButton("reload",
-            Component.text("🔄 " + reload, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__RELOAD)) + reload, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD)), SOFT_BLUE),
             p -> {
                 new BackupTask(BlockProt.getInstance().getDataFolder(), true).run();
@@ -96,31 +96,31 @@ public final class AdminMenuDialog {
         );
 
         DialogButton updateBtn = new DialogButton("update",
-            Component.text("🔍 " + update, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__SEARCH)) + update, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE)), SOFT_BLUE),
             p -> UpdateDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
         DialogButton integrationsBtn = new DialogButton("integrations",
-            Component.text("🔗 " + integrations, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__INTEGRATIONS)) + integrations, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS)), SOFT_BLUE),
             p -> IntegrationsDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
         DialogButton configBtn = new DialogButton("config",
-            Component.text("📝 " + config, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__CONFIG)) + config, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_MENU__CONFIG_TOOLTIP)), PASTEL_GOLD),
             p -> AdminConfigDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
         DialogButton statsBtn = new DialogButton("stats",
-            Component.text("📊 " + stats, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__STATS)) + stats, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS)), PASTEL_PURPLE),
             p -> StatsDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
         DialogButton debugBtn = new DialogButton("debug",
-            Component.text("🔧 " + debug, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__DEBUG)) + debug, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG)), PASTEL_CORAL),
             p -> {
                 BlockProt.getInstance().getLogger().info("=== /bp debug run from dialog ===");
@@ -138,13 +138,13 @@ public final class AdminMenuDialog {
         );
 
         DialogButton infoBtn = new DialogButton("info",
-            Component.text("👤 " + info, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__INFO)) + info, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO)), SOFT_BLUE),
             p -> InfoDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
         DialogButton expiryBtn = new DialogButton("world_expiry",
-            Component.text("⏱ " + worldExpiry, NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__WORLD_EXPIRY)) + worldExpiry, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY)), PASTEL_GOLD),
             p -> ProtdelDialog.show(p, null)
         );

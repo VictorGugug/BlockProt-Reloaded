@@ -85,7 +85,7 @@ public final class EntityFriendManageDialog {
                 String name = getPlayerName(friendUuid);
                 boolean isManager = handler.isManager(friendUuid);
                 body.add(DialogBodyEntry.text(Component.text()
-                    .append(Component.text(isManager ? "● " : "○ ", isManager ? PASTEL_MINT : PASTEL_CORAL))
+                    .append(Component.text(stripColor(Translator.get(isManager ? TranslationKey.ICON__TOGGLE_ON_ACTIVE : TranslationKey.ICON__TOGGLE_OFF_INACTIVE)), isManager ? PASTEL_MINT : PASTEL_CORAL))
                     .append(Component.text(name != null ? name : friendUuid, NamedTextColor.WHITE))
                     .append(Component.text(isManager ? stripColor(Translator.get(TranslationKey.DIALOGS__ENTITY__MANAGER_SUFFIX)) : "", SOFT_GRAY))
                     .build()));
@@ -95,7 +95,7 @@ public final class EntityFriendManageDialog {
         List<DialogButton> buttons = new ArrayList<>();
 
         buttons.add(new DialogButton("add",
-            Component.text("➕ " + stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH)),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__ADD)) + stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH)),
                 NamedTextColor.WHITE),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__FRIENDS__MANAGE_HINT)),
                 TextColor.color(0x888888)),

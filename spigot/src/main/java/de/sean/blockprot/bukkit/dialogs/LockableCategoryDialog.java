@@ -89,7 +89,7 @@ public final class LockableCategoryDialog {
 
             buttons.add(new DialogButton("mat_" + mat.name(),
                 Component.text()
-                    .append(Component.text(active ? "● " : "○ ", c))
+                    .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
                     .append(Component.text(displayName, NamedTextColor.WHITE))
                     .build(),
                 Component.join(JoinConfiguration.newlines(),
@@ -106,7 +106,7 @@ public final class LockableCategoryDialog {
 
         List<DialogButton> extraButtons = new ArrayList<>();
         extraButtons.add(new DialogButton("enable_all",
-            Component.text("✔ " + stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__ENABLE_ALL)), PASTEL_MINT),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__ENABLE_ALL)) + stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__ENABLE_ALL)), PASTEL_MINT),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE)), TextColor.color(0x888888)),
             p -> {
                 DefaultConfig cfg2 = BlockProt.getDefaultConfig();
@@ -117,7 +117,7 @@ public final class LockableCategoryDialog {
             }
         ));
         extraButtons.add(new DialogButton("disable_all",
-            Component.text("✖ " + stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__DISABLE_ALL)), PASTEL_CORAL),
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__DISABLE_ALL)) + stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__DISABLE_ALL)), PASTEL_CORAL),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE)), TextColor.color(0x888888)),
             p -> {
                 DefaultConfig cfg2 = BlockProt.getDefaultConfig();

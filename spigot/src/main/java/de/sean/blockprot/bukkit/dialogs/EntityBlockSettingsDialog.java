@@ -63,7 +63,7 @@ public final class EntityBlockSettingsDialog {
         List<DialogButton> actions = new ArrayList<>();
         actions.add(new DialogButton("hopper",
             Component.text()
-                .append(Component.text(hopperEnabled ? "● " : "○ ", hopperEnabled ? PASTEL_MINT : PASTEL_CORAL))
+                .append(Component.text(stripColor(Translator.get(hopperEnabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), hopperEnabled ? PASTEL_MINT : PASTEL_CORAL))
                 .append(Component.text(label, NamedTextColor.WHITE))
                 .build(),
             Component.join(JoinConfiguration.newlines(),
