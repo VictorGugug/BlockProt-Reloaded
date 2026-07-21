@@ -140,7 +140,7 @@ public final class StatsDialog {
         switch (origin) {
             case USER_MENU: return p -> UserMenuDialog.show(p);
             case ADMIN_MENU: return p -> AdminMenuDialog.show(p);
-            default: return p -> {};
+            default: return null;
         }
     }
 }

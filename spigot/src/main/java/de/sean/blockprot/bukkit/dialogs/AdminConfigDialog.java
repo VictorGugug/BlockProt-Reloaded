@@ -89,7 +89,7 @@ public final class AdminConfigDialog {
         DialogButton backBtn = new DialogButton("back",
             Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__RETURN_ADMIN_MENU)), TextColor.color(0x888888)),
-            exitOrigin == DialogOrigin.NONE ? p -> {} : p -> AdminMenuDialog.show(p));
+            exitOrigin == DialogOrigin.NONE ? null : p -> AdminMenuDialog.show(p));
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 3);
     }
@@ -415,7 +415,7 @@ public final class AdminConfigDialog {
             exitOrigin == DialogOrigin.NONE ? 
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLOSE)), TextColor.color(0x888888)) :
                 returnHint(),
-            exitOrigin == DialogOrigin.NONE ? p -> {} : p -> showCategories(p, backOrigin));
+            exitOrigin == DialogOrigin.NONE ? null : p -> showCategories(p, backOrigin));
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 2);
     }
@@ -662,7 +662,7 @@ public final class AdminConfigDialog {
             exitOrigin == DialogOrigin.NONE ? 
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLOSE)), TextColor.color(0x888888)) :
                 returnHint(),
-            exitOrigin == DialogOrigin.NONE ? p -> {} : p -> showCategories(p, backOrigin));
+            exitOrigin == DialogOrigin.NONE ? null : p -> showCategories(p, backOrigin));
         bridge.showMultiAction(player, title, body, buttons, backBtn, 2);
     }
 

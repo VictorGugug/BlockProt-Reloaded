@@ -88,7 +88,7 @@ public final class EntityInfoDialog {
         DialogButton exitBtn = new DialogButton("exit",
             Component.text(stripColor(Translator.get(exitOrigin != DialogOrigin.NONE ? TranslationKey.DIALOGS__BACK : TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin != DialogOrigin.NONE ? p -> BlockLockDialog.showForEntity(player, entity, handler) : p -> {});
+            exitOrigin != DialogOrigin.NONE ? p -> BlockLockDialog.showForEntity(player, entity, handler) : null);
 
         bridge.showMultiAction(player, title, body, List.of(exitBtn), null, 1);
     }

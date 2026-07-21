@@ -29,7 +29,7 @@ public record DialogButton(
     @NotNull String id,
     @NotNull Component label,
     @Nullable Component tooltip,
-    @NotNull DialogClickHandler onClick
+    @Nullable DialogClickHandler onClick
 ) {
     @FunctionalInterface
     public interface DialogClickHandler {

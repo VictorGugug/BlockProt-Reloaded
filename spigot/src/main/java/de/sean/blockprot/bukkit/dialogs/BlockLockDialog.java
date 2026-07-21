@@ -283,7 +283,7 @@ public final class BlockLockDialog {
         DialogButton exitBtn = new DialogButton("exit",
             Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__RETURN_PREVIOUS : TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin == DialogOrigin.NONE ? p -> {} : (backOrigin == DialogOrigin.ADMIN_MENU ? p -> AdminMenuDialog.show(p) : p -> {})
+            exitOrigin == DialogOrigin.NONE ? null : (backOrigin == DialogOrigin.ADMIN_MENU ? p -> AdminMenuDialog.show(p) : null)
         );
 
         bridge.showMultiAction(player, title, body, actions, exitBtn, 3);
@@ -415,7 +415,7 @@ public final class BlockLockDialog {
         DialogButton exitBtn2 = new DialogButton("exit",
             Component.text(stripColor(Translator.get(exitOrigin2 == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(exitOrigin2 == DialogOrigin.NONE ? TranslationKey.DIALOGS__RETURN_PREVIOUS : TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin2 == DialogOrigin.NONE ? p -> {} : p -> {}
+            null
         );
 
         bridge.showMultiAction(player, title, body, actions, exitBtn2, 3);

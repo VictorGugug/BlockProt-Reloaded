@@ -133,7 +133,7 @@ public final class UserSettingsDialog {
     static DialogButton.DialogClickHandler originBack(Player player, DialogOrigin origin) {
         switch (origin) {
             case USER_MENU: return p -> UserMenuDialog.show(p);
-            default: return p -> {};
+            default: return null;
         }
     }
 

@@ -173,7 +173,7 @@ public final class ProtdelDialog {
         DialogButton exitBtn = new DialogButton("exit",
             Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin == DialogOrigin.NONE ? p -> {} : p -> showWorldSelector(p, bridge, backOrigin)
+            exitOrigin == DialogOrigin.NONE ? null : p -> showWorldSelector(p, bridge, backOrigin)
         );
 
         bridge.showMultiAction(player, title, body, buttons, exitBtn, 1);

@@ -175,7 +175,7 @@ public final class FriendManageDialog {
         DialogButton exitBtn = new DialogButton("exit",
             Component.text(stripColor(Translator.get(exitOrigin != DialogOrigin.NONE ? TranslationKey.DIALOGS__BACK : TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin != DialogOrigin.NONE ? p -> BlockLockDialog.show(p, block, handler) : p -> {}
+            exitOrigin != DialogOrigin.NONE ? p -> BlockLockDialog.show(p, block, handler) : null
         );
 
         bridge.showMultiAction(player, title, body, buttons, exitBtn, 2);
@@ -296,7 +296,7 @@ public final class FriendManageDialog {
     private static DialogButton.DialogClickHandler originBack(Player player, DialogOrigin origin) {
         switch (origin) {
             case USER_MENU: return p -> UserMenuDialog.show(p);
-            default: return p -> {};
+            default: return null;
         }
     }
 

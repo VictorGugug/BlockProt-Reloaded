@@ -193,7 +193,7 @@ public final class AdminMenuDialog {
         switch (origin) {
             case ADMIN_MENU: return p -> AdminMenuDialog.show(p);
             case USER_MENU: return p -> UserMenuDialog.show(p);
-            default: return p -> {};
+            default: return null;
         }
     }
 }

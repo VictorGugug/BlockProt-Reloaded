@@ -131,7 +131,7 @@ public final class UserMenuDialog {
     static DialogButton.DialogClickHandler originBack(Player player, DialogOrigin origin) {
         switch (origin) {
             case ADMIN_MENU: return p -> AdminMenuDialog.show(p);
-            default: return p -> {};
+            default: return null;
         }
     }
 }

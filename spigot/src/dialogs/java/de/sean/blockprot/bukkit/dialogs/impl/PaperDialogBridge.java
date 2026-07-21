@@ -29,6 +29,7 @@ import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import net.kyori.adventure.text.Component;
@@ -43,6 +44,35 @@ public final class PaperDialogBridge implements DialogBridge {
     private static final ClickCallback.Options CLICK_OPTIONS =
         ClickCallback.Options.builder().uses(1).build();
 
+    private static volatile boolean closeDialogChecked = false;
+    private static volatile @Nullable Method closeDialogMethod = null;
+
+    /*
+     * Audience#closeDialog() was added in Adventure 4.24.0 (Minecraft 1.21.6);
+     * paper-api 1.21.7 bundles an older Adventure without it. Resolved by
+     * reflection against the runtime server; falls back to closeInventory()
+     * on a bare 1.21.7 server.
+     */
+    private static void closeDialogOrInventory(@NotNull Player player) {
+        if (!closeDialogChecked) {
+            try {
+                closeDialogMethod = player.getClass().getMethod("closeDialog");
+            } catch (NoSuchMethodException e) {
+                closeDialogMethod = null;
+            }
+            closeDialogChecked = true;
+        }
+        Method method = closeDialogMethod;
+        if (method != null) {
+            try {
+                method.invoke(player);
+                return;
+            } catch (ReflectiveOperationException ignored) {
+            }
+        }
+        player.closeInventory();
+    }
+
     @Override
     public void showNotice(
         @NotNull Player player,
@@ -53,6 +83,7 @@ public final class PaperDialogBridge implements DialogBridge {
         Dialog dialog = Dialog.create(builder -> builder.empty()
             .base(DialogBase.builder(title)
                 .body(body.stream().map(DialogBody::plainMessage).toList())
+                .afterAction(DialogBase.DialogAfterAction.NONE)
                 .build()
             )
             .type(ok != null
@@ -73,6 +104,7 @@ public final class PaperDialogBridge implements DialogBridge {
         Dialog dialog = Dialog.create(builder -> builder.empty()
             .base(DialogBase.builder(title)
                 .body(body.stream().map(DialogBody::plainMessage).toList())
+                .afterAction(DialogBase.DialogAfterAction.NONE)
                 .build()
             )
             .type(DialogType.confirmation(toActionButton(yes), toActionButton(no)))
@@ -90,6 +122,7 @@ public final class PaperDialogBridge implements DialogBridge {
         Dialog dialog = Dialog.create(builder -> builder.empty()
             .base(DialogBase.builder(title)
                 .body(body.stream().map(DialogBody::plainMessage).toList())
+                .afterAction(DialogBase.DialogAfterAction.NONE)
                 .build()
             )
             .type(DialogType.multiAction(
@@ -125,6 +158,7 @@ public final class PaperDialogBridge implements DialogBridge {
         Dialog dialog = Dialog.create(builder -> builder.empty()
             .base(DialogBase.builder(title)
                 .body(dialogBody)
+                .afterAction(DialogBase.DialogAfterAction.NONE)
                 .build()
             )
             .type(DialogType.multiAction(
@@ -137,18 +171,26 @@ public final class PaperDialogBridge implements DialogBridge {
 
     private @NotNull ActionButton toActionButton(@NotNull DialogButton btn) {
         var handler = btn.onClick();
+        DialogAction action;
         if (handler == null) {
-            handler = p -> {};
+            action = DialogAction.customClick(
+                (view, audience) -> {
+                    if (audience instanceof Player player) {
+                        closeDialogOrInventory(player);
+                    }
+                },
+                CLICK_OPTIONS
+            );
+        } else {
+            action = DialogAction.customClick(
+                (view, audience) -> {
+                    if (audience instanceof Player player) {
+                        handler.handle(player);
+                    }
+                },
+                CLICK_OPTIONS
+            );
         }
-        final var finalHandler = handler;
-        var action = DialogAction.customClick(
-            (view, audience) -> {
-                if (audience instanceof Player player) {
-                    finalHandler.handle(player);
-                }
-            },
-            CLICK_OPTIONS
-        );
         var builder = ActionButton.builder(btn.label()).action(action);
         if (btn.tooltip() != null) {
             builder.tooltip(btn.tooltip());

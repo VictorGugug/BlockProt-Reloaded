@@ -220,7 +220,7 @@ public final class UnlockDialog {
         switch (origin) {
             case ADMIN_MENU: return p -> AdminMenuDialog.show(p);
             case INFO: return p -> InfoDialog.show(p, DialogOrigin.ADMIN_MENU);
-            default: return p -> {};
+            default: return null;
         }
     }
 }

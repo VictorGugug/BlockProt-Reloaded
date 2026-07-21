@@ -112,7 +112,7 @@ public final class IntegrationsDialog {
     private static DialogButton.DialogClickHandler backAction(Player player, DialogOrigin origin) {
         switch (origin) {
             case ADMIN_MENU: return p -> AdminMenuDialog.show(p);
-            default: return p -> {};
+            default: return null;
         }
     }
 }

@@ -33,6 +33,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public final class LockableCategoryDialog {
@@ -79,6 +80,11 @@ public final class LockableCategoryDialog {
                 + " / "
                 + stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE)),
             TextColor.color(0x888888))));
+        for (Material mat : pageMats) {
+            if (mat.isItem()) {
+                body.add(DialogBodyEntry.item(new ItemStack(mat)));
+            }
+        }
 
         List<DialogButton> buttons = new ArrayList<>();
 
@@ -149,7 +155,7 @@ public final class LockableCategoryDialog {
         DialogButton backBtn = new DialogButton("back",
             Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin == DialogOrigin.NONE ? p -> {} : p -> LockablesDialog.show(p, backOrigin)
+            exitOrigin == DialogOrigin.NONE ? null : p -> LockablesDialog.show(p, backOrigin)
         );
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 3);
