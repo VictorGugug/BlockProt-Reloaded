@@ -100,7 +100,7 @@ public final class EntityFriendManageDialog {
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__FRIENDS__MANAGE_HINT)),
                 TextColor.color(0x888888)),
             p -> {
-                p.closeInventory();
+                bridge.closeDialog(p);
                 Consumer<String> handleName = text -> {
                     Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
                         @SuppressWarnings("deprecation")
@@ -134,11 +134,13 @@ public final class EntityFriendManageDialog {
                 p -> show(p, entity, handler, next)));
         }
 
-        DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(DialogOrigin.NONE);
+        // Always returns to the parent BlockLockDialog: this is one level of internal
+        // navigation within the same entity menu, not an external-origin exit, so it must
+        // not be gated by DialogBridgeFactory.resolveOrigin()/areExtraCommandsEnabled().
         DialogButton exitBtn = new DialogButton("exit",
-            Component.text(stripColor(Translator.get(exitOrigin != DialogOrigin.NONE ? TranslationKey.DIALOGS__BACK : TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin != DialogOrigin.NONE ? p -> BlockLockDialog.showForEntity(player, entity, handler) : null);
+            p -> BlockLockDialog.showForEntity(player, entity, handler));
 
         bridge.showMultiAction(player, title, body, buttons, exitBtn, 2);
     }

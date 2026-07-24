@@ -33,7 +33,6 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public final class LockableCategoryDialog {
@@ -80,12 +79,6 @@ public final class LockableCategoryDialog {
                 + " / "
                 + stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE)),
             TextColor.color(0x888888))));
-        for (Material mat : pageMats) {
-            if (mat.isItem()) {
-                body.add(DialogBodyEntry.item(new ItemStack(mat)));
-            }
-        }
-
         List<DialogButton> buttons = new ArrayList<>();
 
         for (Material mat : pageMats) {
@@ -151,11 +144,15 @@ public final class LockableCategoryDialog {
         buttons.addAll(navButtons);
         buttons.addAll(extraButtons);
 
-        DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
+        // Always returns to the parent LockablesDialog (category list): this is one level
+        // of internal navigation within the same Lockables feature, not an external-origin
+        // exit, so it must not be gated by DialogBridgeFactory.resolveOrigin()/
+        // areExtraCommandsEnabled(). Only LockablesDialog's own back button (the outermost
+        // level of this feature) decides whether to exit to an external menu or close.
         DialogButton backBtn = new DialogButton("back",
-            Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
-            Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin == DialogOrigin.NONE ? null : p -> LockablesDialog.show(p, backOrigin)
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
+            p -> LockablesDialog.show(p, backOrigin)
         );
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 3);

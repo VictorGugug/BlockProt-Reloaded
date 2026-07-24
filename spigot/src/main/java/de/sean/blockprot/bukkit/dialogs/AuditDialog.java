@@ -49,7 +49,8 @@ public final class AuditDialog {
     private AuditDialog() {}
 
     public static void show(@NotNull Player player, @NotNull Location location) {
-        show(player, location, null, 0, () -> {});
+        // No parent menu to return to: exit button closes the dialog.
+        show(player, location, null, 0, null);
     }
 
     public static void show(@NotNull Player player, @NotNull Block block) {
@@ -58,7 +59,7 @@ public final class AuditDialog {
 
     public static void show(@NotNull Player player, @NotNull Location location,
                              @Nullable String filterPlayerUuid, int page,
-                             @NotNull Runnable backAction) {
+                             @Nullable Runnable backAction) {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
 
@@ -70,9 +71,9 @@ public final class AuditDialog {
                 List.of(Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUDIT__NO_ENTRIES)),
                     SOFT_GRAY)),
                 new DialogButton("exit",
-                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
+                    Component.text(stripColor(Translator.get(backAction != null ? TranslationKey.DIALOGS__BACK : TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-                    null));
+                    backAction != null ? p -> backAction.run() : null));
             return;
         }
 
@@ -88,9 +89,9 @@ public final class AuditDialog {
                 List.of(Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUDIT__NO_ENTRIES)),
                     SOFT_GRAY)),
                 new DialogButton("exit",
-                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
+                    Component.text(stripColor(Translator.get(backAction != null ? TranslationKey.DIALOGS__BACK : TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-                    null));
+                    backAction != null ? p -> backAction.run() : null));
             return;
         }
 
@@ -140,11 +141,14 @@ public final class AuditDialog {
                 p -> show(player, location, filterPlayerUuid, next, backAction)));
         }
 
-        DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(DialogOrigin.NONE);
+        // backAction is only null for the standalone entry point (no parent menu to return
+        // to), in which case the button just closes the dialog. Otherwise it always runs
+        // backAction: this is one level of internal navigation back to whichever menu
+        // opened the audit log, not an external-origin exit gated by config.
         DialogButton exitBtn = new DialogButton("exit",
-            Component.text(stripColor(Translator.get(exitOrigin != DialogOrigin.NONE ? TranslationKey.DIALOGS__BACK : TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
+            Component.text(stripColor(Translator.get(backAction != null ? TranslationKey.DIALOGS__BACK : TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin != DialogOrigin.NONE ? p -> backAction.run() : null);
+            backAction != null ? p -> backAction.run() : null);
 
         bridge.showMultiAction(player, title, body, buttons, exitBtn, 1);
     }

@@ -23,15 +23,19 @@ package de.sean.blockprot.bukkit.dialogs.impl;
 import de.sean.blockprot.bukkit.dialogs.DialogBodyEntry;
 import de.sean.blockprot.bukkit.dialogs.DialogBridge;
 import de.sean.blockprot.bukkit.dialogs.DialogButton;
+import de.sean.blockprot.bukkit.dialogs.DialogTextField;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.body.DialogBody;
+import io.papermc.paper.registry.data.dialog.input.DialogInput;
+import io.papermc.paper.registry.data.dialog.input.TextDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickCallback;
 import org.bukkit.entity.Player;
@@ -53,6 +57,11 @@ public final class PaperDialogBridge implements DialogBridge {
      * reflection against the runtime server; falls back to closeInventory()
      * on a bare 1.21.7 server.
      */
+    @Override
+    public void closeDialog(@NotNull Player player) {
+        closeDialogOrInventory(player);
+    }
+
     private static void closeDialogOrInventory(@NotNull Player player) {
         if (!closeDialogChecked) {
             try {
@@ -83,6 +92,7 @@ public final class PaperDialogBridge implements DialogBridge {
         Dialog dialog = Dialog.create(builder -> builder.empty()
             .base(DialogBase.builder(title)
                 .body(body.stream().map(DialogBody::plainMessage).toList())
+                .pause(false)
                 .afterAction(DialogBase.DialogAfterAction.NONE)
                 .build()
             )
@@ -104,6 +114,7 @@ public final class PaperDialogBridge implements DialogBridge {
         Dialog dialog = Dialog.create(builder -> builder.empty()
             .base(DialogBase.builder(title)
                 .body(body.stream().map(DialogBody::plainMessage).toList())
+                .pause(false)
                 .afterAction(DialogBase.DialogAfterAction.NONE)
                 .build()
             )
@@ -122,6 +133,7 @@ public final class PaperDialogBridge implements DialogBridge {
         Dialog dialog = Dialog.create(builder -> builder.empty()
             .base(DialogBase.builder(title)
                 .body(body.stream().map(DialogBody::plainMessage).toList())
+                .pause(false)
                 .afterAction(DialogBase.DialogAfterAction.NONE)
                 .build()
             )
@@ -158,6 +170,7 @@ public final class PaperDialogBridge implements DialogBridge {
         Dialog dialog = Dialog.create(builder -> builder.empty()
             .base(DialogBase.builder(title)
                 .body(dialogBody)
+                .pause(false)
                 .afterAction(DialogBase.DialogAfterAction.NONE)
                 .build()
             )
@@ -165,6 +178,63 @@ public final class PaperDialogBridge implements DialogBridge {
                 effectiveActions.stream().map(this::toActionButton).toList(),
                 exitAction,
                 columns))
+        );
+        player.showDialog(dialog);
+    }
+
+    @Override
+    public void showValueInput(
+        @NotNull Player player,
+        @NotNull Component title,
+        @NotNull List<DialogBodyEntry> body,
+        @NotNull DialogTextField field,
+        @NotNull Consumer<String> onSubmit,
+        @Nullable DialogButton back
+    ) {
+        List<io.papermc.paper.registry.data.dialog.body.DialogBody> dialogBody
+            = new ArrayList<>(body.size());
+        for (DialogBodyEntry entry : body) {
+            if (entry.text() != null) {
+                dialogBody.add(DialogBody.plainMessage(entry.text()));
+            } else if (entry.item() != null) {
+                dialogBody.add(DialogBody.item(entry.item()).build());
+            }
+        }
+
+        TextDialogInput textInput = DialogInput.text(
+            field.key(),
+            field.width() > 0 ? field.width() : DialogTextField.DEFAULT_WIDTH,
+            field.label(),
+            true,
+            field.initialValue(),
+            field.maxLength() > 0 ? field.maxLength() : 32,
+            null
+        );
+
+        DialogAction confirmAction = DialogAction.customClick(
+            (view, audience) -> {
+                if (!(audience instanceof Player p)) return;
+                String value = view.getText(field.key());
+                onSubmit.accept(value != null ? value : field.initialValue());
+            },
+            CLICK_OPTIONS
+        );
+        var confirmButton = ActionButton.builder(field.label()).action(confirmAction).build();
+
+        ActionButton backAction = back != null ? toActionButton(back) : null;
+
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+            .base(DialogBase.builder(title)
+                .body(dialogBody)
+                .inputs(List.of(textInput))
+                .pause(false)
+                .afterAction(DialogBase.DialogAfterAction.NONE)
+                .build()
+            )
+            .type(DialogType.multiAction(
+                List.of(confirmButton),
+                backAction,
+                1))
         );
         player.showDialog(dialog);
     }

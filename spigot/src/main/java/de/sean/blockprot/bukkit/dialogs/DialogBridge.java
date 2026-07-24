@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.dialogs;
 
 import java.util.List;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -28,6 +29,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface DialogBridge {
+
+    void closeDialog(@NotNull Player player);
 
     void showNotice(
         @NotNull Player player,
@@ -58,5 +61,24 @@ public interface DialogBridge {
         @NotNull List<DialogButton> actions,
         @Nullable DialogButton exit,
         int columns
+    );
+
+    /**
+     * Shows a dialog with a single native text input field plus a confirm
+     * button and an optional back/exit button. The input's current value is
+     * read back and passed to onSubmit in the same click that triggers the
+     * confirm button, without closing or re-showing the dialog first, so the
+     * client-side cursor-recenter behavior tied to opening a new Screen does
+     * not occur. Implementations that lack a native text-input dialog type
+     * should fall back to a chat/anvil/sign prompt instead of silently
+     * dropping the field.
+     */
+    void showValueInput(
+        @NotNull Player player,
+        @NotNull Component title,
+        @NotNull List<DialogBodyEntry> body,
+        @NotNull DialogTextField field,
+        @NotNull Consumer<String> onSubmit,
+        @Nullable DialogButton back
     );
 }

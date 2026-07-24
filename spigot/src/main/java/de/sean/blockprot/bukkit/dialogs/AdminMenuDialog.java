@@ -69,7 +69,7 @@ public final class AdminMenuDialog {
         String stats = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS));
         String debug = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG));
         String info = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO));
-        String worldExpiry = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY));
+        String protdel = stripColor(Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__TITLE));
 
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(
@@ -143,10 +143,10 @@ public final class AdminMenuDialog {
             p -> InfoDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
-        DialogButton expiryBtn = new DialogButton("world_expiry",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__WORLD_EXPIRY)) + worldExpiry, NamedTextColor.WHITE),
-            tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY)), PASTEL_GOLD),
-            p -> ProtdelDialog.show(p, null)
+        DialogButton protdelBtn = new DialogButton("protdel",
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__DISABLE_ALL)) + protdel, NamedTextColor.WHITE),
+            tooltip(protdel, PASTEL_CORAL),
+            p -> ProtdelDialog.show(p, null, DialogOrigin.ADMIN_MENU)
         );
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
@@ -165,7 +165,7 @@ public final class AdminMenuDialog {
         actions.add(statsBtn);
         actions.add(debugBtn);
         actions.add(infoBtn);
-        actions.add(expiryBtn);
+        actions.add(protdelBtn);
         bridge.showMultiAction(player, title, body, actions, exitBtn, 2);
     }
 

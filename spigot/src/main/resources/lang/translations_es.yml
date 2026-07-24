@@ -668,9 +668,12 @@ dialogs:
     enter_new_value: "§7Actual {key}: §f{value} §7- Ingresa nuevo valor:"
     new_value_prompt: "nuevo {key}"
     invalid_number: "§cNumero invalido: {input}"
+    confirm_value: "Confirmar"
     language:
       language_file: "El archivo de idioma para traducciones."
       replace_translations: "Auto-actualizar traducciones faltantes."
+      fallback_string: "Texto mostrado para una clave de traduccion faltante."
+      fallback_string_hint: "Texto de respaldo"
       status_header: "activado  desactivado  [ACTIVO] en config.yml"
       toggle_all_enable: "Activar todos los idiomas en lang.yml"
       toggle_all_disable: "Desactivar todos los idiomas en lang.yml"
@@ -683,6 +686,9 @@ dialogs:
       active_marker: "[ACTIVO]"
     worlds:
       per_worlds_config: "Config separada por mundo."
+      excluded_worlds: "Mundos donde el plugin esta completamente desactivado."
+      excluded_worlds_hint: "Nombres de mundos separados por comas, o vacio para ninguno"
+      excluded_worlds_empty: "(ninguno)"
     players:
       lock_on_place: "Auto-bloquear al colocar bloques."
       public_is_friend: "Bloques públicos cuentan como amigos."
@@ -713,6 +719,14 @@ dialogs:
       auto_protect_tame: "Auto-proteger entidades al domesticar."
       workstation_enabled: "Auto-proteger estaciones de aldeanos."
       workstation_radius: "Radio de protección de estaciones."
+      workstation_radius_hint: "Radio horizontal (bloques)"
+      workstation_vertical_radius: "Radio vertical de estaciones."
+      workstation_vertical_radius_hint: "Radio vertical (bloques)"
+      villager_locate_seconds: "Segundos para localizar un aldeano."
+      villager_locate_seconds_hint: "Tiempo limite de busqueda (segundos)"
+      menu_item: "Item usado para abrir el menu de protección de entidades."
+      menu_item_hint: "Nombre del material, ej. STICK"
+      menu_item_invalid: "§cMaterial desconocido: {input}"
     expiry:
       enabled: "Activar expiración global de protecciones."
       check_interval: "Intervalo de revisión (minutos)."
@@ -727,6 +741,7 @@ dialogs:
       owner_place: "Notificar al poner ítems."
     maintenance:
       inactivity_cleanup: "Días antes de limpiar protecciones (-1 = off)."
+      inactivity_cleanup_hint: "Dias (-1 = desactivado)"
       auto_reload: "Recargar config al cambiar archivo."
       session_log: "Activar registro de sesión."
       backups: "Crear copias de seguridad automáticas."

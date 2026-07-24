@@ -162,7 +162,6 @@ public final class ProtdelDialog {
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PROTDEL__RESTORE_HINT))
                     .replace("{count}", String.valueOf(count)), TextColor.color(0x888888)),
                 p -> {
-                    p.closeInventory();
                     executeUndo(player, ub);
                     showUndoSelector(player, bridge, backOrigin);
                 }

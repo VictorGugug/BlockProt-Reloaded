@@ -23,6 +23,7 @@ package de.sean.blockprot.bukkit.dialogs;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -156,6 +157,18 @@ public final class LockablesDialog {
             else if ((n.contains("CRAFTING") || n.contains("CARTOGRAPHY") || n.contains("GRINDSTONE") || n.contains("STONECUTTER") || n.contains("SMITHING") || n.contains("LOOM") || n.contains("BREWING_STAND") || n.contains("CAULDRON") || n.contains("ENCHANTING_TABLE") || n.contains("ANVIL")) && m.isBlock()) dest = catMap.get("Workstations");
             else if ((n.contains("BUTTON") || n.contains("LEVER") || n.contains("DAYLIGHT_DETECTOR") || n.endsWith("_BED") || n.equals("JUKEBOX") || n.equals("NOTE_BLOCK") || n.equals("BELL") || n.equals("DISPENSER") || n.equals("DROPPER") || n.equals("HOPPER") || n.equals("OBSERVER") || n.equals("TARGET") || n.contains("PRESSURE_PLATE")) && m.isBlock()) dest = catMap.get("Interactive");
             else if (cfg.isLockableEntity(m)) dest = catMap.get("Entities");
+            // Every category above is matched by material-name heuristics that don't always
+            // line up with BlockFamilyParser's real family membership (e.g. buttons, LEVER,
+            // DAYLIGHT_DETECTOR, beds, OBSERVER, TARGET, CRAFTING_TABLE match a category here
+            // but aren't part of any lockable family). Listing those produces a button that
+            // toggleLockable() silently no-ops on, since configKeyForMaterial() finds no family
+            // for it. This includes Entities: cfg.isLockableEntity() is backed by its own
+            // hand-written validator in DefaultConfig.loadBlocksFromConfig(), a separate list
+            // from BlockFamilyParser.isEntityMaterial() that must be kept in sync by hand, so
+            // it is not a structural guarantee against the same silent no-op. Gate every
+            // category, including Entities, on real family membership so every listed material
+            // is guaranteed to actually toggle regardless of whether those two lists drift.
+            if (dest != null && !isKnownLockableMaterial(m)) dest = null;
             if (dest != null) dest.add(m);
         }
 
@@ -167,6 +180,13 @@ public final class LockablesDialog {
         }
         result.removeIf(ce -> ce.totalCount == 0);
         return result;
+    }
+
+    private static boolean isKnownLockableMaterial(@NotNull Material m) {
+        for (BlockFamilyParser.Family family : BlockFamilyParser.Family.values()) {
+            if (BlockFamilyParser.getFamilyMembers(family).contains(m)) return true;
+        }
+        return false;
     }
 
     private static String translateCategory(String label) {

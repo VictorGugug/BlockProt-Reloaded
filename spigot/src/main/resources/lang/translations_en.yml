@@ -684,6 +684,7 @@ dialogs:
     enter_new_value: "§7Current {key}: §f{value} §7- Enter new value:"
     new_value_prompt: "new {key}"
     invalid_number: "§cInvalid number: {input}"
+    confirm_value: "Confirm"
     lock_on_place: "Auto-lock blocks when placed."
     public_is_friend: "Public blocks count as friends."
     redstone_disallowed: "Disallow redstone interaction by default."
@@ -709,6 +710,8 @@ dialogs:
     language:
       language_file: "The language file for translations."
       replace_translations: "Auto-update translations with missing keys."
+      fallback_string: "Text shown for a missing translation key."
+      fallback_string_hint: "Fallback text"
       status_header: "enabled  disabled  [ACTIVE] in config.yml"
       toggle_all_enable: "Enable all languages in lang.yml"
       toggle_all_disable: "Disable all languages in lang.yml"
@@ -721,6 +724,9 @@ dialogs:
       active_marker: "[ACTIVE]"
     worlds:
       per_worlds_config: "Separate config per world."
+      excluded_worlds: "Worlds where the plugin is entirely disabled."
+      excluded_worlds_hint: "Comma-separated world names, or blank for none"
+      excluded_worlds_empty: "(none)"
     players:
       lock_on_place: "Auto-lock blocks when placed."
       public_is_friend: "Public blocks count as friends."
@@ -751,6 +757,14 @@ dialogs:
       auto_protect_tame: "Auto-protect entities when tamed."
       workstation_enabled: "Auto-protect villager workstations."
       workstation_radius: "Workstation protection radius."
+      workstation_radius_hint: "Horizontal radius (blocks)"
+      workstation_vertical_radius: "Workstation vertical radius."
+      workstation_vertical_radius_hint: "Vertical radius (blocks)"
+      villager_locate_seconds: "Seconds to locate a villager."
+      villager_locate_seconds_hint: "Locate timeout (seconds)"
+      menu_item: "Item used to open the entity protection menu."
+      menu_item_hint: "Material name, e.g. STICK"
+      menu_item_invalid: "§cUnknown material: {input}"
     expiry:
       enabled: "Enable global expiry of inactive protections."
       check_interval: "Check interval (minutes)."
@@ -765,6 +779,7 @@ dialogs:
       owner_place: "Notify when someone places items."
     maintenance:
       inactivity_cleanup: "Days before removing inactive protections (-1 = off)."
+      inactivity_cleanup_hint: "Days (-1 = disabled)"
       auto_reload: "Auto-reload configs on file change."
       session_log: "Enable session logging."
       backups: "Create automatic backups."

@@ -54,10 +54,23 @@ public final class DialogBridgeFactory {
         return bridge;
     }
 
+    /**
+     * Returns the origin a dialog's Back button should point to.
+     *
+     * <p>This used to force {@link DialogOrigin#NONE} (Close-only, no Back) whenever
+     * {@code use_menus} was disabled ({@code areExtraCommandsEnabled()}). That was wrong:
+     * with Paper Dialogs active, {@code /bp admin} always opens through the full
+     * {@code AdminMenuDialog} navigation chain regardless of {@code use_menus} (see
+     * {@code AdminMenuCommand}, which bypasses that flag entirely once
+     * {@code shouldUseDialogs()} is true). Gating on the global flag here broke Back
+     * navigation for every dialog in that already-valid chain the instant {@code use_menus}
+     * was turned off - including from inside the very screen used to toggle it back on,
+     * leaving no way back except closing and reopening with {@code /bp admin}.
+     *
+     * <p>{@code backOrigin} is only ever set by the call site that actually opened the
+     * dialog (its real parent), so it is always safe to honor directly.
+     */
     public static DialogOrigin resolveOrigin(@NotNull DialogOrigin backOrigin) {
-        if (BlockProt.getDefaultConfig().areExtraCommandsEnabled()) {
-            return DialogOrigin.NONE;
-        }
         return backOrigin;
     }
 }

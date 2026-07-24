@@ -171,11 +171,13 @@ public final class FriendManageDialog {
                 p -> showForBlock(p, block, handler, next)));
         }
 
-        DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(DialogOrigin.NONE);
+        // Always returns to the parent BlockLockDialog: this is one level of internal
+        // navigation within the same block menu, not an external-origin exit, so it must
+        // not be gated by DialogBridgeFactory.resolveOrigin()/areExtraCommandsEnabled().
         DialogButton exitBtn = new DialogButton("exit",
-            Component.text(stripColor(Translator.get(exitOrigin != DialogOrigin.NONE ? TranslationKey.DIALOGS__BACK : TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin != DialogOrigin.NONE ? p -> BlockLockDialog.show(p, block, handler) : null
+            p -> BlockLockDialog.show(p, block, handler)
         );
 
         bridge.showMultiAction(player, title, body, buttons, exitBtn, 2);
@@ -220,7 +222,7 @@ public final class FriendManageDialog {
             Component.text(stripColor(Translator.get(TranslationKey.ICON__SEARCH)) + search, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH)), SOFT_BLUE),
             p -> {
-                p.closeInventory();
+                bridge.closeDialog(p);
                 de.sean.blockprot.bukkit.inventories.FriendSearchInventory.openChatInput(p);
             }
         );

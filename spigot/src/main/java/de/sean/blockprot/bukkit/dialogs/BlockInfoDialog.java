@@ -106,11 +106,13 @@ public final class BlockInfoDialog {
                 "  " + stripColor(Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__LINKED_FRAME)), TextColor.color(0x888888))));
         }
 
-        DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(DialogOrigin.NONE);
+        // Always returns to the parent BlockLockDialog: this is one level of internal
+        // navigation within the same block menu, not an external-origin exit, so it must
+        // not be gated by DialogBridgeFactory.resolveOrigin()/areExtraCommandsEnabled().
         DialogButton exitBtn = new DialogButton("exit",
-            Component.text(stripColor(Translator.get(exitOrigin != DialogOrigin.NONE ? TranslationKey.DIALOGS__BACK : TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin != DialogOrigin.NONE ? p -> BlockLockDialog.show(p, block, handler) : null);
+            p -> BlockLockDialog.show(p, block, handler));
 
         bridge.showMultiAction(player, title, body, List.of(exitBtn), null, 1);
     }

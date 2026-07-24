@@ -739,27 +739,36 @@ public final class DefaultConfig extends BlockProtConfig {
     public boolean isModernFamilyBlocks() { return config.getBoolean("modern_family_blocks", false); }
 
     /**
-     * Determines the output format for a blocks.yml key based on the global
-     * {@code modern_family_blocks} flag. When false, always uses flat format.
-     * When true, uses family expressions.
+     * Determines the output format for a blocks.yml key.
+     *
+     * <p>Primarily checks the key's actual on-disk content: if it already contains a
+     * family expression (e.g. because {@code /bp recommended} wrote one, or a previous
+     * "select all" toggle collapsed it to {@code [*-SIGN]}), individual toggles keep
+     * writing expressions for that key so a single click does not blow up an already
+     * compact list into hundreds of flat material names.
+     *
+     * <p>Only when the key has no existing content (first-ever toggle on an empty/placeholder
+     * key) does this fall back to the global {@code modern_family_blocks} flag to decide the
+     * starting format. This mirrors {@code BLOCK_FAMILY_SYNTAX.md}: the flag governs the
+     * startup/reload sweep and the format chosen for brand-new content, but it does not force
+     * every future single-block toggle back to flat once a key is already in expression form.
      */
     private boolean isKeyInExpressionFormat(@NotNull String configKey) {
-        if (!isModernFamilyBlocks()) return false;
-        if (blocksConfig == null) return true;
+        if (blocksConfig == null) return isModernFamilyBlocks();
         Object raw = blocksConfig.get(configKey);
         if (raw instanceof String s) {
             String trimmed = s.trim();
-            if (!trimmed.isEmpty()) return BlockFamilyParser.isFamilyExpression(trimmed);
+            if (!isPlaceholderEntry(trimmed)) return BlockFamilyParser.isFamilyExpression(trimmed);
         }
         if (raw instanceof List<?> list) {
             for (Object o : list) {
                 if (!(o instanceof String s)) continue;
                 String trimmed = s.trim();
-                if (trimmed.isEmpty()) continue;
+                if (isPlaceholderEntry(trimmed)) continue;
                 return BlockFamilyParser.isFamilyExpression(trimmed);
             }
         }
-        return true;
+        return isModernFamilyBlocks();
     }
 
     @Nullable
@@ -1020,6 +1029,43 @@ public final class DefaultConfig extends BlockProtConfig {
     }
 
     /**
+     * Re-writes every lockable list key in blocks.yml to match {@code toModern}, based on
+     * the materials currently active for each key. This is the "forced sweep" documented in
+     * {@code BLOCK_FAMILY_SYNTAX.md} for flipping {@code modern_family_blocks} - without it,
+     * {@link #isKeyInExpressionFormat(String)} just keeps reading whatever format a key
+     * already has on disk, so a key that picked up flat entries before modern mode was ever
+     * enabled stays flat forever even after the flag is turned on, and every subsequent
+     * individual toggle on that key keeps writing flat too. Call this right after flipping
+     * {@code modern_family_blocks} so the on-disk format actually matches the flag immediately,
+     * not only for keys an individual toggle happens to touch afterwards.
+     */
+    public synchronized void convertBlocksFileFormat(boolean toModern) {
+        if (blocksConfig == null) return;
+        writeFamilyKeyFormat("lockable_tile_entities", BlockFamilyParser.Family.TILE_ENTITIES, lockableTileEntities, toModern);
+        writeFamilyKeyFormat("lockable_shulker_boxes", BlockFamilyParser.Family.SHULKER_BOXES, shulkerBoxes, toModern);
+        List<Material> blocksOnly = lockableBlocks.stream().filter(m -> !lockableDoors.contains(m)).toList();
+        writeFamilyKeyFormat("lockable_blocks", BlockFamilyParser.Family.BLOCKS, blocksOnly, toModern);
+        writeFamilyKeyFormat("lockable_doors", BlockFamilyParser.Family.DOORS, lockableDoors, toModern);
+        writeFamilyKeyFormat("lockable_entities", BlockFamilyParser.Family.ENTITIES, lockableEntities, toModern);
+        saveBlocksConfig();
+        reloadBlocksAfterToggle();
+    }
+
+    private void writeFamilyKeyFormat(
+            @NotNull String configKey, @NotNull BlockFamilyParser.Family family,
+            @NotNull List<Material> active, boolean toModern) {
+        if (!blocksConfig.contains(configKey) && active.isEmpty()) return;
+        if (toModern) {
+            String expr = BlockFamilyParser.toFamilyExpression(active, family);
+            blocksConfig.set(configKey, expr != null
+                ? List.of(expr)
+                : active.stream().map(Material::name).sorted().toList());
+        } else {
+            blocksConfig.set(configKey, active.stream().map(Material::name).sorted().toList());
+        }
+    }
+
+    /**
      * Toggles a single material in blocks.yml. Adds it if currently inactive, removes it
      * if currently active. Saves to disk and logs the change. Handles both flat and
      * expression-based entries.
@@ -1030,7 +1076,14 @@ public final class DefaultConfig extends BlockProtConfig {
      */
     public synchronized boolean toggleLockable(@NotNull Material material, @NotNull Player who) {
         String configKey = configKeyForMaterial(material);
-        if (configKey == null || blocksConfig == null) return isLockable(material);
+        if (configKey == null) {
+            BlockProtLogger.warn("toggleLockable: " + material.name()
+                + " does not belong to any BlockFamilyParser family; ignoring click from "
+                + who.getName() + ". A menu/dialog listed a material that configKeyForMaterial() "
+                + "cannot resolve; report this as a bug.");
+            return isLockable(material);
+        }
+        if (blocksConfig == null) return isLockable(material);
 
         String name = material.name();
         boolean currentlyActive = isLockable(material) || isLockableEntity(material);

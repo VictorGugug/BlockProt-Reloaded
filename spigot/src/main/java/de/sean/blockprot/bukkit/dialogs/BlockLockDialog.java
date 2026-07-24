@@ -161,7 +161,7 @@ public final class BlockLockDialog {
                 stripColor(Translator.get(TranslationKey.INVENTORIES__SET_BLOCK_NAME)),
                 PASTEL_MINT,
                 p -> {
-                    p.closeInventory();
+                    bridge.closeDialog(p);
                     final Block nameBlock = block;
                     var currentName = new BlockNBTHandler(nameBlock).getName();
                     java.util.function.Consumer<String> handleName = text -> {
@@ -177,7 +177,7 @@ public final class BlockLockDialog {
                 stripColor(Translator.get(TranslationKey.INVENTORIES__TRANSFER__BUTTON)),
                 PASTEL_CORAL,
                 p -> {
-                    p.closeInventory();
+                    bridge.closeDialog(p);
                     TransferSearchInventory.openSearch(p, block);
                 }
             ));
@@ -187,7 +187,7 @@ public final class BlockLockDialog {
                     stripColor(Translator.get(TranslationKey.INVENTORIES__LOCATE_VILLAGER)),
                     PASTEL_GOLD,
                     p -> {
-                        p.closeInventory();
+                        bridge.closeDialog(p);
                         int seconds = BlockProt.getDefaultConfig().getVillagerLocateSeconds();
                         boolean found = VillagerLocateTask.startIfLinked(p, block, seconds);
                         if (!found) {
@@ -256,7 +256,7 @@ public final class BlockLockDialog {
                             SOFT_BLUE, TextDecoration.BOLD),
                         inspectBody.stream().map(e -> e.text() != null ? e.text() : Component.text("")).toList(),
                         new DialogButton("exit",
-                            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
+                            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
                             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
                             pl -> show(pl, block, handler, backOrigin)));
                 }
@@ -389,7 +389,7 @@ public final class BlockLockDialog {
                                 SOFT_BLUE, TextDecoration.BOLD),
                             inspectBody,
                             new DialogButton("exit",
-                                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
+                                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
                                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
                                 pl -> showForEntity(pl, entity, handler, backOrigin)));
                     }
