@@ -4,9 +4,7 @@ enabled: Zapnuto
 disabled: Vypnuto
 about:
   title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
-  original_author: '§7Původní autor: §fspnda'
   fork_maintainers: '§7Správci forku: §fVickey & Reim §8(alias ZarZey)'
-  report_original: §x§c§3§e§e§a§7Nahlásit problémy (původní plugin)
   report_fork: §x§6§6§c§6§6§6Nahlásit problémy (BlockProt Reloaded)
 inventories:
   back: Zpět
@@ -85,54 +83,6 @@ worlds:
   scan_start: '[BlockProt] Skenování světů... ({count} načteno)'
   scan_world_added: '[BlockProt] Svět ''{world}'' přidán do worlds.yml: ochrana VYPNUTA. Zapněte ručně.'
   scan_complete: '[BlockProt] Skenování dokončeno. {added} nový/nové světy registrovány.'
-claims:
-  wand_pos_a: §bRoh A nastaven na §f({x}, {y}, {z})§b. Nyní klikněte pravým na roh B.
-  wand_pos_b: §bRoh B nastaven na §f({x}, {y}, {z})§b. Napište název do chatu pro vytvoření nároku.
-  created: '§aNárok §6{name} §avytvořen! Oblast: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(svět: {world}).'
-  deleted: §aNárok §6{name} §asmazán.
-  no_claim_here: §cNa vaší pozici není žádný nárok.
-  overlap: §cTato oblast se překrývá s nárokem jiného hráče.
-  no_permission: §cNemáte oprávnění upravovat tento nárok.
-  list_header: '§6Vaše aktivní nároky:'
-  name_prompt: '§eNapište název pro váš nárok do chatu. §7(Napište §c{cancel}§7 pro zrušení):'
-  name_cancel_word: zrusit
-  name_cancelled: §cVytváření nároku zrušeno.
-  name_too_long: §cNázev je příliš dlouhý. Maximum {max} znaků.
-  name_invalid: §cNeplatný název. Použijte pouze písmena, číslice, mezery, podtržítka nebo pomlčky.
-  wand_removed: §7Hůlka nároku odebrána.
-  timeout: §cČasový limit vypršel. Použijte hůlku znovu.
-  flags:
-    title: Nastavení nároku
-    fire: Šíření ohně
-    tnt: TNT / Výbuchy
-    redstone: Redstone (ostatními)
-    pvp: PvP
-    flow: Water & Lava flow
-    leaf_decay: Leaf decay
-    mob_spawning: Mob spawning
-    chest: Container access (non-members)
-    door: Door / Trapdoor use (non-members)
-    lever_button: Lever & Button use (non-members)
-    use_bucket: Bucket use (non-members)
-    pet_spawning: Pet taming (non-members)
-    pet_riding: Pet riding (non-members)
-    pet_moving: Lead animals in (non-members)
-    invincible: Invincible zone (no damage)
-    deny_enderpearl: Allow ender pearl entry
-  welcome_set: §aWelcome message set for claim §6{name}§a.
-  welcome_cleared: §7Welcome message cleared for claim §6{name}§7.
-  welcome_prompt: '§eType the welcome message in chat (supports §r&§e colour codes). §7Type §c{cancel}§7 to abort:'
-  delete_confirm_title: §cConfirm deletion
-  delete_yes: §c§lDelete claim
-  delete_cancel: §a§lKeep claim
-  hub:
-    title: Claim Management
-    info: §6Claim Info
-    flags: §6Flags
-    delete: §cDelete Claim
-    wand: §eGet Wand
-    my_claims: §eMy Claims
-    welcome: §eWelcome Message
 integrations:
   lands:
     protect_containers_flag_name: Ochrana skladů (BlockProt)

@@ -42,10 +42,12 @@ import org.jetbrains.annotations.NotNull;
 
 public final class AboutDialog {
 
-    private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
-    private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
     private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
+    private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
+    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
+    private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
     private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
+    private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
 
     private AboutDialog() {}
 

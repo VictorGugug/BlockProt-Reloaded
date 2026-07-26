@@ -418,7 +418,7 @@ public final class BlockLockDialog {
             if (BlockProt.getAuditLogger() != null) {
                 actions.add(actionBtn(
                     stripColor(Translator.get(TranslationKey.INVENTORIES__AUDIT__OPEN)),
-                    TextColor.color(0xE8A0A0),
+                    PASTEL_CORAL,
                     p -> AuditDialog.show(p, entity.getLocation())
                 ));
             }

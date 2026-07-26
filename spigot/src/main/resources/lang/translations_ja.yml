@@ -4,9 +4,7 @@ enabled: 有効
 disabled: 無効
 about:
   title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
-  original_author: '§7オリジナル作者: §fspnda'
   fork_maintainers: '§7フォーク管理者: §fVickey & Reim §8(別名 ZarZey)'
-  report_original: §x§c§3§e§e§a§7問題を報告 (オリジナルプラグイン)
   report_fork: §x§6§6§c§6§6§6問題を報告 (BlockProt Reloaded)
 inventories:
   back: 戻る
@@ -84,54 +82,6 @@ worlds:
   scan_start: '[BlockProt] ワールドをスキャン中... ({count} 読み込み済み)'
   scan_world_added: '[BlockProt] ワールド ''{world}'' を worlds.yml に追加しました: 保護はデフォルトで無効です。手動で有効化してください。'
   scan_complete: '[BlockProt] スキャン完了。{added} 件の新しいワールドが登録されました。'
-claims:
-  wand_pos_a: §bコーナーAを§f({x}, {y}, {z})§bに設定しました。次にコーナーBを右クリックしてください。
-  wand_pos_b: §bコーナーBを§f({x}, {y}, {z})§bに設定しました。チャットに名前を入力してクレームを作成してください。
-  created: '§aクレーム§6{name}§aを作成しました！エリア: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(ワールド: {world})。'
-  deleted: §aクレーム§6{name}§aを削除しました。
-  no_claim_here: §c現在の位置にクレームはありません。
-  overlap: §cこのエリアは他のプレイヤーのクレームと重なっています。
-  no_permission: §cこのクレームを変更する権限がありません。
-  list_header: '§6あなたのアクティブなクレーム:'
-  name_prompt: '§eチャットにクレームの名前を入力してください。§7(§c{cancel}§7 と入力してキャンセル):'
-  name_cancel_word: cancel
-  name_cancelled: §cクレーム作成をキャンセルしました。
-  name_too_long: §c名前が長すぎます。最大 {max} 文字です。
-  name_invalid: §c無効な名前です。文字、数字、スペース、アンダースコア、ハイフンのみ使用してください。
-  wand_removed: §7クレームワンドを削除しました。
-  timeout: §cタイムアウトしました。ワンドを再度使用してください。
-  flags:
-    title: クレーム設定
-    fire: 火の燃え広がり
-    tnt: TNT / 爆発
-    redstone: レッドストーン (他のプレイヤーによる)
-    pvp: PvP
-    flow: Water & Lava flow
-    leaf_decay: Leaf decay
-    mob_spawning: Mob spawning
-    chest: Container access (non-members)
-    door: Door / Trapdoor use (non-members)
-    lever_button: Lever & Button use (non-members)
-    use_bucket: Bucket use (non-members)
-    pet_spawning: Pet taming (non-members)
-    pet_riding: Pet riding (non-members)
-    pet_moving: Lead animals in (non-members)
-    invincible: Invincible zone (no damage)
-    deny_enderpearl: Allow ender pearl entry
-  welcome_set: §aWelcome message set for claim §6{name}§a.
-  welcome_cleared: §7Welcome message cleared for claim §6{name}§7.
-  welcome_prompt: '§eType the welcome message in chat (supports §r&§e colour codes). §7Type §c{cancel}§7 to abort:'
-  delete_confirm_title: §cConfirm deletion
-  delete_yes: §c§lDelete claim
-  delete_cancel: §a§lKeep claim
-  hub:
-    title: Claim Management
-    info: §6Claim Info
-    flags: §6Flags
-    delete: §cDelete Claim
-    wand: §eGet Wand
-    my_claims: §eMy Claims
-    welcome: §eWelcome Message
 integrations:
   lands:
     protect_containers_flag_name: コンテナを保護する (BlockProt)

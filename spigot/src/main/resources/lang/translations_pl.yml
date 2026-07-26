@@ -4,9 +4,7 @@ enabled: Włączony
 disabled: Wyłączony
 about:
   title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
-  original_author: '§7Oryginalny autor: §fspnda'
   fork_maintainers: '§7Opiekunowie forka: §fVickey & Reim §8(alias ZarZey)'
-  report_original: §x§c§3§e§e§a§7Zgłoś problem (oryginalny plugin)
   report_fork: §x§6§6§c§6§6§6Zgłoś problem (BlockProt Reloaded)
 inventories:
   back: Wróć
@@ -85,54 +83,6 @@ worlds:
   scan_start: '[BlockProt] Skanowanie światów... ({count} załadowano)'
   scan_world_added: '[BlockProt] Świat ''{world}'' dodany do worlds.yml: ochrona WYŁĄCZONA domyślnie. Włącz ręcznie.'
   scan_complete: '[BlockProt] Skanowanie zakończone. {added} nowy/nowe światy zarejestrowane.'
-claims:
-  wand_pos_a: §bRóg A ustawiony na §f({x}, {y}, {z})§b. Teraz kliknij prawym przyciskiem na róg B.
-  wand_pos_b: §bRóg B ustawiony na §f({x}, {y}, {z})§b. Wpisz nazwę na czacie, aby utworzyć działkę.
-  created: '§aDziałka §6{name} §autworzona! Region: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(świat: {world}).'
-  deleted: §aDziałka §6{name} §ausunięta.
-  no_claim_here: §cNa twojej aktualnej pozycji nie ma żadnej działki.
-  overlap: §cTen obszar nakłada się z działką innego gracza.
-  no_permission: §cNie masz uprawnień do modyfikowania tej działki.
-  list_header: '§6Twoje aktywne działki:'
-  name_prompt: '§eWpisz nazwę dla swojej działki na czacie. §7(Wpisz §c{cancel}§7 aby anulować):'
-  name_cancel_word: anuluj
-  name_cancelled: §cTworzenie działki anulowane.
-  name_too_long: §cNazwa jest za długa. Maksimum {max} znaków.
-  name_invalid: §cNieprawidłowa nazwa. Używaj tylko liter, cyfr, spacji, podkreśleń lub myślników.
-  wand_removed: §7Różdżka działki usunięta.
-  timeout: §cCzas minął. Użyj różdżki ponownie.
-  flags:
-    title: Opcje działki
-    fire: Rozprzestrzenianie ognia
-    tnt: TNT / Wybuchy
-    redstone: Redstone (przez innych)
-    pvp: PvP
-    flow: Water & Lava flow
-    leaf_decay: Leaf decay
-    mob_spawning: Mob spawning
-    chest: Container access (non-members)
-    door: Door / Trapdoor use (non-members)
-    lever_button: Lever & Button use (non-members)
-    use_bucket: Bucket use (non-members)
-    pet_spawning: Pet taming (non-members)
-    pet_riding: Pet riding (non-members)
-    pet_moving: Lead animals in (non-members)
-    invincible: Invincible zone (no damage)
-    deny_enderpearl: Allow ender pearl entry
-  welcome_set: §aWelcome message set for claim §6{name}§a.
-  welcome_cleared: §7Welcome message cleared for claim §6{name}§7.
-  welcome_prompt: '§eType the welcome message in chat (supports §r&§e colour codes). §7Type §c{cancel}§7 to abort:'
-  delete_confirm_title: §cConfirm deletion
-  delete_yes: §c§lDelete claim
-  delete_cancel: §a§lKeep claim
-  hub:
-    title: Claim Management
-    info: §6Claim Info
-    flags: §6Flags
-    delete: §cDelete Claim
-    wand: §eGet Wand
-    my_claims: §eMy Claims
-    welcome: §eWelcome Message
 integrations:
   lands:
     protect_containers_flag_name: Chroń kontenery (BlockProt)

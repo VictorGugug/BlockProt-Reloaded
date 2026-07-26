@@ -4,9 +4,7 @@ enabled: Attivo
 disabled: Inattivo
 about:
   title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
-  original_author: '§7Autore originale: §fspnda'
   fork_maintainers: '§7Manutentori del fork: §fVickey & Reim §8(alias ZarZey)'
-  report_original: §x§c§3§e§e§a§7Segnala problemi (plugin originale)
   report_fork: §x§6§6§c§6§6§6Segnala problemi (BlockProt Reloaded)
 inventories:
   back: Indietro
@@ -121,54 +119,6 @@ worlds:
   scan_start: 'Scansione dei mondi... ({count} caricati)'
   scan_world_added: "Mondo '{world}' aggiunto a worlds.yml con protezione attivata."
   scan_complete: 'Scansione completata: {count} mondo/i rilevato/i, {added} aggiunto/i a worlds.yml.'
-claims:
-  wand_pos_a: §bAngolo A impostato in §f({x}, {y}, {z})§b. Ora clicca col destro sull'angolo B.
-  wand_pos_b: §bAngolo B impostato in §f({x}, {y}, {z})§b. Scrivi un nome in chat per creare la parcella.
-  created: '§aParcella §6{name} §acreata! Regione: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(mondo: {world}).'
-  deleted: §aParcella §6{name} §aeliminata.
-  no_claim_here: §cNon c'è nessuna parcella nella tua posizione attuale.
-  overlap: §cQuest'area si sovrappone alla parcella di un altro giocatore.
-  no_permission: §cNon hai il permesso di modificare questa parcella.
-  list_header: '§6Le tue parcelle attive:'
-  name_prompt: '§eDigita un nome per la tua parcella in chat. §7(Digita §c{cancel}§7 per annullare):'
-  name_cancel_word: annulla
-  name_cancelled: §cCreazione parcella annullata.
-  name_too_long: §cNome troppo lungo. Massimo {max} caratteri.
-  name_invalid: §cNome non valido. Usa solo lettere, numeri, spazi, trattini bassi o trattini.
-  wand_removed: §7Bacchetta parcella rimossa.
-  timeout: §cTempo scaduto. Usa di nuovo la bacchetta.
-  flags:
-    title: Opzioni parcella
-    fire: Propagazione fuoco
-    tnt: TNT / Esplosioni
-    redstone: Redstone (da altri)
-    pvp: PvP
-    flow: Flusso acqua e lava
-    leaf_decay: Caduta foglie
-    mob_spawning: Spawn mob
-    chest: Accesso contenitori (non-membri)
-    door: Uso porte (non-membri)
-    lever_button: Leve & pulsanti (non-membri)
-    use_bucket: Uso secchi (non-membri)
-    pet_spawning: Addomesticamento animali (non-membri)
-    pet_riding: Cavalcare animali (non-membri)
-    pet_moving: Condurre animali (non-membri)
-    invincible: Zona invincibile (nessun danno)
-    deny_enderpearl: Consenti ingresso con perla dell'Ender
-  welcome_set: §aMessaggio di benvenuto impostato per la parcella §6{name}§a.
-  welcome_cleared: §7Messaggio di benvenuto rimosso per la parcella §6{name}§7.
-  welcome_prompt: '§eDigita il messaggio di benvenuto in chat (supporta codici colore &). §7§c{cancel}§7 per annullare:'
-  delete_confirm_title: §cConferma eliminazione
-  delete_yes: §c§lElimina parcella
-  delete_cancel: §a§lTieni parcella
-  hub:
-    title: Gestione parcella
-    info: §6Info parcella
-    flags: §6Opzioni
-    delete: §cElimina parcella
-    wand: §eOttieni bacchetta
-    my_claims: §eLe mie parcelle
-    welcome: §eMessaggio di benvenuto
 integrations:
   lands:
     protect_containers_flag_name: Proteggi contenitori (BlockProt)

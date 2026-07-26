@@ -6,9 +6,8 @@ Covers all Minecraft versions up to 1.21.x / 26.1 (The Copper Age).
 For the family expression syntax used in modern mode: see `BLOCK_FAMILY_SYNTAX.md`.
 For the in-game block browser and how to use it: see the `/bp lockables` section below.
 
----
-## The /bp lockables command
 
+## The /bp lockables command
 `/bp lockables` opens a paged GUI that shows every block the family system knows about,
 regardless of whether it is currently enabled or disabled on the server.
 
@@ -32,7 +31,6 @@ Click that message and the material name is copied to your clipboard, ready to p
 The info book in slot 46 shows the server version, your client version (if ViaVersion is installed),
 and a count of how many blocks are currently active vs inactive.
 
----
 
 ## Families overview
 
@@ -47,7 +45,6 @@ and a count of how many blocks are currently active vs inactive.
 `lockable_entities` uses entity NBT (persistent data container), not block NBT. Family expressions are fully supported.
 Item frames (`*-ITEM_FRAMES`) are **enabled by default**. Other entity sub-families are disabled: add them to enable.
 
----
 
 ## lockable_tile_entities
 
@@ -86,8 +83,8 @@ Token: `*-FURNACE`
 | Material | MC version | Notes |
 |---|---|---|
 | `FURNACE` | 1.0 | Blocks retrieval of output and fuel. |
-| `SMOKER` | 1.14 | Food only, 2× smelting speed. |
-| `BLAST_FURNACE` | 1.14 | Ores and metals only, 2× smelting speed. |
+| `SMOKER` | 1.14 | Food only, 2x smelting speed. |
+| `BLAST_FURNACE` | 1.14 | Ores and metals only, 2x smelting speed. |
 
 ### Sub-family: SHELF
 
@@ -132,7 +129,7 @@ Remaining tile entities with no dedicated sub-family.
 | `BREWING_STAND` | 1.0 | Blocks access to potions and ingredients. |
 | `DECORATED_POT` | 1.20 | Stores one stack. Accessible via hopper. |
 | `CHISELED_BOOKSHELF` | 1.20 | Stores up to six books. Redstone-readable slot index. |
-| `CRAFTER` | 1.21 | Automated 3×3 crafting block. |
+| `CRAFTER` | 1.21 | Automated 3x3 crafting block. |
 | `LECTERN` | 1.14 | Blocks other players from taking or replacing the displayed book. |
 | `BEEHIVE` | 1.15 | Blocks honey and honeycomb harvesting. |
 | `BEE_NEST` | 1.15 | Natural variant of the beehive. Same protection behaviour. |
@@ -155,7 +152,6 @@ Wood types covered: oak, spruce, birch, jungle, acacia, dark_oak, mangrove, cher
 | `*_HANGING_SIGN` | 1.20 - hanging sign |
 | `*_WALL_HANGING_SIGN` | 1.20 - wall-mounted hanging sign |
 
----
 
 ## lockable_shulker_boxes
 
@@ -186,7 +182,6 @@ Token: `*-SHULKERS` (also matches `[*]` since this is the only sub-family)
 | `RED_SHULKER_BOX` | 1.12 |
 | `BLACK_SHULKER_BOX` | 1.12 |
 
----
 
 ## lockable_blocks
 
@@ -320,7 +315,6 @@ Blocks with no dedicated sub-family token. Target individually with `MATERIAL_NA
 | `BELL` | 1.14 | Blocks ringing by non-owners. |
 | `NOTE_BLOCK` | 1.0 | Blocks pitch changes, useful for musical builds. |
 
----
 
 ## lockable_doors
 
@@ -354,7 +348,6 @@ Token: `*-DOORS` (also matches `[*]`)
 | `WAXED_WEATHERED_COPPER_DOOR` | 1.21 |
 | `WAXED_OXIDIZED_COPPER_DOOR` | 1.21 |
 
----
 
 ## lockable_entities
 
@@ -447,7 +440,6 @@ lockable_entities:
   - "[*-CHEST_BOATS *-CHEST_MINECARTS *-HOPPER_MINECARTS]"
 ```
 
----
 
 ## Entity protection
 
@@ -483,7 +475,7 @@ automatic whenever the workstation block is locked.
 Protected actions:
 - Damage by non-owners (attacks and projectiles)
 - Right-click interaction (trading GUI) by non-owners
-- Breaking blocks within a 2×1×2 area around the workstation (horizontal 2, vertical 1)
+- Breaking blocks within a 2x1x2 area around the workstation (horizontal 2, vertical 1)
 
 **Locate villager button:**
 
@@ -492,7 +484,6 @@ closes the menu and starts a particle effect on the linked villager for `village
 (default 6, max 10). The particles are only visible to the player who clicked the button.
 If no villager is linked to the workstation, nothing happens.
 
----
 
 ## auto_drop_to_inventory
 

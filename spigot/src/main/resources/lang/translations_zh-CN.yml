@@ -4,9 +4,7 @@ enabled: 启用
 disabled: 禁用
 about:
   title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
-  original_author: '§7原始作者: §fspnda'
   fork_maintainers: '§7Fork 维护者: §fVickey & Reim §8(别名 ZarZey)'
-  report_original: §x§c§3§e§e§a§7报告问题 (原始插件)
   report_fork: §x§6§6§c§6§6§6报告问题 (BlockProt Reloaded)
 inventories:
   back: 返回
@@ -86,54 +84,6 @@ worlds:
   scan_start: '[BlockProt] 正在扫描世界... ({count} 已加载)'
   scan_world_added: '[BlockProt] 世界 ''{world}'' 已添加到 worlds.yml，保护默认禁用。请手动启用。'
   scan_complete: '[BlockProt] 扫描完成。{added} 个新世界已注册。'
-claims:
-  wand_pos_a: §b角落A已设置在 §f({x}, {y}, {z})§b。现在右键单击角落B。
-  wand_pos_b: §b角落B已设置在 §f({x}, {y}, {z})§b。在聊天中输入名称以创建领地。
-  created: '§a领地 §6{name} §a已创建！区域: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(世界: {world})。'
-  deleted: §a领地 §6{name} §a已删除。
-  no_claim_here: §c您当前位置没有领地。
-  overlap: §c该区域与其他玩家的领地重叠。
-  no_permission: §c您没有修改此领地的权限。
-  list_header: '§6您的活跃领地:'
-  name_prompt: '§e在聊天中输入领地名称。§7(输入 §c{cancel}§7 取消):'
-  name_cancel_word: 取消
-  name_cancelled: §c创建领地已取消。
-  name_too_long: §c名称太长。最多 {max} 个字符。
-  name_invalid: §c无效名称。只能使用字母、数字、空格、下划线或连字符。
-  wand_removed: §7领地魔杖已移除。
-  timeout: §c操作超时。请重新使用魔杖。
-  flags:
-    title: 领地设置
-    fire: 火焰蔓延
-    tnt: TNT / 爆炸
-    redstone: 红石 (被他人触发)
-    pvp: PvP
-    flow: Water & Lava flow
-    leaf_decay: Leaf decay
-    mob_spawning: Mob spawning
-    chest: Container access (non-members)
-    door: Door / Trapdoor use (non-members)
-    lever_button: Lever & Button use (non-members)
-    use_bucket: Bucket use (non-members)
-    pet_spawning: Pet taming (non-members)
-    pet_riding: Pet riding (non-members)
-    pet_moving: Lead animals in (non-members)
-    invincible: Invincible zone (no damage)
-    deny_enderpearl: Allow ender pearl entry
-  welcome_set: §aWelcome message set for claim §6{name}§a.
-  welcome_cleared: §7Welcome message cleared for claim §6{name}§7.
-  welcome_prompt: '§eType the welcome message in chat (supports §r&§e colour codes). §7Type §c{cancel}§7 to abort:'
-  delete_confirm_title: §cConfirm deletion
-  delete_yes: §c§lDelete claim
-  delete_cancel: §a§lKeep claim
-  hub:
-    title: Claim Management
-    info: §6Claim Info
-    flags: §6Flags
-    delete: §cDelete Claim
-    wand: §eGet Wand
-    my_claims: §eMy Claims
-    welcome: §eWelcome Message
 integrations:
   lands:
     protect_containers_flag_name: 保护容器 (BlockProt)

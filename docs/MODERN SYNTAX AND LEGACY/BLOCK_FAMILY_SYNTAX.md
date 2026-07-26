@@ -33,7 +33,6 @@ directly in their place. In modern mode it is saved as the single-element list
 `- '[]'`, which is the only representation SnakeYAML round-trips safely for "nothing selected"
 without corrupting the rest of the file's structure on the next save.
 
----
 
 ## Format: plain names or a bracket expression
 
@@ -55,8 +54,6 @@ neither word is a valid expression token, and no warning is logged for this case
 Use a plain list, or a flow-list with commas (`[ITEM_FRAME, ACACIA_CHEST_BOAT]`),
 for one or two specific materials. Reach for an expression when you want a whole
 sub-family, or a family minus a few exceptions.
-
----
 
 ## Expression tokens
 
@@ -121,8 +118,6 @@ worlds:
     lockable_doors: []
 ```
 
----
-
 ## auto_drop_to_inventory
 
 Resolves expressions against **all families** independently (union).
@@ -146,8 +141,6 @@ auto_drop_to_inventory:
 # Note: [-*SHULKERS] alone produces an empty set (no base inclusion = nothing to remove from).
 # It will NOT disable shulkers that are listed via other entries in the same blocks list.
 ```
-
----
 
 ## Sub-family reference
 

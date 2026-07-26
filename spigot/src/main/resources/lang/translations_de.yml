@@ -4,9 +4,7 @@ enabled: Aktiviert
 disabled: Deaktiviert
 about:
   title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
-  original_author: '§7Ursprünglicher Autor: §fspnda'
   fork_maintainers: '§7Fork-Maintainer: §fVickey & Reim §8(alias ZarZey)'
-  report_original: §x§c§3§e§e§a§7Probleme melden (Original-Plugin)
   report_fork: §x§6§6§c§6§6§6Probleme melden (BlockProt Reloaded)
 inventories:
   back: Zurück

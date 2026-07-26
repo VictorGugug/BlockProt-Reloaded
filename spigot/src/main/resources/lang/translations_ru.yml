@@ -4,9 +4,7 @@ enabled: Включено
 disabled: Выключено
 about:
   title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
-  original_author: '§7Оригинальный автор: §fspnda'
   fork_maintainers: '§7Сопровождающие форка: §fVickey & Reim §8(псевдоним ZarZey)'
-  report_original: §x§c§3§e§e§a§7Сообщить о проблеме (оригинальный плагин)
   report_fork: §x§6§6§c§6§6§6Сообщить о проблеме (BlockProt Reloaded)
 inventories:
   back: Назад
@@ -120,54 +118,6 @@ worlds:
   scan_start: 'Сканирование миров... ({count} загружено)'
   scan_world_added: "Мир '{world}' добавлен в worlds.yml с включённой защитой."
   scan_complete: 'Сканирование завершено: {count} мир(ов) обнаружено, {added} добавлено в worlds.yml.'
-claims:
-  wand_pos_a: §bУгол A установлен в §f({x}, {y}, {z})§b. Теперь кликните правой кнопкой на угол B.
-  wand_pos_b: §bУгол B установлен в §f({x}, {y}, {z})§b. Введите название в чат, чтобы создать участок.
-  created: '§aУчасток §6{name} §aсоздан! Область: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(мир: {world}).'
-  deleted: §aУчасток §6{name} §aудалён.
-  no_claim_here: §cНа вашей текущей позиции нет участка.
-  overlap: §cЭта область пересекается с участком другого игрока.
-  no_permission: §cУ вас нет прав для изменения этого участка.
-  list_header: '§6Ваши активные участки:'
-  name_prompt: '§eВведите название для вашего участка в чат. §7(Напишите §c{cancel}§7 для отмены):'
-  name_cancel_word: отмена
-  name_cancelled: §cСоздание участка отменено.
-  name_too_long: §cНазвание слишком длинное. Максимум {max} символов.
-  name_invalid: §cНеверное название. Используйте только буквы, цифры, пробелы, подчёркивания или дефисы.
-  wand_removed: §7Жезл участка убран.
-  timeout: §cВремя истекло. Пожалуйста, используйте жезл снова.
-  flags:
-    title: Настройки участка
-    fire: Распространение огня
-    tnt: TNT / Взрывы
-    redstone: Редстоун (другими)
-    pvp: PvP
-    flow: Поток воды и лавы
-    leaf_decay: Опадение листьев
-    mob_spawning: Спавн мобов
-    chest: Доступ к хранилищам (не-члены)
-    door: Использование дверей (не-члены)
-    lever_button: Рычаги и кнопки (не-члены)
-    use_bucket: Использование ведёр (не-члены)
-    pet_spawning: Приручение (не-члены)
-    pet_riding: Верховая езда (не-члены)
-    pet_moving: Ведение животных (не-члены)
-    invincible: Неуязвимая зона (без урона)
-    deny_enderpearl: Разрешить вход через жемчужину андера
-  welcome_set: §aПриветственное сообщение для участка §6{name}§a установлено.
-  welcome_cleared: §7Приветственное сообщение для участка §6{name}§7 удалено.
-  welcome_prompt: '§eВведите приветственное сообщение в чат (поддерживает &-коды цветов). §7§c{cancel}§7 для отмены:'
-  delete_confirm_title: §cПодтверждение удаления
-  delete_yes: §c§lУдалить участок
-  delete_cancel: §a§lОставить участок
-  hub:
-    title: Управление участком
-    info: §6Инфо участка
-    flags: §6Настройки
-    delete: §cУдалить участок
-    wand: §eПолучить жезл
-    my_claims: §eМои участки
-    welcome: §eПриветственное сообщение
 integrations:
   lands:
     protect_containers_flag_name: Запереть хранилища (BlockProt)

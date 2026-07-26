@@ -4,9 +4,7 @@ enabled: Povolené
 disabled: Zakázané
 about:
   title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
-  original_author: '§7Pôvodný autor: §fspnda'
   fork_maintainers: '§7Správcovia forku: §fVickey & Reim §8(alias ZarZey)'
-  report_original: §x§c§3§e§e§a§7Nahlásiť problémy (pôvodný plugin)
   report_fork: §x§6§6§c§6§6§6Nahlásiť problémy (BlockProt Reloaded)
 inventories:
   back: Späť
@@ -85,54 +83,6 @@ worlds:
   scan_start: '[BlockProt] Skenovanie svetov... ({count} načítaných)'
   scan_world_added: '[BlockProt] Svet ''{world}'' pridaný do worlds.yml: ochrana VYPNUTÁ predvolene. Zapni ručne.'
   scan_complete: '[BlockProt] Skenovanie dokončené. {added} nový/nové svety zaregistrované.'
-claims:
-  wand_pos_a: §bRoh A nastavený na §f({x}, {y}, {z})§b. Teraz klikni pravým tlačidlom na roh B.
-  wand_pos_b: §bRoh B nastavený na §f({x}, {y}, {z})§b. Napíš názov do chatu pre vytvorenie parcely.
-  created: '§aParcela §6{name} §avytvorená! Oblasť: §f{x1},{y1},{z1} §a-> §f{x2},{y2},{z2} §7(svet: {world}).'
-  deleted: §aParcela §6{name} §aodstránená.
-  no_claim_here: §cNa tvojej aktuálnej pozícii nie je žiadna parcela.
-  overlap: §cTáto oblasť sa prekrýva s parcelou iného hráča.
-  no_permission: §cNemáš oprávnenie upravovať túto parcelu.
-  list_header: '§6Tvoje aktívne parcely:'
-  name_prompt: '§eNapíš názov pre svoju parcelu do chatu. §7(Napíš §c{cancel}§7 pre zrušenie):'
-  name_cancel_word: zrusit
-  name_cancelled: §cVytváranie parcely zrušené.
-  name_too_long: §cNázov je príliš dlhý. Maximum {max} znakov.
-  name_invalid: §cNeplatný názov. Používaj iba písmená, číslice, medzery, podčiarkovníky alebo pomlčky.
-  wand_removed: §7Palica parcely odstránená.
-  timeout: §cČasový limit vypršal. Použi palicu znova.
-  flags:
-    title: Nastavenia parcely
-    fire: Šírenie ohňa
-    tnt: TNT / Výbuchy
-    redstone: Redstone (ostatnými)
-    pvp: PvP
-    flow: Water & Lava flow
-    leaf_decay: Leaf decay
-    mob_spawning: Mob spawning
-    chest: Container access (non-members)
-    door: Door / Trapdoor use (non-members)
-    lever_button: Lever & Button use (non-members)
-    use_bucket: Bucket use (non-members)
-    pet_spawning: Pet taming (non-members)
-    pet_riding: Pet riding (non-members)
-    pet_moving: Lead animals in (non-members)
-    invincible: Invincible zone (no damage)
-    deny_enderpearl: Allow ender pearl entry
-  welcome_set: §aWelcome message set for claim §6{name}§a.
-  welcome_cleared: §7Welcome message cleared for claim §6{name}§7.
-  welcome_prompt: '§eType the welcome message in chat (supports §r&§e colour codes). §7Type §c{cancel}§7 to abort:'
-  delete_confirm_title: §cConfirm deletion
-  delete_yes: §c§lDelete claim
-  delete_cancel: §a§lKeep claim
-  hub:
-    title: Claim Management
-    info: §6Claim Info
-    flags: §6Flags
-    delete: §cDelete Claim
-    wand: §eGet Wand
-    my_claims: §eMy Claims
-    welcome: §eWelcome Message
 integrations:
   lands:
     protect_containers_flag_name: Ochráň kontajnery (BlockProt)
