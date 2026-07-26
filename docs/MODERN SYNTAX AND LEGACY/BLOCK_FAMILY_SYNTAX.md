@@ -35,154 +35,68 @@ without corrupting the rest of the file's structure on the next save.
 
 ---
 
-## Two valid formats - do not mix them on one line
+## Format: plain names or a bracket expression
 
 Every list key (`lockable_tile_entities`, `lockable_blocks`, `lockable_entities`, etc.)
-accepts a normal YAML list. Each line in that list is either:
-
-1. **A plain material name** - one block/entity per line, exactly like every other
-   list in `blocks.yml`:
-   ```yaml
-   lockable_entities:
-     - ITEM_FRAME
-     - ACACIA_CHEST_BOAT
-   ```
-2. **A family expression** - a single string wrapped in `[...]`, quoted, that can
-   stand for many materials at once:
-   ```yaml
-   lockable_entities:
-     - '[*-ITEM_FRAMES *-CHEST_BOATS]'
-   ```
-
-You can mix plain names and expressions across different lines of the same list.
-What you **cannot** do is put more than one plain name inside `[...]` without commas -
-that is not YAML list syntax, it is the family-expression bracket, and it only
-understands the tokens below (`*`, `*-TAG`, `-*TAG`, `NAME`, `-NAME`).
+is a normal YAML list. Each entry is either a plain material name, one per line,
+or a single quoted string wrapped in `[...]` (a family expression) standing for
+many materials at once. The two forms can be mixed across different lines of the
+same list.
 
 ```yaml
-# WRONG - square brackets are read as ONE family expression, not a list of two names.
-# "ITEM_FRAME" and "ACACIA_CHEST_BOAT" are not valid tokens, so this resolves to nothing
-# and silently enables zero entities. No warning is logged for this case.
-lockable_entities: [ITEM_FRAME ACACIA_CHEST_BOAT]
-
-# RIGHT - plain list, one entry per line
 lockable_entities:
-  - ITEM_FRAME
-  - ACACIA_CHEST_BOAT
-
-# ALSO RIGHT - YAML flow-list with a comma (now two real list entries)
-lockable_entities: [ITEM_FRAME, ACACIA_CHEST_BOAT]
-
-# ALSO RIGHT - family expression, quoted, as the list's only entry
-lockable_entities:
-  - '[*-ITEM_FRAMES *-CHEST_BOATS]'
+  - ITEM_FRAME                              # plain material
+  - '[*-CHEST_BOATS -CHEST_MINECART]'       # family expression
 ```
 
-If you only want one or two specific materials, the plain list format is simpler and
-clearer. Reach for a family expression when you want "all of a sub-family" or
-"everything except a few" - see the token reference below.
+Square brackets without commas are read as one family expression, not a list:
+`lockable_entities: [ITEM_FRAME ACACIA_CHEST_BOAT]` resolves to nothing, since
+neither word is a valid expression token, and no warning is logged for this case.
+Use a plain list, or a flow-list with commas (`[ITEM_FRAME, ACACIA_CHEST_BOAT]`),
+for one or two specific materials. Reach for an expression when you want a whole
+sub-family, or a family minus a few exceptions.
 
 ---
 
 ## Expression tokens
 
-All expressions are wrapped in `[...]` and contain space-separated tokens.
+All expressions are wrapped in `[...]` and contain space-separated tokens. The
+result set starts empty; `*` or `*-TAG` populate it, `-*TAG` removes a sub-family
+from it, and `NAME` / `-NAME` add or remove individual materials.
 
-| Token    | Operation                                                           |
-|----------|---------------------------------------------------------------------|
-| `*`      | Include all members of the current top-level family                 |
-| `*-TAG`  | Include all members of the named sub-family                         |
-| `-*TAG`  | Exclude all members of the named sub-family from the result         |
-| `NAME`   | Include a specific material (must belong to this family)            |
-| `-NAME`  | Exclude a specific material (must belong to this family)            |
+| Token    | Operation                                              | Example |
+|----------|-----------------------------------------------------------|---------|
+| `*`      | Include all members of the family                          | `[*]` -> everything |
+| `*-TAG`  | Include all members of a sub-family                         | `[*-CHEST]` -> only chests |
+| `-*TAG`  | Exclude a sub-family from the current base                  | `[* -*CHEST]` -> everything but chests |
+| `NAME`   | Include one material (must belong to this family)           | `[CHEST BARREL]` -> only those two |
+| `-NAME`  | Exclude one material (must belong to this family)           | `[*-CHEST -COPPER_CHEST]` -> chests minus copper |
 
-**Key rule**: the result set starts empty. `*` or `*-TAG` populate it first.
-`-*TAG` removes from it. `NAME` / `-NAME` add or remove individual materials.
+`-*TAG` with no prior `*` or `*-TAG` has nothing to remove from and resolves to
+an empty set; `[-*CHEST]` alone disables nothing. To drop one sub-family while
+keeping the rest, include the base first: `[* -*CHEST]`.
 
-**Important**: `-*TAG` alone without a prior `*` or `*-TAG` produces an empty set -
-there is nothing to remove from. To disable a sub-family while keeping the rest:
-use `[* -*TAG]` (include all, then subtract).
+`NAME` and `-NAME` are validated against the family of the config key; a material
+from another family is rejected with a console warning and discarded, e.g.
+`[* -FLETCHING_TABLE]` under `lockable_tile_entities` drops that token since
+`FLETCHING_TABLE` belongs to `BLOCKS`, not `TILE_ENTITIES`.
 
----
-
-## Cross-family validation
-
-`NAME` and `-NAME` tokens are checked against the family of the config key.
-A material that does not belong to the current family is rejected with a warning and discarded.
-
-```yaml
-# lockable_tile_entities belongs to the TILE_ENTITIES family.
-# FLETCHING_TABLE is a BLOCKS (workstation) member: not a TILE_ENTITIES member: rejected.
-lockable_tile_entities:
-  - "[* -FLETCHING_TABLE]"           # ERROR: FLETCHING_TABLE not in TILE_ENTITIES -> discarded
-
-# COPPER_CHEST is a CHEST sub-family member: valid.
-lockable_tile_entities:
-  - "[*-CHEST -COPPER_CHEST]"        # OK: all chest variants except COPPER_CHEST
-```
-
----
-
-## Token behaviour by context
-
-| Expression                                   | Result                                                                          |
-|----------------------------------------------|---------------------------------------------------------------------------------|
-| `[*]`                                        | All members of the family                                                       |
-| `[* -CHEST]`                                 | All members except the CHEST material itself                                    |
-| `[*-CHEST]`                                  | Only the CHEST sub-family (all chest variants)                                  |
-| `[*-CHEST -COPPER_CHEST]`                    | Whole CHEST sub-family minus COPPER_CHEST                                       |
-| `[* -*CHEST]`                                | All family members except the CHEST sub-family                                  |
-| `[-*CHEST]`                                  | **Empty** - no base inclusion, nothing to remove from                           |
-| `[* -*CHEST COPPER_CHEST]`                   | All family except CHEST sub-family, but COPPER_CHEST re-included                |
-| `[*-FURNACE *-SHELF *-TRANSPORT *-MISC *-CHEST -COPPER_CHEST]` | All tile-entity sub-families, CHEST minus COPPER_CHEST |
-| `[CHEST BARREL]`                             | Only CHEST and BARREL (empty base, explicit inclusions)                         |
-
----
-
-## Syntax examples
+## More examples
 
 ```yaml
-# All members of a family
 lockable_tile_entities:
-  - "[*]"
+  - "[*]"                                  # everything
+  - "[CHEST BARREL]"                       # only these two
+  - "[*-CHEST *-SHELF]"                    # two sub-families
+  - "[* -*SIGN]"                           # everything except the SIGN sub-family
+  - "[*-FURNACE *-SHELF *-TRANSPORT *-MISC *-CHEST -COPPER_CHEST]"  # all sub-families, CHEST minus copper
 
-# All except one block
 lockable_blocks:
-  - "[* -DRAGON_EGG]"
+  - "[* -DRAGON_EGG]"                      # everything except one block
 
-# Include only specific blocks (empty base + explicit inclusions)
-lockable_tile_entities:
-  - "[CHEST BARREL]"
-
-# One sub-family only
-lockable_tile_entities:
-  - "[*-CHEST]"
-
-# Multiple sub-families
-lockable_tile_entities:
-  - "[*-CHEST *-SHELF]"
-
-# Sub-family minus one member
 lockable_shulker_boxes:
-  - "[*-SHULKERS -WHITE_SHULKER_BOX]"
+  - "[*-SHULKERS -WHITE_SHULKER_BOX]"      # all shulkers minus one
 
-# All shulkers except red
-lockable_shulker_boxes:
-  - "[*-SHULKERS -RED_SHULKER_BOX]"
-
-# All family members except a sub-family (correct syntax)
-lockable_tile_entities:
-  - "[* -*SIGN]"
-
-# All tile-entity sub-families with one exclusion inside CHEST
-lockable_tile_entities:
-  - "[*-FURNACE *-SHELF *-TRANSPORT *-MISC *-CHEST -COPPER_CHEST]"
-
-# Entity family - item frames only (already enabled by default)
-lockable_entities:
-  - "[*-ITEM_FRAMES]"
-
-# Entity family - storage vehicles and item frames
 lockable_entities:
   - "[*-CHEST_BOATS *-CHEST_MINECARTS *-HOPPER_MINECARTS *-ITEM_FRAMES]"
 
@@ -241,7 +155,7 @@ auto_drop_to_inventory:
 |---------------------------|-----------------|--------------------------------------------------------------------|
 | `lockable_tile_entities`  | `TILE_ENTITIES` | `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN`           |
 | `lockable_shulker_boxes`  | `SHULKER_BOXES` | `SHULKERS`                                                         |
-| `lockable_blocks`         | `BLOCKS`        | `ANVIL`, `CAULDRON`, `FENCE_GATE`, `TRAPDOOR`, `WORKSTATION`       |
+| `lockable_blocks`         | `BLOCKS`        | `ANVIL`, `CAULDRON`, `FENCE_GATE`, `TRAPDOOR`, `WORKSTATION`, `BED` |
 | `lockable_doors`          | `DOORS`         | `DOORS`                                                            |
 | `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES` |
 

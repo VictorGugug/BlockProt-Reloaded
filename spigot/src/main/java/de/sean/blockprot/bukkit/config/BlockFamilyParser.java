@@ -75,6 +75,7 @@ public final class BlockFamilyParser {
         WORKSTATION("WORKSTATION", Family.BLOCKS),
         TRAPDOOR("TRAPDOOR", Family.BLOCKS),
         FENCE_GATE("FENCE_GATE", Family.BLOCKS),
+        BED("BED", Family.BLOCKS),
 
         DOORS("DOORS", Family.DOORS),
 
@@ -155,6 +156,7 @@ public final class BlockFamilyParser {
                 else if (n.contains("ANVIL"))      sfAcc.get(SubFamily.ANVIL).add(m);
                 else if (n.contains("CAULDRON"))   sfAcc.get(SubFamily.CAULDRON).add(m);
                 else if (isWorkstationMaterial(n)) sfAcc.get(SubFamily.WORKSTATION).add(m);
+                else if (isBedMaterial(n))         sfAcc.get(SubFamily.BED).add(m);
                 continue;
             }
             if (isEntityMaterial(n)) {
@@ -203,6 +205,10 @@ public final class BlockFamilyParser {
             || n.equals("ENCHANTING_TABLE") || n.equals("FLETCHING_TABLE");
     }
 
+    private static boolean isBedMaterial(@NotNull String n) {
+        return n.endsWith("_BED");
+    }
+
     private static boolean isEntityMaterial(@NotNull String n) {
         return n.contains("CHEST_BOAT") || n.equals("CHEST_MINECART") || n.equals("HOPPER_MINECART")
             || n.equals("ITEM_FRAME") || n.equals("GLOW_ITEM_FRAME");
@@ -232,6 +238,7 @@ public final class BlockFamilyParser {
         if (isWorkstationMaterial(n)) return true;
         if (n.contains("FENCE_GATE")) return true;
         if (n.contains("TRAPDOOR")) return true;
+        if (isBedMaterial(n)) return true;
         return false;
     }
 

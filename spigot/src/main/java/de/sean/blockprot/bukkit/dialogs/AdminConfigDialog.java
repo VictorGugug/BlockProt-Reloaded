@@ -96,7 +96,6 @@ public final class AdminConfigDialog {
     private static void showLanguage(@NotNull Player player, @NotNull DialogOrigin backOrigin) {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
-        DefaultConfig cfg = BlockProt.getDefaultConfig();
 
         Component title = Component.text(
             stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_LANGUAGE)),
@@ -106,8 +105,48 @@ public final class AdminConfigDialog {
         body.add(DialogBodyEntry.text(Component.text(
             stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__STATUS_HEADER)), SOFT_GRAY)));
 
-        BlockProt plugin = BlockProt.getInstance();
-        String currentLang = cfg.getLanguageFile();
+        List<DialogButton> buttons = new ArrayList<>();
+        buttons.add(new DialogButton("toggle_languages",
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_CATEGORY)), NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_HINT)), TextColor.color(0x888888)),
+            p -> showLanguageToggle(p, backOrigin)));
+
+        buttons.add(new DialogButton("select_language",
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__SELECTOR_CATEGORY)), NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__SELECTOR_HINT)), TextColor.color(0x888888)),
+            p -> showLanguageSelector(p, backOrigin)));
+
+        buttons.add(toggleBtn("replace_translations", "replace_translations",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__REPLACE_TRANSLATIONS),
+            BlockProt.getDefaultConfig().shouldReplaceTranslations(),
+            p -> { BlockProt.getDefaultConfig().setAndSave("replace_translations", !BlockProt.getDefaultConfig().shouldReplaceTranslations()); showLanguage(p, backOrigin); }));
+
+        String fallback = BlockProt.getDefaultConfig().getTranslationFallbackString();
+        buttons.add(valueBtn("fallback_string", "fallback_string",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__FALLBACK_STRING),
+            fallback != null ? fallback : "",
+            p -> AdminConfigValueDialog.openText(p, "fallback_string",
+                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__FALLBACK_STRING_HINT)),
+                fallback != null ? fallback : "",
+                raw -> null,
+                v -> { BlockProt.getDefaultConfig().setAndSave("fallback_string", v); showLanguage(p, backOrigin); },
+                () -> showLanguage(p, backOrigin))));
+
+        bridgeReturn(player, bridge, title, body, buttons, backOrigin);
+    }
+
+    private static void showLanguageToggle(@NotNull Player player, @NotNull DialogOrigin backOrigin) {
+        DialogBridge bridge = DialogBridgeFactory.getBridge();
+        if (bridge == null) return;
+
+        Component title = Component.text(
+            stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_CATEGORY)),
+            PASTEL_GOLD, TextDecoration.BOLD);
+
+        List<DialogBodyEntry> body = new ArrayList<>();
+        body.add(DialogBodyEntry.text(Component.text(
+            stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_HINT)), SOFT_GRAY)));
+
         String[] allLangs = Translator.DEFAULT_TRANSLATION_FILES.toArray(new String[0]);
 
         List<DialogButton> buttons = new ArrayList<>();
@@ -123,80 +162,119 @@ public final class AdminConfigDialog {
         String toggleLabel = allEnabled
             ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_DISABLE))
             : stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_ENABLE));
-        String toggleHint = stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_HINT));
         buttons.add(new DialogButton("toggle_all",
             Component.text()
                 .append(Component.text(stripColor(Translator.get(allEnabled ? TranslationKey.ICON__TOGGLE_OFF : TranslationKey.ICON__TOGGLE_ON)), allEnabled ? PASTEL_CORAL : PASTEL_MINT))
                 .append(Component.text(toggleLabel, NamedTextColor.WHITE))
                 .build(),
-            Component.text(toggleHint, TextColor.color(0x888888)),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_HINT)), TextColor.color(0x888888)),
             p -> {
                 for (String lang : allLangs) {
                     LangConfig.setLanguageEnabled(lang, !allEnabled);
                 }
-                showLanguage(p, backOrigin);
+                showLanguageToggle(p, backOrigin);
             }));
 
+        BlockProt plugin = BlockProt.getInstance();
         for (String lang : allLangs) {
-            boolean isConfigLang = lang.equals(currentLang);
             boolean isEnabled = LangConfig.isLanguageEnabled(lang);
             String label = getLanguageLabel(plugin, lang);
 
-            TextColor c = isEnabled ? PASTEL_MINT : PASTEL_CORAL;
-            Component labelComp = isConfigLang
-                ? Component.text().append(Component.text(label, isEnabled ? NamedTextColor.WHITE : SOFT_GRAY))
-                    .append(Component.text(" "
-                        + stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__ACTIVE_MARKER)),
-                        PASTEL_GOLD)).build()
-                : Component.text(label, isEnabled ? NamedTextColor.WHITE : SOFT_GRAY);
+            TextColor c = isEnabled ? NamedTextColor.WHITE : SOFT_GRAY;
             String langStatus = isEnabled
                 ? stripColor(Translator.get(TranslationKey.DIALOGS__STATUS_ENABLED))
                 : stripColor(Translator.get(TranslationKey.DIALOGS__STATUS_DISABLED));
-            String configStatus = isConfigLang
-                ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CONFIG_STATUS_ACTIVE))
-                : stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CONFIG_STATUS_INACTIVE));
             String clickAction = isEnabled
                 ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CLICK_DISABLE))
                 : stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CLICK_ENABLE));
             buttons.add(new DialogButton("lang_" + lang,
                 Component.text()
                     .append(Component.text(stripColor(Translator.get(isEnabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
-                    .append(labelComp)
+                    .append(Component.text(label, c))
                     .build(),
                 Component.join(JoinConfiguration.newlines(),
                     Component.text(stripColor(Translator.get(
                         TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__LANG_STATUS))
                         .replace("{status}", langStatus), c),
-                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CONFIG_YML_PREFIX)) + configStatus, isConfigLang ? PASTEL_GOLD : SOFT_GRAY),
                     Component.text(clickAction, TextColor.color(0x888888))),
                 p -> {
-                    if (isEnabled) {
-                        LangConfig.setLanguageEnabled(lang, false);
-                    } else {
-                        LangConfig.setLanguageEnabled(lang, true);
-                        cfg.setLanguageFile(lang);
-                    }
-                    showLanguage(p, backOrigin);
+                    LangConfig.setLanguageEnabled(lang, !isEnabled);
+                    showLanguageToggle(p, backOrigin);
                 }));
         }
 
-        buttons.add(toggleBtn("replace_translations", "replace_translations",
-            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__REPLACE_TRANSLATIONS),
-            cfg.shouldReplaceTranslations(),
-            p -> { cfg.setAndSave("replace_translations", !cfg.shouldReplaceTranslations()); showLanguage(p, backOrigin); }));
+        DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
+        DialogButton backBtn = new DialogButton("back",
+            Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
+            exitOrigin == DialogOrigin.NONE ?
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLOSE)), TextColor.color(0x888888)) :
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__RETURN_CATEGORIES)), TextColor.color(0x888888)),
+            exitOrigin == DialogOrigin.NONE ? null : p -> showLanguage(p, backOrigin));
 
-        String fallback = cfg.getTranslationFallbackString();
-        buttons.add(valueBtn("fallback_string", "fallback_string",
-            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__FALLBACK_STRING),
-            fallback != null ? fallback : "",
-            p -> AdminConfigValueDialog.openText(p, "fallback_string",
-                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__FALLBACK_STRING_HINT)),
-                fallback != null ? fallback : "",
-                raw -> null,
-                v -> { cfg.setAndSave("fallback_string", v); showLanguage(p, backOrigin); },
-                () -> showLanguage(p, backOrigin))));
+        bridge.showMultiAction(player, title, body, buttons, backBtn, 2);
+    }
 
-        bridgeReturn(player, bridge, title, body, buttons, backOrigin);
+    private static void showLanguageSelector(@NotNull Player player, @NotNull DialogOrigin backOrigin) {
+        DialogBridge bridge = DialogBridgeFactory.getBridge();
+        if (bridge == null) return;
+        DefaultConfig cfg = BlockProt.getDefaultConfig();
+
+        Component title = Component.text(
+            stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__SELECTOR_CATEGORY)),
+            SOFT_BLUE, TextDecoration.BOLD);
+
+        List<DialogBodyEntry> body = new ArrayList<>();
+        body.add(DialogBodyEntry.text(Component.text(
+            stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__SELECTOR_HINT)), SOFT_GRAY)));
+
+        String currentLang = cfg.getLanguageFile();
+        String[] allLangs = Translator.DEFAULT_TRANSLATION_FILES.toArray(new String[0]);
+
+        List<DialogButton> buttons = new ArrayList<>();
+
+        BlockProt plugin = BlockProt.getInstance();
+        for (String lang : allLangs) {
+            boolean isConfigLang = lang.equals(currentLang);
+            boolean isEnabled = LangConfig.isLanguageEnabled(lang);
+            String label = getLanguageLabel(plugin, lang);
+
+            TextColor c = isConfigLang ? PASTEL_GOLD : (isEnabled ? NamedTextColor.WHITE : SOFT_GRAY);
+            Component labelComp = isConfigLang
+                ? Component.text().append(Component.text(label, NamedTextColor.WHITE))
+                    .append(Component.text(" "
+                        + stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__ACTIVE_MARKER)),
+                        PASTEL_GOLD)).build()
+                : Component.text(label, isEnabled ? NamedTextColor.WHITE : SOFT_GRAY);
+            String configStatus = isConfigLang
+                ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CONFIG_STATUS_ACTIVE))
+                : stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CONFIG_STATUS_INACTIVE));
+            String clickAction = isConfigLang
+                ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_CURRENT))
+                : (isEnabled ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CLICK_ENABLE))
+                    : stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__LANG_STATUS)).replace("{status}",
+                        stripColor(Translator.get(TranslationKey.DIALOGS__STATUS_DISABLED))));
+            buttons.add(new DialogButton("lang_" + lang,
+                labelComp,
+                Component.join(JoinConfiguration.newlines(),
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CONFIG_YML_PREFIX)) + configStatus, isConfigLang ? PASTEL_GOLD : SOFT_GRAY),
+                    Component.text(clickAction, TextColor.color(0x888888))),
+                p -> {
+                    if (!isConfigLang && isEnabled) {
+                        cfg.setLanguageFile(lang);
+                    }
+                    showLanguageSelector(p, backOrigin);
+                }));
+        }
+
+        DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
+        DialogButton backBtn = new DialogButton("back",
+            Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
+            exitOrigin == DialogOrigin.NONE ?
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLOSE)), TextColor.color(0x888888)) :
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__RETURN_CATEGORIES)), TextColor.color(0x888888)),
+            exitOrigin == DialogOrigin.NONE ? null : p -> showLanguage(p, backOrigin));
+
+        bridge.showMultiAction(player, title, body, buttons, backBtn, 2);
     }
 
     private static @Nullable YamlConfiguration loadLanguageFile(@NotNull BlockProt plugin, @NotNull String fileName) {

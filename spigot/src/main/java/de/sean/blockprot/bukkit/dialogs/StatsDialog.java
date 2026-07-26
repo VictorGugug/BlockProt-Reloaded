@@ -20,17 +20,24 @@
 
 package de.sean.blockprot.bukkit.dialogs;
 
+import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.BlockCountStatistic;
+import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -69,10 +76,13 @@ public final class StatsDialog {
             stripColor(Translator.get(TranslationKey.DIALOGS__STATS__HEADER)), SOFT_GRAY)));
         body.add(DialogBodyEntry.text(Component.empty()));
 
+        List<DialogButton> buttons = new ArrayList<>();
+
         if (isPlayerPage) {
             PlayerBlocksStatistic pStat = new PlayerBlocksStatistic();
             StatHandler.getStatistic(pStat, player);
-            int total = pStat.get().size();
+            List<LocationListEntry> entries = pStat.get();
+            int total = entries.size();
             body.add(DialogBodyEntry.text(Component.text()
                 .append(Component.text(
                     stripColor(Translator.get(TranslationKey.DIALOGS__STATS__YOUR_BLOCKS)), NamedTextColor.WHITE))
@@ -80,13 +90,22 @@ public final class StatsDialog {
                 .build()));
             body.add(DialogBodyEntry.text(Component.empty()));
 
-            List<String> breakdown = pStat.getBreakdownLore();
-            if (!breakdown.isEmpty()) {
-                body.add(DialogBodyEntry.text(Component.text(
-                    stripColor(Translator.get(TranslationKey.DIALOGS__STATS__BREAKDOWN)), SOFT_GRAY)));
-                for (String line : breakdown) {
-                    String clean = line.replaceAll("[§&][0-9a-fk-orxA-F]", "");
-                    body.add(DialogBodyEntry.text(Component.text("  " + clean, TextColor.color(0x888888))));
+            if (total > 0) {
+                Map<Material, List<LocationListEntry>> grouped = new LinkedHashMap<>();
+                for (LocationListEntry entry : entries) {
+                    Material mat = entry.getItemType();
+                    if (mat != Material.AIR) {
+                        grouped.computeIfAbsent(mat, k -> new ArrayList<>()).add(entry);
+                    }
+                }
+                for (Map.Entry<Material, List<LocationListEntry>> group : grouped.entrySet()) {
+                    Material mat = group.getKey();
+                    int count = group.getValue().size();
+                    String matName = toHumanReadable(mat);
+                    buttons.add(new DialogButton("mat_" + mat.name(),
+                        Component.text(matName + " (" + count + ")", NamedTextColor.WHITE),
+                        Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), TextColor.color(0x888888)),
+                        p -> showMaterialBlocks(p, backOrigin, pageKey, mat, group.getValue())));
                 }
             } else {
                 body.add(DialogBodyEntry.text(Component.text(
@@ -108,11 +127,11 @@ public final class StatsDialog {
 
         String nextPageKey = isPlayerPage ? KEY_GLOBAL : KEY_PLAYER;
 
-        DialogButton toggleBtn = new DialogButton("toggle",
+        buttons.add(new DialogButton("toggle",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__STATS)) + toggleLabel, NamedTextColor.WHITE),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__SWITCH_VIEW)), TextColor.color(0x888888)),
             p -> show(p, backOrigin, nextPageKey)
-        );
+        ));
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
         DialogButton backBtn = new DialogButton("back",
@@ -121,7 +140,81 @@ public final class StatsDialog {
             backAction(player, exitOrigin)
         );
 
-        bridge.showMultiAction(player, title, body, List.of(toggleBtn), backBtn, 1);
+        bridge.showMultiAction(player, title, body, buttons, backBtn, 2);
+    }
+
+    private static void showMaterialBlocks(@NotNull Player player, @NotNull DialogOrigin backOrigin,
+                                            @NotNull String pageKey, @NotNull Material mat,
+                                            @NotNull List<LocationListEntry> entries) {
+        DialogBridge bridge = DialogBridgeFactory.getBridge();
+        if (bridge == null) return;
+
+        Component title = Component.text(
+            toHumanReadable(mat),
+            PASTEL_GOLD, TextDecoration.BOLD
+        );
+
+        List<DialogBodyEntry> body = new ArrayList<>();
+        body.add(DialogBodyEntry.text(Component.text(
+            stripColor(Translator.get(TranslationKey.DIALOGS__STATS__YOUR_BLOCKS)) + toHumanReadable(mat),
+            SOFT_GRAY)));
+
+        boolean canTp = player.hasPermission(Permissions.BLOCKS_TP.key());
+        String tpLore = stripColor(Translator.get(
+            canTp ? TranslationKey.INVENTORIES__STATS__LORE_TP
+                  : TranslationKey.INVENTORIES__STATS__LORE_NO_TP));
+
+        List<DialogButton> buttons = new ArrayList<>();
+        for (LocationListEntry entry : entries) {
+            Location loc = entry.get();
+            String lockedAgo = entry.getLockedAgoText();
+            List<String> contents = entry.getContentsLore();
+
+            List<Component> loreLines = new ArrayList<>();
+            loreLines.add(Component.text(tpLore, canTp ? PASTEL_MINT : PASTEL_PURPLE));
+            if (!lockedAgo.isEmpty()) {
+                loreLines.add(Component.text(stripColor(lockedAgo), SOFT_GRAY));
+            }
+            if (!contents.isEmpty()) {
+                loreLines.add(Component.empty());
+                for (String line : contents) {
+                    loreLines.add(Component.text(stripColor(line), TextColor.color(0x888888)));
+                }
+            }
+
+            buttons.add(new DialogButton("block_" + loc.getBlockX() + "_" + loc.getBlockY() + "_" + loc.getBlockZ(),
+                Component.text(entry.getTitle(), NamedTextColor.WHITE),
+                Component.join(JoinConfiguration.newlines(), loreLines),
+                p -> {
+                    if (!p.hasPermission(Permissions.BLOCKS_TP.key())) {
+                        p.sendMessage(stripColor(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION_TP)));
+                        return;
+                    }
+                    Location tpLoc = entry.get();
+                    if (tpLoc.getWorld() != null) {
+                        p.teleport(tpLoc.clone().add(0.5, 1.0, 0.5));
+                    }
+                }));
+        }
+
+        DialogButton backBtn = new DialogButton("back",
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
+            p -> show(p, backOrigin, pageKey));
+
+        bridge.showMultiAction(player, title, body, buttons, backBtn, 2);
+    }
+
+    static String toHumanReadable(@NotNull Material mat) {
+        String raw = mat.name().replace('_', ' ');
+        StringBuilder sb = new StringBuilder();
+        boolean cap = true;
+        for (char c : raw.toCharArray()) {
+            if (c == ' ') { sb.append(c); cap = true; }
+            else if (cap) { sb.append(Character.toUpperCase(c)); cap = false; }
+            else { sb.append(Character.toLowerCase(c)); }
+        }
+        return sb.toString();
     }
 
     private static String stripColor(String s) {

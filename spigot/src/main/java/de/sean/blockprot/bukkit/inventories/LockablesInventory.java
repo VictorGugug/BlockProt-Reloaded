@@ -69,6 +69,7 @@ public final class LockablesInventory extends BlockProtInventory {
         SIGNS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__SIGNS),
         DOORS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__DOORS),
         TRAPDOORS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__TRAPDOORS),
+        BEDS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__BEDS),
         GATES(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__GATES),
         WORKSTATIONS(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__WORKSTATIONS),
         INTERACTIVE(TranslationKey.INVENTORIES__LOCKABLES__CATEGORY__INTERACTIVE),
@@ -284,7 +285,7 @@ public final class LockablesInventory extends BlockProtInventory {
         return switch (cat) {
             case CHESTS, FURNACES, STORAGE, SIGNS -> BlockFamilyParser.Family.TILE_ENTITIES;
             case SHULKERS -> BlockFamilyParser.Family.SHULKER_BOXES;
-            case TRAPDOORS, GATES, WORKSTATIONS, INTERACTIVE -> BlockFamilyParser.Family.BLOCKS;
+            case TRAPDOORS, BEDS, GATES, WORKSTATIONS, INTERACTIVE -> BlockFamilyParser.Family.BLOCKS;
             case DOORS -> BlockFamilyParser.Family.DOORS;
             case ENTITIES -> BlockFamilyParser.Family.ENTITIES;
         };
@@ -349,6 +350,7 @@ public final class LockablesInventory extends BlockProtInventory {
         if (cfg.isLockableShulkerBox(m) || n.contains("SHULKER_BOX")) return Category.SHULKERS;
         if (n.endsWith("_DOOR") && !n.contains("TRAP"))               return Category.DOORS;
         if (n.contains("TRAPDOOR"))                                    return Category.TRAPDOORS;
+        if (n.endsWith("_BED"))                                        return Category.BEDS;
         if (n.contains("FENCE_GATE"))                                  return Category.GATES;
         if (n.contains("FURNACE") || n.equals("SMOKER")
             || n.equals("BLAST_FURNACE"))                              return Category.FURNACES;
@@ -382,6 +384,7 @@ public final class LockablesInventory extends BlockProtInventory {
             case SIGNS        -> "[*-SIGN]";
             case DOORS        -> "[*]";
             case TRAPDOORS    -> "[*-TRAPDOOR]";
+            case BEDS         -> "[*-BED]";
             case GATES        -> "[*-FENCE_GATE]";
             case WORKSTATIONS -> "[*-WORKSTATION *-ANVIL]";
             case INTERACTIVE  -> "[*-CAULDRON]";

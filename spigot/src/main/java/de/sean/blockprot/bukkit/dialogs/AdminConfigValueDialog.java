@@ -56,7 +56,11 @@ import org.jetbrains.annotations.Nullable;
 public final class AdminConfigValueDialog {
 
     private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
+    private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
+    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
     private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
+    private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
+    private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
 
     private AdminConfigValueDialog() {}
 
@@ -207,13 +211,14 @@ public final class AdminConfigValueDialog {
         body.add(DialogBodyEntry.text(Component.join(JoinConfiguration.newlines(),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_CURRENT)) + currentValue, SOFT_GRAY))));
         if (errorLine != null) {
-            body.add(DialogBodyEntry.text(Component.text(errorLine, TextColor.color(0xF0A0A0))));
+            body.add(DialogBodyEntry.text(Component.text(errorLine, PASTEL_CORAL)));
         }
 
         DialogTextField field = DialogTextField.of(
             sanitizeInputKey(configKey),
             Component.text(configKey, NamedTextColor.WHITE),
-            currentValue
+            currentValue,
+            stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CONFIRM_VALUE))
         );
 
         DialogButton back = new DialogButton("cancel",

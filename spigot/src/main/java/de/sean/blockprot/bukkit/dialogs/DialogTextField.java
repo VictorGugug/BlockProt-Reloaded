@@ -39,10 +39,13 @@ public record DialogTextField(
     @NotNull Component label,
     @NotNull String initialValue,
     int maxLength,
-    int width
+    int width,
+    @NotNull String confirmLabel
 ) {
     /** Default widget width in GUI pixels, matching vanilla's text field default. */
     public static final int DEFAULT_WIDTH = 200;
+    /** Default confirm/save button text. */
+    public static final String DEFAULT_CONFIRM = "Save";
 
     public DialogTextField {
         if (maxLength <= 0) maxLength = 32;
@@ -50,6 +53,10 @@ public record DialogTextField(
     }
 
     public static @NotNull DialogTextField of(@NotNull String key, @NotNull Component label, @NotNull String initialValue) {
-        return new DialogTextField(key, label, initialValue, 32, DEFAULT_WIDTH);
+        return new DialogTextField(key, label, initialValue, 32, DEFAULT_WIDTH, DEFAULT_CONFIRM);
+    }
+
+    public static @NotNull DialogTextField of(@NotNull String key, @NotNull Component label, @NotNull String initialValue, @NotNull String confirmLabel) {
+        return new DialogTextField(key, label, initialValue, 32, DEFAULT_WIDTH, confirmLabel);
     }
 }

@@ -251,6 +251,7 @@ public final class DefaultConfig extends BlockProtConfig {
                 if (name.contains("ANVIL")) return true;
                 if (name.contains("FENCE_GATE")) return true;
                 if (name.contains("TRAPDOOR")) return true;
+                if (name.endsWith("_BED")) return true;
                 return false;
             };
             loadBlockListFromConfig("lockable_blocks", lockableBlocks, inactiveBlocks,

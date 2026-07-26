@@ -40,7 +40,7 @@ and a count of how many blocks are currently active vs inactive.
 |---------------------------|-----------------|---------------------------------------------------------------------------------|
 | `lockable_tile_entities`  | `TILE_ENTITIES` | `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN`                        |
 | `lockable_shulker_boxes`  | `SHULKER_BOXES` | `SHULKERS`                                                                      |
-| `lockable_blocks`         | `BLOCKS`        | `ANVIL`, `CAULDRON`, `FENCE_GATE`, `TRAPDOOR`, `WORKSTATION`                   |
+| `lockable_blocks`         | `BLOCKS`        | `ANVIL`, `CAULDRON`, `FENCE_GATE`, `TRAPDOOR`, `WORKSTATION`, `BED`            |
 | `lockable_doors`          | `DOORS`         | `DOORS`                                                                         |
 | `lockable_entities`       | `ENTITIES`      | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES`            |
 
@@ -280,6 +280,34 @@ Blocks non-owners from opening or closing the trapdoor.
 | `WAXED_EXPOSED_COPPER_TRAPDOOR` | 1.21 |
 | `WAXED_WEATHERED_COPPER_TRAPDOOR` | 1.21 |
 | `WAXED_OXIDIZED_COPPER_TRAPDOOR` | 1.21 |
+
+### Sub-family: BED
+
+Token: `*-BED`
+
+A bed occupies two blocks (foot and head half). Locking either half locks both: the plugin
+mirrors owner/friends/redstone data to the paired half automatically, the same way it does
+for double chests and two-block doors. Breaking, sneak-right-click menu access, and the
+lock-hint message all work identically to any other `BLOCKS` family member.
+
+| Material | MC version |
+|---|---|
+| `WHITE_BED` | 1.0 |
+| `ORANGE_BED` | 1.0 |
+| `MAGENTA_BED` | 1.0 |
+| `LIGHT_BLUE_BED` | 1.0 |
+| `YELLOW_BED` | 1.0 |
+| `LIME_BED` | 1.0 |
+| `PINK_BED` | 1.0 |
+| `GRAY_BED` | 1.0 |
+| `LIGHT_GRAY_BED` | 1.0 |
+| `CYAN_BED` | 1.0 |
+| `PURPLE_BED` | 1.0 |
+| `BLUE_BED` | 1.0 |
+| `BROWN_BED` | 1.0 |
+| `GREEN_BED` | 1.0 |
+| `RED_BED` | 1.0 |
+| `BLACK_BED` | 1.0 |
 
 ### Ungrouped
 

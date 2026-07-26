@@ -136,8 +136,8 @@ public final class FriendManageDialog {
                         }
                     });
                 };
-                AnvilInput.open(p, BlockProt.getInstance(), "",
-                    Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH), handleName);
+                bridge.closeDialog(p);
+                openFriendNameInput(p, handleName);
             }
         ));
 
@@ -282,6 +282,19 @@ public final class FriendManageDialog {
             if (op.getName() != null) return op.getName();
         } catch (IllegalArgumentException ignored) {}
         return null;
+    }
+
+    private static void openFriendNameInput(@NotNull Player p, @NotNull Consumer<String> handleName) {
+        if (de.sean.blockprot.bukkit.VersionCompat.isPaper()) {
+            de.sean.blockprot.bukkit.inventories.ChatInput.open(p, BlockProt.getInstance(), handleName);
+        } else {
+            String prompt = Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH);
+            if (de.sean.blockprot.bukkit.inventories.SignInput.isSupported()) {
+                de.sean.blockprot.bukkit.inventories.SignInput.open(p, BlockProt.getInstance(), prompt, handleName);
+            } else {
+                AnvilInput.open(p, BlockProt.getInstance(), "", prompt, handleName);
+            }
+        }
     }
 
     private static String stripColor(String s) {

@@ -219,7 +219,7 @@ public final class PaperDialogBridge implements DialogBridge {
             },
             CLICK_OPTIONS
         );
-        var confirmButton = ActionButton.builder(field.label()).action(confirmAction).build();
+        var confirmButton = ActionButton.builder(Component.text(field.confirmLabel())).action(confirmAction).build();
 
         ActionButton backAction = back != null ? toActionButton(back) : null;
 

@@ -535,6 +535,17 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
                     orElse.accept(doubleChestHandler);
                 }
             }
+        } else if (BlockFamilyParser.getSubFamilyMembers(BlockFamilyParser.SubFamily.BED).contains(this.block.getType())) {
+            final Block otherBedHalf = BlockUtil.getOtherBedHalf(this.block.getState());
+            if (otherBedHalf == null) return;
+            // Guard: the adjacent bed half may be in an unloaded chunk on large servers.
+            if (!otherBedHalf.getChunk().isLoaded()) return;
+            final BlockNBTHandler otherBedHandler = new BlockNBTHandler(otherBedHalf);
+            if (condition.test(otherBedHandler)) {
+                otherBedHandler.mergeHandler(this);
+            } else {
+                orElse.accept(otherBedHandler);
+            }
         }
     }
 

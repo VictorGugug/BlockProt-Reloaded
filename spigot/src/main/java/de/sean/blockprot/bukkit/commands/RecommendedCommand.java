@@ -95,7 +95,11 @@ public class RecommendedCommand implements CommandExecutor {
                     "CAULDRON", "WATER_CAULDRON", "LAVA_CAULDRON", "POWDER_SNOW_CAULDRON",
                     "GRINDSTONE", "STONECUTTER", "LOOM", "CARTOGRAPHY_TABLE",
                     "SMITHING_TABLE", "ENCHANTING_TABLE", "FLETCHING_TABLE",
-                    "DRAGON_EGG", "COMPOSTER", "BELL", "NOTE_BLOCK"));
+                    "DRAGON_EGG", "COMPOSTER", "BELL", "NOTE_BLOCK",
+                    "WHITE_BED", "ORANGE_BED", "MAGENTA_BED", "LIGHT_BLUE_BED",
+                    "YELLOW_BED", "LIME_BED", "PINK_BED", "GRAY_BED",
+                    "LIGHT_GRAY_BED", "CYAN_BED", "PURPLE_BED", "BLUE_BED",
+                    "BROWN_BED", "GREEN_BED", "RED_BED", "BLACK_BED"));
                 cfg.set("lockable_doors", List.of(
                     "OAK_DOOR", "SPRUCE_DOOR", "BIRCH_DOOR", "JUNGLE_DOOR",
                     "ACACIA_DOOR", "DARK_OAK_DOOR", "MANGROVE_DOOR", "CHERRY_DOOR",

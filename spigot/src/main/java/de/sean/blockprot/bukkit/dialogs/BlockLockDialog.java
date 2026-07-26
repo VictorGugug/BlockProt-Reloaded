@@ -25,7 +25,8 @@ import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.events.BlockAccessMenuEvent;
-import de.sean.blockprot.bukkit.inventories.*;
+import de.sean.blockprot.bukkit.inventories.InventoryState;
+import de.sean.blockprot.bukkit.inventories.TransferSearchInventory;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerInventoryClipboard;
@@ -161,15 +162,33 @@ public final class BlockLockDialog {
                 stripColor(Translator.get(TranslationKey.INVENTORIES__SET_BLOCK_NAME)),
                 PASTEL_MINT,
                 p -> {
-                    bridge.closeDialog(p);
                     final Block nameBlock = block;
-                    var currentName = new BlockNBTHandler(nameBlock).getName();
-                    java.util.function.Consumer<String> handleName = text -> {
-                        new BlockNBTHandler(nameBlock).setName(text);
-                        BlockLockDialog.show(p, nameBlock, new BlockNBTHandler(nameBlock));
-                    };
-                    AnvilInput.open(p, BlockProt.getInstance(), currentName,
-                        Translator.get(TranslationKey.INVENTORIES__SET_BLOCK_NAME), handleName);
+                    String currentName = new BlockNBTHandler(nameBlock).getName();
+                    String hint = stripColor(Translator.get(TranslationKey.INVENTORIES__SET_BLOCK_NAME));
+                    List<DialogBodyEntry> inputBody = new ArrayList<>();
+                    inputBody.add(DialogBodyEntry.text(Component.text(hint, SOFT_GRAY)));
+                    if (currentName != null && !currentName.isEmpty()) {
+                        inputBody.add(DialogBodyEntry.text(
+                            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_CURRENT)) + currentName, SOFT_GRAY)));
+                    }
+                    DialogTextField field = DialogTextField.of(
+                        "block_name",
+                        Component.text(hint, NamedTextColor.WHITE),
+                        currentName != null ? currentName : "",
+                        stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CONFIRM_VALUE))
+                    );
+                    DialogButton back = new DialogButton("cancel",
+                        Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
+                        Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
+                        pl -> show(pl, block, handler, backOrigin));
+                    bridge.showValueInput(p,
+                        Component.text(hint, PASTEL_MINT, TextDecoration.BOLD),
+                        inputBody, field,
+                        text -> {
+                            new BlockNBTHandler(nameBlock).setName(text != null ? text : "");
+                            BlockLockDialog.show(p, nameBlock, new BlockNBTHandler(nameBlock));
+                        },
+                        back);
                 }
             ));
 

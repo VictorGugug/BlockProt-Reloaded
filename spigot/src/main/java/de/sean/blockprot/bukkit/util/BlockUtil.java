@@ -27,6 +27,7 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.Chest;
 import org.bukkit.block.DoubleChest;
 import org.bukkit.block.data.Bisected;
+import org.bukkit.block.data.type.Bed;
 import org.bukkit.block.data.type.Door;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
@@ -95,6 +96,32 @@ public final class BlockUtil {
             final Location other = state.getLocation().clone();
             if (door.getHalf() == Bisected.Half.TOP) other.setY(other.getY() - 1);
             else other.setY(other.getY() + 1);
+            return state.getWorld().getBlockAt(other);
+        } catch (ClassCastException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Gets the other half of a bed, as per the block given.
+     *
+     * <p>A bed occupies two blocks: FOOT and HEAD, connected along the direction
+     * the bed data reports via {@link Bed#getFacing()} (pointing from foot to head).
+     *
+     * @param state The BlockState of one bed half.
+     * @return The other half of the bed, or null if the given state is not a bed.
+     */
+    @Nullable
+    public static Block getOtherBedHalf(@NotNull final BlockState state) {
+        try {
+            final Bed bed = (Bed) state.getBlockData();
+            final org.bukkit.block.BlockFace facing = bed.getFacing();
+            final Location other = state.getLocation().clone();
+            if (bed.getPart() == Bed.Part.FOOT) {
+                other.add(facing.getModX(), facing.getModY(), facing.getModZ());
+            } else {
+                other.subtract(facing.getModX(), facing.getModY(), facing.getModZ());
+            }
             return state.getWorld().getBlockAt(other);
         } catch (ClassCastException e) {
             return null;

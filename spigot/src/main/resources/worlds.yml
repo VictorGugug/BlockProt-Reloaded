@@ -1,4 +1,4 @@
-# worlds.yml -- BlockProt Reloaded
+# worlds.yml - BlockProt Reloaded
 # Per-world block configuration. Active when config.yml has: per_worlds_config: true
 #
 # Each world entry has its own lockable block lists. The per-world GUI is
