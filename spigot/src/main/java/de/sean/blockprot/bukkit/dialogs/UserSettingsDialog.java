@@ -117,6 +117,28 @@ public final class UserSettingsDialog {
         actions.add(lockBtn);
         actions.add(hintsBtn);
         actions.add(notifBtn);
+
+        if (de.sean.blockprot.bukkit.BlockProt.getDefaultConfig().isDialogsEnabled()) {
+            String rawDialogs = stripColor(Translator.get(TranslationKey.DIALOGS__SETTINGS__PREFER_DIALOGS));
+            String dialogsDesc = stripColor(Translator.get(TranslationKey.DIALOGS__SETTINGS__PREFER_DIALOGS_DESC));
+            boolean preferDialogs = settings.getPreferDialogs();
+            DialogButton dialogsBtn = new DialogButton("prefer_dialogs",
+                toggleLabel(rawDialogs, preferDialogs, PASTEL_MINT, PASTEL_CORAL),
+                tooltip(rawDialogs, preferDialogs, dialogsDesc),
+                p -> {
+                    PlayerSettingsHandler h = new PlayerSettingsHandler(p);
+                    boolean nextState = !h.getPreferDialogs();
+                    h.setPreferDialogs(nextState);
+                    if (!nextState) {
+                        p.openInventory(new de.sean.blockprot.bukkit.inventories.UserSettingsInventory().fill(p));
+                    } else {
+                        show(p, backOrigin);
+                    }
+                }
+            );
+            actions.add(dialogsBtn);
+        }
+
         bridge.showMultiAction(player, title, body, actions, exitBtn, 1);
     }
 

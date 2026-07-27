@@ -75,7 +75,7 @@ public final class FriendsAddAllCommand implements CommandExecutor {
     }
 
     private void openFriendManageGui(@NotNull Player player) {
-        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+        if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             FriendManageDialog.show(player);
             return;
         }

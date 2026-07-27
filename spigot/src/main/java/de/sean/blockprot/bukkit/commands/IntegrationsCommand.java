@@ -44,7 +44,7 @@ public class IntegrationsCommand implements CommandExecutor {
         if (!canUseCommand(sender))
             return false;
 
-        if (sender instanceof Player player && BlockProt.getDefaultConfig().shouldUseDialogs()) {
+        if (sender instanceof Player player && BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             IntegrationsDialog.show(player);
             return true;
         }

@@ -152,7 +152,7 @@ public class InteractEventListener implements Listener {
                 return;
             }
 
-            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
                 BlockLockDialog.showBlock(player, event.getClickedBlock());
             } else {
                 BlockProtAPI api = BlockProtAPI.getInstance();

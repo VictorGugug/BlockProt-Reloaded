@@ -50,6 +50,7 @@ public class UserSettingsInventory extends BlockProtInventory {
 
     private static final int SLOT_LOCK_ON_PLACE   = 0;
     private static final int SLOT_HINTS           = 1;
+    private static final int SLOT_PREFER_DIALOGS  = 2;
     private static final int SLOT_NOTIFICATIONS   = 3;
     private static final int SLOT_FRIENDS         = 4;
 
@@ -80,6 +81,18 @@ public class UserSettingsInventory extends BlockProtInventory {
                 boolean hintsCurrentlyEnabled = !h.hasPlayerInteractedWithMenu();
                 h.setHasPlayerInteractedWithMenu(hintsCurrentlyEnabled);
                 fill(player);
+            }
+            case PAPER -> {
+                if (BlockProt.getDefaultConfig().isDialogsEnabled()) {
+                    PlayerSettingsHandler h = new PlayerSettingsHandler(player);
+                    boolean nextState = !h.getPreferDialogs();
+                    h.setPreferDialogs(nextState);
+                    if (nextState) {
+                        de.sean.blockprot.bukkit.dialogs.UserSettingsDialog.show(player);
+                    } else {
+                        fill(player);
+                    }
+                }
             }
             case BELL -> {
                 PlayerSettingsHandler h = new PlayerSettingsHandler(player);
@@ -124,6 +137,15 @@ public class UserSettingsInventory extends BlockProtInventory {
             TranslationKey.INVENTORIES__USER_MENU__HINTS,
             hintsEnabled
         );
+
+        if (BlockProt.getDefaultConfig().isDialogsEnabled()) {
+            setEnchantedOptionItemStack(
+                SLOT_PREFER_DIALOGS,
+                Material.PAPER,
+                TranslationKey.DIALOGS__SETTINGS__PREFER_DIALOGS,
+                settings.getPreferDialogs()
+            );
+        }
 
         setEnchantedOptionItemStack(
             SLOT_NOTIFICATIONS,

@@ -306,6 +306,13 @@ public final class DefaultConfig extends BlockProtConfig {
         return config.getBoolean("auto_reload_configs", true);
     }
 
+    public int getAutoReloadDelaySeconds() {
+        int val = config.getInt("auto_reload_delay_seconds", 0);
+        if (val < 0) return 0;
+        if (val > 5) return 5;
+        return val;
+    }
+
     public boolean isWorldExcluded(InventoryHolder holder) {
         try {
             if (holder instanceof DoubleChest) {
@@ -366,6 +373,11 @@ public final class DefaultConfig extends BlockProtConfig {
      */
     public boolean shouldUseDialogs() {
         return isDialogsEnabled() && VersionCompat.hasDialogApi();
+    }
+
+    public boolean shouldUseDialogs(@NotNull Player player) {
+        if (!shouldUseDialogs()) return false;
+        return new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getPreferDialogs();
     }
 
     public boolean shouldEnableAllOptionalFeatures() { return false; }
@@ -520,6 +532,11 @@ public final class DefaultConfig extends BlockProtConfig {
 
     public void setAutoReloadConfigs(boolean value) {
         setAndSave("auto_reload_configs", value);
+    }
+
+    public void setAutoReloadDelaySeconds(int value) {
+        int clamped = Math.max(0, Math.min(5, value));
+        setAndSave("auto_reload_delay_seconds", clamped);
     }
 
     public void setRedstoneDisallowedByDefault(boolean value) {

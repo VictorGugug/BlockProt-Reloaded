@@ -76,7 +76,7 @@ public final class InfoCommand implements CommandExecutor {
 
         if (args.length < 2) {
             if (sender instanceof Player player) {
-                if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+                if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
                     InfoDialog.show(player, DialogOrigin.ADMIN_MENU);
                     return true;
                 }
@@ -117,7 +117,7 @@ public final class InfoCommand implements CommandExecutor {
                 StatHandler.getStatisticByUuid(stat, finalTarget.getUniqueId());
 
                 if (sender instanceof Player player) {
-                    if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+                    if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
                         player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                             Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_HEADER)
                                 .replace("{player}", displayName)));

@@ -74,7 +74,7 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
                         .replace("{world}", worldName)));
                 return true;
             }
-            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
                 ProtdelDialog.show(player, world.getName());
                 return true;
             }
@@ -84,7 +84,7 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
             return true;
         }
 
-        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+        if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             ProtdelDialog.show(player, null);
             return true;
         }

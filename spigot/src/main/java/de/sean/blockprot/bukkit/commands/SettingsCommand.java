@@ -38,7 +38,7 @@ public class SettingsCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) return false;
 
-        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+        if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             UserSettingsDialog.show(player);
             return true;
         }

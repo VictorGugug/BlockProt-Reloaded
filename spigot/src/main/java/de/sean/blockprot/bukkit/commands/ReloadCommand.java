@@ -41,7 +41,7 @@ public class ReloadCommand implements CommandExecutor {
         if (canUseCommand(sender)) {
             // Run backup before reload to preserve the current state.
             new de.sean.blockprot.bukkit.tasks.BackupTask(BlockProt.getInstance().getDataFolder(), true).run();
-            BlockProt.getInstance().reloadConfigAndTranslations();
+            de.sean.blockprot.bukkit.config.ReloadCoordinator.commitCommand();
             BlockEventListener.invalidateAllSettings();
             sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__RELOAD_DONE)));

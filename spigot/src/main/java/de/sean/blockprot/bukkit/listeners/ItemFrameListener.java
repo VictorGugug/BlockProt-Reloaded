@@ -116,7 +116,7 @@ public final class ItemFrameListener implements Listener {
                 return;
             }
 
-            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
                 BlockLockDialog.showForEntity(player, frame, handler);
             } else {
                 InventoryState state = InventoryState.getOrCreate(player.getUniqueId());
@@ -174,7 +174,7 @@ public final class ItemFrameListener implements Listener {
                 return;
             }
 
-            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
                 BlockLockDialog.show(player, linkedBlock, blockHandler);
             } else {
                 InventoryState state = new InventoryState(linkedBlock);

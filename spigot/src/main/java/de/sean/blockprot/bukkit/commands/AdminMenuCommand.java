@@ -55,7 +55,7 @@ public final class AdminMenuCommand implements CommandExecutor {
             player.sendMessage(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }
-        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+        if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             AdminMenuDialog.show(player);
             return true;
         }

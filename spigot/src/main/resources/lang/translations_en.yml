@@ -543,6 +543,8 @@ dialogs:
     auto_lock_desc: "Automatically lock blocks when placed."
     hints_desc: "Show action bar hints for locked blocks."
     notifications_desc: "Receive access notification messages."
+    prefer_dialogs: "Use Paper Dialogs"
+    prefer_dialogs_desc: "Choose native Paper dialog windows over inventory GUIs."
   friends:
     header: "Friends"
     manage_hint: "Manage your default friends list:"
@@ -787,10 +789,28 @@ dialogs:
       inactivity_cleanup: "Days before removing inactive protections (-1 = off)."
       inactivity_cleanup_hint: "Days (-1 = disabled)"
       auto_reload: "Auto-reload configs on file change."
+      auto_reload_delay: "Quiet-period delay before auto reload (0-5 seconds)."
+      auto_reload_delay_hint: "Delay in seconds (0 to 5, 0 = next tick)"
       session_log: "Enable session logging."
       backups: "Create automatic backups."
     deprecated:
       we_paste_enabled: "WorldEdit paste auto-lock."
+  pending_reload:
+    title: "Pending Reload Review"
+    hint: "The following changes are queued and will be applied upon confirmation. This reload will be recorded in the plugin activity log."
+    empty: "There are no pending configuration changes to confirm."
+    confirm: "Confirm Reload"
+    confirm_hint: "Apply all pending changes now and record the operation."
+    cancel: "Cancel"
+    discard: "Discard Pending Changes"
+    discard_hint: "Clear all uncommitted dialog changes without applying them."
+    discard_confirm_title: "Confirm Discard"
+    discard_confirm_hint: "Are you sure you want to discard all pending changes?"
+    success: "Successfully reloaded configuration. Applied {count} change(s)."
+    failure: "Failed to reload configuration: {error}"
+    action_button: "Reload configuration"
+    action_button_hint: "Review and confirm pending configuration changes."
+  status_pending: "Pending Reload"
 
 worlds:
   scan_start: "Scanning worlds... ({count} loaded)"

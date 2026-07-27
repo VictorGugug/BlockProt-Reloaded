@@ -24,64 +24,46 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.config.ReloadCoordinator;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
-import java.nio.file.ClosedWatchServiceException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
+import java.nio.file.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Watches the plugin data directory and reloads BlockProt after relevant YAML
- * files change. Reloads are debounced to avoid duplicate reloads while an
- * editor is still writing the file.
- *
- * <h3>Self-write suppression</h3>
- * {@code reloadConfigAndTranslations()} writes several YAML files to disk
- * (merge, clean, lang). Without suppression those writes trigger new
- * {@code ENTRY_MODIFY} events that cause another reload: infinitely.
- *
- * Fix: before any plugin-initiated write, call {@link #suppressNext()} which
- * records the current timestamp. The watcher ignores any event that arrives
- * within {@link #SUPPRESS_WINDOW_MS} of that timestamp.
- * An external editor change takes at least a second to reach the JVM, so
- * a 3-second suppression window is safe.
+ * Generation-based quiet-period scheduler for external file modifications.
  */
 public final class ConfigFileWatcher implements Runnable {
 
-    private static final long DEBOUNCE_MS      = 2_000;
-    /** How long (ms) after a plugin-initiated write to ignore ENTRY_MODIFY events. */
-    private static final long SUPPRESS_WINDOW_MS = 3_000;
-
-    private final BlockProt    plugin;
-    private final File         watchDir;
-    private final AtomicLong   lastEventTime      = new AtomicLong(0);
-    private final AtomicLong   lastSuppressTime   = new AtomicLong(0);
-    private final AtomicBoolean reloadScheduled   = new AtomicBoolean(false);
-    private final AtomicBoolean running           = new AtomicBoolean(false);
+    private final BlockProt plugin;
+    private final File watchDir;
+    private final AtomicLong currentGeneration = new AtomicLong(0);
+    private final AtomicLong lastEventTimestamp = new AtomicLong(0);
+    private final ConcurrentHashMap<String, AtomicLong> suppressedPaths = new ConcurrentHashMap<>();
+    private final AtomicBoolean running = new AtomicBoolean(false);
 
     private WatchService watchService;
 
     public ConfigFileWatcher(@NotNull BlockProt plugin) {
-        this.plugin   = plugin;
+        this.plugin = plugin;
         this.watchDir = plugin.getDataFolder();
     }
 
-    /**
-     * Call this immediately before the plugin writes any config file to disk.
-     * Suppresses watch events for {@link #SUPPRESS_WINDOW_MS} milliseconds.
-     */
     public void suppressNext() {
-        lastSuppressTime.set(System.currentTimeMillis());
+        suppressPath("config.yml");
+        suppressPath("lang/lang.yml");
+        suppressPath("blocks.yml");
+        suppressPath("worlds.yml");
     }
 
-    /** Returns true if the watcher thread is currently active. */
+    public void suppressPath(@NotNull String relativePath) {
+        suppressedPaths.computeIfAbsent(relativePath, k -> new AtomicLong(0)).incrementAndGet();
+    }
+
     public boolean isRunning() {
         return running.get();
     }
@@ -106,38 +88,41 @@ public final class ConfigFileWatcher implements Runnable {
         try {
             watchService = FileSystems.getDefault().newWatchService();
             Path dir = watchDir.toPath();
-            dir.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+            dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
 
             File langDir = new File(watchDir, "lang");
             if (langDir.exists() && langDir.isDirectory()) {
-                langDir.toPath().register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+                langDir.toPath().register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
             }
 
-            while (!Thread.currentThread().isInterrupted()) {
+            while (!Thread.currentThread().isInterrupted() && running.get()) {
                 WatchKey key = watchService.take();
 
                 boolean relevant = false;
                 for (WatchEvent<?> event : key.pollEvents()) {
                     Path changed = (Path) event.context();
-                    String name  = changed.getFileName().toString();
+                    String name = changed.getFileName().toString();
 
-                    if (name.equals("config.yml") || name.equals("worlds.yml") || name.endsWith(".yml")) {
-                        // Ignore events within the suppress window: written by the plugin itself.
-                        long now = System.currentTimeMillis();
-                        if (now - lastSuppressTime.get() < SUPPRESS_WINDOW_MS) continue;
+                    if (name.endsWith(".yml")) {
+                        String relPath = name;
+                        AtomicLong token = suppressedPaths.get(relPath);
+                        if (token != null && token.get() > 0) {
+                            token.decrementAndGet();
+                            continue;
+                        }
                         relevant = true;
                     }
                 }
 
                 if (relevant) {
-                    lastEventTime.set(System.currentTimeMillis());
-                    scheduleReload();
+                    long gen = currentGeneration.incrementAndGet();
+                    lastEventTimestamp.set(System.currentTimeMillis());
+                    scheduleQuietPeriod(gen);
                 }
 
                 if (!key.reset()) break;
             }
         } catch (InterruptedException | ClosedWatchServiceException ignored) {
-            // Plugin shutdown or deliberate stop(): exit cleanly.
         } catch (Exception e) {
             plugin.getLogger().warning(Translator.get(TranslationKey.CONSOLE__FILEWATCHER_ERROR)
                 .replace("{error}", e.getMessage()));
@@ -146,20 +131,32 @@ public final class ConfigFileWatcher implements Runnable {
         }
     }
 
-    private void scheduleReload() {
-        if (!reloadScheduled.compareAndSet(false, true)) return;
+    private void scheduleQuietPeriod(long targetGen) {
+        DefaultConfig cfg = BlockProt.getDefaultConfig();
+        int delaySec = cfg != null ? cfg.getAutoReloadDelaySeconds() : 0;
+        long delayMs = (long) delaySec * 1000L;
 
         BlockProt.getFoliaLib().getScheduler().runLaterAsync(() -> {
-            long timeSinceLastEvent = System.currentTimeMillis() - lastEventTime.get();
-            if (timeSinceLastEvent >= DEBOUNCE_MS - 100) {
-                BlockProtLogger.log("filewatch", "Config changed, reloading...");
-                plugin.getLogger().info(Translator.get(TranslationKey.CONSOLE__CONFIG_CHANGE_DETECTED));
-                new BackupTask(plugin.getDataFolder(), true).run();
-                BlockProt.getFoliaLib().getScheduler().runNextTick(t -> {
-                    plugin.reloadConfigAndTranslations();
-                });
+            if (currentGeneration.get() != targetGen) {
+                return;
             }
-            reloadScheduled.set(false);
-        }, (DEBOUNCE_MS / 50) + 5L);
+
+            long elapsed = System.currentTimeMillis() - lastEventTimestamp.get();
+            if (elapsed < delayMs) {
+                scheduleQuietPeriod(targetGen);
+                return;
+            }
+
+            BlockProt.getFoliaLib().getScheduler().runNextTick(t -> {
+                if (currentGeneration.get() == targetGen) {
+                    if (BlockProt.getDefaultConfig().isAutoReloadEnabled()) {
+                        BlockProtLogger.log("filewatch", "Quiet period elapsed. Executing automatic reload...");
+                        ReloadCoordinator.commitExternal();
+                    } else {
+                        BlockProtLogger.log("filewatch", "External changes detected while auto-reload is disabled; queued for manual reload.");
+                    }
+                }
+            });
+        }, Math.max(1L, (delayMs / 50L)));
     }
 }

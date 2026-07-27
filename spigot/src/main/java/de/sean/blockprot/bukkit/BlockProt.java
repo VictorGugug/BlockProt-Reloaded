@@ -87,6 +87,7 @@ public final class BlockProt extends JavaPlugin {
     @Nullable private String  pendingMigrationLog     = null;
     private          boolean  pendingMigrationSuccess = false;
     @Nullable private String  pendingMigrationError   = null;
+    private          boolean  isMigrationPerformed   = false;
 
     @Nullable private static String pluginVersion = null;
     @Nullable private static List<String> pluginAuthors = null;
@@ -220,14 +221,14 @@ public final class BlockProt extends JavaPlugin {
             BlockProtLogger.log("Version scheme: " + VersionCompat.MAJOR + ".x year-based detected.");
         }
 
-        BlockProtConsole.boot(
+        BlockProtConsole.bootStatus(
             Translator.get(TranslationKey.CONSOLE__BOOT_CONFIGURATION),
+            true,
             Translator.get(TranslationKey.CONSOLE__BOOT_LOADED));
 
         StatHandler.enable();
 
-        boolean hasUpgradeData = BackupTask.hasPriorData(this.getDataFolder());
-        if (hasUpgradeData && defaultConfig.isBackupsEnabled()) {
+        if (isMigrationPerformed && defaultConfig.isBackupsEnabled()) {
             new BackupTask(this.getDataFolder()).run();
         }
         saveResourceSilent("worlds.yml", false);
@@ -284,50 +285,65 @@ public final class BlockProt extends JavaPlugin {
         registerEvent(pm, new RaidDetectionListener());
         registerEvent(pm, new WorldEditPasteListener(this));
 
-        BlockProtConsole.boot(
+        BlockProtConsole.bootStatus(
             Translator.get(TranslationKey.CONSOLE__BOOT_LISTENERS),
+            true,
             Translator.get(TranslationKey.CONSOLE__BOOT_REGISTERED));
 
         Objects.requireNonNull(this.getCommand("blockprot"))
             .setExecutor(new BlockProtCommand());
 
-        BlockProtConsole.boot(
+        BlockProtConsole.bootStatus(
             Translator.get(TranslationKey.CONSOLE__BOOT_COMMANDS),
+            true,
             Translator.get(TranslationKey.CONSOLE__BOOT_REGISTERED));
 
-        if (VersionCompat.hasDialogApi()) {
-            BlockProtConsole.boot(
-                Translator.get(TranslationKey.CONSOLE__BOOT_DIALOG_API),
-                Translator.get(TranslationKey.CONSOLE__BOOT_AVAILABLE));
-        } else {
-            BlockProtConsole.bootMuted(
-                Translator.get(TranslationKey.CONSOLE__BOOT_DIALOG_API),
-                Translator.get(TranslationKey.CONSOLE__BOOT_NOT_AVAILABLE));
-        }
+        boolean hasDialogs = VersionCompat.hasDialogApi();
+        BlockProtConsole.bootStatus(
+            Translator.get(TranslationKey.CONSOLE__BOOT_DIALOG_API),
+            hasDialogs,
+            hasDialogs ? Translator.get(TranslationKey.CONSOLE__BOOT_AVAILABLE)
+                       : Translator.get(TranslationKey.CONSOLE__BOOT_NOT_AVAILABLE));
 
+        boolean dbActive = hybridDatabase != null && hybridDatabase.isEnabled();
+        String dbType = dbActive ? "MySQL" : "SQLite";
+        BlockProtConsole.bootStatus("Database", true, dbType + " Ready");
+
+        List<String> enabledIntegrations = new ArrayList<>();
+        List<String> disabledIntegrations = new ArrayList<>();
         for (PluginIntegration integration : integrations) {
             try {
                 integration.enable();
                 if (integration.isEnabled()) {
-                    BlockProtConsole.boot(integration.name,
-                        Translator.get(TranslationKey.CONSOLE__BOOT_HOOKED));
+                    enabledIntegrations.add(integration.name);
                 } else {
-                    BlockProtConsole.bootMuted(integration.name,
-                        Translator.get(TranslationKey.CONSOLE__BOOT_NOT_INSTALLED));
+                    disabledIntegrations.add(integration.name);
                 }
             } catch (NoClassDefFoundError ignored) {
-                BlockProtConsole.bootMuted(integration.name,
-                    Translator.get(TranslationKey.CONSOLE__BOOT_NOT_INSTALLED));
+                disabledIntegrations.add(integration.name);
             }
         }
         integrationsEnabled = true;
         new BlockProtAPI(this);
 
+        int activeIntegrations = enabledIntegrations.size();
+        int totalIntegrations = integrations.size();
+        boolean hasIntegrations = activeIntegrations > 0;
+        String intSummary = hasIntegrations
+            ? "Active (" + activeIntegrations + "/" + totalIntegrations + ": " + String.join(", ", enabledIntegrations) + ")"
+            : "Disabled (0/" + totalIntegrations + ")";
+        BlockProtConsole.bootStatus("Integrations", hasIntegrations, intSummary);
+
+        boolean auditActive = auditLogger != null;
+        BlockProtConsole.bootStatus("Audit Logger", auditActive, auditActive ? "Active" : "Disabled");
+
         foliaLib.getScheduler().runAsync(task -> populateProtectedBlockCache());
 
-        BlockProtConsole.bootLast(
+        BlockProtConsole.bootStatus(
             Translator.get(TranslationKey.CONSOLE__BOOT_STARTUP_TIME),
-            java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() + " ms");
+            true,
+            java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() + " ms",
+            true);
 
         // First-run guide: buffered so it prints directly under the banner, before the boot checklist.
         if (isFirstStart() && !defaultConfig.hasConfiguredBlocks()) {
@@ -1220,6 +1236,7 @@ public final class BlockProt extends JavaPlugin {
 
                 Files.createFile(legacyFolder.toPath().resolve(".migrated"));
                 pendingMigrationSuccess = true;
+                isMigrationPerformed = true;
                 // A migrated install is not a fresh install; skip the first-start guide.
                 markFirstStartDone();
             } catch (IOException e) {
@@ -1305,6 +1322,7 @@ public final class BlockProt extends JavaPlugin {
         }
         try {
             Files.move(legacyFile.toPath(), newFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            isMigrationPerformed = true;
             getLogger().info("Moved blockprot_usercache.sqlite into plugin data folder.");
         } catch (IOException e) {
             getLogger().warning("Failed to move blockprot_usercache.sqlite: " + e.getMessage());

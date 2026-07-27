@@ -85,14 +85,8 @@ public final class AdminMenuDialog {
 
         DialogButton reloadBtn = new DialogButton("reload",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__RELOAD)) + reload, NamedTextColor.WHITE),
-            tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD)), SOFT_BLUE),
-            p -> {
-                new BackupTask(BlockProt.getInstance().getDataFolder(), true).run();
-                BlockProt.getInstance().reloadConfigAndTranslations();
-                BlockEventListener.invalidateAllSettings();
-                p.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                    Translator.get(TranslationKey.MESSAGES__RELOAD_DONE)));
-            }
+            tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD)), PASTEL_MINT),
+            p -> PendingReloadDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
         DialogButton updateBtn = new DialogButton("update",

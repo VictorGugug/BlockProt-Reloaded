@@ -69,7 +69,7 @@ public final class AdminUnlockCommand implements CommandExecutor {
         }
 
         if (args.length < 2) {
-            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
                 InfoDialog.show(player, DialogOrigin.ADMIN_MENU);
                 return true;
             }
@@ -101,7 +101,7 @@ public final class AdminUnlockCommand implements CommandExecutor {
             return true;
         }
 
-        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+        if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             UnlockDialog.show(player, DialogOrigin.ADMIN_MENU, resolvedName, 0);
             return true;
         }

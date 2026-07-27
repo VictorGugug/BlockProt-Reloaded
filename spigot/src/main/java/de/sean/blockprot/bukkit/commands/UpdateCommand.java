@@ -40,7 +40,7 @@ public class UpdateCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!canUseCommand(sender)) return false;
 
-        if (sender instanceof Player player && BlockProt.getDefaultConfig().shouldUseDialogs()) {
+        if (sender instanceof Player player && BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             UpdateDialog.show(player);
             return true;
         }

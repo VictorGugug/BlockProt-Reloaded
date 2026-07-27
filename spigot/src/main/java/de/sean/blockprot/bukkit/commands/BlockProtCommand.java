@@ -88,6 +88,8 @@ public final class BlockProtCommand implements TabExecutor {
         ALL_COMMANDS.put(name, exec);
     }
 
+    private static final Set<String> UNIVERSAL_COMMANDS = Set.of("about", "help", "info", "reload", "debug", "update");
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
@@ -106,6 +108,10 @@ public final class BlockProtCommand implements TabExecutor {
         String sub = args[0].toLowerCase(Locale.ROOT);
 
         if (menusEnabled) {
+            CommandExecutor universalExec = CLI_COMMANDS.get(sub);
+            if (universalExec != null && UNIVERSAL_COMMANDS.contains(sub)) {
+                return universalExec.onCommand(sender, command, label, args);
+            }
             CommandExecutor adminExec = ADMIN_COMMANDS.get(sub);
             if (adminExec != null) {
                 sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
@@ -152,15 +158,19 @@ public final class BlockProtCommand implements TabExecutor {
         }
 
         boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
-        Map<String, CommandExecutor> visible = menusEnabled ? GUI_COMMANDS : CLI_COMMANDS;
-        Map<String, CommandExecutor> combined = new LinkedHashMap<>(visible);
-        if (!menusEnabled) {
-            combined.putAll(ADMIN_COMMANDS);
+        Map<String, CommandExecutor> visible = menusEnabled ? new LinkedHashMap<>(GUI_COMMANDS) : new LinkedHashMap<>(CLI_COMMANDS);
+        if (menusEnabled) {
+            for (String univ : UNIVERSAL_COMMANDS) {
+                CommandExecutor exec = CLI_COMMANDS.get(univ);
+                if (exec != null) visible.put(univ, exec);
+            }
+        } else {
+            visible.putAll(ADMIN_COMMANDS);
         }
 
         String partial = args.length == 1 ? args[0].toLowerCase(Locale.ROOT) : "";
         List<String> result = new ArrayList<>();
-        for (var entry : combined.entrySet()) {
+        for (var entry : visible.entrySet()) {
             if (entry.getKey().startsWith(partial) && entry.getValue().canUseCommand(sender))
                 result.add(entry.getKey());
         }

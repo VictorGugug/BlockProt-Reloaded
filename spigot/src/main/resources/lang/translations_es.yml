@@ -537,6 +537,8 @@ dialogs:
     auto_lock_desc: "Bloquear bloques automaticamente al colocarlos."
     hints_desc: "Mostrar ayudas en la action bar para bloques bloqueados."
     notifications_desc: "Recibir notificaciones cuando accedan a tus bloques."
+    prefer_dialogs: "Usar Diálogos de Paper"
+    prefer_dialogs_desc: "Elegir ventanas emergentes nativas de Paper en lugar de GUIs de inventario."
   friends:
     header: "Amigos"
     manage_hint: "Administra tu lista de amigos predeterminados:"
@@ -781,10 +783,28 @@ dialogs:
       inactivity_cleanup: "Días antes de limpiar protecciones (-1 = off)."
       inactivity_cleanup_hint: "Dias (-1 = desactivado)"
       auto_reload: "Recargar config al cambiar archivo."
+      auto_reload_delay: "Espera de periodo de quietud para recarga automática (0-5 segundos)."
+      auto_reload_delay_hint: "Espera en segundos (0 a 5, 0 = siguiente tick)"
       session_log: "Activar registro de sesión."
       backups: "Crear copias de seguridad automáticas."
     deprecated:
       we_paste_enabled: "Auto-bloqueo de pegado de WorldEdit."
+  pending_reload:
+    title: "Revisión de Recarga Pendiente"
+    hint: "Los siguientes cambios están en cola y se aplicarán al confirmar. Esta recarga quedará registrada en el log de actividad."
+    empty: "No hay cambios de configuración pendientes por confirmar."
+    confirm: "Confirmar Recarga"
+    confirm_hint: "Aplicar todos los cambios pendientes ahora y registrar la operación."
+    cancel: "Cancelar"
+    discard: "Descartar Cambios Pendientes"
+    discard_hint: "Limpiar todos los cambios pendientes sin aplicarlos."
+    discard_confirm_title: "Confirmar Descarte"
+    discard_confirm_hint: "¿Estás seguro de que deseas descartar todos los cambios pendientes?"
+    success: "Configuración recargada exitosamente. Se aplicaron {count} cambio(s)."
+    failure: "Error al recargar la configuración: {error}"
+    action_button: "Recargar configuración"
+    action_button_hint: "Revisar y confirmar cambios pendientes de configuración."
+  status_pending: "Recarga Pendiente"
 
 worlds:
   scan_start: "Escaneando mundos... ({count} cargados)"

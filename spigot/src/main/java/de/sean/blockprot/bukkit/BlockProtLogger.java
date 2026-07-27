@@ -27,17 +27,14 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
- * Session logger for BlockProt.
+ * Mandatory session and activity logger for BlockProt.
  *
- * One log file per server start, named blockprot-YYYY-MM-DD_HH-mm-ss.log.
- * Can be disabled via {@code enable_session_log: false} in config.yml.
- *
- * Usage:
- *   BlockProtLogger.init(dataFolder, enabled);  // call from onEnable
- *   BlockProtLogger.log("message");
- *   BlockProtLogger.close();                    // call from onDisable
+ * Automatically mirrors all plugin logger records into the log file.
  */
 public final class BlockProtLogger {
 
@@ -54,27 +51,48 @@ public final class BlockProtLogger {
     private static boolean enabled = true;
     private static int rotationCount = 0;
     private static long lastKnownLength = 0;
+    private static boolean isReentrancyGuard = false;
 
     @Nullable private static String fileTimestamp = null;
-
-    @Nullable private static java.util.function.Function<String, String> secondaryTranslator = null;
-
-    public static void setSecondaryTranslator(@Nullable java.util.function.Function<String, String> fn) {
-        secondaryTranslator = fn;
-    }
+    @Nullable private static Handler mirrorHandler = null;
 
     private BlockProtLogger() {}
 
     public static void init(@NotNull File dataFolder, boolean sessionLogEnabled) {
-        enabled = sessionLogEnabled;
-        if (!enabled) return;
-
+        enabled = true; // Mandatory activity logging
         logsDir = new File(dataFolder, "logs");
         if (!logsDir.exists()) logsDir.mkdirs();
 
         fileTimestamp = LocalDateTime.now().format(FILE_FMT);
         rotationCount = 0;
         openNewFile();
+        registerMirrorHandler();
+    }
+
+    private static void registerMirrorHandler() {
+        if (mirrorHandler != null) return;
+        try {
+            Logger pluginLogger = Logger.getLogger("BlockProt");
+            mirrorHandler = new Handler() {
+                @Override
+                public void publish(LogRecord record) {
+                    if (record == null || isReentrancyGuard) return;
+                    isReentrancyGuard = true;
+                    try {
+                        String msg = record.getMessage();
+                        if (msg != null && !msg.isBlank()) {
+                            log("console", "[" + record.getLevel().getName() + "] " + msg);
+                        }
+                    } finally {
+                        isReentrancyGuard = false;
+                    }
+                }
+
+                @Override public void flush() {}
+                @Override public void close() throws SecurityException {}
+            };
+            pluginLogger.addHandler(mirrorHandler);
+        } catch (Exception ignored) {}
     }
 
     private static void openNewFile() {
@@ -105,8 +123,6 @@ public final class BlockProtLogger {
         } catch (IOException e) {
             writer = null;
             currentLogFile = null;
-            java.util.logging.Logger.getLogger("BlockProt").severe(
-                "[BlockProt] CRITICAL: Failed to initialise plugin log file: " + e.getMessage());
         }
     }
 
@@ -127,6 +143,10 @@ public final class BlockProtLogger {
     }
 
     public static void close() {
+        if (mirrorHandler != null) {
+            try { Logger.getLogger("BlockProt").removeHandler(mirrorHandler); } catch (Exception ignored) {}
+            mirrorHandler = null;
+        }
         if (writer != null) {
             log("=== BlockProt Session End ===");
             writer.flush();
@@ -141,10 +161,6 @@ public final class BlockProtLogger {
         if (writer == null) return;
         String line = "[" + LocalDateTime.now().format(LINE_FMT) + "] "
             + COLOR_STRIP.matcher(message).replaceAll("");
-        if (secondaryTranslator != null) {
-            String alt = secondaryTranslator.apply(message);
-            if (alt != null && !alt.equals(message)) line += "  |  " + alt;
-        }
         writer.println(line);
         writer.flush();
         lastKnownLength = currentLogFile != null ? currentLogFile.length() : 0;
@@ -167,7 +183,7 @@ public final class BlockProtLogger {
     }
 
     public static void separator() {
-        log("---");
+        log("----------------------------------------");
     }
 
     @Nullable

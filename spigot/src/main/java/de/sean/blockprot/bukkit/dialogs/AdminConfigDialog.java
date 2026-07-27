@@ -82,6 +82,10 @@ public final class AdminConfigDialog {
         buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_RAID)), p -> showRaid(p, backOrigin)));
         buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_NOTIFICATIONS)), p -> showNotif(p, backOrigin)));
         buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_MAINTENANCE)), p -> showMaintenance(p, backOrigin)));
+        buttons.add(new DialogButton("reload_config",
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PENDING_RELOAD__ACTION_BUTTON)), PASTEL_GOLD, TextDecoration.BOLD),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PENDING_RELOAD__ACTION_BUTTON_HINT)), TextColor.color(0x888888)),
+            p -> PendingReloadDialog.show(p, backOrigin)));
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
         DialogButton backBtn = new DialogButton("back",
@@ -676,6 +680,18 @@ public final class AdminConfigDialog {
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__AUTO_RELOAD),
             cfg.isAutoReloadEnabled(),
             p -> { cfg.setAutoReloadConfigs(!cfg.isAutoReloadEnabled()); showMaintenance(p, backOrigin); }));
+        int delay = cfg.getAutoReloadDelaySeconds();
+        buttons.add(valueBtn("auto_reload_delay_seconds", "auto_reload_delay_seconds",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__AUTO_RELOAD_DELAY),
+            String.valueOf(delay),
+            p -> AdminConfigValueDialog.openInt(p, "auto_reload_delay_seconds",
+                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__AUTO_RELOAD_DELAY_HINT)), delay,
+                v -> {
+                    int clamped = Math.max(0, Math.min(5, v));
+                    cfg.setAutoReloadDelaySeconds(clamped);
+                    showMaintenance(p, backOrigin);
+                },
+                () -> showMaintenance(p, backOrigin))));
         buttons.add(toggleBtn("enable_session_log", "enable_session_log",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__SESSION_LOG),
             cfg.isSessionLogEnabled(),

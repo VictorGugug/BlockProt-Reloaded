@@ -55,7 +55,7 @@ public final class UserMenuCommand implements CommandExecutor {
             player.sendMessage(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }
-        if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+        if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             UserMenuDialog.show(player);
             return true;
         }

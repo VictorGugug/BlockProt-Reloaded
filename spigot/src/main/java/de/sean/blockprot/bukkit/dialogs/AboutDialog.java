@@ -96,6 +96,32 @@ public final class AboutDialog {
             .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__JAVA_LABEL)), SOFT_GRAY))
             .append(Component.text(javaVersion, TextColor.color(0x888888)))
             .build()));
+
+        boolean dbActive = BlockProt.getHybridDatabase() != null && BlockProt.getHybridDatabase().isEnabled();
+        String dbMode = dbActive ? "MySQL" : "SQLite";
+        int cacheCount = de.sean.blockprot.bukkit.storage.ProtectedBlockCache.size();
+        List<String> activeInts = new ArrayList<>();
+        List<de.sean.blockprot.bukkit.integrations.PluginIntegration> allInts = BlockProt.getInstance().getIntegrations();
+        for (var pi : allInts) {
+            if (pi.isEnabled()) activeInts.add(pi.name);
+        }
+        String intText = activeInts.isEmpty()
+            ? "Disabled (0/" + allInts.size() + ")"
+            : "Active (" + activeInts.size() + "/" + allInts.size() + ": " + String.join(", ", activeInts) + ")";
+
+        body.add(DialogBodyEntry.text(Component.text()
+            .append(Component.text("Database Engine: ", SOFT_GRAY))
+            .append(Component.text(dbMode, PASTEL_MINT))
+            .build()));
+        body.add(DialogBodyEntry.text(Component.text()
+            .append(Component.text("Cache: ", SOFT_GRAY))
+            .append(Component.text(cacheCount + " protected blocks", PASTEL_GOLD))
+            .build()));
+        body.add(DialogBodyEntry.text(Component.text()
+            .append(Component.text("Integrations: ", SOFT_GRAY))
+            .append(Component.text(intText, activeInts.isEmpty() ? PASTEL_CORAL : PASTEL_MINT))
+            .build()));
+
         body.add(DialogBodyEntry.text(Component.empty()));
 
         body.add(DialogBodyEntry.text(Component.text()

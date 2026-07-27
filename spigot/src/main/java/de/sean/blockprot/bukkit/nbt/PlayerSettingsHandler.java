@@ -49,6 +49,9 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
 
     static final String PLAYER_HAS_INTERACTED_WITH_MENU = "blockprot_player_has_interacted_with_menu";
 
+    /** Per-player preference for native dialogs vs inventory GUIs. */
+    static final String PREFER_DIALOGS_ATTRIBUTE = "blockprot_prefer_dialogs";
+
     /** Per-player toggle: receive access notifications. Defaults to server config value. */
     static final String NOTIFICATIONS_ENABLED_ATTRIBUTE = "blockprot_notifications_enabled";
 
@@ -223,6 +226,21 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
     /** Persists the player's notification preference. */
     public void setNotificationsEnabled(boolean enabled) {
         container.setBoolean(NOTIFICATIONS_ENABLED_ATTRIBUTE, enabled);
+    }
+
+    /**
+     * Whether this player prefers Paper dialogs over inventory GUIs.
+     * Defaults to true when dialogs are enabled on the server.
+     */
+    public boolean getPreferDialogs() {
+        if (!container.hasTag(PREFER_DIALOGS_ATTRIBUTE))
+            return BlockProt.getDefaultConfig().isDialogsEnabled();
+        return container.getBoolean(PREFER_DIALOGS_ATTRIBUTE);
+    }
+
+    /** Persists the player's dialog preference. */
+    public void setPreferDialogs(boolean preferDialogs) {
+        container.setBoolean(PREFER_DIALOGS_ATTRIBUTE, preferDialogs);
     }
 
     /**

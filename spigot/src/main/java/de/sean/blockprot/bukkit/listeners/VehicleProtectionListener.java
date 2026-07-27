@@ -140,7 +140,7 @@ public final class VehicleProtectionListener implements Listener {
                 return;
             }
 
-            if (BlockProt.getDefaultConfig().shouldUseDialogs()) {
+            if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
                 BlockLockDialog.showForEntity(player, entity, handler);
             } else {
                 InventoryState state = InventoryState.getOrCreate(player.getUniqueId());

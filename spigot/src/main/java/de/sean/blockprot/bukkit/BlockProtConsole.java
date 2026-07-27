@@ -42,10 +42,18 @@ public final class BlockProtConsole {
      * This prefix replaces the {@code [HH:mm:ss INFO]: [BlockProt Reloaded]} line the
      * standard logger would have added.
      */
-    private static final String BANNER_LIGHT = hex("D2B48C");
-    private static final String ACCENT_MINT = hex("8FE3B0");
+    public static final String PASTEL_CYAN   = hex("A2D2FF");
+    public static final String PASTEL_PURPLE = hex("CDB4DB");
+    public static final String PASTEL_PINK   = hex("FFC8DD");
+    public static final String PASTEL_MINT   = hex("B9FBC0");
+    public static final String PASTEL_ORANGE = hex("FFB703");
+    public static final String PASTEL_GOLD   = hex("E9C46A");
+    public static final String PASTEL_GRAY   = "§7";
+    public static final String CONNECTOR_GRAY = "§8";
+
+    private static final String BANNER_CYAN = PASTEL_CYAN;
+    private static final String ACCENT_MINT = PASTEL_MINT;
     private static final String LABEL_GRAY = "§7";
-    private static final String CONNECTOR_GRAY = "§8";
     private static final String INACTIVE_GRAY = "§8";
 
     private static final String PREFIX = "§8[§rBlockProt Reloaded§8] §r";
@@ -99,14 +107,14 @@ public final class BlockProtConsole {
         guideBuffer = null;
         if (pluginLogger == null) return;
 
-        raw(BANNER_LIGHT + "  ██████╗ ██████╗  ██████╗ ");
-        raw(BANNER_LIGHT + "  ██╔══██╗██╔══██╗██╔══██╗");
-        raw(BANNER_LIGHT + "  ██████╔╝██████╔╝██████╔╝");
-        raw(BANNER_LIGHT + "  ██╔══██╗██╔═══╝ ██╔══██╗");
-        raw(BANNER_LIGHT + "  ██████╔╝██║     ██║  ██║");
-        raw(BANNER_LIGHT + "  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
-        raw("§r        BlockProt Reloaded");
-        raw("§r            v" + version);
+        raw(PASTEL_CYAN + "  ██████╗ ██████╗  ██████╗ ");
+        raw(PASTEL_CYAN + "  ██╔══██╗██╔══██╗██╔══██╗");
+        raw(PASTEL_CYAN + "  ██████╔╝██████╔╝██████╔╝");
+        raw(PASTEL_CYAN + "  ██╔══██╗██╔═══╝ ██╔══██╗");
+        raw(PASTEL_CYAN + "  ██████╔╝██║     ██║  ██║");
+        raw(PASTEL_CYAN + "  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
+        raw("§r        " + PASTEL_MINT + "BlockProt Reloaded");
+        raw("§r            " + PASTEL_GOLD + "v" + version);
 
         for (String guideLine : guideLines) {
             raw(guideLine);
@@ -130,15 +138,34 @@ public final class BlockProtConsole {
      */
     private static void raw(@NotNull String message) {
         Bukkit.getConsoleSender().sendMessage(LegacyComponentSerializer.legacySection().deserialize(message));
+        BlockProtLogger.log(message);
+    }
+
+    public static String padRight(@NotNull String s, int n) {
+        if (s.length() >= n) return s;
+        return s + " ".repeat(n - s.length());
     }
 
     private static void bootLine(@NotNull String label, @NotNull String status, @NotNull String statusColor, boolean isLast) {
         String connector = isLast ? "└─" : "├─";
-        info("  " + CONNECTOR_GRAY + connector + " " + LABEL_GRAY + label + "§r  " + statusColor + status);
+        String paddedLabel = padRight(label, 16);
+        info("  " + CONNECTOR_GRAY + connector + " " + LABEL_GRAY + paddedLabel + "  " + statusColor + status);
+    }
+
+    public static void bootStatus(@NotNull String label, boolean active, @NotNull String status, boolean isLast) {
+        String connector = isLast ? "└─" : "├─";
+        String dot = active ? PASTEL_MINT + "● " : PASTEL_ORANGE + "● ";
+        String statusColor = active ? PASTEL_MINT : PASTEL_ORANGE;
+        String paddedLabel = padRight(label, 16);
+        info("  " + CONNECTOR_GRAY + connector + " " + LABEL_GRAY + paddedLabel + "  " + dot + statusColor + status);
+    }
+
+    public static void bootStatus(@NotNull String label, boolean active, @NotNull String status) {
+        bootStatus(label, active, status, false);
     }
 
     public static void boot(@NotNull String label, @NotNull String status) {
-        bootLine(label, status, ACCENT_MINT, false);
+        bootStatus(label, true, status, false);
     }
 
     public static void bootLast(@NotNull String label, @NotNull String status) {
@@ -147,7 +174,7 @@ public final class BlockProtConsole {
 
     /** Same as {@link #boot(String, String)} but for informational, non-active statuses (e.g. an integration that is not installed). */
     public static void bootMuted(@NotNull String label, @NotNull String status) {
-        bootLine(label, status, INACTIVE_GRAY, false);
+        bootStatus(label, false, status, false);
     }
 
     public static void info(@NotNull String message) {
