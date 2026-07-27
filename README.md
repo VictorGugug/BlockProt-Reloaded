@@ -12,7 +12,6 @@
 [![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
 [![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
 [![Paper](https://img.shields.io/badge/Paper-1.21.1%2B%20%7C%2026.x-white?style=flat-square)](https://papermc.io/)
-
 Java 25, Paper 1.21.1 through 26.x, MySQL index, per-world config, access audit, entity protection, villager workstation protection, auto-backup, ownership transfer, item frame and vehicle protection
 
 </div>
@@ -22,6 +21,26 @@ Block protection plugin for Paper and Spigot servers. Players lock chests, furna
 ## Philosophy
 
 BlockProt Reloaded exists because the best ideas come from the community that uses the plugin. If you have a feature request, a bug report, or want to discuss improvements, open an issue on GitHub or join the [Discord](https://discord.gg/RRcjuMr9Jd). If you are a developer, open a pull request. Fragmentation into multiple forks helps nobody; every improvement belongs in one place, shared with everyone.
+
+## Translating
+
+Translations are managed through **[GitLocalize](https://gitlocalize.com/repo/10833)**.
+
+[![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
+
+The English file `translations_en.yml` is the reference. Missing keys fall back to English automatically.
+
+### Languages on GitLocalize
+
+These languages are available on [GitLocalize](https://gitlocalize.com/repo/10833) and accepting contributions:
+
+cs, de, es, fr, hu, it, ja, ko, nl, pl, pt-br, ru, sk, th, tr, zh-CN, zh-TW
+
+The editor shows the English source on the left and your translations on the right. Both legacy color codes (`&a`, `&6`) and MiniMessage format (`<gold>`, `<gradient:...>`) are accepted.
+
+### Languages on Discord
+
+fi (Finnish) and id (Indonesian) are managed through the community Discord channel. If you speak either language, join the [Discord server](https://discord.gg/RRcjuMr9Jd) and look for the translation channel to contribute or request a new language.
 
 ## Screenshots
 
@@ -112,7 +131,7 @@ plugins/BlockProtReloaded/
 │   ├── mysql.yml                 MySQL / storage configuration
 │   └── blockprot_audit.sqlite    SQLite access audit log
 ├── lang/
-│   └── translations_*.yml        15 bundled language files
+│   └── translations_*.yml        18 bundled language files
 ├── logs/
 │   ├── blockprot-current.log     Active session log
 │   └── blockprot-YYYY-MM-DD--YYYY-MM-DD.log   Rotated archives
@@ -501,28 +520,6 @@ MySQL is configured separately in `mysql/mysql.yml`.
 | Server software | Paper, Spigot, Purpur, Folia |
 | Java | 25+ required |
 | MySQL | MySQL 8+, MariaDB 10.5+ (optional) |
-| Languages | EN, ES, DE, FR, IT, PT-BR, RU, JA, KO, ZH-CN, ZH-TW, CS, SK, PL, TR |
-
-
-## Translating
-
-Translations are managed through **GitLocalize**.
-
-[![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
-
-The English file `translations_en.yml` is the reference. Missing keys fall back to English automatically.
-
-### Languages on GitLocalize
-
-These languages are available on [GitLocalize](https://gitlocalize.com/repo/10833) and accepting contributions:
-
-cs, de, es, fr, hu, it, ja, ko, nl, pl, pt-br, ru, sk, th, tr, zh-CN, zh-TW
-
-The editor shows the English source on the left and your translations on the right. Both legacy color codes (`&a`, `&6`) and MiniMessage format (`<gold>`, `<gradient:...>`) are accepted.
-
-### Languages on Discord
-
-fi (Finnish) and id (Indonesian) are managed through the community Discord channel. If you speak either language, join the [Discord server](https://discord.gg/RRcjuMr9Jd) and look for the translation channel to contribute or request a new language.
 
 
 ## Roadmap

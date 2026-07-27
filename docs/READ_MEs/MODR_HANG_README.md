@@ -121,7 +121,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 | Server software | Paper, Spigot, Purpur, Folia |
 | Java | 25+ required |
 | MySQL | MySQL 8+, MariaDB 10.5+ (optional) |
-| Languages | EN, ES, DE, FR, IT, PT-BR, RU, JA, KO, ZH-CN, ZH-TW, CS, SK, PL, TR |
+| Languages | 18 languages on [GitLocalize](https://gitlocalize.com/repo/10833): CS, DE, EN, ES, FR, HU, IT, JA, KO, NL, PL, PT-BR, RU, SK, TH, TR, ZH-CN, ZH-TW. FI (Finnish) and ID (Indonesian) managed via Discord |
 
 
 ## Integrations
