@@ -1,1 +1,27 @@
-# GitLocalize config from upstream: not used in this fork.
+# GitLocalize configuration for BlockProt-Reloaded
+# Source: English reference (always complete)
+# Targets: 16 active language files
+# Note: fi and id are managed via Discord community translation, not GitLocalize.
+
+files:
+  - source: /spigot/src/main/resources/lang/translations_en.yml
+    translation:
+      # Community translations (13 actively maintained languages)
+      - /spigot/src/main/resources/lang/translations_cs.yml
+      - /spigot/src/main/resources/lang/translations_de.yml
+      - /spigot/src/main/resources/lang/translations_es.yml
+      - /spigot/src/main/resources/lang/translations_fr.yml
+      - /spigot/src/main/resources/lang/translations_it.yml
+      - /spigot/src/main/resources/lang/translations_ja.yml
+      - /spigot/src/main/resources/lang/translations_ko.yml
+      - /spigot/src/main/resources/lang/translations_pl.yml
+      - /spigot/src/main/resources/lang/translations_pt-br.yml
+      - /spigot/src/main/resources/lang/translations_ru.yml
+      - /spigot/src/main/resources/lang/translations_sk.yml
+      - /spigot/src/main/resources/lang/translations_tr.yml
+      - /spigot/src/main/resources/lang/translations_zh-CN.yml
+      - /spigot/src/main/resources/lang/translations_zh-TW.yml
+      # New bare templates (locale + language_name only, rest pending translation)
+      - /spigot/src/main/resources/lang/translations_hu.yml
+      - /spigot/src/main/resources/lang/translations_nl.yml
+      - /spigot/src/main/resources/lang/translations_th.yml

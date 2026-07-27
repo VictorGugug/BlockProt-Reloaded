@@ -141,8 +141,8 @@ public final class Translator {
                     : TranslationValue.UNKNOWN_TRANSLATION_VALUE;
 
             Object activeValue = config.get(translationKey);
-            if (activeValue instanceof String) {
-                translatedValue.setTranslatedValue((String) activeValue);
+            if (activeValue instanceof String str && !str.isBlank()) {
+                translatedValue.setTranslatedValue(str);
             } else {
                 missingInActive.add(translationKey);
             }

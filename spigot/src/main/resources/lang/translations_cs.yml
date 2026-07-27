@@ -2,54 +2,17 @@ locale: cs
 language_name: Čeština
 enabled: Zapnuto
 disabled: Vypnuto
-icon:
-  settings: ''
-  friends: ''
-  stats: ''
-  about: ''
-  lockables: ''
-  reload: ''
-  search: ''
-  integrations: ''
-  config: ''
-  debug: ''
-  info: ''
-  world_expiry: ''
-  unlock: ''
-  history: ''
-  enable_all: ''
-  disable_all: ''
-  undo: ''
-  add: ''
-  toggle_on: ''
-  toggle_off: ''
-  true: ''
-  false: ''
-  toggle_on_active: ''
-  toggle_off_inactive: ''
 about:
   title: §x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin
   fork_maintainers: '§7Správci forku: §fVickey & Reim §8(alias ZarZey)'
   report_fork: §x§6§6§c§6§6§6Nahlásit problémy (BlockProt Reloaded)
-  report_fork_hover: ''
+  report_fork_hover:
 inventories:
   back: Zpět
   last_page: Poslední strana
   next_page: Další
-  loading: ''
-  searching: ''
   block_lock: Zámek
   user_settings: Uživatelské nastavení
-  user_settings_notifications: ''
-  block_info:
-    title: ''
-    owner_label: ''
-    owner_lore: ''
-    friend_count: ''
-    linked_frame: ''
-    empty_frame: ''
-    location_format: ''
-    lore_prefix: ''
   lock: Zamknout
   unlock: Odemknout
   lock_on_place: Zamykat automaticky
@@ -57,7 +20,6 @@ inventories:
   paste_configuration: Vložit nastavení
   set_block_name: Nastavit název bloku
   inspect_contents: Prohlédnout obsah
-  inspect_contents_empty: ''
   redstone:
     settings: Nastavení ruditu
     redstone_protection: Rudit ochrana
@@ -65,9 +27,6 @@ inventories:
     hopper_protection: Ochrana před násypkou
     enable_all: Aktivovat vše
     disable_all: Deaktivovat vše
-  block_settings:
-    title: ''
-    owner_only_movement: ''
   friends:
     manage: Správa přátel
     edit: Upravit  přítele
@@ -83,209 +42,222 @@ inventories:
       read: Číst
       write: Psát
       manager: Správce
-      none: ''
-  groups:
-    title: ''
-    button: ''
-    button_lore: ''
-    create: ''
-    create_lore: ''
-    dissolve: ''
-    dissolve_lore: ''
-    leave: ''
-    leave_lore: ''
-    member_count: ''
-    no_group: ''
-    join: ''
-    join_lore: ''
+      none:
   statistics:
     statistics: Statistiky
     player_statistics: Statistiky hráče
     global_statistics: Statistiky serveru
     container_count: Počet kostek
     your_blocks: Moje kostky
-  stats:
-    lore_tp: ''
-    lore_no_tp: ''
-    click_to_open: ''
-    contents_item_format: ''
-    contents_more_format: ''
-    breakdown_entry: ''
-    breakdown_more: ''
-    item_frame_entry: ''
   audit:
     title: Přístupový protokol
     no_entries: Žádné záznamy.
     teleport: Teleportovat se k bloku
     open: Přístupový protokol
-    action_count: ''
-    click_hint: ''
-    player_history: ''
-    action_access_denied: ''
-    action_opened: ''
-    action_item_taken: ''
-    action_item_placed: ''
-    action_raid_explosion: ''
-    action_unknown: ''
+    action_count:
+    click_hint:
+    player_history:
+    action_access_denied:
+    action_opened:
+    action_item_taken:
+    action_item_placed:
+    action_raid_explosion:
+    action_unknown:
+  loading:
+  searching:
+  user_settings_notifications:
+  block_info:
+    title:
+    owner_label:
+    owner_lore:
+    friend_count:
+    linked_frame:
+    empty_frame:
+    location_format:
+    lore_prefix:
+  inspect_contents_empty:
+  block_settings:
+    title:
+    owner_only_movement:
+  groups:
+    title:
+    button:
+    button_lore:
+    create:
+    create_lore:
+    dissolve:
+    dissolve_lore:
+    leave:
+    leave_lore:
+    member_count:
+    no_group:
+    join:
+    join_lore:
+  stats:
+    lore_tp:
+    lore_no_tp:
+    click_to_open:
+    contents_item_format:
+    contents_more_format:
+    breakdown_entry:
+    breakdown_more:
+    item_frame_entry:
   entity_settings:
-    settings: ''
-    protect: ''
-    no_damage: ''
-    no_interact: ''
-    no_leash: ''
-    no_pickup: ''
-  locate_villager: ''
+    settings:
+    protect:
+    no_damage:
+    no_interact:
+    no_leash:
+    no_pickup:
+  locate_villager:
   lockable_selection:
-    blocks_suffix: ''
+    blocks_suffix:
   entity:
-    inspect_entity: ''
-    transfer_not_available: ''
-    manager_suffix: ''
+    inspect_entity:
+    transfer_not_available:
+    manager_suffix:
   transfer:
-    title: ''
-    search_prompt: ''
-    button: ''
-    button_lore: ''
+    title:
+    search_prompt:
+    button:
+    button_lore:
   timed:
-    title: ''
-    button: ''
-    button_lore: ''
-    info: ''
-    over_max: ''
-    max_label: ''
-    no_limit: ''
-    player_label: ''
+    title:
+    button:
+    button_lore:
+    info:
+    over_max:
+    max_label:
+    no_limit:
+    player_label:
   user_menu:
-    title: ''
-    settings: ''
-    settings_lore: ''
-    friends: ''
-    friends_lore: ''
-    stats: ''
-    stats_lore: ''
-    transfer: ''
-    transfer_lore: ''
-    timed: ''
-    timed_lore: ''
-    hints: ''
-    hints_lore: ''
-    hints_already: ''
-    about: ''
-    about_lore: ''
-    close: ''
-    close_lore: ''
+    title:
+    settings:
+    settings_lore:
+    friends:
+    friends_lore:
+    stats:
+    stats_lore:
+    transfer:
+    transfer_lore:
+    timed:
+    timed_lore:
+    hints:
+    hints_lore:
+    hints_already:
+    about:
+    about_lore:
+    close:
+    close_lore:
   admin_menu:
-    title: ''
-    reload: ''
-    reload_lore: ''
-    update: ''
-    update_lore: ''
-    integrations: ''
-    integrations_lore: ''
-    stats: ''
-    stats_lore: ''
-    debug: ''
-    debug_lore: ''
-    info: ''
-    info_lore: ''
-    close: ''
-    close_lore: ''
-    world_expiry: ''
-    world_expiry_lore: ''
-    lockables: ''
-    lockables_lore: ''
-    config: ''
-    config_lore: ''
-    about: ''
-    about_lore: ''
-    auto_drop: ''
-    auto_drop_lore: ''
+    title:
+    reload:
+    reload_lore:
+    update:
+    update_lore:
+    integrations:
+    integrations_lore:
+    stats:
+    stats_lore:
+    debug:
+    debug_lore:
+    info:
+    info_lore:
+    close:
+    close_lore:
+    world_expiry:
+    world_expiry_lore:
+    lockables:
+    lockables_lore:
+    config:
+    config_lore:
+    about:
+    about_lore:
+    auto_drop:
+    auto_drop_lore:
   admin_block_list:
-    title: ''
+    title:
   player_list:
-    title: ''
-    empty: ''
-    block_count: ''
-    online: ''
-    offline: ''
-    sort_name_asc: ''
-    sort_name_desc: ''
-    sort_blocks_desc: ''
-    sort_blocks_asc: ''
+    title:
+    empty:
+    block_count:
+    online:
+    offline:
+    sort_name_asc:
+    sort_name_desc:
+    sort_blocks_desc:
+    sort_blocks_asc:
   bp_unlock:
-    title: ''
-    left_click_hint: ''
-    right_click_hint: ''
+    title:
+    left_click_hint:
+    right_click_hint:
   world_prot_del:
-    title: ''
-    search_prompt: ''
-    select_hint: ''
-    confirm_title: ''
-    confirm_button: ''
-    confirm_lore: ''
-    cancel_button: ''
-    undo_button: ''
-    undo_lore: ''
-    environment: ''
-    no_undo_available: ''
+    title:
+    search_prompt:
+    select_hint:
+    confirm_title:
+    confirm_button:
+    confirm_lore:
+    cancel_button:
+    undo_button:
+    undo_lore:
+    environment:
+    no_undo_available:
   world_expiry:
-    title: ''
-    world_lore: ''
-    disabled: ''
-    duration_label: ''
-    environment_label: ''
+    title:
+    world_lore:
+    disabled:
+    duration_label:
+    environment_label:
   lockables:
-    title: ''
-    info_title: ''
-    left_click_hint: ''
-    right_click_hint: ''
-    toggle_family: ''
-    toggle_family_hint: ''
-    status_active: ''
-    status_inactive: ''
-    off_suffix: ''
-    copy_message: ''
-    copy_hover: ''
-    info_server: ''
-    info_client: ''
-    info_active: ''
-    info_inactive: ''
-    info_page: ''
+    title:
+    info_title:
+    left_click_hint:
+    right_click_hint:
+    toggle_family:
+    toggle_family_hint:
+    status_active:
+    status_inactive:
+    off_suffix:
+    copy_message:
+    copy_hover:
+    info_server:
+    info_client:
+    info_active:
+    info_inactive:
+    info_page:
     category:
-      chests: ''
-      shulkers: ''
-      furnaces: ''
-      storage: ''
-      signs: ''
-      doors: ''
-      trapdoors: ''
-      beds: ''
-      gates: ''
-      workstations: ''
-      interactive: ''
-      entities: ''
-      misc: ''
+      chests:
+      shulkers:
+      furnaces:
+      storage:
+      signs:
+      doors:
+      trapdoors:
+      beds:
+      gates:
+      workstations:
+      interactive:
+      entities:
+      misc:
   auto_drop:
-    title: ''
-    family_title: ''
-    left_click_hint: ''
-    right_click_hint: ''
-    status_active: ''
-    status_inactive: ''
+    title:
+    family_title:
+    left_click_hint:
+    right_click_hint:
+    status_active:
+    status_inactive:
   integrations:
-    separator: ''
-    none: ''
+    separator:
+    none:
 messages:
   permission_granted: Oprávění uděleno.
   unlocked: Odemknuto.
   no_permission: Bez oprávnění.
-  error_prefix: ''
-  entity_death_notification: ''
   friend_added: Přítel přidán.
   friend_removed: Přítel odebrán.
   friend_already_added: Přítel již přidán.
   friend_cant_be_removed: Přítele nelze odebrat.
-  friend_player_not_found: ''
   redstone_added: Rudit ochrana přidána.
   redstone_removed: Rudit ochrana odebrána.
   exceeded_max_block_count: Překročili jste limit zamčených kostek.
@@ -300,7 +272,6 @@ messages:
     §c{cancel}§7 zrušit):'
   chat_input_cancel_word: zrusit
   chat_input_cancelled: §cHledání zrušeno.
-  entity_denied: ''
   lock_on_place_success: §aBlok uzamčen!
   friends_searching: §eHledám §f{player}§e...
   friends_addall_success: §a§f{player}§a přidán jako přítel do §f{count}§a bloku/bloků.
@@ -308,489 +279,146 @@ messages:
   inactivity_cleanup_done: '§e[BlockProt] Čištění neaktivity: §f{count}§e blok/bloků
     uvolněno.'
   friends_list_title: §6Vaši přátelé
-  only_players: ''
-  reload_done: ''
-  integrations_enabled: ''
-  transfer_success: ''
-  transfer_usage: ''
-  transfer_not_owner: ''
-  transfer_player_not_found: ''
-  transfer_self: ''
-  transfer_self_gui: ''
-  transfer_not_owner_gui: ''
-  transfer_failed: ''
-  transfer_all_success: ''
-  transfer_all_no_blocks: ''
-  timed_access_success: ''
-  timed_access_granted: ''
-  timed_access_usage: ''
-  timed_access_revoked: ''
-  timed_access_not_owner: ''
-  timed_access_over_max: ''
-  timed_access_invalid_state: ''
-  admin_info_header: ''
-  admin_info_entry: ''
-  admin_info_usage: ''
-  admin_info_player_not_found: ''
-  admin_info_no_blocks: ''
-  user_transfer_hint: ''
-  user_timed_hint: ''
-  hints_disabled: ''
-  hints_already: ''
-  copy_done: ''
-  paste_done: ''
-  notify_opened: ''
-  notify_item_taken: ''
-  notify_item_placed: ''
-  raid_alert: ''
-  raid_coords: ''
-  raid_tp_label: ''
-  raid_pending: ''
-  no_permission_tp: ''
-  remote_unlock_warning: ''
-  admin_reload_done: ''
-  admin_integrations: ''
-  admin_info_hint: ''
-  admin_debug_hint: ''
-  admin_unlock_success: ''
-  admin_unlock_failed: ''
-  admin_unlock_usage: ''
-  bp_unlock_removed: ''
-  bp_unlock_usage: ''
-  bp_unlock_player_not_found: ''
-  bp_unlock_no_blocks: ''
+  error_prefix:
+  entity_death_notification:
+  friend_player_not_found:
+  entity_denied:
+  only_players:
+  reload_done:
+  integrations_enabled:
+  transfer_success:
+  transfer_usage:
+  transfer_not_owner:
+  transfer_player_not_found:
+  transfer_self:
+  transfer_self_gui:
+  transfer_not_owner_gui:
+  transfer_failed:
+  transfer_all_success:
+  transfer_all_no_blocks:
+  timed_access_success:
+  timed_access_granted:
+  timed_access_usage:
+  timed_access_revoked:
+  timed_access_not_owner:
+  timed_access_over_max:
+  timed_access_invalid_state:
+  admin_info_header:
+  admin_info_entry:
+  admin_info_usage:
+  admin_info_player_not_found:
+  admin_info_no_blocks:
+  user_transfer_hint:
+  user_timed_hint:
+  hints_disabled:
+  hints_already:
+  copy_done:
+  paste_done:
+  notify_opened:
+  notify_item_taken:
+  notify_item_placed:
+  raid_alert:
+  raid_coords:
+  raid_tp_label:
+  raid_pending:
+  no_permission_tp:
+  remote_unlock_warning:
+  admin_reload_done:
+  admin_integrations:
+  admin_info_hint:
+  admin_debug_hint:
+  admin_unlock_success:
+  admin_unlock_failed:
+  admin_unlock_usage:
+  bp_unlock_removed:
+  bp_unlock_usage:
+  bp_unlock_player_not_found:
+  bp_unlock_no_blocks:
   world_expiry:
-    set: ''
-    cleared: ''
-    error: ''
-    usage: ''
+    set:
+    cleared:
+    error:
+    usage:
   lockables:
-    family_unknown: ''
-    toggle_feedback: ''
-    toggle_family_feedback: ''
+    family_unknown:
+    toggle_feedback:
+    toggle_family_feedback:
   auto_drop:
-    toggle_feedback: ''
-    toggle_family_feedback: ''
+    toggle_feedback:
+    toggle_family_feedback:
   groups:
-    created: ''
-    dissolved: ''
-    joined: ''
-    left: ''
-    not_owner: ''
-    already_in_group: ''
-    disabled: ''
-  debug_usage: ''
-  console_warn_prefix: ''
-  cmd_usage_menus: ''
-  cmd_usage_cli: ''
-  cmd_usage_cli_gui_only: ''
-  world_prot_del_done: ''
-  world_prot_del_none: ''
-  world_prot_del_world_not_found: ''
-  world_prot_del_usage: ''
-  world_prot_del_undo_done: ''
-  world_prot_del_undo_nothing: ''
+    created:
+    dissolved:
+    joined:
+    left:
+    not_owner:
+    already_in_group:
+    disabled:
+  debug_usage:
+  console_warn_prefix:
+  cmd_usage_menus:
+  cmd_usage_cli:
+  cmd_usage_cli_gui_only:
+  world_prot_del_done:
+  world_prot_del_none:
+  world_prot_del_world_not_found:
+  world_prot_del_usage:
+  world_prot_del_undo_done:
+  world_prot_del_undo_nothing:
   debug:
-    chest_placed: ''
-    shulker_placed: ''
-    history_cleared: ''
-    running_diagnostics: ''
-    results_go_to_log: ''
-    checks_passed_actionbar: ''
-    checks_failed_actionbar: ''
-    checks_passed_chat: ''
-    checks_failed_chat: ''
-    log_path: ''
-    inventory_title: ''
+    chest_placed:
+    shulker_placed:
+    history_cleared:
+    running_diagnostics:
+    results_go_to_log:
+    checks_passed_actionbar:
+    checks_failed_actionbar:
+    checks_passed_chat:
+    checks_failed_chat:
+    log_path:
+    inventory_title:
   time:
-    days: ''
-    day: ''
-    hours: ''
-    hour: ''
-    minutes: ''
-    minute: ''
+    days:
+    day:
+    hours:
+    hour:
+    minutes:
+    minute:
   first_run:
-    header: ''
-    title: ''
-    step1: ''
-    step1_click: ''
-    step2: ''
-    step3: ''
-    step4: ''
-    footer: ''
+    header:
+    title:
+    step1:
+    step1_click:
+    step2:
+    step3:
+    step4:
+    footer:
   integrations:
-    name_colored: ''
-    name: ''
-    separator: ''
-    none: ''
+    name_colored:
+    name:
+    separator:
+    none:
   location:
-    locked_ago: ''
-    just_now: ''
-    empty_contents: ''
+    locked_ago:
+    just_now:
+    empty_contents:
   update:
-    outdated: ''
-    ahead: ''
-    up_to_date: ''
-    click_hint: ''
-console:
-  config_change_detected: ''
-  config_reloaded: ''
-  filewatcher_error: ''
-  audit_logger_started: ''
-  audit_logger_failed: ''
-  worldedit_listener_enabled: ''
-  claims_system_enabled: ''
-  claims_system_disabled: ''
-  worlds_yml_syntax_error: ''
-  worlds_yml_restored: ''
-  worlds_yml_restore_failed: ''
-  worlds_yml_save_failed: ''
-  backup_dir_failed: ''
-  backup_created: ''
-  backup_review_config: ''
-  backup_failed: ''
-  config_language_missing: ''
-  lang_keys_updated: ''
-  lang_keys_save_failed: ''
-  config_keys_updated: ''
-  config_keys_save_failed: ''
-  mysql_enabled: ''
-  mysql_disabled: ''
-  mysql_lookup_failed: ''
-  mysql_schema_failed: ''
-  mysql_cache_load_failed: ''
-  mysql_operation_failed: ''
-  translations_incomplete: ''
-  java_too_old: ''
-  not_paper: ''
-  typed_views_fallback: ''
-  dialogs_unavailable: ''
-  stats_save_failed: ''
-  migration_start: ''
-  migration_done: ''
-  migration_failed: ''
-  saving_statistics: ''
-  update:
-    available: ''
-    up_to_date: ''
-  viaversion_detected: ''
-  viaversion_api_missing: ''
-  craftbukkit_unsupported: ''
-  integration_enabled: ''
-  startup_complete: ''
-  auto_reload_disabled: ''
-  boot_configuration: ''
-  boot_listeners: ''
-  boot_commands: ''
-  boot_startup_time: ''
-  boot_loaded: ''
-  boot_registered: ''
-  boot_hooked: ''
-  boot_not_installed: ''
-  boot_dialog_api: ''
-  boot_available: ''
-  boot_not_available: ''
-  recommended_console_only: ''
-  recommended_blocks_missing: ''
-  recommended_done: ''
-  recommended_reload: ''
-  recommended_failed: ''
-  first_start:
-    header: ''
-    title: ''
-    step1: ''
-    step2: ''
-    step3: ''
-    step4: ''
-    footer: ''
-  boot:
-    configuration: ''
-    listeners: ''
-    commands: ''
-    startup_time: ''
-    loaded: ''
-    registered: ''
-    hooked: ''
-    not_installed: ''
-dialogs:
-  about:
-    title: ''
-    description: ''
-    maintainer: ''
-    report_issues: ''
-    version_label: ''
-    server_label: ''
-    api_label: ''
-    java_label: ''
-    issues_url: ''
-  user_menu:
-    header: ''
-  admin_menu:
-    header: ''
-    config_tooltip: ''
-  settings:
-    header: ''
-    auto_lock_desc: ''
-    hints_desc: ''
-    notifications_desc: ''
-  friends:
-    header: ''
-    manage_hint: ''
-    public_make: ''
-    public_current: ''
-    private_current: ''
-    public_click: ''
-    private_click: ''
-    no_history: ''
-    recent_searches: ''
-  stats:
-    header: ''
-    your_blocks: ''
-    no_blocks: ''
-    breakdown: ''
-    server_total: ''
-  integrations:
-    count: ''
-    enabled: ''
-    disabled: ''
-    plugin: ''
-    dependent: ''
-  lockables:
-    header: ''
-    cat_prefix: ''
-    categories:
-      chests: ''
-      shulkers: ''
-      furnaces: ''
-      storage: ''
-      signs: ''
-      doors: ''
-      trapdoors: ''
-      beds: ''
-      gates: ''
-      workstations: ''
-      interactive: ''
-      entities: ''
-  info:
-    header: ''
-    protected_blocks: ''
-  unlock:
-    header: ''
-    click_hint: ''
-    location: ''
-    material_label: ''
-    owner_label: ''
-    friends_label: ''
-    player_not_found: ''
-    no_blocks: ''
-    unlocked: ''
-    not_owned: ''
-    failed: ''
-  protdel:
-    header: ''
-    world_hint: ''
-    confirm: ''
-    cancel: ''
-    blocks_suffix: ''
-    undo_label: ''
-    undo_title: ''
-    no_history: ''
-    restore_hint: ''
-    cant_undo: ''
-    deleting: ''
-  update:
-    title: ''
-    current: ''
-    latest: ''
-    outdated: ''
-    ahead: ''
-    up_to_date: ''
-    check_hint: ''
-    check_now: ''
-    checking: ''
-    download: ''
-    version_prefix: ''
-    latest_link_label: ''
-  debug:
-    title: ''
-    label_plugin: ''
-    label_server: ''
-    label_api: ''
-    label_java: ''
-    run_separator: ''
-  choose_option: ''
-  admin_choose: ''
-  click_to_open: ''
-  back: ''
-  close: ''
-  page: ''
-  prev: ''
-  next: ''
-  prev_hint: ''
-  next_hint: ''
-  status_label: ''
-  status_public: ''
-  status_private: ''
-  status_enabled: ''
-  status_disabled: ''
-  switch_view: ''
-  click_disable: ''
-  click_enable: ''
-  click_chat: ''
-  return_user_menu: ''
-  return_admin_menu: ''
-  return_previous: ''
-  category_label: ''
-  admin_config:
-    title: ''
-    header: ''
-    hint: ''
-    cat_general: ''
-    cat_general_desc: ''
-    cat_protection: ''
-    cat_protection_desc: ''
-    cat_mechanics: ''
-    cat_mechanics_desc: ''
-    cat_limits: ''
-    cat_limits_desc: ''
-    cat_notifications: ''
-    cat_notifications_desc: ''
-    cat_language: ''
-    cat_worlds: ''
-    cat_players: ''
-    cat_blocks: ''
-    cat_entity: ''
-    cat_expiry: ''
-    cat_raid: ''
-    cat_maintenance: ''
-    cat_deprecated: ''
-    value_bool: ''
-    value_cycle: ''
-    value_click_edit: ''
-    dialog_marker: ''
-    return_categories: ''
-    config_yml_prefix: ''
-    value_current: ''
-    enter_new_value: ''
-    new_value_prompt: ''
-    invalid_number: ''
-    confirm_value: ''
-    lock_on_place: ''
-    public_is_friend: ''
-    redstone_disallowed: ''
-    auto_reload: ''
-    toggle_lang: ''
-    protect_explosions: ''
-    piston_movement: ''
-    shulker_break: ''
-    allow_break: ''
-    spawn_protection: ''
-    simplified_hopper: ''
-    lock_effects: ''
-    lock_sounds: ''
-    world_expiry: ''
-    entity_protection: ''
-    backups: ''
-    session_log: ''
-    max_blocks: ''
-    hint_cooldown: ''
-    friend_search: ''
-    notify_updates: ''
-    owner_notifications: ''
-    language:
-      language_file: ''
-      toggle_category: ''
-      toggle_hint: ''
-      selector_category: ''
-      selector_hint: ''
-      replace_translations: ''
-      fallback_string: ''
-      fallback_string_hint: ''
-      status_header: ''
-      toggle_all_enable: ''
-      toggle_all_disable: ''
-      toggle_all_hint: ''
-      lang_status: ''
-      config_status_active: ''
-      config_status_inactive: ''
-      click_disable: ''
-      click_enable: ''
-      active_marker: ''
-    worlds:
-      per_worlds_config: ''
-      excluded_worlds: ''
-      excluded_worlds_hint: ''
-      excluded_worlds_empty: ''
-    players:
-      lock_on_place: ''
-      public_is_friend: ''
-      max_blocks: ''
-      max_blocks_hint: ''
-      hint_cooldown: ''
-      hint_cooldown_hint: ''
-      friend_search: ''
-      friend_search_hint: ''
-      disable_friends: ''
-    blocks:
-      modern_family: ''
-      redstone_disallowed: ''
-      simplified_hopper: ''
-      protect_explosions: ''
-      piston_movement: ''
-      shulker_break: ''
-      allow_break: ''
-      spawn_protection: ''
-      lock_effects: ''
-      lock_sounds: ''
-      use_menus_de: ''
-      use_dialogs_de: ''
-      timed_access: ''
-      timed_access_hint: ''
-    entity:
-      protection_enabled: ''
-      auto_protect_tame: ''
-      workstation_enabled: ''
-      workstation_radius: ''
-      workstation_radius_hint: ''
-      workstation_vertical_radius: ''
-      workstation_vertical_radius_hint: ''
-      villager_locate_seconds: ''
-      villager_locate_seconds_hint: ''
-      menu_item: ''
-      menu_item_hint: ''
-      menu_item_invalid: ''
-    expiry:
-      enabled: ''
-      check_interval: ''
-      check_interval_hint: ''
-    raid:
-      enabled: ''
-    notifications:
-      notify_ops: ''
-      owner_enabled: ''
-      owner_open: ''
-      owner_take: ''
-      owner_place: ''
-    maintenance:
-      inactivity_cleanup: ''
-      inactivity_cleanup_hint: ''
-      auto_reload: ''
-      session_log: ''
-      backups: ''
-    deprecated:
-      we_paste_enabled: ''
+    outdated:
+    ahead:
+    up_to_date:
+    click_hint:
 worlds:
   scan_start: '[BlockProt] Skenování světů... ({count} načteno)'
   scan_world_added: '[BlockProt] Svět ''{world}'' přidán do worlds.yml: ochrana VYPNUTA.
     Zapněte ručně.'
   scan_complete: '[BlockProt] Skenování dokončeno. {added} nový/nové světy registrovány.'
-  status: ''
-  protected_count: ''
-  no_worlds: ''
-  world_config_hint: ''
-  per_world_config: ''
-  worlds: ''
-  configured: ''
+  status:
+  protected_count:
+  no_worlds:
+  world_config_hint:
+  per_world_config:
+  worlds:
+  configured:
 integrations:
   lands:
     protect_containers_flag_name: Ochrana skladů (BlockProt)
@@ -802,27 +430,399 @@ integrations:
 help:
   header: §6=== Nápověda BlockProt ===
   footer: §6==================
-  block_protection_title: ''
-  block_protection_settings: ''
-  friends_title: ''
-  friends_gui: ''
-  friends_addall: ''
-  transfer: ''
-  timed_access: ''
-  admin_info: ''
-  other_title: ''
-  settings: ''
-  stats: ''
-  about: ''
-  integrations: ''
-  update: ''
-  reload: ''
-  disable_hints: ''
-  debug: ''
-  unlock: ''
-  lockables: ''
-  recommended: ''
-  world_prot_del: ''
-  gui_mode_title: ''
-  gui_user: ''
-  gui_admin: ''
+  block_protection_title:
+  block_protection_settings:
+  friends_title:
+  friends_gui:
+  friends_addall:
+  transfer:
+  timed_access:
+  admin_info:
+  other_title:
+  settings:
+  stats:
+  about:
+  integrations:
+  update:
+  reload:
+  disable_hints:
+  debug:
+  unlock:
+  lockables:
+  recommended:
+  world_prot_del:
+  gui_mode_title:
+  gui_user:
+  gui_admin:
+icon:
+  settings:
+  friends:
+  stats:
+  about:
+  lockables:
+  reload:
+  search:
+  integrations:
+  config:
+  debug:
+  info:
+  world_expiry:
+  unlock:
+  history:
+  enable_all:
+  disable_all:
+  undo:
+  add:
+  toggle_on:
+  toggle_off:
+  'True':
+  'False':
+  toggle_on_active:
+  toggle_off_inactive:
+console:
+  config_change_detected:
+  config_reloaded:
+  filewatcher_error:
+  audit_logger_started:
+  audit_logger_failed:
+  worldedit_listener_enabled:
+  claims_system_enabled:
+  claims_system_disabled:
+  worlds_yml_syntax_error:
+  worlds_yml_restored:
+  worlds_yml_restore_failed:
+  worlds_yml_save_failed:
+  backup_dir_failed:
+  backup_created:
+  backup_review_config:
+  backup_failed:
+  config_language_missing:
+  lang_keys_updated:
+  lang_keys_save_failed:
+  config_keys_updated:
+  config_keys_save_failed:
+  mysql_enabled:
+  mysql_disabled:
+  mysql_lookup_failed:
+  mysql_schema_failed:
+  mysql_cache_load_failed:
+  mysql_operation_failed:
+  translations_incomplete:
+  java_too_old:
+  not_paper:
+  typed_views_fallback:
+  dialogs_unavailable:
+  stats_save_failed:
+  migration_start:
+  migration_done:
+  migration_failed:
+  saving_statistics:
+  update:
+    available:
+    up_to_date:
+  viaversion_detected:
+  viaversion_api_missing:
+  craftbukkit_unsupported:
+  integration_enabled:
+  startup_complete:
+  auto_reload_disabled:
+  boot_configuration:
+  boot_listeners:
+  boot_commands:
+  boot_startup_time:
+  boot_loaded:
+  boot_registered:
+  boot_hooked:
+  boot_not_installed:
+  boot_dialog_api:
+  boot_available:
+  boot_not_available:
+  recommended_console_only:
+  recommended_blocks_missing:
+  recommended_done:
+  recommended_reload:
+  recommended_failed:
+  first_start:
+    header:
+    title:
+    step1:
+    step2:
+    step3:
+    step4:
+    footer:
+  boot:
+    configuration:
+    listeners:
+    commands:
+    startup_time:
+    loaded:
+    registered:
+    hooked:
+    not_installed:
+dialogs:
+  about:
+    title:
+    description:
+    maintainer:
+    report_issues:
+    version_label:
+    server_label:
+    api_label:
+    java_label:
+    issues_url:
+  user_menu:
+    header:
+  admin_menu:
+    header:
+    config_tooltip:
+  settings:
+    header:
+    auto_lock_desc:
+    hints_desc:
+    notifications_desc:
+  friends:
+    header:
+    manage_hint:
+    public_make:
+    public_current:
+    private_current:
+    public_click:
+    private_click:
+    no_history:
+    recent_searches:
+  stats:
+    header:
+    your_blocks:
+    no_blocks:
+    breakdown:
+    server_total:
+  integrations:
+    count:
+    enabled:
+    disabled:
+    plugin:
+    dependent:
+  lockables:
+    header:
+    cat_prefix:
+    categories:
+      chests:
+      shulkers:
+      furnaces:
+      storage:
+      signs:
+      doors:
+      trapdoors:
+      beds:
+      gates:
+      workstations:
+      interactive:
+      entities:
+  info:
+    header:
+    protected_blocks:
+  unlock:
+    header:
+    click_hint:
+    location:
+    material_label:
+    owner_label:
+    friends_label:
+    player_not_found:
+    no_blocks:
+    unlocked:
+    not_owned:
+    failed:
+  protdel:
+    header:
+    world_hint:
+    confirm:
+    cancel:
+    blocks_suffix:
+    undo_label:
+    undo_title:
+    no_history:
+    restore_hint:
+    cant_undo:
+    deleting:
+  update:
+    title:
+    current:
+    latest:
+    outdated:
+    ahead:
+    up_to_date:
+    check_hint:
+    check_now:
+    checking:
+    download:
+    version_prefix:
+    latest_link_label:
+  debug:
+    title:
+    label_plugin:
+    label_server:
+    label_api:
+    label_java:
+    run_separator:
+  choose_option:
+  admin_choose:
+  click_to_open:
+  back:
+  close:
+  page:
+  prev:
+  next:
+  prev_hint:
+  next_hint:
+  status_label:
+  status_public:
+  status_private:
+  status_enabled:
+  status_disabled:
+  switch_view:
+  click_disable:
+  click_enable:
+  click_chat:
+  return_user_menu:
+  return_admin_menu:
+  return_previous:
+  category_label:
+  admin_config:
+    title:
+    header:
+    hint:
+    cat_general:
+    cat_general_desc:
+    cat_protection:
+    cat_protection_desc:
+    cat_mechanics:
+    cat_mechanics_desc:
+    cat_limits:
+    cat_limits_desc:
+    cat_notifications:
+    cat_notifications_desc:
+    cat_language:
+    cat_worlds:
+    cat_players:
+    cat_blocks:
+    cat_entity:
+    cat_expiry:
+    cat_raid:
+    cat_maintenance:
+    cat_deprecated:
+    value_bool:
+    value_cycle:
+    value_click_edit:
+    dialog_marker:
+    return_categories:
+    config_yml_prefix:
+    value_current:
+    enter_new_value:
+    new_value_prompt:
+    invalid_number:
+    confirm_value:
+    lock_on_place:
+    public_is_friend:
+    redstone_disallowed:
+    auto_reload:
+    toggle_lang:
+    protect_explosions:
+    piston_movement:
+    shulker_break:
+    allow_break:
+    spawn_protection:
+    simplified_hopper:
+    lock_effects:
+    lock_sounds:
+    world_expiry:
+    entity_protection:
+    backups:
+    session_log:
+    max_blocks:
+    hint_cooldown:
+    friend_search:
+    notify_updates:
+    owner_notifications:
+    language:
+      language_file:
+      toggle_category:
+      toggle_hint:
+      selector_category:
+      selector_hint:
+      replace_translations:
+      fallback_string:
+      fallback_string_hint:
+      status_header:
+      toggle_all_enable:
+      toggle_all_disable:
+      toggle_all_hint:
+      lang_status:
+      config_status_active:
+      config_status_inactive:
+      click_disable:
+      click_enable:
+      active_marker:
+    worlds:
+      per_worlds_config:
+      excluded_worlds:
+      excluded_worlds_hint:
+      excluded_worlds_empty:
+    players:
+      lock_on_place:
+      public_is_friend:
+      max_blocks:
+      max_blocks_hint:
+      hint_cooldown:
+      hint_cooldown_hint:
+      friend_search:
+      friend_search_hint:
+      disable_friends:
+    blocks:
+      modern_family:
+      redstone_disallowed:
+      simplified_hopper:
+      protect_explosions:
+      piston_movement:
+      shulker_break:
+      allow_break:
+      spawn_protection:
+      lock_effects:
+      lock_sounds:
+      use_menus_de:
+      use_dialogs_de:
+      timed_access:
+      timed_access_hint:
+    entity:
+      protection_enabled:
+      auto_protect_tame:
+      workstation_enabled:
+      workstation_radius:
+      workstation_radius_hint:
+      workstation_vertical_radius:
+      workstation_vertical_radius_hint:
+      villager_locate_seconds:
+      villager_locate_seconds_hint:
+      menu_item:
+      menu_item_hint:
+      menu_item_invalid:
+    expiry:
+      enabled:
+      check_interval:
+      check_interval_hint:
+    raid:
+      enabled:
+    notifications:
+      notify_ops:
+      owner_enabled:
+      owner_open:
+      owner_take:
+      owner_place:
+    maintenance:
+      inactivity_cleanup:
+      inactivity_cleanup_hint:
+      auto_reload:
+      session_log:
+      backups:
+    deprecated:
+      we_paste_enabled:
