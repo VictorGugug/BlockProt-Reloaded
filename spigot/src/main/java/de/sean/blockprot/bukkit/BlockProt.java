@@ -584,9 +584,10 @@ public final class BlockProt extends JavaPlugin {
                         String indent = langIndent + "  ";
                         lines.add(line);
                         for (String fileName : Translator.DEFAULT_TRANSLATION_FILES) {
-                            boolean enabled = existing.getBoolean("languages." + fileName, false);
+                            String code = LangConfig.fileNameToCode(fileName);
+                            boolean enabled = existing.getBoolean("languages." + code, false);
                             int pct = percentages.getOrDefault(fileName, 0);
-                            lines.add(indent + fileName + ": " + enabled);
+                            lines.add(indent + code + ": " + enabled);
                             lines.add(indent + "# K: " + pct + "%");
                         }
                     } else if (inLanguages) {

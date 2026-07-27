@@ -11,35 +11,35 @@ fallback_language: translations_en.yml
 # are never broken.
 languages:
   # Reference languages (actively maintained, always complete)
-  translations_en.yml: true
+  en: true
   # K: 0%
-  translations_es.yml: true
+  es: true
   # K: 0%
 
   # Community translations (may have missing keys)
-  translations_cs.yml: false
+  cs: false
   # K: 0%
-  translations_de.yml: false
+  de: false
   # K: 0%
-  translations_fr.yml: false
+  fr: false
   # K: 0%
-  translations_it.yml: false
+  it: false
   # K: 0%
-  translations_ja.yml: false
+  ja: false
   # K: 0%
-  translations_ko.yml: false
+  ko: false
   # K: 0%
-  translations_pl.yml: false
+  pl: false
   # K: 0%
-  translations_pt-br.yml: false
+  pt-br: false
   # K: 0%
-  translations_ru.yml: false
+  ru: false
   # K: 0%
-  translations_sk.yml: false
+  sk: false
   # K: 0%
-  translations_tr.yml: false
+  tr: false
   # K: 0%
-  translations_zh-CN.yml: false
+  zh-CN: false
   # K: 0%
-  translations_zh-TW.yml: false
+  zh-TW: false
   # K: 0%

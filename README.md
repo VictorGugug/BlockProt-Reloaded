@@ -9,6 +9,7 @@
 [![CurseForge](https://img.shields.io/curseforge/dt/1565977?style=flat-square&color=FF6E1A&logo=curseforge&label=CurseForge)](https://www.curseforge.com/minecraft/bukkit-plugins/blockprot-reloaded)
 [![Hangar](https://img.shields.io/hangar/dt/BlockProt-Reloaded?style=flat-square&color=00D4A2&logo=papermc&label=Hangar)](https://hangar.papermc.io/VictorGugug/BlockProt-Reloaded/versions?channel=Release&platform=PAPER)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](LICENSE)
+[![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
 [![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
 [![Paper](https://img.shields.io/badge/Paper-1.21.1%2B%20%7C%2026.x-white?style=flat-square)](https://papermc.io/)
 
@@ -505,7 +506,23 @@ MySQL is configured separately in `mysql/mysql.yml`.
 
 ## Translating
 
-Language files are in `spigot/src/main/resources/lang/`. Both legacy color codes and MiniMessage format are accepted in all values. The English file `translations_en.yml` is the reference. Missing keys are added automatically on startup and on `/bp reload`. Pull requests for new or improved translations are welcome.
+Translations are managed through **GitLocalize**.
+
+[![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
+
+The English file `translations_en.yml` is the reference. Missing keys fall back to English automatically.
+
+### Languages on GitLocalize
+
+These languages are available on [GitLocalize](https://gitlocalize.com/repo/10833) and accepting contributions:
+
+cs, de, es, fr, hu, it, ja, ko, nl, pl, pt-br, ru, sk, th, tr, zh-CN, zh-TW
+
+The editor shows the English source on the left and your translations on the right. Both legacy color codes (`&a`, `&6`) and MiniMessage format (`<gold>`, `<gradient:...>`) are accepted.
+
+### Languages on Discord
+
+fi (Finnish) and id (Indonesian) are managed through the community Discord channel. If you speak either language, join the [Discord server](https://discord.gg/RRcjuMr9Jd) and look for the translation channel to contribute or request a new language.
 
 
 ## Roadmap
