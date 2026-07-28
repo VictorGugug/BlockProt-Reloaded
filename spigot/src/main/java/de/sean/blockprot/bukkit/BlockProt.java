@@ -618,11 +618,33 @@ public final class BlockProt extends JavaPlugin {
                     }
                 }
             }
-            try (java.io.Writer writer = new java.io.OutputStreamWriter(new java.io.FileOutputStream(langYml), StandardCharsets.UTF_8)) {
-                for (int i = 0; i < lines.size(); i++) {
-                    writer.write(lines.get(i));
-                    if (i < lines.size() - 1) writer.write(System.lineSeparator());
+            StringBuilder newContent = new StringBuilder();
+            for (int i = 0; i < lines.size(); i++) {
+                newContent.append(lines.get(i));
+                if (i < lines.size() - 1) newContent.append(System.lineSeparator());
+            }
+
+            String currentContent;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new java.io.FileInputStream(langYml), StandardCharsets.UTF_8))) {
+                StringBuilder sb = new StringBuilder();
+                String l;
+                boolean first = true;
+                while ((l = reader.readLine()) != null) {
+                    if (!first) sb.append(System.lineSeparator());
+                    sb.append(l);
+                    first = false;
                 }
+                currentContent = sb.toString();
+            }
+
+            // Skips the write when content is unchanged; avoids self-triggering the file watcher.
+            if (currentContent.equals(newContent.toString())) {
+                return;
+            }
+
+            if (fileWatcher != null) fileWatcher.suppressPath("lang/lang.yml");
+            try (java.io.Writer writer = new java.io.OutputStreamWriter(new java.io.FileOutputStream(langYml), StandardCharsets.UTF_8)) {
+                writer.write(newContent.toString());
             }
         } catch (IOException e) {
             getLogger().warning("Failed to update lang.yml completion percentages: " + e.getMessage());

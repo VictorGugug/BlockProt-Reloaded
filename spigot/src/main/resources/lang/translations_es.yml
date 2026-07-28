@@ -630,8 +630,8 @@ dialogs:
     outdated: "Desactualizado"
     ahead: "Por delante del Release"
     up_to_date: "Actualizado"
-    check_hint: "Usa 'Check Now' para comprobar actualizaciones."
-    check_now: "Check Now"
+    check_hint: "Usa 'Comprobar Ahora' para comprobar actualizaciones."
+    check_now: "Comprobar Ahora"
     checking: "Comprobando actualizaciones..."
     download: "Descargar:"
     version_prefix: " v"
@@ -804,6 +804,9 @@ dialogs:
     failure: "Error al recargar la configuración: {error}"
     action_button: "Recargar configuración"
     action_button_hint: "Revisar y confirmar cambios pendientes de configuración."
+    force: "Forzar Recarga"
+    force_hint: "Recargar config.yml, blocks.yml y lang.yml desde disco ahora mismo, aunque no haya nada pendiente detectado."
+    force_success: "Se forzó una recarga de configuración desde disco."
   status_pending: "Recarga Pendiente"
 
 worlds:

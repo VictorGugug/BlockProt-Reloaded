@@ -20,6 +20,7 @@
 
 package de.sean.blockprot.bukkit.config;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,6 +35,7 @@ public final class ReloadReport {
         AUTOMATIC("automatic"),
         MANUAL_DIALOG("manual-dialog"),
         MANUAL_COMMAND("manual-command"),
+        MANUAL_FORCE("manual-force"),
         MANUAL_INVENTORY("manual-inventory"),
         EXTERNAL_FILE("external-file");
 
@@ -102,7 +104,7 @@ public final class ReloadReport {
             Object value = entry.getValue();
             if (value instanceof Map<?, ?> nestedMap) {
                 flattenMap(key, nestedMap, file, out);
-            } else {
+            } else if (!(value instanceof ConfigurationSection)) {
                 out.put(file + ":" + key, value);
             }
         }

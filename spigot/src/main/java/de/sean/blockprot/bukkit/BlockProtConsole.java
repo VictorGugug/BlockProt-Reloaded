@@ -43,6 +43,7 @@ public final class BlockProtConsole {
      * standard logger would have added.
      */
     public static final String PASTEL_CYAN   = hex("A2D2FF");
+    public static final String PASTEL_COFFEE = hex("D8B994");
     public static final String PASTEL_PURPLE = hex("CDB4DB");
     public static final String PASTEL_PINK   = hex("FFC8DD");
     public static final String PASTEL_MINT   = hex("B9FBC0");
@@ -107,12 +108,13 @@ public final class BlockProtConsole {
         guideBuffer = null;
         if (pluginLogger == null) return;
 
-        raw(PASTEL_CYAN + "  ██████╗ ██████╗  ██████╗ ");
-        raw(PASTEL_CYAN + "  ██╔══██╗██╔══██╗██╔══██╗");
-        raw(PASTEL_CYAN + "  ██████╔╝██████╔╝██████╔╝");
-        raw(PASTEL_CYAN + "  ██╔══██╗██╔═══╝ ██╔══██╗");
-        raw(PASTEL_CYAN + "  ██████╔╝██║     ██║  ██║");
-        raw(PASTEL_CYAN + "  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
+        raw("");
+        raw(PASTEL_COFFEE + "  ██████╗ ██████╗  ██████╗ ");
+        raw(PASTEL_COFFEE + "  ██╔══██╗██╔══██╗██╔══██╗");
+        raw(PASTEL_COFFEE + "  ██████╔╝██████╔╝██████╔╝");
+        raw(PASTEL_COFFEE + "  ██╔══██╗██╔═══╝ ██╔══██╗");
+        raw(PASTEL_COFFEE + "  ██████╔╝██║     ██║  ██║");
+        raw(PASTEL_COFFEE + "  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
         raw("§r        " + PASTEL_MINT + "BlockProt Reloaded");
         raw("§r            " + PASTEL_GOLD + "v" + version);
 
@@ -122,6 +124,7 @@ public final class BlockProtConsole {
 
         if (lines.isEmpty()) {
             raw(PREFIX + "  No startup messages.");
+            raw("");
             return;
         }
 
@@ -129,6 +132,7 @@ public final class BlockProtConsole {
             String tag = line.isWarning() ? WARN_TAG : "";
             raw(PREFIX + tag + line.message());
         }
+        raw("");
     }
 
     /**

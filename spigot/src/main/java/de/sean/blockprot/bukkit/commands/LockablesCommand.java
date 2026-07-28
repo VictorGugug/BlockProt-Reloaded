@@ -56,7 +56,7 @@ public final class LockablesCommand implements CommandExecutor {
             return true;
         }
         if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-            LockablesDialog.show(player, DialogOrigin.ADMIN_MENU);
+            LockablesDialog.show(player, DialogOrigin.NONE);
             return true;
         }
         InventoryState state = InventoryState.builder()

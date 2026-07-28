@@ -47,7 +47,7 @@ public class StatisticsCommand implements CommandExecutor {
         }
 
         if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-            StatsDialog.show(player, DialogOrigin.USER_MENU);
+            StatsDialog.show(player, DialogOrigin.NONE);
             return true;
         }
 

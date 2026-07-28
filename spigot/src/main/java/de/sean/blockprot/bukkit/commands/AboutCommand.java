@@ -29,6 +29,8 @@ import de.sean.blockprot.bukkit.dialogs.AboutDialog;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -47,6 +49,19 @@ import java.util.List;
 public class AboutCommand implements CommandExecutor {
     private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
 
+    private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
+    private static final TextColor MUTED_GRAY = TextColor.color(0x888888);
+    private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
+    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
+    private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
+    private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
+
+    private static final Component PREFIX = Component.text()
+        .append(Component.text("[", TextColor.color(0x555555)))
+        .append(Component.text("BlockProt Reloaded"))
+        .append(Component.text("] ", TextColor.color(0x555555)))
+        .build();
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         String senderName = (sender instanceof Player p) ? p.getName() : "Console";
@@ -61,7 +76,7 @@ public class AboutCommand implements CommandExecutor {
         String serverVer = Bukkit.getVersion();
         String runtimeVer = VersionCompat.getDiagnosticString();
         String javaVer = System.getProperty("java.version") + " (" + System.getProperty("java.vendor") + ")";
-        
+
         boolean dbActive = BlockProt.getHybridDatabase() != null && BlockProt.getHybridDatabase().isEnabled();
         String dbMode = dbActive ? "MySQL" : "SQLite (blockprot_usercache.sqlite)";
         int cacheCount = ProtectedBlockCache.size();
@@ -73,41 +88,55 @@ public class AboutCommand implements CommandExecutor {
         for (PluginIntegration pi : allInts) {
             if (pi.isEnabled()) activeInts.add(pi.name);
         }
-        String intText = activeInts.isEmpty()
-            ? "§c0/" + allInts.size() + " Active"
-            : "§a" + activeInts.size() + "/" + allInts.size() + " Active (" + String.join(", ", activeInts) + ")";
+        boolean anyIntActive = !activeInts.isEmpty();
+        String intText = anyIntActive
+            ? activeInts.size() + "/" + allInts.size() + " Active (" + String.join(", ", activeInts) + ")"
+            : "0/" + allInts.size() + " Active";
 
         File currentLog = BlockProtLogger.getCurrentLogFile();
         String logPath = currentLog != null ? currentLog.getName() : "None";
 
-        List<String> reportLines = List.of(
-            "§8[§rBlockProt Reloaded§8] §a=== About & System Information ===",
-            "§8[§rBlockProt Reloaded§8] §7Plugin Version: §e" + version,
-            "§8[§rBlockProt Reloaded§8] §7Maintainers: §eZaynr (Zar), spnda",
-            "§8[§rBlockProt Reloaded§8] §7Server Version: §e" + serverVer,
-            "§8[§rBlockProt Reloaded§8] §7Runtime Engine: §e" + runtimeVer,
-            "§8[§rBlockProt Reloaded§8] §7Java Runtime: §e" + javaVer,
-            "§8[§rBlockProt Reloaded§8] §7Database Engine: §e" + dbMode,
-            "§8[§rBlockProt Reloaded§8] §7Cache Population: §e" + cacheCount + " protected blocks",
-            "§8[§rBlockProt Reloaded§8] §7Dialog API: " + (hasDialogs ? "§aAvailable" : "§cUnavailable"),
-            "§8[§rBlockProt Reloaded§8] §7Integrations: " + intText,
-            "§8[§rBlockProt Reloaded§8] §7Audit Logger: " + (auditActive ? "§aActive" : "§cDisabled"),
-            "§8[§rBlockProt Reloaded§8] §7Backups Mode: §eMigration-only",
-            "§8[§rBlockProt Reloaded§8] §7Active Log File: §e" + logPath
+        List<Component> reportLines = List.of(
+            row(null, "=== About & System Information ===", PASTEL_MINT, TextDecoration.BOLD),
+            row("Plugin Version: ", version, PASTEL_GOLD),
+            row("Maintainers: ", "Zaynr (Zar), spnda", MUTED_GRAY),
+            row("Server Version: ", serverVer, MUTED_GRAY),
+            row("Runtime Engine: ", runtimeVer, MUTED_GRAY),
+            row("Java Runtime: ", javaVer, MUTED_GRAY),
+            row("Database Engine: ", dbMode, PASTEL_MINT),
+            row("Cache Population: ", cacheCount + " protected blocks", PASTEL_GOLD),
+            row("Dialog API: ", hasDialogs ? "Available" : "Unavailable", hasDialogs ? PASTEL_MINT : PASTEL_CORAL),
+            row("Integrations: ", intText, anyIntActive ? PASTEL_MINT : PASTEL_CORAL),
+            row("Audit Logger: ", auditActive ? "Active" : "Disabled", auditActive ? PASTEL_MINT : PASTEL_CORAL),
+            row("Backups Mode: ", "Migration-only", PASTEL_GOLD),
+            row("Active Log File: ", logPath, MUTED_GRAY)
         );
 
-        for (String l : reportLines) {
-            sender.sendMessage(LEGACY.deserialize(l));
-            BlockProtLogger.log(l);
+        for (Component line : reportLines) {
+            sender.sendMessage(line);
+            BlockProtLogger.log(LEGACY.serialize(line));
         }
 
-        Component reportLink = LEGACY.deserialize("§8[§rBlockProt Reloaded§8] §7Report Issues: §bhttps://github.com/VictorGugug/BlockProt-Reloaded/issues")
-            .clickEvent(ClickEvent.openUrl("https://github.com/VictorGugug/BlockProt-Reloaded/issues"))
-            .hoverEvent(HoverEvent.showText(LEGACY.deserialize("§7Click to open GitHub Issues tracker")));
+        String issuesUrl = "https://github.com/VictorGugug/BlockProt-Reloaded/issues";
+        Component reportLink = Component.text()
+            .append(PREFIX)
+            .append(Component.text("Report Issues: ", SOFT_GRAY))
+            .append(Component.text(issuesUrl, SOFT_BLUE)
+                .clickEvent(ClickEvent.openUrl(issuesUrl))
+                .hoverEvent(HoverEvent.showText(Component.text("Click to open GitHub Issues tracker", SOFT_GRAY))))
+            .build();
         sender.sendMessage(reportLink);
-        BlockProtLogger.log("Report Issues: https://github.com/VictorGugug/BlockProt-Reloaded/issues");
+        BlockProtLogger.log("Report Issues: " + issuesUrl);
 
         return true;
+    }
+
+    @NotNull
+    private static Component row(@Nullable String label, @NotNull String value, @NotNull TextColor valueColor, @NotNull TextDecoration... decorations) {
+        var builder = Component.text().append(PREFIX);
+        if (label != null) builder.append(Component.text(label, SOFT_GRAY));
+        builder.append(Component.text(value, valueColor, decorations));
+        return builder.build();
     }
 
     @Nullable

@@ -77,7 +77,7 @@ public final class InfoCommand implements CommandExecutor {
         if (args.length < 2) {
             if (sender instanceof Player player) {
                 if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-                    InfoDialog.show(player, DialogOrigin.ADMIN_MENU);
+                    InfoDialog.show(player, DialogOrigin.NONE);
                     return true;
                 }
                 InventoryState state = new InventoryState(null);

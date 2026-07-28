@@ -181,8 +181,21 @@ inactivity_cleanup_days: -1
 # Automatically reload configurations if files are changed externally.
 auto_reload_configs: true
 
+# Quiet period (in seconds, 0-5) to wait after detecting an external file
+# change before applying it. Batches multiple rapid saves (e.g. an editor
+# that writes twice, or several config files edited back to back) into a
+# single reload instead of reloading on every individual write.
+auto_reload_delay_seconds: 2
+
 # Enable session logging.
 enable_session_log: true
+
+# Controls the format of what gets written to the session log.
+# false (default) -> technical output (raw key paths, config values as stored).
+# true            -> human-readable lines stating what changed, on what value,
+#                    where the change came from (file edit, in-game dialog,
+#                    command), and who triggered it.
+simplified_log: false
 
 # Create database backups automatically.
 enable_backups: true

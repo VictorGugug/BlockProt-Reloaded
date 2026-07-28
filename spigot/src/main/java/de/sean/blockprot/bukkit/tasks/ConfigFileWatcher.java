@@ -26,10 +26,14 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
 import de.sean.blockprot.bukkit.config.ReloadCoordinator;
+import de.sean.blockprot.bukkit.config.ReloadReport;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.nio.file.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -39,11 +43,13 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class ConfigFileWatcher implements Runnable {
 
+    private static final long SELF_WRITE_WINDOW_MS = 3000L;
+
     private final BlockProt plugin;
     private final File watchDir;
     private final AtomicLong currentGeneration = new AtomicLong(0);
     private final AtomicLong lastEventTimestamp = new AtomicLong(0);
-    private final ConcurrentHashMap<String, AtomicLong> suppressedPaths = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> suppressedUntil = new ConcurrentHashMap<>();
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     private WatchService watchService;
@@ -61,7 +67,7 @@ public final class ConfigFileWatcher implements Runnable {
     }
 
     public void suppressPath(@NotNull String relativePath) {
-        suppressedPaths.computeIfAbsent(relativePath, k -> new AtomicLong(0)).incrementAndGet();
+        suppressedUntil.put(relativePath, System.currentTimeMillis() + SELF_WRITE_WINDOW_MS);
     }
 
     public boolean isRunning() {
@@ -88,15 +94,19 @@ public final class ConfigFileWatcher implements Runnable {
         try {
             watchService = FileSystems.getDefault().newWatchService();
             Path dir = watchDir.toPath();
-            dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+            Map<WatchKey, String> keyPrefixes = new HashMap<>();
+            WatchKey rootKey = dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+            keyPrefixes.put(rootKey, "");
 
             File langDir = new File(watchDir, "lang");
             if (langDir.exists() && langDir.isDirectory()) {
-                langDir.toPath().register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+                WatchKey langKey = langDir.toPath().register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+                keyPrefixes.put(langKey, "lang/");
             }
 
             while (!Thread.currentThread().isInterrupted() && running.get()) {
                 WatchKey key = watchService.take();
+                String prefix = keyPrefixes.getOrDefault(key, "");
 
                 boolean relevant = false;
                 for (WatchEvent<?> event : key.pollEvents()) {
@@ -104,10 +114,9 @@ public final class ConfigFileWatcher implements Runnable {
                     String name = changed.getFileName().toString();
 
                     if (name.endsWith(".yml")) {
-                        String relPath = name;
-                        AtomicLong token = suppressedPaths.get(relPath);
-                        if (token != null && token.get() > 0) {
-                            token.decrementAndGet();
+                        String relPath = prefix + name;
+                        Long until = suppressedUntil.get(relPath);
+                        if (until != null && System.currentTimeMillis() <= until) {
                             continue;
                         }
                         relevant = true;
@@ -150,13 +159,36 @@ public final class ConfigFileWatcher implements Runnable {
             BlockProt.getFoliaLib().getScheduler().runNextTick(t -> {
                 if (currentGeneration.get() == targetGen) {
                     if (BlockProt.getDefaultConfig().isAutoReloadEnabled()) {
-                        BlockProtLogger.log("filewatch", "Quiet period elapsed. Executing automatic reload...");
+                        BlockProtLogger.logConsole("filewatch", "Quiet period elapsed. Executing automatic reload...");
                         ReloadCoordinator.commitExternal();
                     } else {
-                        BlockProtLogger.log("filewatch", "External changes detected while auto-reload is disabled; queued for manual reload.");
+                        logDisabledPreview();
                     }
                 }
             });
         }, Math.max(1L, (delayMs / 50L)));
+    }
+
+    /**
+     * Logs a preview of what an external file edit changed while auto-reload
+     * is disabled, without committing anything. Nothing has reloaded yet at
+     * this point, so the plugin's live in-memory config is an accurate
+     * "before" and the files currently on disk are an accurate "after".
+     */
+    private void logDisabledPreview() {
+        List<ReloadReport.ChangeDiff> preview = ReloadCoordinator.previewExternalDiff();
+        if (preview.isEmpty()) {
+            BlockProtLogger.logConsole("filewatch", "External changes detected while auto-reload is disabled; queued for manual reload.");
+            return;
+        }
+
+        boolean simplified = BlockProt.getDefaultConfig().isSimplifiedLogEnabled();
+        BlockProtLogger.logConsole("filewatch", "External changes detected while auto-reload is disabled; queued for manual reload:");
+        for (ReloadReport.ChangeDiff diff : preview) {
+            BlockProtLogger.log("filewatch", simplified
+                ? "  " + diff.getFile() + ": " + diff.getKey() + " changed from " + diff.getOldValue()
+                    + " to " + diff.getNewValue() + " (external file edit, pending)"
+                : "  " + diff.toString());
+        }
     }
 }

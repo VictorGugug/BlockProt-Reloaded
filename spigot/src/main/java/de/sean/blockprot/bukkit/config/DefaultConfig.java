@@ -466,8 +466,16 @@ public final class DefaultConfig extends BlockProtConfig {
     }
 
     public void setAndSave(@NotNull String key, @NotNull Object value) {
+        BlockProt plugin = BlockProt.getInstance();
+        Object oldValue = config.get(key);
+        if (plugin.getFileWatcher() != null) {
+            plugin.getFileWatcher().suppressPath("config.yml");
+        }
         config.set(key, value);
-        BlockProt.getInstance().saveConfig();
+        plugin.saveConfig();
+        if (!java.util.Objects.equals(oldValue, value)) {
+            BlockProtLogger.logConsole("config", key + " changed from " + oldValue + " to " + value);
+        }
     }
 
     public void setLockOnPlaceByDefault(boolean value) {
@@ -565,7 +573,13 @@ public final class DefaultConfig extends BlockProtConfig {
     public boolean isNotifyOnPlace()              { return isOwnerNotificationsEnabled() && config.getBoolean("owner_notifications.notify_on_place", true); }
 
     public boolean isSessionLogEnabled()                { return config.getBoolean("enable_session_log", true); }
+    public boolean isSimplifiedLogEnabled()              { return config.getBoolean("simplified_log", false); }
     public boolean isBackupsEnabled()                   { return config.getBoolean("enable_backups", true); }
+
+    @Nullable
+    public YamlConfiguration getBlocksConfig() {
+        return blocksConfig;
+    }
 
     public boolean isAutoDropToInventoryEnabled() {
         if (blocksConfig != null) return blocksConfig.getBoolean("auto_drop_to_inventory.enabled", true);

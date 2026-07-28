@@ -5,6 +5,7 @@ import de.sean.blockprot.bukkit.Translator;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +28,11 @@ public final class LangConfig {
     }
 
     private LangConfig() {}
+
+    @Nullable
+    public static YamlConfiguration getConfig() {
+        return config;
+    }
 
     public static void reload() {
         BlockProt plugin = BlockProt.getInstance();

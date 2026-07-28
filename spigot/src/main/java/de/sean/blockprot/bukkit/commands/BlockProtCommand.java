@@ -28,6 +28,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -35,12 +36,18 @@ import java.util.*;
 /**
  * Main dispatcher for /blockprot (alias /bp).
  *
- * <p>Visibility rules:
+ * <p>Visibility rules apply to player senders only; console always has access to
+ * every CLI and admin subcommand regardless of {@code use_menus}, since the GUI
+ * subcommands ({@code user}, {@code admin}) require a player and have no console
+ * equivalent.
  * <ul>
- *   <li><b>use_menus=true</b> : tab-complete shows only {@code user} and {@code admin}.
- *       Any other subcommand is blocked with a usage hint.</li>
- *   <li><b>use_menus=false</b>: tab-complete shows all CLI commands (help, settings,
- *       friends, stats, etc.). {@code user} and {@code admin} are hidden and blocked.</li>
+ *   <li><b>use_menus=true</b>, player sender: tab-complete shows only {@code user}
+ *       and {@code admin}. Any other subcommand is blocked with a usage hint.</li>
+ *   <li><b>use_menus=false</b>, player sender: tab-complete shows all CLI commands
+ *       (help, settings, friends, stats, etc.). {@code user} and {@code admin} are
+ *       hidden and blocked.</li>
+ *   <li>Console sender: always sees and can run all CLI and admin subcommands.
+ *       {@code user}/{@code admin} are blocked with a player-only message.</li>
  * </ul>
  */
 public final class BlockProtCommand implements TabExecutor {
@@ -88,15 +95,14 @@ public final class BlockProtCommand implements TabExecutor {
         ALL_COMMANDS.put(name, exec);
     }
 
-    private static final Set<String> UNIVERSAL_COMMANDS = Set.of("about", "help", "info", "reload", "debug", "update");
-
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
+        boolean playerMenuMode = menusEnabled && sender instanceof Player;
 
         if (args.length == 0) {
-            if (menusEnabled) {
+            if (playerMenuMode) {
                 CommandExecutor exec = (sender.isOp() || sender.hasPermission(Permissions.USER_ADMIN.key()))
                     ? GUI_COMMANDS.get("admin") : GUI_COMMANDS.get("user");
                 return exec != null && exec.onCommand(sender, command, label, args);
@@ -107,11 +113,7 @@ public final class BlockProtCommand implements TabExecutor {
 
         String sub = args[0].toLowerCase(Locale.ROOT);
 
-        if (menusEnabled) {
-            CommandExecutor universalExec = CLI_COMMANDS.get(sub);
-            if (universalExec != null && UNIVERSAL_COMMANDS.contains(sub)) {
-                return universalExec.onCommand(sender, command, label, args);
-            }
+        if (playerMenuMode) {
             CommandExecutor adminExec = ADMIN_COMMANDS.get(sub);
             if (adminExec != null) {
                 sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
@@ -158,13 +160,9 @@ public final class BlockProtCommand implements TabExecutor {
         }
 
         boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
-        Map<String, CommandExecutor> visible = menusEnabled ? new LinkedHashMap<>(GUI_COMMANDS) : new LinkedHashMap<>(CLI_COMMANDS);
-        if (menusEnabled) {
-            for (String univ : UNIVERSAL_COMMANDS) {
-                CommandExecutor exec = CLI_COMMANDS.get(univ);
-                if (exec != null) visible.put(univ, exec);
-            }
-        } else {
+        boolean playerMenuMode = menusEnabled && sender instanceof Player;
+        Map<String, CommandExecutor> visible = playerMenuMode ? new LinkedHashMap<>(GUI_COMMANDS) : new LinkedHashMap<>(CLI_COMMANDS);
+        if (!playerMenuMode) {
             visible.putAll(ADMIN_COMMANDS);
         }
 

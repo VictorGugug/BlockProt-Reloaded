@@ -106,6 +106,20 @@ public final class PendingReloadDialog {
                 p -> showDiscardConfirm(p, backOrigin)));
         }
 
+        buttons.add(new DialogButton("force_reload",
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PENDING_RELOAD__FORCE)), PASTEL_GOLD),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PENDING_RELOAD__FORCE_HINT)), SOFT_GRAY),
+            p -> {
+                ReloadReport report = ReloadCoordinator.commitForce(p.getUniqueId());
+                if (report.isSuccess()) {
+                    p.sendMessage(Component.text(Translator.get(TranslationKey.DIALOGS__PENDING_RELOAD__FORCE_SUCCESS), PASTEL_MINT));
+                } else {
+                    p.sendMessage(Component.text(Translator.get(TranslationKey.DIALOGS__PENDING_RELOAD__FAILURE)
+                        .replace("{error}", String.valueOf(report.getErrorMessage())), PASTEL_CORAL));
+                }
+                AdminConfigDialog.show(p, backOrigin);
+            }));
+
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
         DialogButton backBtn = new DialogButton("back",
             Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),

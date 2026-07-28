@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
 import de.sean.blockprot.bukkit.dialogs.ProtdelDialog;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.WorldProtDeleteConfirmInventory;
@@ -75,7 +76,7 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
                 return true;
             }
             if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-                ProtdelDialog.show(player, world.getName());
+                ProtdelDialog.show(player, world.getName(), DialogOrigin.NONE);
                 return true;
             }
             InventoryState.remove(player.getUniqueId());
@@ -85,7 +86,7 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
         }
 
         if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-            ProtdelDialog.show(player, null);
+            ProtdelDialog.show(player, null, DialogOrigin.NONE);
             return true;
         }
         InventoryState.remove(player.getUniqueId());

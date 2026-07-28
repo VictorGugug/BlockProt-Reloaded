@@ -77,7 +77,6 @@ public class RecommendedCommand implements CommandExecutor {
             defaultConfig.setLockEffects(true);
             defaultConfig.setLockSounds(true);
             defaultConfig.setAutoReloadConfigs(true);
-            defaultConfig.setAutoReloadDelaySeconds(0);
 
             cfg.set("lockable_tile_entities", List.of("[*-CHEST *-FURNACE *-TRANSPORT *-MISC *-SHELF *-SIGN]"));
             cfg.set("lockable_shulker_boxes", List.of("[*]"));

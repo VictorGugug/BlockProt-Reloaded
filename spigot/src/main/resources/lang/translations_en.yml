@@ -810,6 +810,9 @@ dialogs:
     failure: "Failed to reload configuration: {error}"
     action_button: "Reload configuration"
     action_button_hint: "Review and confirm pending configuration changes."
+    force: "Force Reload"
+    force_hint: "Reload config.yml, blocks.yml and lang.yml from disk right now, even if nothing is detected as pending."
+    force_success: "Forced a configuration reload from disk."
   status_pending: "Pending Reload"
 
 worlds:
