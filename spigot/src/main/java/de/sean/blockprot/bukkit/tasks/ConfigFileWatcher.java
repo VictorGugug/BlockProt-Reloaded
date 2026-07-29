@@ -21,18 +21,15 @@
 package de.sean.blockprot.bukkit.tasks;
 
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
 import de.sean.blockprot.bukkit.config.ReloadCoordinator;
-import de.sean.blockprot.bukkit.config.ReloadReport;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.nio.file.*;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -95,12 +92,12 @@ public final class ConfigFileWatcher implements Runnable {
             watchService = FileSystems.getDefault().newWatchService();
             Path dir = watchDir.toPath();
             Map<WatchKey, String> keyPrefixes = new HashMap<>();
-            WatchKey rootKey = dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+            WatchKey rootKey = dir.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
             keyPrefixes.put(rootKey, "");
 
             File langDir = new File(watchDir, "lang");
             if (langDir.exists() && langDir.isDirectory()) {
-                WatchKey langKey = langDir.toPath().register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+                WatchKey langKey = langDir.toPath().register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
                 keyPrefixes.put(langKey, "lang/");
             }
 
@@ -145,50 +142,24 @@ public final class ConfigFileWatcher implements Runnable {
         int delaySec = cfg != null ? cfg.getAutoReloadDelaySeconds() : 0;
         long delayMs = (long) delaySec * 1000L;
 
+        long elapsed = System.currentTimeMillis() - lastEventTimestamp.get();
+        long remaining = delayMs - elapsed;
+        if (remaining <= 0) {
+            BlockProt.getFoliaLib().getScheduler().runNextTick(t -> {
+                if (currentGeneration.get() == targetGen) {
+                    if (BlockProt.getDefaultConfig().isAutoReloadEnabled()) {
+                        ReloadCoordinator.commitExternal();
+                    }
+                }
+            });
+            return;
+        }
+
         BlockProt.getFoliaLib().getScheduler().runLaterAsync(() -> {
             if (currentGeneration.get() != targetGen) {
                 return;
             }
-
-            long elapsed = System.currentTimeMillis() - lastEventTimestamp.get();
-            if (elapsed < delayMs) {
-                scheduleQuietPeriod(targetGen);
-                return;
-            }
-
-            BlockProt.getFoliaLib().getScheduler().runNextTick(t -> {
-                if (currentGeneration.get() == targetGen) {
-                    if (BlockProt.getDefaultConfig().isAutoReloadEnabled()) {
-                        BlockProtLogger.logConsole("filewatch", "Quiet period elapsed. Executing automatic reload...");
-                        ReloadCoordinator.commitExternal();
-                    } else {
-                        logDisabledPreview();
-                    }
-                }
-            });
-        }, Math.max(1L, (delayMs / 50L)));
-    }
-
-    /**
-     * Logs a preview of what an external file edit changed while auto-reload
-     * is disabled, without committing anything. Nothing has reloaded yet at
-     * this point, so the plugin's live in-memory config is an accurate
-     * "before" and the files currently on disk are an accurate "after".
-     */
-    private void logDisabledPreview() {
-        List<ReloadReport.ChangeDiff> preview = ReloadCoordinator.previewExternalDiff();
-        if (preview.isEmpty()) {
-            BlockProtLogger.logConsole("filewatch", "External changes detected while auto-reload is disabled; queued for manual reload.");
-            return;
-        }
-
-        boolean simplified = BlockProt.getDefaultConfig().isSimplifiedLogEnabled();
-        BlockProtLogger.logConsole("filewatch", "External changes detected while auto-reload is disabled; queued for manual reload:");
-        for (ReloadReport.ChangeDiff diff : preview) {
-            BlockProtLogger.log("filewatch", simplified
-                ? "  " + diff.getFile() + ": " + diff.getKey() + " changed from " + diff.getOldValue()
-                    + " to " + diff.getNewValue() + " (external file edit, pending)"
-                : "  " + diff.toString());
-        }
+            scheduleQuietPeriod(targetGen);
+        }, Math.max(1L, (remaining / 50L)));
     }
 }

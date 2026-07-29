@@ -170,24 +170,6 @@ public final class BlockProtLogger {
         log("[" + section + "] " + message);
     }
 
-    /**
-     * Logs to the session file and mirrors the same line to the real
-     * plugin console via the Bukkit logger, guarded against the mirror
-     * handler re-writing it back into the file a second time.
-     */
-    public static void logConsole(@NotNull String section, @NotNull String message) {
-        String fullMessage = "[" + section + "] " + message;
-        log(fullMessage);
-        BlockProt plugin = BlockProt.getInstance();
-        if (plugin == null) return;
-        isReentrancyGuard = true;
-        try {
-            plugin.getLogger().info(COLOR_STRIP.matcher(fullMessage).replaceAll(""));
-        } finally {
-            isReentrancyGuard = false;
-        }
-    }
-
     public static void pass(@NotNull String check) {
         log("PASS: " + check);
     }

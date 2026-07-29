@@ -533,6 +533,7 @@ dialogs:
     api_label: "API: "
     java_label: "Java: "
     issues_url: "github.com/VictorGugug/BlockProt-Reloaded/issues"
+    credit_line: "Author: spnda | Maintainer: Zaynr (Zar)"
   user_menu:
     header: "User Menu"
   admin_menu:
@@ -795,25 +796,6 @@ dialogs:
       backups: "Create automatic backups."
     deprecated:
       we_paste_enabled: "WorldEdit paste auto-lock."
-  pending_reload:
-    title: "Pending Reload Review"
-    hint: "The following changes are queued and will be applied upon confirmation. This reload will be recorded in the plugin activity log."
-    empty: "There are no pending configuration changes to confirm."
-    confirm: "Confirm Reload"
-    confirm_hint: "Apply all pending changes now and record the operation."
-    cancel: "Cancel"
-    discard: "Discard Pending Changes"
-    discard_hint: "Clear all uncommitted dialog changes without applying them."
-    discard_confirm_title: "Confirm Discard"
-    discard_confirm_hint: "Are you sure you want to discard all pending changes?"
-    success: "Successfully reloaded configuration. Applied {count} change(s)."
-    failure: "Failed to reload configuration: {error}"
-    action_button: "Reload configuration"
-    action_button_hint: "Review and confirm pending configuration changes."
-    force: "Force Reload"
-    force_hint: "Reload config.yml, blocks.yml and lang.yml from disk right now, even if nothing is detected as pending."
-    force_success: "Forced a configuration reload from disk."
-  status_pending: "Pending Reload"
 
 worlds:
   scan_start: "Scanning worlds... ({count} loaded)"

@@ -21,6 +21,8 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtConsole;
+import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
@@ -93,10 +95,12 @@ public class RecommendedCommand implements CommandExecutor {
 
             cfg.save(blocksFile);
             DefaultConfig.prependBlocksHeader(blocksFile);
-            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_DONE));
-            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+            BlockProtConsole.info("Recommended configuration applied.");
+            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_DONE));
+            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
         } catch (IOException e) {
-            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)
+            BlockProtConsole.info("Recommended configuration failed.");
+            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)
                 .replace("{error}", e.getMessage()));
         }
 

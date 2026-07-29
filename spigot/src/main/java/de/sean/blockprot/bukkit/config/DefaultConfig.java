@@ -474,7 +474,7 @@ public final class DefaultConfig extends BlockProtConfig {
         config.set(key, value);
         plugin.saveConfig();
         if (!java.util.Objects.equals(oldValue, value)) {
-            BlockProtLogger.logConsole("config", key + " changed from " + oldValue + " to " + value);
+            BlockProtLogger.log("config", key + " changed from " + oldValue + " to " + value);
         }
     }
 
@@ -573,7 +573,6 @@ public final class DefaultConfig extends BlockProtConfig {
     public boolean isNotifyOnPlace()              { return isOwnerNotificationsEnabled() && config.getBoolean("owner_notifications.notify_on_place", true); }
 
     public boolean isSessionLogEnabled()                { return config.getBoolean("enable_session_log", true); }
-    public boolean isSimplifiedLogEnabled()              { return config.getBoolean("simplified_log", false); }
     public boolean isBackupsEnabled()                   { return config.getBoolean("enable_backups", true); }
 
     @Nullable

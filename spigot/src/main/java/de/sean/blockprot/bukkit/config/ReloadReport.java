@@ -33,10 +33,7 @@ public final class ReloadReport {
 
     public enum ReloadSource {
         AUTOMATIC("automatic"),
-        MANUAL_DIALOG("manual-dialog"),
         MANUAL_COMMAND("manual-command"),
-        MANUAL_FORCE("manual-force"),
-        MANUAL_INVENTORY("manual-inventory"),
         EXTERNAL_FILE("external-file");
 
         private final String tag;

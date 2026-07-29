@@ -42,17 +42,17 @@ public final class BlockProtConsole {
      * This prefix replaces the {@code [HH:mm:ss INFO]: [BlockProt Reloaded]} line the
      * standard logger would have added.
      */
-    public static final String PASTEL_CYAN   = hex("A2D2FF");
-    public static final String PASTEL_COFFEE = hex("D8B994");
-    public static final String PASTEL_PURPLE = hex("CDB4DB");
-    public static final String PASTEL_PINK   = hex("FFC8DD");
-    public static final String PASTEL_MINT   = hex("B9FBC0");
-    public static final String PASTEL_ORANGE = hex("FFB703");
-    public static final String PASTEL_GOLD   = hex("E9C46A");
-    public static final String PASTEL_GRAY   = "§7";
+    public static final String PASTEL_MINT    = hex("8FE3B0");
+    public static final String PASTEL_CORAL   = hex("F0A0A0");
+    public static final String PASTEL_GOLD    = hex("D2B48C");
+    public static final String SOFT_BLUE      = hex("A0C4E8");
+    public static final String PASTEL_PURPLE  = hex("C8A0E0");
+    public static final String PASTEL_COFFEE  = hex("D8B994");
+    public static final String PASTEL_ORANGE  = hex("FFB703");
+    public static final String PASTEL_GRAY    = "§7";
     public static final String CONNECTOR_GRAY = "§8";
 
-    private static final String BANNER_CYAN = PASTEL_CYAN;
+    private static final String BANNER_CYAN = PASTEL_MINT;
     private static final String ACCENT_MINT = PASTEL_MINT;
     private static final String LABEL_GRAY = "§7";
     private static final String INACTIVE_GRAY = "§8";

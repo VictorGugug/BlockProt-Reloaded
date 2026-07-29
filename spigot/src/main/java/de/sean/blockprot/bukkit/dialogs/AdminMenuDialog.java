@@ -23,6 +23,8 @@ package de.sean.blockprot.bukkit.dialogs;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.config.ReloadCoordinator;
+import de.sean.blockprot.bukkit.config.ReloadReport;
 import de.sean.blockprot.bukkit.listeners.BlockEventListener;
 import de.sean.blockprot.bukkit.tasks.BackupTask;
 import java.util.ArrayList;
@@ -86,7 +88,14 @@ public final class AdminMenuDialog {
         DialogButton reloadBtn = new DialogButton("reload",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__RELOAD)) + reload, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD)), PASTEL_MINT),
-            p -> PendingReloadDialog.show(p, DialogOrigin.ADMIN_MENU)
+            p -> {
+                ReloadReport report = ReloadCoordinator.commitCommand();
+                p.sendMessage(Component.text(
+                    report.isSuccess()
+                        ? Translator.get(TranslationKey.MESSAGES__ADMIN_RELOAD_DONE)
+                        : "§cReload failed: " + (report.getErrorMessage() != null ? report.getErrorMessage() : "unknown"),
+                    report.isSuccess() ? PASTEL_MINT : PASTEL_CORAL));
+            }
         );
 
         DialogButton updateBtn = new DialogButton("update",

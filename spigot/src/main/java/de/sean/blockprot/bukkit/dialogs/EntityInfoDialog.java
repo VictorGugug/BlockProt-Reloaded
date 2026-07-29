@@ -83,7 +83,7 @@ public final class EntityInfoDialog {
             String name = getPlayerName(friendUuid);
             boolean isManager = handler.isManager(friendUuid);
             body.add(DialogBodyEntry.text(Component.text(
-                "  " + (name != null ? name : friendUuid) + (isManager ? stripColor(Translator.get(TranslationKey.DIALOGS__ENTITY__MANAGER_SUFFIX)) : ""),
+                "  " + (name != null ? name : friendUuid) + (isManager ? stripColor(Translator.get(TranslationKey.INVENTORIES__ENTITY__MANAGER_SUFFIX)) : ""),
                 TextColor.color(0x888888))));
         }
 

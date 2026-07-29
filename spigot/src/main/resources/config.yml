@@ -190,13 +190,6 @@ auto_reload_delay_seconds: 2
 # Enable session logging.
 enable_session_log: true
 
-# Controls the format of what gets written to the session log.
-# false (default) -> technical output (raw key paths, config values as stored).
-# true            -> human-readable lines stating what changed, on what value,
-#                    where the change came from (file edit, in-game dialog,
-#                    command), and who triggered it.
-simplified_log: false
-
 # Create database backups automatically.
 enable_backups: true
 

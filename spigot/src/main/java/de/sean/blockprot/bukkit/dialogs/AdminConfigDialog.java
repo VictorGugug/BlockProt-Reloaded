@@ -82,10 +82,6 @@ public final class AdminConfigDialog {
         buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_RAID)), p -> showRaid(p, backOrigin)));
         buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_NOTIFICATIONS)), p -> showNotif(p, backOrigin)));
         buttons.add(catBtn(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_MAINTENANCE)), p -> showMaintenance(p, backOrigin)));
-        buttons.add(new DialogButton("reload_config",
-            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PENDING_RELOAD__ACTION_BUTTON)), PASTEL_GOLD, TextDecoration.BOLD),
-            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PENDING_RELOAD__ACTION_BUTTON_HINT)), TextColor.color(0x888888)),
-            p -> PendingReloadDialog.show(p, backOrigin)));
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
         DialogButton backBtn = new DialogButton("back",

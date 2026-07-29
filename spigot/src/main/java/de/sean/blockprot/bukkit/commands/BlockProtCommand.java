@@ -21,7 +21,6 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -103,8 +102,10 @@ public final class BlockProtCommand implements TabExecutor {
 
         if (args.length == 0) {
             if (playerMenuMode) {
-                CommandExecutor exec = (sender.isOp() || sender.hasPermission(Permissions.USER_ADMIN.key()))
-                    ? GUI_COMMANDS.get("admin") : GUI_COMMANDS.get("user");
+                // `user` takes priority over `admin` on the bare command, matching
+                // convention in other plugins. Admins still reach the admin menu
+                // explicitly via `/blockprot admin`.
+                CommandExecutor exec = GUI_COMMANDS.get("user");
                 return exec != null && exec.onCommand(sender, command, label, args);
             }
             CommandExecutor help = CLI_COMMANDS.get("help");

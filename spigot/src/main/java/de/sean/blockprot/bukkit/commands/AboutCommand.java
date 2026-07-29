@@ -21,46 +21,31 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtConsole;
 import de.sean.blockprot.bukkit.BlockProtLogger;
-import de.sean.blockprot.bukkit.VersionCompat;
-import de.sean.blockprot.bukkit.integrations.PluginIntegration;
-import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.dialogs.AboutDialog;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Displays full plugin version, maintainer info, runtime state, and diagnostic info.
  */
 public class AboutCommand implements CommandExecutor {
-    private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacySection();
-
     private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
-    private static final TextColor MUTED_GRAY = TextColor.color(0x888888);
     private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
-    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
     private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
     private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
-
-    private static final Component PREFIX = Component.text()
-        .append(Component.text("[", TextColor.color(0x555555)))
-        .append(Component.text("BlockProt Reloaded"))
-        .append(Component.text("] ", TextColor.color(0x555555)))
-        .build();
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
@@ -72,71 +57,39 @@ public class AboutCommand implements CommandExecutor {
             return true;
         }
 
-        String version = BlockProt.getPluginVersion();
-        String serverVer = Bukkit.getVersion();
-        String runtimeVer = VersionCompat.getDiagnosticString();
-        String javaVer = System.getProperty("java.version") + " (" + System.getProperty("java.vendor") + ")";
-
-        boolean dbActive = BlockProt.getHybridDatabase() != null && BlockProt.getHybridDatabase().isEnabled();
-        String dbMode = dbActive ? "MySQL" : "SQLite (blockprot_usercache.sqlite)";
-        int cacheCount = ProtectedBlockCache.size();
-        boolean hasDialogs = VersionCompat.hasDialogApi();
-        boolean auditActive = BlockProt.getAuditLogger() != null;
-
-        List<String> activeInts = new ArrayList<>();
-        List<PluginIntegration> allInts = BlockProt.getInstance().getIntegrations();
-        for (PluginIntegration pi : allInts) {
-            if (pi.isEnabled()) activeInts.add(pi.name);
-        }
-        boolean anyIntActive = !activeInts.isEmpty();
-        String intText = anyIntActive
-            ? activeInts.size() + "/" + allInts.size() + " Active (" + String.join(", ", activeInts) + ")"
-            : "0/" + allInts.size() + " Active";
-
-        File currentLog = BlockProtLogger.getCurrentLogFile();
-        String logPath = currentLog != null ? currentLog.getName() : "None";
-
-        List<Component> reportLines = List.of(
-            row(null, "=== About & System Information ===", PASTEL_MINT, TextDecoration.BOLD),
-            row("Plugin Version: ", version, PASTEL_GOLD),
-            row("Maintainers: ", "Zaynr (Zar), spnda", MUTED_GRAY),
-            row("Server Version: ", serverVer, MUTED_GRAY),
-            row("Runtime Engine: ", runtimeVer, MUTED_GRAY),
-            row("Java Runtime: ", javaVer, MUTED_GRAY),
-            row("Database Engine: ", dbMode, PASTEL_MINT),
-            row("Cache Population: ", cacheCount + " protected blocks", PASTEL_GOLD),
-            row("Dialog API: ", hasDialogs ? "Available" : "Unavailable", hasDialogs ? PASTEL_MINT : PASTEL_CORAL),
-            row("Integrations: ", intText, anyIntActive ? PASTEL_MINT : PASTEL_CORAL),
-            row("Audit Logger: ", auditActive ? "Active" : "Disabled", auditActive ? PASTEL_MINT : PASTEL_CORAL),
-            row("Backups Mode: ", "Migration-only", PASTEL_GOLD),
-            row("Active Log File: ", logPath, MUTED_GRAY)
-        );
-
-        for (Component line : reportLines) {
-            sender.sendMessage(line);
-            BlockProtLogger.log(LEGACY.serialize(line));
+        if (sender instanceof Player player) {
+            printPlayerAbout(player);
+            return true;
         }
 
-        String issuesUrl = "https://github.com/VictorGugug/BlockProt-Reloaded/issues";
-        Component reportLink = Component.text()
-            .append(PREFIX)
-            .append(Component.text("Report Issues: ", SOFT_GRAY))
-            .append(Component.text(issuesUrl, SOFT_BLUE)
-                .clickEvent(ClickEvent.openUrl(issuesUrl))
-                .hoverEvent(HoverEvent.showText(Component.text("Click to open GitHub Issues tracker", SOFT_GRAY))))
-            .build();
-        sender.sendMessage(reportLink);
-        BlockProtLogger.log("Report Issues: " + issuesUrl);
-
+        printConsoleAbout();
         return true;
     }
 
-    @NotNull
-    private static Component row(@Nullable String label, @NotNull String value, @NotNull TextColor valueColor, @NotNull TextDecoration... decorations) {
-        var builder = Component.text().append(PREFIX);
-        if (label != null) builder.append(Component.text(label, SOFT_GRAY));
-        builder.append(Component.text(value, valueColor, decorations));
-        return builder.build();
+    private static void printConsoleAbout() {
+        String version = BlockProt.getPluginVersion();
+        String issuesUrl = "https://github.com/VictorGugug/BlockProt-Reloaded/issues";
+        BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__VERSION_LABEL) + BlockProtConsole.PASTEL_GOLD + version);
+        BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__CREDIT_LINE));
+        BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__REPORT_ISSUES) + " " + BlockProtConsole.SOFT_BLUE + issuesUrl);
+        BlockProtLogger.log("about | version=" + version + " | issues=" + issuesUrl);
+    }
+
+    private static void printPlayerAbout(Player player) {
+        String version = BlockProt.getPluginVersion();
+        String issuesUrl = "https://github.com/VictorGugug/BlockProt-Reloaded/issues";
+        player.sendMessage(Component.text()
+            .append(Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__VERSION_LABEL), SOFT_GRAY))
+            .append(Component.text(version, PASTEL_GOLD))
+            .build());
+        player.sendMessage(Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__CREDIT_LINE), PASTEL_MINT));
+        player.sendMessage(Component.text()
+            .append(Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__REPORT_ISSUES), SOFT_GRAY))
+            .append(Component.text(" ", SOFT_GRAY))
+            .append(Component.text(issuesUrl, SOFT_BLUE)
+                .clickEvent(ClickEvent.openUrl(issuesUrl))
+                .hoverEvent(HoverEvent.showText(Component.text(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN).replaceAll("[§&][0-9a-fk-orxA-F]", ""), SOFT_GRAY))))
+            .build());
     }
 
     @Nullable

@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.config;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtConsole;
 import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.logger.PluginActivityLog;
 import de.sean.blockprot.bukkit.tasks.ConfigFileWatcher;
@@ -29,7 +30,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -38,11 +38,6 @@ import java.util.*;
 public final class ReloadCoordinator {
 
     private ReloadCoordinator() {}
-
-    @NotNull
-    public static ReloadReport commitManual(@Nullable UUID requestingPlayer) {
-        return executeReload(ReloadReport.ReloadSource.MANUAL_DIALOG, requestingPlayer);
-    }
 
     @NotNull
     public static ReloadReport commitAutomatic() {
@@ -55,49 +50,18 @@ public final class ReloadCoordinator {
     }
 
     @NotNull
-    public static ReloadReport commitForce(@Nullable UUID requestingPlayer) {
-        return executeReload(ReloadReport.ReloadSource.MANUAL_FORCE, requestingPlayer);
-    }
-
-    @NotNull
-    public static ReloadReport commitInventory() {
-        return executeReload(ReloadReport.ReloadSource.MANUAL_INVENTORY, null);
-    }
-
-    @NotNull
     public static ReloadReport commitExternal() {
         return executeReload(ReloadReport.ReloadSource.EXTERNAL_FILE, null);
     }
 
-    /**
-     * Builds a non-committing diff between the plugin's currently-loaded
-     * in-memory config and what is currently on disk. Used to preview
-     * external file edits while auto-reload is disabled: at the moment
-     * this is called nothing has reloaded yet, so the live in-memory state
-     * is an accurate "before" and the on-disk files are an accurate
-     * "after", with no writes and no state changes on either side.
-     */
-    @NotNull
-    public static List<ReloadReport.ChangeDiff> previewExternalDiff() {
-        BlockProt plugin = BlockProt.getInstance();
-        Map<String, Object> beforeSnapshot = captureFullSnapshot(plugin, true);
-        Map<String, Object> afterSnapshot = captureFullSnapshot(plugin, false);
-        return ReloadReport.compareSnapshots(beforeSnapshot, afterSnapshot);
-    }
-
     private static synchronized ReloadReport executeReload(@NotNull ReloadReport.ReloadSource source, @Nullable UUID actor) {
         BlockProt plugin = BlockProt.getInstance();
-        PendingConfigChanges pending = PendingConfigChanges.getInstance();
 
         boolean captureBeforeFromMemory = source == ReloadReport.ReloadSource.AUTOMATIC
             || source == ReloadReport.ReloadSource.EXTERNAL_FILE;
         Map<String, Object> beforeSnapshot = captureFullSnapshot(plugin, captureBeforeFromMemory);
 
         try {
-            if (pending.hasPending()) {
-                writePendingToDisk(plugin, pending);
-            }
-
             ConfigFileWatcher watcher = plugin.getFileWatcher();
             if (watcher != null) {
                 watcher.suppressNext();
@@ -108,8 +72,6 @@ public final class ReloadCoordinator {
             Map<String, Object> afterSnapshot = captureFullSnapshot(plugin, false);
             List<ReloadReport.ChangeDiff> diffs = ReloadReport.compareSnapshots(beforeSnapshot, afterSnapshot);
 
-            pending.clear();
-
             ReloadReport report = new ReloadReport(source, diffs, true, null);
             logReport(report, actor);
 
@@ -119,33 +81,6 @@ public final class ReloadCoordinator {
             ReloadReport report = new ReloadReport(source, Collections.emptyList(), false, ex.getMessage());
             logReport(report, actor);
             return report;
-        }
-    }
-
-    private static void writePendingToDisk(@NotNull BlockProt plugin, @NotNull PendingConfigChanges pending) throws IOException {
-        List<PendingConfigChanges.PendingEntry> snapshot = pending.getSortedSnapshot();
-        Map<String, Map<String, Object>> filesToUpdate = new HashMap<>();
-
-        for (PendingConfigChanges.PendingEntry entry : snapshot) {
-            filesToUpdate.computeIfAbsent(entry.getFile(), f -> new HashMap<>())
-                .put(entry.getKey(), entry.getRequestedValue());
-        }
-
-        ConfigFileWatcher watcher = plugin.getFileWatcher();
-
-        for (Map.Entry<String, Map<String, Object>> fileEntry : filesToUpdate.entrySet()) {
-            String relativePath = fileEntry.getKey();
-            File diskFile = new File(plugin.getDataFolder(), relativePath);
-
-            if (watcher != null) {
-                watcher.suppressNext();
-            }
-
-            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(diskFile);
-            for (Map.Entry<String, Object> kv : fileEntry.getValue().entrySet()) {
-                yaml.set(kv.getKey(), kv.getValue());
-            }
-            yaml.save(diskFile);
         }
     }
 
@@ -192,49 +127,26 @@ public final class ReloadCoordinator {
 
     private static void logReport(@NotNull ReloadReport report, @Nullable UUID actor) {
         String sourceTag = report.getSource().getTag();
-        BlockProtLogger.log("reload", "=== Configuration Reload Started [" + sourceTag + "] ===");
 
         if (!report.isSuccess()) {
-            BlockProtLogger.warn("Reload failed [" + sourceTag + "]: " + report.getErrorMessage());
+            BlockProtLogger.log("reload", "=== Reload Failed [" + sourceTag + "] ===");
+            BlockProtLogger.log("reload", "  " + report.getErrorMessage());
+            BlockProtLogger.log("reload", "=== Reload Failed [" + sourceTag + "] ===");
+            BlockProtConsole.info("Reload failed.");
             PluginActivityLog.logReload(sourceTag, actor, false, 0, report.getErrorMessage());
             return;
         }
 
-        if (report.getDiffs().isEmpty()) {
-            BlockProtLogger.logConsole("reload", "Reload completed [" + sourceTag + "]: no configuration values changed.");
-        } else {
-            boolean simplified = BlockProt.getDefaultConfig().isSimplifiedLogEnabled();
-            String origin = describeSource(report.getSource());
-            String actorName = describeActor(actor);
-            for (ReloadReport.ChangeDiff diff : report.getDiffs()) {
-                BlockProtLogger.log("reload", simplified
-                    ? "  " + diff.getFile() + ": " + diff.getKey() + " changed from " + diff.getOldValue()
-                        + " to " + diff.getNewValue() + " (" + origin + ", " + actorName + ")"
-                    : "  " + diff.toString());
-            }
-            BlockProtLogger.logConsole("reload", "Reload completed [" + sourceTag + "]: " + report.getDiffs().size() + " change(s) activated.");
+        BlockProtLogger.log("reload", "=== Reload Started [" + sourceTag + "] ===");
+        for (ReloadReport.ChangeDiff diff : report.getDiffs()) {
+            BlockProtLogger.log("reload", "  " + diff.getFile() + ": " + diff.getKey()
+                + " changed from " + diff.getOldValue() + " to " + diff.getNewValue());
         }
 
-        PluginActivityLog.logReload(sourceTag, actor, true, report.getDiffs().size(), null);
-    }
+        int count = report.getDiffs().size();
+        BlockProtLogger.log("reload", "=== Reload Completed [" + sourceTag + "]: " + count + " change(s) ===");
+        BlockProtConsole.info("Reload completed.");
 
-    @NotNull
-    private static String describeSource(@NotNull ReloadReport.ReloadSource source) {
-        return switch (source) {
-            case AUTOMATIC -> "automatic reload after external file edit";
-            case MANUAL_DIALOG -> "in-game dialog";
-            case MANUAL_COMMAND -> "console or /bp reload command";
-            case MANUAL_FORCE -> "in-game force reload button";
-            case MANUAL_INVENTORY -> "in-game inventory menu";
-            case EXTERNAL_FILE -> "external file edit";
-        };
-    }
-
-    @NotNull
-    private static String describeActor(@Nullable UUID actor) {
-        if (actor == null) return "SERVER";
-        org.bukkit.OfflinePlayer player = org.bukkit.Bukkit.getOfflinePlayer(actor);
-        String name = player.getName();
-        return name != null ? name : actor.toString();
+        PluginActivityLog.logReload(sourceTag, actor, true, count, null);
     }
 }

@@ -89,7 +89,7 @@ public final class EntityFriendManageDialog {
                 body.add(DialogBodyEntry.text(Component.text()
                     .append(Component.text(stripColor(Translator.get(isManager ? TranslationKey.ICON__TOGGLE_ON_ACTIVE : TranslationKey.ICON__TOGGLE_OFF_INACTIVE)), isManager ? PASTEL_MINT : PASTEL_CORAL))
                     .append(Component.text(name != null ? name : friendUuid, NamedTextColor.WHITE))
-                    .append(Component.text(isManager ? stripColor(Translator.get(TranslationKey.DIALOGS__ENTITY__MANAGER_SUFFIX)) : "", SOFT_GRAY))
+                    .append(Component.text(isManager ? stripColor(Translator.get(TranslationKey.INVENTORIES__ENTITY__MANAGER_SUFFIX)) : "", SOFT_GRAY))
                     .build()));
             }
         }

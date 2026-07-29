@@ -527,6 +527,7 @@ dialogs:
     api_label: "API: "
     java_label: "Java: "
     issues_url: "github.com/VictorGugug/BlockProt-Reloaded/issues"
+    credit_line: "Autor: spnda | Mantenedor: Zaynr (Zar)"
   user_menu:
     header: "Menu de Usuario"
   admin_menu:
@@ -789,25 +790,6 @@ dialogs:
       backups: "Crear copias de seguridad automáticas."
     deprecated:
       we_paste_enabled: "Auto-bloqueo de pegado de WorldEdit."
-  pending_reload:
-    title: "Revisión de Recarga Pendiente"
-    hint: "Los siguientes cambios están en cola y se aplicarán al confirmar. Esta recarga quedará registrada en el log de actividad."
-    empty: "No hay cambios de configuración pendientes por confirmar."
-    confirm: "Confirmar Recarga"
-    confirm_hint: "Aplicar todos los cambios pendientes ahora y registrar la operación."
-    cancel: "Cancelar"
-    discard: "Descartar Cambios Pendientes"
-    discard_hint: "Limpiar todos los cambios pendientes sin aplicarlos."
-    discard_confirm_title: "Confirmar Descarte"
-    discard_confirm_hint: "¿Estás seguro de que deseas descartar todos los cambios pendientes?"
-    success: "Configuración recargada exitosamente. Se aplicaron {count} cambio(s)."
-    failure: "Error al recargar la configuración: {error}"
-    action_button: "Recargar configuración"
-    action_button_hint: "Revisar y confirmar cambios pendientes de configuración."
-    force: "Forzar Recarga"
-    force_hint: "Recargar config.yml, blocks.yml y lang.yml desde disco ahora mismo, aunque no haya nada pendiente detectado."
-    force_success: "Se forzó una recarga de configuración desde disco."
-  status_pending: "Recarga Pendiente"
 
 worlds:
   scan_start: "Escaneando mundos... ({count} cargados)"
