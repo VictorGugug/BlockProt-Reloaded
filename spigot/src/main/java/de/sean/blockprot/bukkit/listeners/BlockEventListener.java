@@ -102,7 +102,7 @@ public class BlockEventListener implements Listener {
     @EventHandler
     public void onBlockBurn(BlockBurnEvent event) {
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
-        if (!BlockProt.getDefaultConfig().isLockable(event.getBlock().getType())) return;
+        if (!BlockProt.getDefaultConfig().isLockable(event.getBlock().getType(), event.getBlock().getWorld())) return;
         BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
         if (handler.isProtected()) {
             event.setCancelled(true);
@@ -313,7 +313,7 @@ public class BlockEventListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onBlockPhysics(@NotNull final BlockPhysicsEvent event) {
         if (event.getChangedType().toString().contains("ANVIL") &&
-            BlockProt.getDefaultConfig().isLockableBlock(event.getChangedType())) {
+            BlockProt.getDefaultConfig().isLockableBlock(event.getChangedType(), event.getBlock().getWorld())) {
             BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
 
             if (handler.isProtected())
@@ -346,7 +346,7 @@ public class BlockEventListener implements Listener {
 
     @EventHandler
     public void onSignChanged(@NotNull final SignChangeEvent event) {
-        if (BlockProt.getDefaultConfig().isLockableBlock(event.getBlock().getType())) {
+        if (BlockProt.getDefaultConfig().isLockableBlock(event.getBlock().getType(), event.getBlock().getWorld())) {
             final var handler = new BlockNBTHandler(event.getBlock());
             if (handler.isProtected() && !handler.isOwner(event.getPlayer().getUniqueId()))
                 event.setCancelled(true);

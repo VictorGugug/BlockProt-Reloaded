@@ -20,6 +20,7 @@
 
 package de.sean.blockprot.bukkit.dialogs;
 
+import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
@@ -60,13 +61,25 @@ public final class StatsDialog {
     }
 
     public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin, @NotNull String pageKey) {
-        DialogBridge bridge = DialogBridgeFactory.getBridge();
-        if (bridge == null) return;
-
         boolean isPlayerPage = pageKey.equals(KEY_PLAYER);
         TranslationKey titleKey = isPlayerPage
             ? TranslationKey.INVENTORIES__STATISTICS__PLAYER_STATISTICS
             : TranslationKey.INVENTORIES__STATISTICS__GLOBAL_STATISTICS;
+        show(player, backOrigin, pageKey, true, titleKey);
+    }
+
+    public static void showUserStats(@NotNull Player player, @NotNull DialogOrigin backOrigin) {
+        show(player, backOrigin, KEY_PLAYER, false, TranslationKey.DIALOGS__STATS__PLACEMENTS_TITLE);
+    }
+
+    private static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
+                             @NotNull String pageKey, boolean showToggle,
+                             @NotNull TranslationKey titleKey) {
+        DialogBridge bridge = DialogBridgeFactory.getBridge();
+        if (bridge == null) return;
+
+        boolean isPlayerPage = pageKey.equals(KEY_PLAYER);
+        boolean isUserStats = titleKey == TranslationKey.DIALOGS__STATS__PLACEMENTS_TITLE;
 
         Component title = Component.text(
             stripColor(Translator.get(titleKey)),
@@ -85,10 +98,15 @@ public final class StatsDialog {
             StatHandler.getStatistic(pStat, player);
             List<LocationListEntry> entries = pStat.get();
             int total = entries.size();
+            Integer limit = BlockProt.getDefaultConfig().getMaxLockedBlockCount();
+            String countStr = String.valueOf(total);
+            if (limit != null) {
+                countStr += "/" + limit;
+            }
             body.add(DialogBodyEntry.text(Component.text()
                 .append(Component.text(
                     stripColor(Translator.get(TranslationKey.DIALOGS__STATS__YOUR_BLOCKS)), NamedTextColor.WHITE))
-                .append(Component.text(String.valueOf(total), PASTEL_MINT, TextDecoration.BOLD))
+                .append(Component.text(countStr, PASTEL_MINT, TextDecoration.BOLD))
                 .build()));
             body.add(DialogBodyEntry.text(Component.empty()));
 
@@ -107,7 +125,7 @@ public final class StatsDialog {
                     buttons.add(new DialogButton("mat_" + mat.name(),
                         Component.text(matName + " (" + count + ")", NamedTextColor.WHITE),
                         Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), TextColor.color(0x888888)),
-                        p -> showMaterialBlocks(p, backOrigin, pageKey, mat, group.getValue())));
+                        p -> showMaterialBlocks(p, backOrigin, pageKey, isUserStats, mat, group.getValue())));
                 }
             } else {
                 body.add(DialogBodyEntry.text(Component.text(
@@ -123,17 +141,19 @@ public final class StatsDialog {
                 .build()));
         }
 
-        String toggleLabel = isPlayerPage
-            ? stripColor(Translator.get(TranslationKey.INVENTORIES__STATISTICS__GLOBAL_STATISTICS))
-            : stripColor(Translator.get(TranslationKey.INVENTORIES__STATISTICS__PLAYER_STATISTICS));
+        if (showToggle) {
+            String toggleLabel = isPlayerPage
+                ? stripColor(Translator.get(TranslationKey.INVENTORIES__STATISTICS__GLOBAL_STATISTICS))
+                : stripColor(Translator.get(TranslationKey.INVENTORIES__STATISTICS__PLAYER_STATISTICS));
 
-        String nextPageKey = isPlayerPage ? KEY_GLOBAL : KEY_PLAYER;
+            String nextPageKey = isPlayerPage ? KEY_GLOBAL : KEY_PLAYER;
 
-        buttons.add(new DialogButton("toggle",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__STATS)) + toggleLabel, NamedTextColor.WHITE),
-            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__SWITCH_VIEW)), TextColor.color(0x888888)),
-            p -> show(p, backOrigin, nextPageKey)
-        ));
+            buttons.add(new DialogButton("toggle",
+                Component.text(stripColor(Translator.get(TranslationKey.ICON__STATS)) + toggleLabel, NamedTextColor.WHITE),
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__SWITCH_VIEW)), TextColor.color(0x888888)),
+                p -> show(p, backOrigin, nextPageKey)
+            ));
+        }
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
         DialogButton backBtn = new DialogButton("back",
@@ -146,8 +166,9 @@ public final class StatsDialog {
     }
 
     private static void showMaterialBlocks(@NotNull Player player, @NotNull DialogOrigin backOrigin,
-                                            @NotNull String pageKey, @NotNull Material mat,
-                                            @NotNull List<LocationListEntry> entries) {
+                                             @NotNull String pageKey, boolean isUserStats,
+                                             @NotNull Material mat,
+                                             @NotNull List<LocationListEntry> entries) {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
 
@@ -172,8 +193,20 @@ public final class StatsDialog {
             String lockedAgo = entry.getLockedAgoText();
             List<String> contents = entry.getContentsLore();
 
+            // A click only opens the edit dialog when the block is still lockable under
+            // the current config; otherwise it falls back to teleporting. The lore must
+            // match whichever of those two the click will actually do, not show both.
+            boolean willOpen = loc.getWorld() != null
+                && BlockProt.getDefaultConfig().isLockable(loc.getBlock().getType(), loc.getWorld());
+
             List<Component> loreLines = new ArrayList<>();
-            loreLines.add(Component.text(tpLore, canTp ? PASTEL_MINT : PASTEL_PURPLE));
+            if (willOpen) {
+                loreLines.add(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), PASTEL_MINT));
+            } else if (canTp) {
+                loreLines.add(Component.text(tpLore, PASTEL_MINT));
+            } else {
+                loreLines.add(Component.text(tpLore, SOFT_GRAY));
+            }
             if (!lockedAgo.isEmpty()) {
                 loreLines.add(Component.text(stripColor(lockedAgo), SOFT_GRAY));
             }
@@ -188,6 +221,13 @@ public final class StatsDialog {
                 Component.text(entry.getTitle(), NamedTextColor.WHITE),
                 Component.join(JoinConfiguration.newlines(), loreLines),
                 p -> {
+                    if (loc.getWorld() != null) {
+                        org.bukkit.block.Block b = loc.getBlock();
+                        if (BlockProt.getDefaultConfig().isLockable(b.getType(), b.getWorld())) {
+                            BlockLockDialog.showBlock(p, b, isUserStats ? DialogOrigin.USER_MENU : DialogOrigin.ADMIN_MENU);
+                            return;
+                        }
+                    }
                     if (!p.hasPermission(Permissions.BLOCKS_TP.key())) {
                         p.sendMessage(stripColor(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION_TP)));
                         return;
@@ -202,7 +242,13 @@ public final class StatsDialog {
         DialogButton backBtn = new DialogButton("back",
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            p -> show(p, backOrigin, pageKey));
+            p -> {
+                if (isUserStats) {
+                    showUserStats(p, backOrigin);
+                } else {
+                    show(p, backOrigin, pageKey);
+                }
+            });
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 2);
     }

@@ -101,7 +101,7 @@ public class InventoryEventListener implements Listener {
                 }
                 BlockInventoryHolder blockHolder = (BlockInventoryHolder) rawHolder;
                 Block block = blockHolder.getBlock();
-                if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
+                if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) {
                     BlockNBTHandler handler = new BlockNBTHandler(block);
                     String playerUuid = player.getUniqueId().toString();
 
@@ -197,7 +197,7 @@ public class InventoryEventListener implements Listener {
                     }
                 } else if (holder instanceof Container || holder instanceof DoubleChest) {
                     Block block = holder instanceof Container container ? container.getBlock() : ((DoubleChest) holder).getLocation().getBlock();
-                    if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
+                    if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) {
                         BlockNBTHandler handler = new BlockNBTHandler(block);
                         if (handler.isProtected()) {
                             AuditLogger audit = BlockProt.getAuditLogger();
@@ -262,7 +262,7 @@ public class InventoryEventListener implements Listener {
                 block = ((DoubleChest) holder).getLocation().getBlock();
             }
 
-            if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
+            if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) {
                 BlockAccessEvent accessEvent = new BlockAccessEvent(block, player);
                 Bukkit.getPluginManager().callEvent(accessEvent);
 

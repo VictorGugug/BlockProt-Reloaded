@@ -59,7 +59,7 @@ public final class UserMenuDialog {
 
         String settings = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__SETTINGS));
         String friends = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__FRIENDS));
-        String stats = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__STATS));
+        String placements = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__PLACEMENTS));
         String about = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__ABOUT));
 
         List<DialogBodyEntry> body = new ArrayList<>();
@@ -84,9 +84,9 @@ public final class UserMenuDialog {
         );
 
         DialogButton statsBtn = new DialogButton("stats",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__STATS)) + stats, NamedTextColor.WHITE),
-            tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__STATS)), PASTEL_PURPLE),
-            p -> StatsDialog.show(p, DialogOrigin.USER_MENU)
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__STATS)) + placements, NamedTextColor.WHITE),
+            tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__PLACEMENTS)), PASTEL_PURPLE),
+            p -> StatsDialog.showUserStats(p, DialogOrigin.USER_MENU)
         );
 
         DialogButton aboutBtn = new DialogButton("about",

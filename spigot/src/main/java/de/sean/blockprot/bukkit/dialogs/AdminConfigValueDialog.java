@@ -204,7 +204,7 @@ public final class AdminConfigValueDialog {
         @Nullable String errorLine,
         @NotNull Consumer<String> onRawSubmit
     ) {
-        Component title = Component.text(configKey, PASTEL_GOLD, TextDecoration.BOLD);
+        Component title = Component.text(hintLabel, PASTEL_GOLD, TextDecoration.BOLD);
 
         List<DialogBodyEntry> body = new java.util.ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(hintLabel, SOFT_GRAY)));
@@ -216,7 +216,7 @@ public final class AdminConfigValueDialog {
 
         DialogTextField field = DialogTextField.of(
             sanitizeInputKey(configKey),
-            Component.text(configKey, NamedTextColor.WHITE),
+            Component.text(hintLabel, NamedTextColor.WHITE),
             currentValue,
             stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CONFIRM_VALUE))
         );

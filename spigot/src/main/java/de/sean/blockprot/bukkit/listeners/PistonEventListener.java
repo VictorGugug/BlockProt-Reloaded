@@ -39,13 +39,13 @@ public class PistonEventListener implements Listener {
         }
 
         for (Block block : event.getBlocks()) {
-            if (BlockProt.getDefaultConfig().isLockableShulkerBox(block.getType())) {
+            if (BlockProt.getDefaultConfig().isLockableShulkerBox(block.getType(), block.getWorld())) {
                 // Shulker boxes drop right away, so they will never be pushable if locked.
                 if (new BlockNBTHandler(block).isProtected()) {
                     event.setCancelled(true);
                     return;
                 }
-            } else if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
+            } else if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) {
                 BlockNBTHandler nbtHandler = new BlockNBTHandler(block);
                 if (nbtHandler.isProtected()
                         && (BlockProt.getDefaultConfig().shouldBlockProtectedBlockPistonMovement()
@@ -64,12 +64,12 @@ public class PistonEventListener implements Listener {
             return;
         }
         for (Block block : event.getBlocks()) {
-            if (BlockProt.getDefaultConfig().isLockableShulkerBox(block.getType())) {
+            if (BlockProt.getDefaultConfig().isLockableShulkerBox(block.getType(), block.getWorld())) {
                 if (new BlockNBTHandler(block).isProtected()) {
                     event.setCancelled(true);
                     return;
                 }
-            } else if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
+            } else if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) {
                 BlockNBTHandler nbtHandler = new BlockNBTHandler(block);
                 if (nbtHandler.isProtected()
                         && (BlockProt.getDefaultConfig().shouldBlockProtectedBlockPistonMovement()

@@ -69,8 +69,8 @@ public class UserMenuInventory extends BlockProtInventory {
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__FRIENDS),
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__FRIENDS_LORE)));
         inventory.setItem(SLOT_STATS, item(Material.BOOK,
-            Translator.get(TranslationKey.INVENTORIES__USER_MENU__STATS),
-            Translator.get(TranslationKey.INVENTORIES__USER_MENU__STATS_LORE)));
+            Translator.get(TranslationKey.INVENTORIES__USER_MENU__PLACEMENTS),
+            Translator.get(TranslationKey.INVENTORIES__USER_MENU__PLACEMENTS_LORE)));
         inventory.setItem(SLOT_TRANSFER, item(Material.HOPPER,
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__TRANSFER),
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__TRANSFER_LORE)));

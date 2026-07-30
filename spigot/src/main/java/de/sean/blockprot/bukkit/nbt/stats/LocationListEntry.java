@@ -93,7 +93,8 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
 
     @Override
     public String getTitle() {
-        var coordinates = new StringJoiner(", ", "[", "]")
+        String worldName = this.value.getWorld() != null ? this.value.getWorld().getName() + " " : "";
+        var coordinates = worldName + new StringJoiner(", ", "[", "]")
             .add(String.valueOf(this.value.getBlockX()))
             .add(String.valueOf(this.value.getBlockY()))
             .add(String.valueOf(this.value.getBlockZ()))

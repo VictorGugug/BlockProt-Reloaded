@@ -117,12 +117,14 @@ public final class AdminConfigDialog {
             p -> showLanguageSelector(p, backOrigin)));
 
         buttons.add(toggleBtn("replace_translations", "replace_translations",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__REPLACE_TRANSLATIONS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__REPLACE_TRANSLATIONS),
             BlockProt.getDefaultConfig().shouldReplaceTranslations(),
             p -> { BlockProt.getDefaultConfig().setAndSave("replace_translations", !BlockProt.getDefaultConfig().shouldReplaceTranslations()); showLanguage(p, backOrigin); }));
 
         String fallback = BlockProt.getDefaultConfig().getTranslationFallbackString();
         buttons.add(valueBtn("fallback_string", "fallback_string",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__FALLBACK_STRING_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__FALLBACK_STRING),
             fallback != null ? fallback : "",
             p -> AdminConfigValueDialog.openText(p, "fallback_string",
@@ -325,6 +327,7 @@ public final class AdminConfigDialog {
 
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(toggleBtn("per_worlds_config", "per_worlds_config",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__WORLDS__PER_WORLDS_CONFIG_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__WORLDS__PER_WORLDS_CONFIG),
             cfg.isPerWorldsConfigEnabled(),
             p -> { cfg.setAndSave("per_worlds_config", !cfg.isPerWorldsConfigEnabled()); showWorlds(p, backOrigin); }));
@@ -334,6 +337,7 @@ public final class AdminConfigDialog {
             ? stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__WORLDS__EXCLUDED_WORLDS_EMPTY))
             : String.join(", ", excludedList);
         buttons.add(valueBtn("excluded_worlds", "excluded_worlds",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__WORLDS__EXCLUDED_WORLDS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__WORLDS__EXCLUDED_WORLDS), excludedJoined,
             p -> AdminConfigValueDialog.openText(p, "excluded_worlds",
                 stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__WORLDS__EXCLUDED_WORLDS_HINT)),
@@ -367,16 +371,19 @@ public final class AdminConfigDialog {
 
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(toggleBtn("lock_on_place_by_default", "lock_on_place_by_default",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__LOCK_ON_PLACE_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__LOCK_ON_PLACE),
             cfg.lockOnPlaceByDefault(),
             p -> { cfg.setLockOnPlaceByDefault(!cfg.lockOnPlaceByDefault()); showPlayers(p, backOrigin); }));
         buttons.add(toggleBtn("public_is_friend_by_default", "public_is_friend_by_default",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__PUBLIC_IS_FRIEND_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__PUBLIC_IS_FRIEND),
             cfg.publicIsFriendByDefault(),
             p -> { cfg.setPublicIsFriendByDefault(!cfg.publicIsFriendByDefault()); showPlayers(p, backOrigin); }));
 
         int maxBlocks = cfg.getMaxLockedBlockCount() != null ? cfg.getMaxLockedBlockCount() : -1;
         buttons.add(valueBtn("player_max_locked_block_count", "player_max_locked_block_count",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__MAX_BLOCKS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__MAX_BLOCKS),
             String.valueOf(maxBlocks),
             p -> AdminConfigValueDialog.openInt(p, "player_max_locked_block_count",
@@ -386,6 +393,7 @@ public final class AdminConfigDialog {
 
         int cooldown = (int) cfg.getLockHintCooldown();
         buttons.add(valueBtn("lock_hint_cooldown_in_seconds", "lock_hint_cooldown_in_seconds",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__HINT_COOLDOWN_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__HINT_COOLDOWN),
             String.valueOf(cooldown),
             p -> AdminConfigValueDialog.openInt(p, "lock_hint_cooldown_in_seconds",
@@ -395,6 +403,7 @@ public final class AdminConfigDialog {
 
         double similarity = cfg.getFriendSearchSimilarityPercentage();
         buttons.add(valueBtn("friend_search_similarity", "friend_search_similarity",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__FRIEND_SEARCH_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__FRIEND_SEARCH),
             String.valueOf(similarity),
             p -> AdminConfigValueDialog.openDouble(p, "friend_search_similarity",
@@ -403,6 +412,7 @@ public final class AdminConfigDialog {
                 () -> showPlayers(p, backOrigin))));
 
         buttons.add(toggleBtn("disable_friend_functionality", "disable_friend_functionality",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__DISABLE_FRIENDS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__DISABLE_FRIENDS),
             cfg.isFriendFunctionalityDisabled(),
             p -> { cfg.setAndSave("disable_friend_functionality", !cfg.isFriendFunctionalityDisabled()); showPlayers(p, backOrigin); }));
@@ -425,6 +435,7 @@ public final class AdminConfigDialog {
 
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(toggleBtn("modern_family_blocks", "modern_family_blocks",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__MODERN_FAMILY_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__MODERN_FAMILY),
             cfg.isModernFamilyBlocks(),
             p -> {
@@ -436,52 +447,64 @@ public final class AdminConfigDialog {
                 showBlocks(p, backOrigin);
             }));
         buttons.add(toggleBtn("redstone_disallowed_by_default", "redstone_disallowed_by_default",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__REDSTONE_DISALLOWED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__REDSTONE_DISALLOWED),
             cfg.disallowRedstoneOnPlace(),
             p -> { cfg.setRedstoneDisallowedByDefault(!cfg.disallowRedstoneOnPlace()); showBlocks(p, backOrigin); }));
         buttons.add(toggleBtn("simplified_hopper_logic", "simplified_hopper_logic",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SIMPLIFIED_HOPPER_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SIMPLIFIED_HOPPER),
             cfg.isSimplifiedHopperLogic(),
             p -> { cfg.setSimplifiedHopperLogic(!cfg.isSimplifiedHopperLogic()); showBlocks(p, backOrigin); }));
         buttons.add(toggleBtn("protect_locked_blocks_from_explosions", "protect_locked_blocks_from_explosions",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__PROTECT_EXPLOSIONS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__PROTECT_EXPLOSIONS),
             cfg.shouldProtectLockedBlocksFromExplosions(),
             p -> { cfg.setProtectFromExplosions(!cfg.shouldProtectLockedBlocksFromExplosions()); showBlocks(p, backOrigin); }));
         buttons.add(toggleBtn("block_protected_block_piston_movement", "block_protected_block_piston_movement",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__PISTON_MOVEMENT_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__PISTON_MOVEMENT),
             cfg.shouldBlockProtectedBlockPistonMovement(),
             p -> { cfg.setBlockPistonMovement(!cfg.shouldBlockProtectedBlockPistonMovement()); showBlocks(p, backOrigin); }));
         buttons.add(toggleBtn("clear_protection_on_shulker_break", "clear_protection_on_shulker_break",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SHULKER_BREAK_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SHULKER_BREAK),
             cfg.shouldClearProtectionOnShulkerBreak(),
             p -> { cfg.setClearProtectionOnShulkerBreak(!cfg.shouldClearProtectionOnShulkerBreak()); showBlocks(p, backOrigin); }));
         buttons.add(toggleBtn("allow_break_protected_blocks", "allow_break_protected_blocks",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__ALLOW_BREAK_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__ALLOW_BREAK),
             cfg.shouldAllowBreakProtectedBlocks(),
             p -> { cfg.setAllowBreakProtectedBlocks(!cfg.shouldAllowBreakProtectedBlocks()); showBlocks(p, backOrigin); }));
         buttons.add(toggleBtn("respect_spawn_protection", "respect_spawn_protection",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SPAWN_PROTECTION_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SPAWN_PROTECTION),
             cfg.shouldRespectSpawnProtection(),
             p -> { cfg.setRespectSpawnProtection(!cfg.shouldRespectSpawnProtection()); showBlocks(p, backOrigin); }));
         buttons.add(toggleBtn("block_lock_effects", "block_lock_effects",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__LOCK_EFFECTS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__LOCK_EFFECTS),
             cfg.isLockEffectEnabled(),
             p -> { cfg.setLockEffects(!cfg.isLockEffectEnabled()); showBlocks(p, backOrigin); }));
         buttons.add(toggleBtn("block_lock_sounds", "block_lock_sounds",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__LOCK_SOUNDS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__LOCK_SOUNDS),
             cfg.isLockSoundEnabled(),
             p -> { cfg.setLockSounds(!cfg.isLockSoundEnabled()); showBlocks(p, backOrigin); }));
         boolean useMenus = cfg.getBukkitConfig().getBoolean("use_menus", false);
         buttons.add(dialogToggleBtn("use_menus", "use_menus [Dialog]",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__USE_MENUS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__USE_MENUS_DE),
             useMenus,
             p -> { cfg.setAndSave("use_menus", !useMenus); showBlocks(p, backOrigin); }));
         buttons.add(dialogToggleBtn("use_dialogs", "use_dialogs [Dialog]",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__USE_DIALOGS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__USE_DIALOGS_DE),
             cfg.isDialogsEnabled(),
             p -> { cfg.setAndSave("use_dialogs", !cfg.isDialogsEnabled()); showBlocks(p, backOrigin); }));
         int timedAccessDays = cfg.getBukkitConfig().getInt("timed_access_max_duration_days", 90);
         buttons.add(valueBtn("timed_access_max_duration_days", "timed_access_max_duration_days",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__TIMED_ACCESS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__TIMED_ACCESS),
             String.valueOf(timedAccessDays),
             p -> AdminConfigValueDialog.openInt(p, "timed_access_max_duration_days",
@@ -507,20 +530,24 @@ public final class AdminConfigDialog {
 
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(toggleBtn("entity_protection.enabled", "entity_protection.enabled",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__PROTECTION_ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__PROTECTION_ENABLED),
             cfg.isEntityProtectionEnabled(),
             p -> { cfg.setEntityProtectionEnabled(!cfg.isEntityProtectionEnabled()); showEntity(p, backOrigin); }));
         buttons.add(toggleBtn("entity_protection.auto_protect_on_tame", "entity_protection.auto_protect_on_tame",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__AUTO_PROTECT_TAME_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__AUTO_PROTECT_TAME),
             cfg.isEntityProtectionAutoProtectOnTame(),
             p -> { cfg.setAndSave("entity_protection.auto_protect_on_tame", !cfg.isEntityProtectionAutoProtectOnTame()); showEntity(p, backOrigin); }));
         buttons.add(toggleBtn("villager_workstation_protection.enabled", "villager_workstation_protection.enabled",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__WORKSTATION_ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__WORKSTATION_ENABLED),
             cfg.isVillagerWorkstationProtectionEnabled(),
             p -> { cfg.setAndSave("villager_workstation_protection.enabled", !cfg.isVillagerWorkstationProtectionEnabled()); showEntity(p, backOrigin); }));
 
         int workstationRadius = cfg.getBukkitConfig().getInt("villager_workstation_protection.radius", 2);
         buttons.add(valueBtn("villager_workstation_protection.radius", "villager_workstation_protection.radius",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__WORKSTATION_RADIUS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__WORKSTATION_RADIUS),
             String.valueOf(workstationRadius),
             p -> AdminConfigValueDialog.openInt(p, "villager_workstation_protection.radius",
@@ -530,6 +557,7 @@ public final class AdminConfigDialog {
 
         int workstationVerticalRadius = cfg.getBukkitConfig().getInt("villager_workstation_protection.vertical_radius", 1);
         buttons.add(valueBtn("villager_workstation_protection.vertical_radius", "villager_workstation_protection.vertical_radius",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__WORKSTATION_VERTICAL_RADIUS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__WORKSTATION_VERTICAL_RADIUS),
             String.valueOf(workstationVerticalRadius),
             p -> AdminConfigValueDialog.openInt(p, "villager_workstation_protection.vertical_radius",
@@ -539,6 +567,7 @@ public final class AdminConfigDialog {
 
         int villagerLocateSeconds = cfg.getBukkitConfig().getInt("entity_protection.villager_locate_seconds", 6);
         buttons.add(valueBtn("entity_protection.villager_locate_seconds", "entity_protection.villager_locate_seconds",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__VILLAGER_LOCATE_SECONDS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__VILLAGER_LOCATE_SECONDS),
             String.valueOf(villagerLocateSeconds),
             p -> AdminConfigValueDialog.openInt(p, "entity_protection.villager_locate_seconds",
@@ -548,6 +577,7 @@ public final class AdminConfigDialog {
 
         String menuItem = cfg.getBukkitConfig().getString("entity_protection.menu_item", "STICK");
         buttons.add(valueBtn("entity_protection.menu_item", "entity_protection.menu_item",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__MENU_ITEM_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__MENU_ITEM),
             menuItem != null ? menuItem : "STICK",
             p -> AdminConfigValueDialog.openText(p, "entity_protection.menu_item",
@@ -585,12 +615,14 @@ public final class AdminConfigDialog {
 
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(toggleBtn("world_expiry.enabled", "world_expiry.enabled",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__ENABLED),
             cfg.isWorldExpiryEnabled(),
             p -> { cfg.setWorldExpiryEnabled(!cfg.isWorldExpiryEnabled()); showExpiry(p, backOrigin); }));
 
         int interval = cfg.getWorldExpiryCheckInterval();
         buttons.add(valueBtn("world_expiry.check_interval_minutes", "world_expiry.check_interval_minutes",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__CHECK_INTERVAL_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__CHECK_INTERVAL),
             String.valueOf(interval),
             p -> AdminConfigValueDialog.openInt(p, "world_expiry.check_interval_minutes",
@@ -617,6 +649,7 @@ public final class AdminConfigDialog {
         DefaultConfig cfg = BlockProt.getDefaultConfig();
         boolean raidEnabled = BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", true);
         buttons.add(toggleBtn("raid_detection.enabled", "raid_detection.enabled",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__RAID__ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__RAID__ENABLED),
             raidEnabled,
             p -> { cfg.setAndSave("raid_detection.enabled", !raidEnabled); showRaid(p, backOrigin); }));
@@ -639,10 +672,12 @@ public final class AdminConfigDialog {
 
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(toggleBtn("notify_op_of_updates", "notify_op_of_updates",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__NOTIFY_OPS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__NOTIFY_OPS),
             cfg.shouldNotifyOpOfUpdates(),
             p -> { cfg.setNotifyOpOfUpdates(!cfg.shouldNotifyOpOfUpdates()); showNotif(p, backOrigin); }));
         buttons.add(toggleBtn("owner_notifications.enabled", "owner_notifications.enabled",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_ENABLED),
             cfg.isOwnerNotificationsEnabled(),
             p -> { cfg.setAndSave("owner_notifications.enabled", !cfg.isOwnerNotificationsEnabled()); showNotif(p, backOrigin); }));
@@ -666,6 +701,7 @@ public final class AdminConfigDialog {
         List<DialogButton> buttons = new ArrayList<>();
         int inactivityDays = cfg.getBukkitConfig().getInt("inactivity_cleanup_days", -1);
         buttons.add(valueBtn("inactivity_cleanup_days", "inactivity_cleanup_days",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__INACTIVITY_CLEANUP_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__INACTIVITY_CLEANUP),
             String.valueOf(inactivityDays),
             p -> AdminConfigValueDialog.openInt(p, "inactivity_cleanup_days",
@@ -673,11 +709,13 @@ public final class AdminConfigDialog {
                 v -> { cfg.setAndSave("inactivity_cleanup_days", v); showMaintenance(p, backOrigin); },
                 () -> showMaintenance(p, backOrigin))));
         buttons.add(toggleBtn("auto_reload_configs", "auto_reload_configs",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__AUTO_RELOAD_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__AUTO_RELOAD),
             cfg.isAutoReloadEnabled(),
             p -> { cfg.setAutoReloadConfigs(!cfg.isAutoReloadEnabled()); showMaintenance(p, backOrigin); }));
         int delay = cfg.getAutoReloadDelaySeconds();
         buttons.add(valueBtn("auto_reload_delay_seconds", "auto_reload_delay_seconds",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__AUTO_RELOAD_DELAY_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__AUTO_RELOAD_DELAY),
             String.valueOf(delay),
             p -> AdminConfigValueDialog.openInt(p, "auto_reload_delay_seconds",
@@ -689,10 +727,12 @@ public final class AdminConfigDialog {
                 },
                 () -> showMaintenance(p, backOrigin))));
         buttons.add(toggleBtn("enable_session_log", "enable_session_log",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__SESSION_LOG_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__SESSION_LOG),
             cfg.isSessionLogEnabled(),
             p -> { cfg.setSessionLogEnabled(!cfg.isSessionLogEnabled()); showMaintenance(p, backOrigin); }));
         buttons.add(toggleBtn("enable_backups", "enable_backups",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__BACKUPS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__BACKUPS),
             cfg.isBackupsEnabled(),
             p -> { cfg.setBackupsEnabled(!cfg.isBackupsEnabled()); showMaintenance(p, backOrigin); }));
@@ -702,16 +742,17 @@ public final class AdminConfigDialog {
 
     // -- helpers --
 
-    private static DialogButton valueBtn(String id, String configKey, String label, String currentValue,
-                                          DialogButton.DialogClickHandler clickAction) {
+    private static DialogButton valueBtn(String id, String configKey, String title, String description,
+                                           String currentValue, DialogButton.DialogClickHandler clickAction) {
         return new DialogButton(id,
             Component.text()
-                .append(Component.text(configKey, NamedTextColor.WHITE))
+                .append(Component.text(title, NamedTextColor.WHITE))
                 .append(Component.text(": ", SOFT_GRAY))
                 .append(Component.text(currentValue, PASTEL_GOLD, TextDecoration.BOLD))
                 .build(),
             Component.join(JoinConfiguration.newlines(),
-                Component.text(label, SOFT_GRAY),
+                Component.text(description, SOFT_GRAY),
+                Component.text(configKey, TextColor.color(0x666666)),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_CURRENT)) + currentValue, TextColor.color(0x888888)),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_CLICK_EDIT)), TextColor.color(0x888888))),
             clickAction);
@@ -724,33 +765,35 @@ public final class AdminConfigDialog {
             handler);
     }
 
-    private static DialogButton toggleBtn(String id, String configKey, String label, boolean active,
-                                           DialogButton.DialogClickHandler handler) {
+    private static DialogButton toggleBtn(String id, String configKey, String title, String description,
+                                           boolean active, DialogButton.DialogClickHandler handler) {
         TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
         return new DialogButton(id,
             Component.text()
                 .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
-                .append(Component.text(configKey, NamedTextColor.WHITE))
+                .append(Component.text(title, NamedTextColor.WHITE))
                 .build(),
             Component.join(JoinConfiguration.newlines(),
-                Component.text(label, SOFT_GRAY),
+                Component.text(description, SOFT_GRAY),
+                Component.text(configKey, TextColor.color(0x666666)),
                 Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TRUE : TranslationKey.ICON__FALSE)), c),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_BOOL)), TextColor.color(0x888888))),
             handler);
     }
 
-    private static DialogButton dialogToggleBtn(String id, String configKey, String label, boolean active,
-                                                  DialogButton.DialogClickHandler handler) {
+    private static DialogButton dialogToggleBtn(String id, String configKey, String title, String description,
+                                                   boolean active, DialogButton.DialogClickHandler handler) {
         TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
         String marker = stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__DIALOG_MARKER));
         return new DialogButton(id,
             Component.text()
                 .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
-                .append(Component.text(configKey, NamedTextColor.WHITE))
+                .append(Component.text(title, NamedTextColor.WHITE))
                 .build(),
             Component.join(JoinConfiguration.newlines(),
                 Component.text(marker, PASTEL_GOLD),
-                Component.text(label, SOFT_GRAY),
+                Component.text(description, SOFT_GRAY),
+                Component.text(configKey, TextColor.color(0x666666)),
                 Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TRUE : TranslationKey.ICON__FALSE)), c),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_BOOL)), TextColor.color(0x888888))),
             handler);
