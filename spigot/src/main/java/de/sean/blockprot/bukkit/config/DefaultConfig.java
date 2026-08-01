@@ -476,6 +476,9 @@ public final class DefaultConfig extends BlockProtConfig {
         if (!java.util.Objects.equals(oldValue, value)) {
             BlockProtLogger.log("config", key + " changed from " + oldValue + " to " + value);
         }
+        if (plugin.getFileWatcher() != null) {
+            plugin.getFileWatcher().requestProgrammaticReload();
+        }
     }
 
     public void setLockOnPlaceByDefault(boolean value) {
@@ -931,6 +934,10 @@ public final class DefaultConfig extends BlockProtConfig {
         } catch (IOException e) {
             BlockProtLogger.warn("Failed to save blocks.yml: " + e.getMessage());
         }
+        de.sean.blockprot.bukkit.BlockProt plugin = de.sean.blockprot.bukkit.BlockProt.getInstance();
+        if (plugin != null && plugin.getFileWatcher() != null) {
+            plugin.getFileWatcher().requestProgrammaticReload();
+        }
     }
 
     public static void prependBlocksHeader(@NotNull File file) throws IOException {
@@ -1181,6 +1188,85 @@ public final class DefaultConfig extends BlockProtConfig {
         boolean currentlyActive = isLockable(material) || isLockableEntity(material);
         if (currentlyActive == lockable) return;
         toggleLockable(material, who);
+    }
+
+    public synchronized void batchSetLockable(@NotNull List<Material> materials, boolean lockable, @NotNull Player who) {
+        if (blocksConfig == null) return;
+        Map<String, Set<Material>> activeByKey = new LinkedHashMap<>();
+
+        for (String key : LOCKABLE_LIST_KEYS) {
+            BlockFamilyParser.Family family = familyForConfigKey(key);
+            if (family == null) continue;
+            Object raw = blocksConfig.get(key);
+            if (raw == null) {
+                activeByKey.put(key, new LinkedHashSet<>());
+                continue;
+            }
+            activeByKey.put(key, new LinkedHashSet<>(BlockFamilyParser.parse(raw, family)));
+        }
+
+        int changed = 0;
+        for (Material mat : materials) {
+            String configKey = configKeyForMaterial(mat);
+            if (configKey == null) continue;
+            BlockFamilyParser.Family family = familyForMaterial(mat);
+            if (family == null) continue;
+            Set<Material> active = activeByKey.get(configKey);
+            if (active == null) continue;
+            boolean currentlyActive = active.contains(mat);
+            if (currentlyActive == lockable) continue;
+            if (lockable) {
+                active.add(mat);
+            } else {
+                active.remove(mat);
+            }
+            changed++;
+        }
+
+        if (changed == 0) return;
+
+        for (Map.Entry<String, Set<Material>> entry : activeByKey.entrySet()) {
+            String configKey = entry.getKey();
+            Set<Material> activeSet = entry.getValue();
+            if (isKeyInExpressionFormat(configKey)) {
+                BlockFamilyParser.Family family = familyForConfigKey(configKey);
+                String expr = family != null ? BlockFamilyParser.toFamilyExpression(activeSet, family) : null;
+                if (expr != null) {
+                    blocksConfig.set(configKey, List.of(expr));
+                } else {
+                    blocksConfig.set(configKey, activeSet.stream().map(Material::name).sorted().toList());
+                }
+            } else {
+                blocksConfig.set(configKey, activeSet.stream().map(Material::name).sorted().toList());
+            }
+        }
+
+        saveBlocksConfig();
+        reloadBlocksAfterToggle();
+
+        String actionText = lockable
+            ? Translator.get(TranslationKey.ENABLED)
+            : Translator.get(TranslationKey.DISABLED);
+        BlockProtLogger.log("lockables-batch",
+            actionText + " " + changed + " materials in batch (by " + who.getName() + ")");
+        if (who.isOnline()) {
+            who.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                Translator.get(TranslationKey.MESSAGES__LOCKABLES__TOGGLE_FEEDBACK)
+                    .replace("{action}", actionText)
+                    .replace("{name}", String.valueOf(changed) + " blocks")));
+        }
+    }
+
+    @Nullable
+    private static BlockFamilyParser.Family familyForConfigKey(@NotNull String configKey) {
+        return switch (configKey) {
+            case "lockable_tile_entities" -> BlockFamilyParser.Family.TILE_ENTITIES;
+            case "lockable_shulker_boxes" -> BlockFamilyParser.Family.SHULKER_BOXES;
+            case "lockable_blocks" -> BlockFamilyParser.Family.BLOCKS;
+            case "lockable_doors" -> BlockFamilyParser.Family.DOORS;
+            case "lockable_entities" -> BlockFamilyParser.Family.ENTITIES;
+            default -> null;
+        };
     }
 
     /**

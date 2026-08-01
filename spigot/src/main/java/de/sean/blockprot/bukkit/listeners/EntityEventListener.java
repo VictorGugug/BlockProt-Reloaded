@@ -47,22 +47,23 @@ public final class EntityEventListener implements Listener {
         if (blockType == Material.AIR || blockType == Material.CAVE_AIR || blockType == Material.VOID_AIR) return;
 
         Entity entity = event.getEntity();
+        org.bukkit.World world = event.getBlock().getWorld();
         if (entity instanceof FallingBlock) {
             Material mat = ((FallingBlock) entity).getBlockData().getMaterial();
 
             if (mat.toString().contains("ANVIL") &&
-                BlockProt.getDefaultConfig().isLockableBlock(mat)) {
-                if (BlockProt.getDefaultConfig().isLockable(blockType)) {
+                BlockProt.getDefaultConfig().isLockableBlock(mat, world)) {
+                if (BlockProt.getDefaultConfig().isLockable(blockType, world)) {
                     BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
                     if (handler.isProtected()) event.setCancelled(true);
                 }
             }
         } else if (entity instanceof Enderman) {
-            if (BlockProt.getDefaultConfig().isLockable(blockType)) {
+            if (BlockProt.getDefaultConfig().isLockable(blockType, world)) {
                 BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
                 if (handler.isProtected()) event.setCancelled(true);
             }
-        } else if (BlockProt.getDefaultConfig().isLockable(blockType)) {
+        } else if (BlockProt.getDefaultConfig().isLockable(blockType, world)) {
             BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
             if (handler.isProtected()) event.setCancelled(true);
         }

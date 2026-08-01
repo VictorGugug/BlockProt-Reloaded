@@ -154,7 +154,7 @@ public class BlockEventListener implements Listener {
     public void onAutoDropBlockBreak(BlockBreakEvent event) {
         if (!BlockProt.getDefaultConfig().isAutoDropToInventory(event.getBlock().getType())) return;
         if (!BlockProt.getDefaultConfig().isAutoDropToInventoryEnabled(event.getBlock().getWorld())) return;
-        if (BlockProt.getDefaultConfig().isLockableShulkerBox(event.getBlock().getType())) return;
+        if (BlockProt.getDefaultConfig().isLockableShulkerBox(event.getBlock().getType(), event.getBlock().getWorld())) return;
         Player player = event.getPlayer();
         if (player.isOp() || player.hasPermission(Permissions.USER_ADMIN.key())) return;
         if (player.getGameMode() == GameMode.CREATIVE) return;
@@ -332,7 +332,7 @@ public class BlockEventListener implements Listener {
         } catch (ClassCastException ignored) { return; }
         if (facing == null) return;
         org.bukkit.block.Block target = event.getBlock().getRelative(facing);
-        if (!BlockProt.getDefaultConfig().isLockable(target.getType())) return;
+        if (!BlockProt.getDefaultConfig().isLockable(target.getType(), target.getWorld())) return;
         try {
             BlockNBTHandler handler = new BlockNBTHandler(target);
             if (handler.isProtected()) event.setCancelled(true);

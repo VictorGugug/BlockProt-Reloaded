@@ -53,6 +53,9 @@ import java.util.*;
  */
 public final class LockablesInventory extends BlockProtInventory {
 
+    private static final net.kyori.adventure.text.format.TextColor PASTEL_ORANGE =
+        net.kyori.adventure.text.format.TextColor.color(0xF2A65A);
+
     private static final int CONTENT_SLOTS = 45;
     private static final int SLOT_INFO       = 45;
     private static final int SLOT_AUTO_DROP  = 46;
@@ -392,6 +395,16 @@ public final class LockablesInventory extends BlockProtInventory {
         };
     }
 
+    /**
+     * True when active/total sits near the midpoint. Band widens for small
+     * totals so a single-item swing still lands inside it.
+     */
+    private static boolean isNearHalf(long active, long total) {
+        double ratio = (double) active / total;
+        double halfBand = total <= 5 ? 0.20 : 0.10;
+        return Math.abs(ratio - 0.5) <= halfBand;
+    }
+
     @NotNull
     private static ItemStack selectAllItem(@NotNull String token,
                                            long activeCount, long totalCount,
@@ -401,7 +414,7 @@ public final class LockablesInventory extends BlockProtInventory {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             meta.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TOGGLE_FAMILY) + token).color(NamedTextColor.AQUA));
-            NamedTextColor statusColor;
+            net.kyori.adventure.text.format.TextColor statusColor;
             String statusLabel;
             if (activeCount == 0) {
                 statusColor = NamedTextColor.RED;
@@ -410,7 +423,7 @@ public final class LockablesInventory extends BlockProtInventory {
                 statusColor = NamedTextColor.GREEN;
                 statusLabel = Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_ACTIVE);
             } else {
-                statusColor = NamedTextColor.GOLD;
+                statusColor = isNearHalf(activeCount, totalCount) ? PASTEL_ORANGE : NamedTextColor.GREEN;
                 statusLabel = activeCount + "/" + totalCount;
             }
             meta.lore(List.of(

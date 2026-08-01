@@ -504,6 +504,7 @@ console:
   recommended_done: "§aRecommended configuration written to blocks.yml."
   recommended_reload: "§7Reload with '/bp reload' or wait for auto-reload."
   recommended_failed: "§cFailed to write blocks.yml: {error}"
+  recommended_already_applied: "§7Recommended configuration was already applied once; edit blocks.yml directly to change it further."
 
   first_start:
     header: "§x§D§2§B§4§8§C  ------------------------------------------"
@@ -536,6 +537,14 @@ dialogs:
     java_label: "Java: "
     issues_url: "github.com/VictorGugug/BlockProt-Reloaded/issues"
     credit_line: "Author: spnda | Maintainer: Zaynr (Zar)"
+    db_engine_label: "Database Engine: "
+    db_mysql: "MySQL"
+    db_sqlite: "SQLite"
+    cache_label: "Cache: "
+    cache_suffix: " protected blocks"
+    integrations_label: "Integrations: "
+    integrations_disabled: "Disabled ({count} total)"
+    integrations_active: "Active ({enabled}/{total}: {names})"
   user_menu:
     header: "User Menu"
   admin_menu:
@@ -652,6 +661,8 @@ dialogs:
   switch_view: "Switch view."
   click_disable: "Click to disable all."
   click_enable: "Click to enable all."
+  click_disable_single: "Click to disable."
+  click_enable_single: "Click to enable."
   click_chat: "Click to view details in chat."
   return_user_menu: "Return to User Menu."
   return_admin_menu: "Return to Admin Menu."

@@ -40,7 +40,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public final class ConfigFileWatcher implements Runnable {
 
-    private static final long SELF_WRITE_WINDOW_MS = 3000L;
+    private static final long MIN_SELF_WRITE_WINDOW_MS = 3000L;
+    private static final long SELF_WRITE_WINDOW_MARGIN_MS = 2000L;
 
     private final BlockProt plugin;
     private final File watchDir;
@@ -64,11 +65,32 @@ public final class ConfigFileWatcher implements Runnable {
     }
 
     public void suppressPath(@NotNull String relativePath) {
-        suppressedUntil.put(relativePath, System.currentTimeMillis() + SELF_WRITE_WINDOW_MS);
+        suppressedUntil.put(relativePath, System.currentTimeMillis() + selfWriteWindowMs());
+    }
+
+    /**
+     * Window used to ignore watch events caused by the plugin's own writes.
+     * Floors at {@code MIN_SELF_WRITE_WINDOW_MS} and grows with the configured
+     * quiet-period delay plus a fixed margin, so a large auto_reload_delay_seconds
+     * or slow OS-level watch delivery cannot outlast the suppression window and
+     * get misread as an external change, stacking a second delay on top.
+     */
+    private long selfWriteWindowMs() {
+        DefaultConfig cfg = BlockProt.getDefaultConfig();
+        long delayMs = cfg != null ? (long) cfg.getAutoReloadDelaySeconds() * 1000L : 0L;
+        return Math.max(MIN_SELF_WRITE_WINDOW_MS, delayMs + SELF_WRITE_WINDOW_MARGIN_MS);
     }
 
     public boolean isRunning() {
         return running.get();
+    }
+
+    public void requestProgrammaticReload() {
+        DefaultConfig cfg = BlockProt.getDefaultConfig();
+        if (cfg == null || !cfg.isAutoReloadEnabled()) return;
+        long gen = currentGeneration.incrementAndGet();
+        lastEventTimestamp.set(System.currentTimeMillis());
+        scheduleQuietPeriod(gen);
     }
 
     public void start() {

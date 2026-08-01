@@ -120,7 +120,7 @@ public class HopperEventListener implements Listener {
 
         Block source = getBlock(event.getSource().getHolder());
         if (source == null) return;
-        if (!BlockProt.getDefaultConfig().isLockable(source.getType())) return;
+        if (!BlockProt.getDefaultConfig().isLockable(source.getType(), source.getWorld())) return;
 
         // Early-exit: skip NBT if this location has never been protected.
         if (!ProtectedBlockCache.isProtected(source)) return;
@@ -140,7 +140,7 @@ public class HopperEventListener implements Listener {
             // Guard: only attempt NBT read if the destination is a known lockable type.
             // Without this check, getEntry() would construct a BlockNBTHandler for non-lockable
             // containers (e.g. minecart chests) and throw a RuntimeException caught silently by Paper.
-            if (destination != null && BlockProt.getDefaultConfig().isLockable(destination.getType())) {
+            if (destination != null && BlockProt.getDefaultConfig().isLockable(destination.getType(), destination.getWorld())) {
                 CacheEntry destEntry = getEntry(destination);
                 if (destEntry != null && destEntry.owner().equals(sourceEntry.owner())) return;
             }

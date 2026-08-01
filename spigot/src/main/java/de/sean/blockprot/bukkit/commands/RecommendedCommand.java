@@ -61,12 +61,18 @@ public class RecommendedCommand implements CommandExecutor {
             return false;
         }
 
+        DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
+        if (defaultConfig.getBukkitConfig().getBoolean("recommended_applied", false)) {
+            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_ALREADY_APPLIED));
+            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_ALREADY_APPLIED));
+            return true;
+        }
+
         try {
             YamlConfiguration cfg = YamlConfiguration.loadConfiguration(blocksFile);
 
             boolean modern = plugin.getConfig().getBoolean("modern_family_blocks", false);
 
-            DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
             defaultConfig.setAndSave("modern_family_blocks", true);
             defaultConfig.setAndSave("use_menus", true);
             defaultConfig.setAndSave("use_dialogs", true);
@@ -93,11 +99,19 @@ public class RecommendedCommand implements CommandExecutor {
                 cfg.set("auto_drop_to_inventory.blocks", List.of());
             }
 
+            if (plugin.getFileWatcher() != null) {
+                plugin.getFileWatcher().suppressPath("blocks.yml");
+            }
             cfg.save(blocksFile);
             DefaultConfig.prependBlocksHeader(blocksFile);
+            defaultConfig.setAndSave("recommended_applied", true);
             BlockProtConsole.info("Recommended configuration applied.");
             BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_DONE));
             BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+
+            if (plugin.getFileWatcher() != null) {
+                plugin.getFileWatcher().requestProgrammaticReload();
+            }
         } catch (IOException e) {
             BlockProtConsole.info("Recommended configuration failed.");
             BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)

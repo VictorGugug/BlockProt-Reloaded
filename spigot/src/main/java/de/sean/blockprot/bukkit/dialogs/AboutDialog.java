@@ -98,7 +98,9 @@ public final class AboutDialog {
             .build()));
 
         boolean dbActive = BlockProt.getHybridDatabase() != null && BlockProt.getHybridDatabase().isEnabled();
-        String dbMode = dbActive ? "MySQL" : "SQLite";
+        String dbMode = dbActive
+            ? stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__DB_MYSQL))
+            : stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__DB_SQLITE));
         int cacheCount = de.sean.blockprot.bukkit.storage.ProtectedBlockCache.size();
         List<String> activeInts = new ArrayList<>();
         List<de.sean.blockprot.bukkit.integrations.PluginIntegration> allInts = BlockProt.getInstance().getIntegrations();
@@ -106,19 +108,21 @@ public final class AboutDialog {
             if (pi.isEnabled()) activeInts.add(pi.name);
         }
         String intText = activeInts.isEmpty()
-            ? "Disabled (0/" + allInts.size() + ")"
-            : "Active (" + activeInts.size() + "/" + allInts.size() + ": " + String.join(", ", activeInts) + ")";
+            ? Translator.get(TranslationKey.DIALOGS__ABOUT__INTEGRATIONS_DISABLED).replace("{count}", String.valueOf(allInts.size()))
+            : Translator.get(TranslationKey.DIALOGS__ABOUT__INTEGRATIONS_ACTIVE).replace("{enabled}", String.valueOf(activeInts.size())).replace("{total}", String.valueOf(allInts.size())).replace("{names}", String.join(", ", activeInts));
+        intText = stripColor(intText);
 
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("Database Engine: ", SOFT_GRAY))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__DB_ENGINE_LABEL)), SOFT_GRAY))
             .append(Component.text(dbMode, PASTEL_MINT))
             .build()));
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("Cache: ", SOFT_GRAY))
-            .append(Component.text(cacheCount + " protected blocks", PASTEL_GOLD))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__CACHE_LABEL)), SOFT_GRAY))
+            .append(Component.text(cacheCount, PASTEL_GOLD))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__CACHE_SUFFIX)), PASTEL_GOLD))
             .build()));
         body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text("Integrations: ", SOFT_GRAY))
+            .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ABOUT__INTEGRATIONS_LABEL)), SOFT_GRAY))
             .append(Component.text(intText, activeInts.isEmpty() ? PASTEL_CORAL : PASTEL_MINT))
             .build()));
 

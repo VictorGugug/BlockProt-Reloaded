@@ -23,9 +23,11 @@ package de.sean.blockprot.bukkit.dialogs;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -35,58 +37,54 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public final class LockableCategoryDialog {
+/** Dialog counterpart of {@code AutoDropFamilyInventory}: per-material toggles for one family. */
+public final class AutoDropFamilyDialog {
 
     private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
     private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
     private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
     private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
-    private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
-    private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
 
     private static final int PER_PAGE = 9;
 
-    private LockableCategoryDialog() {}
+    private AutoDropFamilyDialog() {}
 
     public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
-                            @NotNull String categoryName, @NotNull List<Material> materials) {
-        show(player, backOrigin, categoryName, materials, 0);
+                            @NotNull BlockFamilyParser.Family family) {
+        show(player, backOrigin, family, 0);
     }
 
     public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
-                            @NotNull String categoryName, @NotNull List<Material> materials, int page) {
+                            @NotNull BlockFamilyParser.Family family, int page) {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
 
         DefaultConfig cfg = BlockProt.getDefaultConfig();
+        Set<Material> autoDropBlocks = cfg.getAutoDropToInventoryBlocks();
+        List<Material> materials = new ArrayList<>(BlockFamilyParser.getFamilyMembers(family));
+        materials.sort((a, b) -> a.name().compareTo(b.name()));
+
         int totalPages = Math.max(1, (int) Math.ceil(materials.size() / (double) PER_PAGE));
         int safePage = Math.max(0, Math.min(page, totalPages - 1));
         int from = safePage * PER_PAGE;
         int to = Math.min(from + PER_PAGE, materials.size());
         List<Material> pageMats = materials.subList(from, to);
 
-        Component title = Component.text(categoryName, PASTEL_GOLD, TextDecoration.BOLD);
+        String familyLabel = friendlyName(family.name());
+        Component title = Component.text(familyLabel, PASTEL_GOLD, TextDecoration.BOLD);
 
         List<DialogBodyEntry> body = new ArrayList<>();
-        body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text(" " + categoryName + " ", NamedTextColor.WHITE))
-            .build()));
         body.add(DialogBodyEntry.text(Component.text(
-            Translator.get(TranslationKey.DIALOGS__PAGE)
+            stripColor(Translator.get(TranslationKey.DIALOGS__PAGE))
                 .replace("{current}", String.valueOf(safePage + 1))
                 .replace("{total}", String.valueOf(totalPages)),
             TextColor.color(0x888888))));
-        body.add(DialogBodyEntry.text(Component.text(
-            stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE))
-                + " / "
-                + stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE)),
-            TextColor.color(0x888888))));
-        List<DialogButton> buttons = new ArrayList<>();
 
+        List<DialogButton> buttons = new ArrayList<>();
         for (Material mat : pageMats) {
-            boolean active = cfg.isLockable(mat) || cfg.isLockableEntity(mat);
+            boolean active = autoDropBlocks.contains(mat);
             TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
-            String displayName = formatMaterialName(mat.name());
+            String displayName = LockableCategoryDialog.formatMaterialName(mat.name());
 
             buttons.add(new DialogButton("mat_" + mat.name(),
                 Component.text()
@@ -99,27 +97,19 @@ public final class LockableCategoryDialog {
                         ? stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE_SINGLE))
                         : stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE_SINGLE)), c)),
                 p -> {
-                    cfg.toggleLockable(mat, p);
-                    show(p, backOrigin, categoryName, materials, safePage);
+                    cfg.toggleAutoDropMaterial(mat, p);
+                    show(p, backOrigin, family, safePage);
                 }
             ));
         }
 
         List<DialogButton> extraButtons = new ArrayList<>();
-        extraButtons.add(new DialogButton("enable_all",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__ENABLE_ALL)) + stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__ENABLE_ALL)), PASTEL_MINT),
-            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE)), TextColor.color(0x888888)),
+        extraButtons.add(new DialogButton("toggle_family",
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__TOGGLE_ON)) + familyLabel, PASTEL_MINT),
+            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__LEFT_CLICK_HINT)), TextColor.color(0x888888)),
             p -> {
-                BlockProt.getDefaultConfig().batchSetLockable(materials, true, p);
-                show(p, backOrigin, categoryName, materials, safePage);
-            }
-        ));
-        extraButtons.add(new DialogButton("disable_all",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__DISABLE_ALL)) + stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__DISABLE_ALL)), PASTEL_CORAL),
-            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE)), TextColor.color(0x888888)),
-            p -> {
-                BlockProt.getDefaultConfig().batchSetLockable(materials, false, p);
-                show(p, backOrigin, categoryName, materials, safePage);
+                cfg.toggleAutoDropFamily(family, p);
+                show(p, backOrigin, family, safePage);
             }
         ));
 
@@ -128,48 +118,35 @@ public final class LockableCategoryDialog {
             navButtons.add(new DialogButton("prev",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, categoryName, materials, safePage - 1)));
+                p -> show(p, backOrigin, family, safePage - 1)));
         }
         if (safePage + 1 < totalPages) {
             navButtons.add(new DialogButton("next",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, categoryName, materials, safePage + 1)));
+                p -> show(p, backOrigin, family, safePage + 1)));
         }
 
         buttons.addAll(navButtons);
         buttons.addAll(extraButtons);
 
-        // Always returns to the parent LockablesDialog (category list): this is one level
-        // of internal navigation within the same Lockables feature, not an external-origin
-        // exit, so it must not be gated by DialogBridgeFactory.resolveOrigin()/
-        // areExtraCommandsEnabled(). Only LockablesDialog's own back button (the outermost
-        // level of this feature) decides whether to exit to an external menu or close.
         DialogButton backBtn = new DialogButton("back",
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            p -> LockablesDialog.show(p, backOrigin)
+            p -> AutoDropDialog.show(p, backOrigin)
         );
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 3);
     }
 
-    static String formatMaterialName(String name) {
+    @NotNull
+    private static String friendlyName(@NotNull String name) {
+        String[] words = name.toLowerCase().split("_");
         StringBuilder sb = new StringBuilder();
-        boolean nextUpper = true;
-        for (int i = 0; i < name.length(); i++) {
-            char c = name.charAt(i);
-            if (c == '_') {
-                sb.append(' ');
-                nextUpper = true;
-            } else if (nextUpper) {
-                sb.append(Character.toUpperCase(c));
-                nextUpper = false;
-            } else {
-                sb.append(Character.toLowerCase(c));
-            }
+        for (String w : words) {
+            if (!w.isEmpty()) sb.append(Character.toUpperCase(w.charAt(0))).append(w.substring(1)).append(' ');
         }
-        return sb.toString();
+        return sb.toString().trim();
     }
 
     private static String stripColor(String s) {

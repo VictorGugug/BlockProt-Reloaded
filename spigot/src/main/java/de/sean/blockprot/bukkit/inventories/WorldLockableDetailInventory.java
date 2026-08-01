@@ -173,6 +173,10 @@ public final class WorldLockableDetailInventory extends BlockProtInventory {
             BlockProtLogger.warn("Failed to save worlds.yml for " + world.getName() + ": " + ex.getMessage());
         }
 
+        if (BlockProt.getInstance().getFileWatcher() != null) {
+            BlockProt.getInstance().getFileWatcher().requestProgrammaticReload();
+        }
+
         String actionText = currentlyActive
             ? Translator.get(TranslationKey.DISABLED)
             : Translator.get(TranslationKey.ENABLED);

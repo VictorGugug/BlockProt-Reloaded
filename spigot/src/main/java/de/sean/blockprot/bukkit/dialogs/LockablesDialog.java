@@ -46,6 +46,7 @@ public final class LockablesDialog {
     private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
     private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
     private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
+    private static final TextColor PASTEL_ORANGE = TextColor.color(0xF2A65A);
 
     private static final int PER_PAGE = 6;
 
@@ -84,12 +85,12 @@ public final class LockablesDialog {
         List<DialogButton> buttons = new ArrayList<>();
 
         for (CategoryEntry entry : pageEntries) {
-            boolean active = entry.activeCount > 0;
-            TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
+            boolean noneActive = entry.activeCount == 0;
+            TextColor c = stateColor(entry.activeCount, entry.totalCount);
             String catLabel = translateCategory(entry.label);
             buttons.add(new DialogButton("cat_" + entry.label,
                 Component.text()
-                    .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
+                    .append(Component.text(stripColor(Translator.get(noneActive ? TranslationKey.ICON__TOGGLE_OFF : TranslationKey.ICON__TOGGLE_ON)), c))
                     .append(Component.text(catLabel, NamedTextColor.WHITE))
                     .append(Component.text(" (" + entry.activeCount + "/" + entry.totalCount + ")", TextColor.color(0x888888)))
                     .build(),
@@ -101,6 +102,12 @@ public final class LockablesDialog {
                 p -> LockableCategoryDialog.show(p, backOrigin, entry.label, entry.materials)
             ));
         }
+
+        buttons.add(new DialogButton("auto_drop",
+            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP)), SOFT_BLUE),
+            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP_LORE)), TextColor.color(0x888888)),
+            p -> AutoDropDialog.show(p, backOrigin)
+        ));
 
         List<DialogButton> navButtons = new ArrayList<>();
         if (safePage > 0) {
@@ -182,6 +189,22 @@ public final class LockablesDialog {
         }
         result.removeIf(ce -> ce.totalCount == 0);
         return result;
+    }
+
+    /**
+     * Picks the state color for an active/total pair. Orange is reserved for
+     * counts sitting near the midpoint (a "close call" signal); everything
+     * else falls back to coral (none active) or mint (some/all active). The
+     * near-half band widens for small totals so a swing of a single item
+     * still lands inside it (percentages jump too hard at low counts for a
+     * fixed 40-60% band to be meaningful).
+     */
+    private static TextColor stateColor(long active, long total) {
+        if (active == 0) return PASTEL_CORAL;
+        if (active == total) return PASTEL_MINT;
+        double ratio = (double) active / total;
+        double halfBand = total <= 5 ? 0.20 : 0.10;
+        return Math.abs(ratio - 0.5) <= halfBand ? PASTEL_ORANGE : PASTEL_MINT;
     }
 
     private static boolean isKnownLockableMaterial(@NotNull Material m) {

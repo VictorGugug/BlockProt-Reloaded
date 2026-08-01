@@ -580,7 +580,7 @@ public final class BlockFamilyParser {
             }
             for (SubFamily sf : sfs) {
                 if (sfStatus.get(sf) == SfStatus.PARTIAL) {
-                    appendPartialSubFamily(sb, sf, present, false);
+                    appendPartialSubFamily(sb, sf, present, false, true);
                 }
             }
             for (Material m : ungroupedMissing) sb.append(" -").append(m.name());
@@ -598,7 +598,7 @@ public final class BlockFamilyParser {
             }
             for (SubFamily sf : sfs) {
                 if (sfStatus.get(sf) == SfStatus.PARTIAL) {
-                    appendPartialSubFamily(sb, sf, present, first);
+                    appendPartialSubFamily(sb, sf, present, first, false);
                     first = false;
                 }
             }
@@ -617,11 +617,15 @@ public final class BlockFamilyParser {
      * exclusion form ({@code *-TAG -missing...}) or direct inclusion form
      * ({@code present1 present2...}) is shorter for that sub-family alone.
      * {@code isFirstToken} controls whether a separating space is written before
-     * the first token in the builder.
+     * the first token in the builder. {@code globalStarContext} must be true when
+     * the enclosing expression already opens with a global {@code *}: the bare
+     * inclusion form only excludes the missing members correctly when there is no
+     * surrounding {@code *}, so under a global star this always falls back to the
+     * exclusion form regardless of which form is shorter.
      */
     private static void appendPartialSubFamily(
             @NotNull StringBuilder sb, @NotNull SubFamily sf,
-            @NotNull Set<Material> present, boolean isFirstToken) {
+            @NotNull Set<Material> present, boolean isFirstToken, boolean globalStarContext) {
         Set<Material> sfMembers = SUBFAMILY_MEMBERS.getOrDefault(sf, Collections.emptySet());
         List<Material> sfPresent = new ArrayList<>();
         List<Material> sfMissing = new ArrayList<>();
@@ -631,7 +635,7 @@ public final class BlockFamilyParser {
 
         if (!isFirstToken) sb.append(" ");
 
-        if (sfMissing.size() <= sfPresent.size()) {
+        if (globalStarContext || sfMissing.size() <= sfPresent.size()) {
             sb.append("*-").append(sf.tag);
             for (Material m : sfMissing) sb.append(" -").append(m.name());
         } else {

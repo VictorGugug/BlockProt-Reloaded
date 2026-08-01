@@ -68,7 +68,7 @@ public class ExplodeEventListener implements Listener {
 
         while (it.hasNext()) {
             Block b = it.next();
-            if (!BlockProt.getDefaultConfig().isLockable(b.getType())) continue;
+            if (!BlockProt.getDefaultConfig().isLockable(b.getType(), b.getWorld())) continue;
 
             BlockNBTHandler handler;
             try {

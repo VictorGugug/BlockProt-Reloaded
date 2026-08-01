@@ -483,6 +483,7 @@ console:
   recommended_done: "§aConfiguración recomendada escrita en blocks.yml."
   recommended_reload: "§7Recarga con '/bp reload' o espera la recarga automática."
   recommended_failed: "§cFalló al escribir blocks.yml: {error}"
+  recommended_already_applied: "§7La configuración recomendada ya se aplicó una vez; edita blocks.yml directamente para cambiarla."
   update:
     available: "Hay una nueva versión de BlockProt Reloaded disponible: {version}"
     up_to_date: "BlockProt Reloaded está actualizado"
@@ -530,6 +531,14 @@ dialogs:
     java_label: "Java: "
     issues_url: "github.com/VictorGugug/BlockProt-Reloaded/issues"
     credit_line: "Autor: spnda | Mantenedor: Zaynr (Zar)"
+    db_engine_label: "Motor de Base de Datos: "
+    db_mysql: "MySQL"
+    db_sqlite: "SQLite"
+    cache_label: "Cache: "
+    cache_suffix: " bloques protegidos"
+    integrations_label: "Integraciones: "
+    integrations_disabled: "Desactivadas ({count} total)"
+    integrations_active: "Activas ({enabled}/{total}: {names})"
   user_menu:
     header: "Menu de Usuario"
   admin_menu:
@@ -620,6 +629,8 @@ dialogs:
   switch_view: "Cambiar vista."
   click_disable: "Haz clic para desactivar todo."
   click_enable: "Haz clic para activar todo."
+  click_disable_single: "Haz clic para desactivar."
+  click_enable_single: "Haz clic para activar."
   click_chat: "Haz clic para ver detalles en el chat."
   integrations:
     count: "{enabled}/{total} activadas"
