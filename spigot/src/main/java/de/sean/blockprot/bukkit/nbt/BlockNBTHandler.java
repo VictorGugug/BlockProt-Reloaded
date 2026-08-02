@@ -377,7 +377,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
 
         PlayerBlocksStatistic playerBlocksStatistic = new PlayerBlocksStatistic();
         StatHandler.getStatistic(playerBlocksStatistic, player);
-        if (player.hasPermission("blockprot.lockmax")) {
+        if (player.hasPermission(Permissions.LOCKMAX.key())) {
             // Use streams with parseInt try-catch instead of manual ArrayList copy + linear scan.
             // On servers with 200-500 permission nodes (LuckPerms inheritance chains) this avoids
             // creating a full copy of the effective-permissions collection on every lock.

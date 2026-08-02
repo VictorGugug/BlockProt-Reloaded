@@ -46,7 +46,7 @@ public final class AutoDropDialog {
     private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
     private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
     private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
-    private static final TextColor PASTEL_ORANGE = TextColor.color(0xF2A65A);
+    private static final TextColor PASTEL_ORANGE = TextColor.color(0xDFB98E);
 
     private static final List<BlockFamilyParser.Family> FAMILIES = List.of(
         BlockFamilyParser.Family.TILE_ENTITIES,

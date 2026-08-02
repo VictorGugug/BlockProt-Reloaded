@@ -32,6 +32,7 @@ import de.sean.blockprot.bukkit.integrations.PluginIntegration;
 import de.sean.blockprot.bukkit.integrations.ViaVersionIntegration;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -53,8 +54,13 @@ import java.util.*;
  */
 public final class LockablesInventory extends BlockProtInventory {
 
-    private static final net.kyori.adventure.text.format.TextColor PASTEL_ORANGE =
-        net.kyori.adventure.text.format.TextColor.color(0xF2A65A);
+    private static final TextColor PASTEL_CORAL  = TextColor.color(0xF0A0A0);
+    private static final TextColor PASTEL_MINT   = TextColor.color(0x8FE3B0);
+    private static final TextColor PASTEL_GOLD   = TextColor.color(0xD2B48C);
+    private static final TextColor PASTEL_YELLOW = TextColor.color(0xF0E6A0);
+    private static final TextColor PASTEL_AQUA   = TextColor.color(0xA8E2E2);
+    private static final TextColor PASTEL_TEAL   = TextColor.color(0x8FC9C9);
+    private static final TextColor PASTEL_ORANGE = TextColor.color(0xDFB98E);
 
     private static final int CONTENT_SLOTS = 45;
     private static final int SLOT_INFO       = 45;
@@ -136,11 +142,11 @@ public final class LockablesInventory extends BlockProtInventory {
         ItemStack info = new ItemStack(Material.BOOK, 1);
         ItemMeta im = info.getItemMeta();
         if (im != null) {
-            im.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_TITLE)).color(NamedTextColor.GOLD));
+            im.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_TITLE)).color(PASTEL_GOLD));
             List<Component> lore = new ArrayList<>();
-            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_SERVER) + VersionCompat.getVersionString()).color(NamedTextColor.YELLOW));
-            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_CLIENT) + resolveClientVersion(player)).color(NamedTextColor.YELLOW));
-            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_ACTIVE) + activeCount).color(NamedTextColor.GREEN));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_SERVER) + VersionCompat.getVersionString()).color(PASTEL_YELLOW));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_CLIENT) + resolveClientVersion(player)).color(PASTEL_YELLOW));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_ACTIVE) + activeCount).color(PASTEL_MINT));
             lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_INACTIVE) + inactiveCount).color(NamedTextColor.GRAY));
             lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__INFO_PAGE) + (safePage + 1) + "/" + totalPages).color(NamedTextColor.DARK_GRAY));
             im.lore(lore);
@@ -151,7 +157,7 @@ public final class LockablesInventory extends BlockProtInventory {
         ItemStack autoDropItem = new ItemStack(Material.DROPPER);
         ItemMeta adm = autoDropItem.getItemMeta();
         if (adm != null) {
-            adm.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP)).color(NamedTextColor.AQUA));
+            adm.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP)).color(PASTEL_AQUA));
             adm.lore(List.of(
                 Component.text(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP_LORE)).color(NamedTextColor.GRAY)
             ));
@@ -173,7 +179,7 @@ public final class LockablesInventory extends BlockProtInventory {
             ItemStack worldItem = new ItemStack(Material.MAP);
             ItemMeta wim = worldItem.getItemMeta();
             if (wim != null) {
-                wim.displayName(Component.text(Translator.get(TranslationKey.WORLDS__PER_WORLD_CONFIG)).color(NamedTextColor.GOLD));
+                wim.displayName(Component.text(Translator.get(TranslationKey.WORLDS__PER_WORLD_CONFIG)).color(PASTEL_GOLD));
                 wim.lore(List.of(
                     Component.text("§7" + worldCount + " " + Translator.get(TranslationKey.WORLDS__WORLDS)).color(NamedTextColor.GRAY),
                     Component.text("§7" + Translator.get(TranslationKey.WORLDS__CONFIGURED) + ": §e" + enabledCount + "/" + worldCount).color(NamedTextColor.GRAY)
@@ -279,7 +285,7 @@ public final class LockablesInventory extends BlockProtInventory {
         } else {
             String msg = Translator.get(TranslationKey.MESSAGES__LOCKABLES__FAMILY_UNKNOWN)
                 .replace("{expression}", expression);
-            player.sendMessage(Component.text(msg).color(NamedTextColor.RED));
+            player.sendMessage(Component.text(msg).color(PASTEL_CORAL));
         }
     }
 
@@ -413,22 +419,22 @@ public final class LockablesInventory extends BlockProtInventory {
         ItemStack stack = new ItemStack(icon);
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TOGGLE_FAMILY) + token).color(NamedTextColor.AQUA));
+            meta.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TOGGLE_FAMILY) + token).color(PASTEL_AQUA));
             net.kyori.adventure.text.format.TextColor statusColor;
             String statusLabel;
             if (activeCount == 0) {
-                statusColor = NamedTextColor.RED;
+                statusColor = PASTEL_CORAL;
                 statusLabel = Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_INACTIVE);
             } else if (activeCount == totalCount) {
-                statusColor = NamedTextColor.GREEN;
+                statusColor = PASTEL_MINT;
                 statusLabel = Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_ACTIVE);
             } else {
-                statusColor = isNearHalf(activeCount, totalCount) ? PASTEL_ORANGE : NamedTextColor.GREEN;
+                statusColor = isNearHalf(activeCount, totalCount) ? PASTEL_ORANGE : PASTEL_MINT;
                 statusLabel = activeCount + "/" + totalCount;
             }
             meta.lore(List.of(
-                Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TOGGLE_FAMILY_HINT)).color(NamedTextColor.YELLOW),
-                Component.text(token).color(NamedTextColor.DARK_AQUA),
+                Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TOGGLE_FAMILY_HINT)).color(PASTEL_YELLOW),
+                Component.text(token).color(PASTEL_TEAL),
                 Component.text(statusLabel).color(statusColor)
             ));
             stack.setItemMeta(meta);
@@ -441,7 +447,7 @@ public final class LockablesInventory extends BlockProtInventory {
         ItemStack sep = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = sep.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text(label).color(NamedTextColor.AQUA));
+            meta.displayName(Component.text(label).color(PASTEL_AQUA));
             meta.lore(List.of());
             sep.setItemMeta(meta);
         }
@@ -469,9 +475,9 @@ public final class LockablesInventory extends BlockProtInventory {
                 ? Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_ACTIVE)
                 : Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_INACTIVE);
             lore.add(Component.text(status)
-                .color(active ? NamedTextColor.GREEN : NamedTextColor.RED));
-            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__LEFT_CLICK_HINT)).color(NamedTextColor.GREEN));
-            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__RIGHT_CLICK_HINT)).color(NamedTextColor.RED));
+                .color(active ? PASTEL_MINT : PASTEL_CORAL));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__LEFT_CLICK_HINT)).color(PASTEL_MINT));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__RIGHT_CLICK_HINT)).color(PASTEL_CORAL));
             meta.lore(lore);
             stack.setItemMeta(meta);
         }
@@ -558,7 +564,7 @@ public final class LockablesInventory extends BlockProtInventory {
                 Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__COPY_HOVER)).color(NamedTextColor.GRAY));
         Component msg = Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__COPY_MESSAGE)).color(NamedTextColor.DARK_GRAY)
             .append(Component.text(token)
-                .color(NamedTextColor.RED)
+                .color(PASTEL_CORAL)
                 .clickEvent(copyEvent)
                 .hoverEvent(hoverEvent));
         player.sendMessage(msg);

@@ -26,6 +26,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.events.BlockAccessMenuEvent;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.nbt.LockReturnValue;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerInventoryClipboard;
 import de.sean.blockprot.bukkit.tasks.VillagerLocateTask;
@@ -142,7 +143,15 @@ public class BlockLockInventory extends BlockProtInventory {
 
         if (block == null) return;
         if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld()) && event.getSlot() == 0) {
-            applyChanges(player, (h) -> h.lockBlock(player), null);
+            BlockNBTHandler nbtHandler = getNbtHandlerOrNull(block);
+            if (nbtHandler != null) {
+                LockReturnValue ret = nbtHandler.lockBlock(player);
+                if (ret.success) {
+                    nbtHandler.applyToOtherContainer();
+                } else if (ret.reason != null) {
+                    sendActionBar(player, Translator.get(ret.reason));
+                }
+            }
             closeAndOpen(player, null);
         } else {
             switch (item.getType()) {

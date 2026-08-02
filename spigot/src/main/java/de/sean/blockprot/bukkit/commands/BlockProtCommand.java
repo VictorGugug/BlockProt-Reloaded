@@ -153,7 +153,7 @@ public final class BlockProtCommand implements TabExecutor {
                                                @NotNull String alias, @NotNull String[] args) {
         if (args.length > 1) {
             CommandExecutor exec = ALL_COMMANDS.get(args[0].toLowerCase(Locale.ROOT));
-            if (exec != null) {
+            if (exec != null && exec.canUseCommand(sender)) {
                 List<String> sub = exec.onTabComplete(sender, command, alias, args);
                 return sub != null ? sub : Collections.emptyList();
             }

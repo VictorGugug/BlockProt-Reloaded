@@ -22,12 +22,18 @@ permissions:
       with protection data automatically cleared on break.
     children:
       blockprot.user: true
-  blockprot.max_blocks:
+  blockprot.lockmax:
     default: false
     description: >
-      Exempts the player from the player_max_locked_block_count limit in config.yml.
-      Assign to VIPs, donors, or trusted players who should protect more blocks than
-      the configured cap allows.
+      Exempts the player from the player_max_locked_block_count limit in config.yml
+      (unlimited locked blocks). Assign to VIPs, donors, or trusted players who
+      should protect more blocks than the configured cap allows.
+  blockprot.locklimit.<N>:
+    default: false
+    description: >
+      Dynamic node that overrides the per-player cap with a specific number:
+      replace <N> with the number (e.g. blockprot.locklimit.500 = max 500 locked
+      blocks). The highest granted value wins.
   blockprot.blocks.tp:
     default: op
     description: >

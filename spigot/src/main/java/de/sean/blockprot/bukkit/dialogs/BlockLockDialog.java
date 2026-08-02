@@ -29,6 +29,7 @@ import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.TransferSearchInventory;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
+import de.sean.blockprot.nbt.LockReturnValue;
 import de.sean.blockprot.bukkit.nbt.PlayerInventoryClipboard;
 import de.sean.blockprot.bukkit.tasks.VillagerLocateTask;
 import net.kyori.adventure.text.Component;
@@ -131,8 +132,11 @@ public final class BlockLockDialog {
             NamedTextColor.WHITE,
             p -> {
                 if (isNotProtected) {
-                    handler.setOwner(p.getUniqueId().toString());
-                    handler.applyToOtherContainer();
+                    LockReturnValue ret = handler.lockBlock(p);
+                    if (!ret.success && ret.reason != null) {
+                        p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(ret.reason)));
+                    }
                 } else {
                     handler.clear();
                     handler.applyToOtherContainer();

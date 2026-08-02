@@ -23,21 +23,28 @@ package de.sean.blockprot.bukkit;
 /**
  * Permission nodes for BlockProt Reloaded.
  *
- * <p>Four active nodes (declared in plugin.yml):
+ * <p>Five active nodes (declared in plugin.yml):
  * <ul>
  *   <li>{@link #USER}      : all standard player actions. Default: true (everyone)</li>
  *   <li>{@link #USER_ADMIN}: all admin actions plus the ability to break any protected
  *                             block or shulker, clearing the protection on break.
  *                             Implicitly grants USER. Default: op</li>
- *   <li>{@link #MAX_BLOCKS}: exempts the player from the player_max_locked_block_count
- *                             cap in config.yml. Default: false</li>
+ *   <li>{@link #LOCKMAX}   : exempts the player from the player_max_locked_block_count
+ *                             cap in config.yml (unlimited). The dynamic node
+ *                             {@code blockprot.locklimit.<N>} overrides the cap with a
+ *                             specific number. Default: false</li>
  *   <li>{@link #BLOCKS_TP} : teleport to a block from the statistics inventory.
  *                             Default: op</li>
+ *   <li>{@link #DEBUG}     : run diagnostic checks and view debug output. Default: op</li>
  * </ul>
  *
  * <p>{@link #BYPASS} is kept as a deprecated alias of {@link #USER_ADMIN} so that any
  * external code or permission plugin entries that still reference {@code blockprot.bypass}
  * continue to compile and behave correctly without modification.
+ *
+ * <p>{@link #MAX_BLOCKS} is kept as a deprecated alias of {@link #LOCKMAX}: the old
+ * {@code blockprot.max_blocks} node never had an effect, and the working exemption
+ * nodes are {@code blockprot.lockmax} and {@code blockprot.locklimit.<N>}.
  *
  * @since 1.1.7
  */
@@ -54,10 +61,12 @@ public enum Permissions {
     USER_ADMIN("blockprot.user.admin"),
 
     /**
-     * Exempts the holder from the {@code player_max_locked_block_count} limit.
+     * Exempts the holder from the {@code player_max_locked_block_count} limit
+     * (unlimited locked blocks). The dynamic {@code blockprot.locklimit.<N>} node
+     * overrides the cap with a specific number instead.
      * Assign to VIPs, donors, or trusted players.
      */
-    MAX_BLOCKS("blockprot.max_blocks"),
+    LOCKMAX("blockprot.lockmax"),
 
     /** Teleport to a protected block from the statistics inventory. */
     BLOCKS_TP("blockprot.blocks.tp"),
@@ -73,6 +82,11 @@ public enum Permissions {
      */
     @Deprecated
     BYPASS("blockprot.user.admin"),
+
+    /** @deprecated Use {@link #LOCKMAX}. The old node never had an effect; the working
+     *               exemption nodes are {@code blockprot.lockmax} and {@code blockprot.locklimit.<N>}. */
+    @Deprecated
+    MAX_BLOCKS("blockprot.lockmax"),
 
     /** @deprecated Use {@link #USER} */
     @Deprecated

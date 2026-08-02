@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.dialogs.FriendManageDialog;
@@ -53,11 +54,21 @@ public final class FriendsAddAllCommand implements CommandExecutor {
     private static final long SEARCH_MSG_TIMEOUT_TICKS = 60L;
 
     @Override
+    public boolean canUseCommand(@NotNull CommandSender sender) {
+        return sender.hasPermission(Permissions.USER.key());
+    }
+
+    @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS)));
+            return true;
+        }
+        if (!canUseCommand(sender)) {
+            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
             return true;
         }
         if (args.length == 1) {

@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -40,6 +41,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public final class AutoDropFamilyInventory extends BlockProtInventory {
+
+    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
+    private static final TextColor PASTEL_MINT  = TextColor.color(0x8FE3B0);
+    private static final TextColor PASTEL_AQUA  = TextColor.color(0xA8E2E2);
 
     private static final int CONTENT_SLOTS = 45;
     private static final int SLOT_PREV = 47;
@@ -96,7 +101,7 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
         ItemStack backStack = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta backMeta = backStack.getItemMeta();
         if (backMeta != null) {
-            backMeta.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__BACK)).color(NamedTextColor.RED));
+            backMeta.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__BACK)).color(PASTEL_CORAL));
             backStack.setItemMeta(backMeta);
         }
         inventory.setItem(SLOT_BACK, backStack);
@@ -185,7 +190,7 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
         ItemStack sep = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = sep.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text(label).color(NamedTextColor.AQUA));
+            meta.displayName(Component.text(label).color(PASTEL_AQUA));
             meta.lore(List.of());
             sep.setItemMeta(meta);
         }
@@ -212,8 +217,8 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
             String status = active
                 ? Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__STATUS_ACTIVE)
                 : Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__STATUS_INACTIVE);
-            lore.add(Component.text(status).color(active ? NamedTextColor.GREEN : NamedTextColor.RED));
-            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__LEFT_CLICK_HINT)).color(NamedTextColor.GREEN));
+            lore.add(Component.text(status).color(active ? PASTEL_MINT : PASTEL_CORAL));
+            lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__LEFT_CLICK_HINT)).color(PASTEL_MINT));
             meta.lore(lore);
             stack.setItemMeta(meta);
         }

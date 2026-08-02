@@ -46,7 +46,7 @@ public final class LockablesDialog {
     private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
     private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
     private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
-    private static final TextColor PASTEL_ORANGE = TextColor.color(0xF2A65A);
+    private static final TextColor PASTEL_ORANGE = TextColor.color(0xDFB98E);
 
     private static final int PER_PAGE = 6;
 

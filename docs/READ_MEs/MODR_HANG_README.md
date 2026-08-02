@@ -5,7 +5,7 @@ BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/
 
 ## What it does
 
-Players sneak and right-click any lockable block or entity to open the protection GUI - no commands required. From the GUI they can lock or unlock, manage a per-block friend list with Read, Write, or Manager roles, control redstone and hopper access, inspect the access audit trail, and copy and paste settings between blocks.
+Players sneak and right-click any lockable block or entity to open the protection GUI - no commands required. From the GUI they can lock or unlock, manage a per-block friend list and make blocks public, control redstone and hopper access, inspect the access audit trail, and copy and paste settings between blocks.
 
 Admins get a separate toolset: a paged block browser (`/bp lockables`), per-player block lists (`/bp info`), an unlock GUI (`/bp unlock`), diagnostics (`/bp debug run`), and a full audit log per protected block.
 
@@ -75,8 +75,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 - All SQL and NBT I/O is asynchronous.
 
 ### Other additions
-- Ownership transfer: `/bp transfer <player>` and `/bp transfer all <player>`.
-- Timed friend access: grant a friend temporary access that auto-revokes when the timer expires.
+- Ownership transfer: `/bp transferall <player>` moves ownership of all your blocks to another player.
 - Per-world configuration via `worlds.yml` (`per_worlds_config: true`).
 - Auto-reload via `ConfigFileWatcher` (`auto_reload_configs`, default `true`).
 - Automatic backup zip on version upgrade.
@@ -98,8 +97,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 | `/bp unlock <player>` | `blockprot.user.admin` | Inspect or remove any player's protections |
 | `/bp reload` | op | Reload all config files and merge missing keys |
 | `/bp debug run` | `blockprot.debug` | Run internal diagnostics |
-| `/bp transfer <player>` | `blockprot.user` | Transfer ownership of the looked-at block |
-| `/bp transfer all <player>` | `blockprot.user` | Transfer all owned blocks to another player |
+| `/bp transferall <player>` | `blockprot.user` | Transfer ownership of all your protected blocks to another player |
 
 
 ## Permissions
@@ -108,7 +106,8 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 |---|---|---|
 | `blockprot.user` | true | All standard player features |
 | `blockprot.user.admin` | op | Admin commands and GUIs |
-| `blockprot.max_blocks` | false | Exempt from block count limit |
+| `blockprot.lockmax` | false | Exempt from the block count limit (unlimited) |
+| `blockprot.locklimit.<N>` | false | Per-player cap override (e.g. `blockprot.locklimit.500`) |
 | `blockprot.blocks.tp` | op | Teleport to blocks from stats and admin GUIs |
 | `blockprot.debug` | op | Access to `/bp debug` |
 

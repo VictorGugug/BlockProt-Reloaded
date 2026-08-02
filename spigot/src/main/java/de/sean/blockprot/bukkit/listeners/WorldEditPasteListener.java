@@ -57,6 +57,7 @@ public final class WorldEditPasteListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onWorldEditPasteCommand(@NotNull PlayerCommandPreprocessEvent event) {
+        if (!IntegrationConfig.getBoolean("worldedit.enabled", true)) return;
         if (!IntegrationConfig.getBoolean("worldedit.paste_autolock.enabled", false)) return;
         if (!isPasteCommand(event.getMessage())) return;
 

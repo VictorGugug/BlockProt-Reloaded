@@ -129,7 +129,10 @@ public final class Translator {
 
             if (!defaultConfig.contains(translationKey, true)
                     && !config.contains(translationKey, true)) {
-                values.put(translation, new TranslationValue(translationKey));
+                String fallback = BlockProt.getDefaultConfig().getTranslationFallbackString();
+                values.put(translation, (fallback == null || fallback.isBlank())
+                    ? new TranslationValue(translationKey)
+                    : new TranslationValue(fallback));
                 missingInBoth.add(translationKey);
                 continue;
             }
@@ -189,8 +192,11 @@ public final class Translator {
     @NotNull
     public static String get(@NotNull final TranslationKey key) {
         TranslationValue value = values.get(key);
-        String raw = value == null ? key.toString() : value.getValue();
-        return process(raw);
+        if (value == null) {
+            String fallback = BlockProt.getDefaultConfig().getTranslationFallbackString();
+            return process((fallback == null || fallback.isBlank()) ? key.toString() : fallback);
+        }
+        return process(value.getValue());
     }
 
     @NotNull

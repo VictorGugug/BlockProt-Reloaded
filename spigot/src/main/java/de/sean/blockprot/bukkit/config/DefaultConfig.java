@@ -280,7 +280,7 @@ public final class DefaultConfig extends BlockProtConfig {
     }
 
     public boolean disallowRedstoneOnPlace() {
-        return !config.contains("redstone_disallowed_by_default") || config.getBoolean("redstone_disallowed_by_default");
+        return config.contains("redstone_disallowed_by_default") && config.getBoolean("redstone_disallowed_by_default");
     }
 
     public boolean isWorldExcluded(World world) {
@@ -884,7 +884,7 @@ public final class DefaultConfig extends BlockProtConfig {
         "# Run /bp recommended blocks for a ready-made starting selection instead of editing by hand.",
         "# Format: flat names (CHEST) or family expressions ([*-CHEST]).",
         "# See docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md for full syntax.",
-        "# This file is NEVER modified on startup/reload. Only GUI toggles write here."
+        "# Your lockable lists are never rewritten on startup/reload; structural merges, format conversion, and repair may rewrite this file."
     );
 
     /**

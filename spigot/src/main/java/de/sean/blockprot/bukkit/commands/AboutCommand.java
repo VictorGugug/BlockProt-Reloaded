@@ -23,6 +23,7 @@ package de.sean.blockprot.bukkit.commands;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtConsole;
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.dialogs.AboutDialog;
@@ -48,7 +49,16 @@ public class AboutCommand implements CommandExecutor {
     private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
 
     @Override
+    public boolean canUseCommand(@NotNull CommandSender sender) {
+        return !(sender instanceof Player) || sender.hasPermission(Permissions.USER.key());
+    }
+
+    @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (sender instanceof Player player && !canUseCommand(sender)) {
+            player.sendMessage(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            return true;
+        }
         String senderName = (sender instanceof Player p) ? p.getName() : "Console";
         BlockProtLogger.log("command", senderName + " executed /bp about");
 

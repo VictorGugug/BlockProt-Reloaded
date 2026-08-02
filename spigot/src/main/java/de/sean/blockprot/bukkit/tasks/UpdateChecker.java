@@ -31,6 +31,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.Contract;
@@ -187,7 +188,7 @@ public final class UpdateChecker implements Runnable {
             }
             var comp = Component.text(message);
             if (isOutdated) {
-                comp = comp.color(NamedTextColor.YELLOW)
+                comp = comp.color(TextColor.color(0xF0E6A0))
                     .clickEvent(ClickEvent.openUrl(RELEASE_URL))
                     .hoverEvent(HoverEvent.showText(
                         Component.text(Translator.get(TranslationKey.MESSAGES__UPDATE__CLICK_HINT))));

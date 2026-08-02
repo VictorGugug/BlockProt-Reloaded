@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -41,6 +42,11 @@ import java.util.List;
 import java.util.Set;
 
 public final class AutoDropInventory extends BlockProtInventory {
+
+    private static final TextColor PASTEL_CORAL  = TextColor.color(0xF0A0A0);
+    private static final TextColor PASTEL_MINT   = TextColor.color(0x8FE3B0);
+    private static final TextColor PASTEL_GOLD   = TextColor.color(0xD2B48C);
+    private static final TextColor PASTEL_YELLOW = TextColor.color(0xF0E6A0);
 
     private record FamilyEntry(BlockFamilyParser.Family family, Material icon, int slot) {}
 
@@ -78,10 +84,10 @@ public final class AutoDropInventory extends BlockProtInventory {
             ItemStack stack = new ItemStack(fe.icon());
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                NamedTextColor nameColor = allActive ? NamedTextColor.GREEN : (noneActive ? NamedTextColor.RED : NamedTextColor.GOLD);
+                TextColor nameColor = allActive ? PASTEL_MINT : (noneActive ? PASTEL_CORAL : PASTEL_GOLD);
                 meta.displayName(Component.text(label).color(nameColor));
 
-                NamedTextColor statusColor = allActive ? NamedTextColor.GREEN : (noneActive ? NamedTextColor.RED : NamedTextColor.GOLD);
+                TextColor statusColor = allActive ? PASTEL_MINT : (noneActive ? PASTEL_CORAL : PASTEL_GOLD);
                 String statusText = allActive
                     ? Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__STATUS_ACTIVE)
                     : (noneActive
@@ -90,8 +96,8 @@ public final class AutoDropInventory extends BlockProtInventory {
 
                 meta.lore(List.of(
                     Component.text(statusText).color(statusColor),
-                    Component.text(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__LEFT_CLICK_HINT)).color(NamedTextColor.GREEN),
-                    Component.text(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__RIGHT_CLICK_HINT)).color(NamedTextColor.YELLOW)
+                    Component.text(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__LEFT_CLICK_HINT)).color(PASTEL_MINT),
+                    Component.text(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__RIGHT_CLICK_HINT)).color(PASTEL_YELLOW)
                 ));
                 stack.setItemMeta(meta);
             }

@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
@@ -43,14 +44,17 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Handles {@code /bp transfer <player>} and {@code /bp transfer all <player>}.
- *
- * <p>Single-block: player must look at a block they own.<br>
- * All-blocks: transfers every block in the caller's stat list to the target player.
+ * Handles {@code /bp transferall <player>}: transfers ownership of every block
+ * the caller owns to the target player.
  *
  * @since 1.2.0
  */
 public final class TransferCommand implements CommandExecutor {
+
+    @Override
+    public boolean canUseCommand(@NotNull CommandSender sender) {
+        return sender.hasPermission(Permissions.USER.key());
+    }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
@@ -58,6 +62,11 @@ public final class TransferCommand implements CommandExecutor {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS)));
+            return true;
+        }
+        if (!canUseCommand(sender)) {
+            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
             return true;
         }
 

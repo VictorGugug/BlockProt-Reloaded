@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
 import de.sean.blockprot.bukkit.dialogs.StatsDialog;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
@@ -40,10 +41,19 @@ import java.util.List;
  */
 public class StatisticsCommand implements CommandExecutor {
     @Override
+    public boolean canUseCommand(@NotNull CommandSender sender) {
+        return sender.hasPermission(Permissions.USER.key());
+    }
+
+    @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage(Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
             return false;
+        }
+        if (!canUseCommand(sender)) {
+            player.sendMessage(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            return true;
         }
 
         if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
