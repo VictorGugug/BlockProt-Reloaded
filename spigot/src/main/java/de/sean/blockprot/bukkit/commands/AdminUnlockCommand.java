@@ -54,6 +54,11 @@ import java.util.stream.Collectors;
 public final class AdminUnlockCommand implements CommandExecutor {
 
     @Override
+    public boolean canUseCommand(@NotNull CommandSender sender) {
+        return sender.isOp() || sender.hasPermission(Permissions.USER_ADMIN.key());
+    }
+
+    @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {

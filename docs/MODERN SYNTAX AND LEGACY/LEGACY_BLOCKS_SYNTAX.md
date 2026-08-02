@@ -4,6 +4,8 @@
 
 `blocks.yml` controls which blocks, entities, and containers players can protect on your server.
 
+> New to BlockProt Reloaded? Start with the step-by-step setup guide at `../READ_MEs/ADMIN_GUIDE.md`. For the player-facing usage guide: see `../READ_MEs/PLAYER_GUIDE.md`.
+
 ## Two valid formats
 
 Every list key accepts **two formats**. Do not mix them on the same line.
@@ -37,18 +39,18 @@ lockable_entities:
 
 ## Quick reference
 
-All five lockable list keys ship with two blank template lines (`-` / `-`) by default on a fresh install, ready for you to type material names directly in their place. Run `/bp recommended` (console only) to populate a sensible default set instead of configuring everything by hand. The table below shows what `/bp recommended` writes for each key when `modern_family_blocks: false` (flat mode).
+All five lockable list keys ship with two blank template lines (`-` / `-`) by default on a fresh install, ready for you to type material names directly in their place. Run `/bp recommended blocks` (console only) to populate a sensible default set instead of configuring everything by hand. The table below shows what `/bp recommended blocks` writes for each key when `modern_family_blocks: false` (flat mode).
 
-| Key | Family | `/bp recommended` default (flat mode) |
+| Key | Family | `/bp recommended blocks` default (flat mode) |
 |---|---|---|
 | `lockable_tile_entities` | TILE_ENTITIES | All chests, furnaces, hoppers, barrels, shelves, etc. |
 | `lockable_shulker_boxes` | SHULKER_BOXES | All 17 shulker box variants |
 | `lockable_blocks` | BLOCKS | Anvils, cauldrons, workstations (grindstone, stonecutter, loom, cartography table, smithing table, enchanting table, fletching table), dragon egg, composter, bell, note block |
 | `lockable_doors` | DOORS | All wood types + iron |
 | `lockable_entities` | ENTITIES | ITEM_FRAME + GLOW_ITEM_FRAME only |
-| `auto_drop_to_inventory` | -- | Empty (`auto_drop_to_inventory.enabled: true`, `blocks: []`) even after `/bp recommended` in flat mode; only the modern-mode (`modern_family_blocks: true`) branch of `/bp recommended` populates it, with `[*-SHULKERS]` |
+| `auto_drop_to_inventory` | -- | Empty (`auto_drop_to_inventory.enabled: true`, `blocks: []`) even after `/bp recommended blocks` in flat mode; only the modern-mode (`modern_family_blocks: true`) branch of `/bp recommended blocks` populates it, with `[*-SHULKERS]` |
 
-Fence gates, trapdoors, and copper doors belong to the BLOCKS and DOORS families respectively and can be added with family expressions (e.g. `"[*-TRAPDOOR]"`, `"[*-FENCE_GATE]"`), but `/bp recommended` does not include them in its flat-mode defaults.
+Fence gates, trapdoors, and copper doors belong to the BLOCKS and DOORS families respectively and can be added with family expressions (e.g. `"[*-TRAPDOOR]"`, `"[*-FENCE_GATE]"`), but `/bp recommended blocks` does not include them in its flat-mode defaults.
 
 ### Flat list -- per-material
 
@@ -76,7 +78,7 @@ If you use a token that does not belong to that family (e.g. `FLETCHING_TABLE` i
 
 ## Enabling and disabling entities
 
-`lockable_entities` controls entity protection. It is empty by default; nothing is protected until it is configured, either manually or via `/bp recommended`.
+`lockable_entities` controls entity protection. It is empty by default; nothing is protected until it is configured, either manually or via `/bp recommended blocks`.
 
 ```yaml
 # Enable everything (all entity sub-families)

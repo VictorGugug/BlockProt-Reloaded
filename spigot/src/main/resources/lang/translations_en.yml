@@ -501,10 +501,12 @@ console:
 
   recommended_console_only: "§cThis command can only be run from the console."
   recommended_blocks_missing: "§cblocks.yml not found. Start the server once to generate it."
-  recommended_done: "§aRecommended configuration written to blocks.yml."
+  recommended_usage: "§7Usage: §e/bp recommended <blocks|config|all> [force]§7. blocks: write the recommended block lists to blocks.yml. config: enable the recommended config.yml settings (modern_family_blocks, use_menus, use_dialogs). all: apply both."
+  recommended_blocks_done: "§aRecommended block lists written to blocks.yml."
+  recommended_config_done: "§aRecommended settings written to config.yml (modern_family_blocks, use_menus, use_dialogs)."
   recommended_reload: "§7Reload with '/bp reload' or wait for auto-reload."
-  recommended_failed: "§cFailed to write blocks.yml: {error}"
-  recommended_already_applied: "§7Recommended configuration was already applied once; edit blocks.yml directly to change it further."
+  recommended_failed: "§cFailed to write {file}: {error}"
+  recommended_already_applied: "§7Recommended {target} was already applied once. Re-run with §e/bp recommended {target} force §7to apply it again."
 
   first_start:
     header: "§x§D§2§B§4§8§C  ------------------------------------------"
@@ -892,7 +894,7 @@ help:
   debug: "§7  /bp debug <run|...> §f- Developer diagnostics."
   unlock: "§7  /bp unlock <player> §f- Open block unlock GUI for a player."
   lockables: "§7  /bp lockables §f- Browse and toggle which blocks are lockable."
-  recommended: "§7  /bp recommended §f- Apply the recommended block protection defaults."
+  recommended: "§7  /bp recommended <blocks|config|all> [force] §f- Apply recommended blocks.yml lists, config.yml settings, or both."
   world_prot_del: "§7  /bp protdel [world] §f- Delete all protections in a world."
   gui_mode_title: "§6► GUI Mode"
   gui_user: "§7  /bp user  §f- Open User Menu (settings, friends, stats, about)"

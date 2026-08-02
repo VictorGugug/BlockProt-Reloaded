@@ -25,7 +25,7 @@ All additions are **disabled by default**. The upstream NBT core is untouched un
 
 **Java 25 / Paper 26.x compatibility**: detects both `1.x` and year-based `26.x` versioning at runtime; startup compatibility checks logged to console and a session log file.
 
-**Persistent session logging**: one timestamped log file per session under `plugins/BlockProt/logs/`.
+**Persistent session logging**: one timestamped log file per session under `plugins/BlockProtReloaded/logs/`.
 
 **Hybrid MySQL / NBT backend** *(optional)*: HikariCP connection pool, async queries, global trust table, in-memory cache. Disabled by default.
 

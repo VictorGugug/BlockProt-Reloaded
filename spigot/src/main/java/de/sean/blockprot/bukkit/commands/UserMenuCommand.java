@@ -44,7 +44,7 @@ public final class UserMenuCommand implements CommandExecutor {
 
     @Override
     public boolean canUseCommand(@NotNull CommandSender sender) {
-        return sender.hasPermission(Permissions.USER.key()) || sender.hasPermission(Permissions.USER.key());
+        return sender.hasPermission(Permissions.USER.key());
     }
 
     @Override

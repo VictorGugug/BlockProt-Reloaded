@@ -47,7 +47,7 @@ import java.util.zip.ZipOutputStream;
  * When a backup is made, the console receives a clear notice and a reminder to
  * review the new config options.</p>
  *
- * <p>Backups are saved to: {@code plugins/BlockProt/backups/YYYY-MM-DD_HH-mm.zip}</p>
+ * <p>Backups are saved to: {@code plugins/BlockProtReloaded/backups/YYYY-MM-DD_HH-mm.zip}</p>
  *
  * <p>Version metadata is written from the cached {@link UpdateChecker#latestVersion}
  * value when available, avoiding a redundant HTTP request at startup.</p>

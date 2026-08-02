@@ -776,7 +776,7 @@ public final class DefaultConfig extends BlockProtConfig {
      * Determines the output format for a blocks.yml key.
      *
      * <p>Primarily checks the key's actual on-disk content: if it already contains a
-     * family expression (e.g. because {@code /bp recommended} wrote one, or a previous
+     * family expression (e.g. because {@code /bp recommended blocks} wrote one, or a previous
      * "select all" toggle collapsed it to {@code [*-SIGN]}), individual toggles keep
      * writing expressions for that key so a single click does not blow up an already
      * compact list into hundreds of flat material names.
@@ -881,7 +881,7 @@ public final class DefaultConfig extends BlockProtConfig {
     private static final List<String> BLOCKS_HEADER = List.of(
         "# BlockProt Reloaded -- blocks.yml",
         "# Add block or material names below each list, one per line, replacing the blank lines.",
-        "# Run /bp recommended for a ready-made starting selection instead of editing by hand.",
+        "# Run /bp recommended blocks for a ready-made starting selection instead of editing by hand.",
         "# Format: flat names (CHEST) or family expressions ([*-CHEST]).",
         "# See docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md for full syntax.",
         "# This file is NEVER modified on startup/reload. Only GUI toggles write here."
