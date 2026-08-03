@@ -23,4 +23,6 @@ lockable_entities:
 
 auto_drop_to_inventory:
   enabled: true
-  blocks: []
+  blocks:
+  -
+  -

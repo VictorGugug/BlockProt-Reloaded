@@ -863,11 +863,7 @@ public final class DefaultConfig extends BlockProtConfig {
             }
 
             if (real.isEmpty()) {
-                if (k.equals(AUTO_DROP_BLOCKS_KEY)) {
-                    cfg.set(key, Collections.emptyList());
-                } else {
-                    cfg.set(key, modernFormat ? List.of("[]") : Arrays.asList(null, null));
-                }
+                cfg.set(key, modernFormat ? List.of("[]") : Arrays.asList(null, null));
             } else if (real.size() != raw.size()) {
                 cfg.set(key, real);
             }
@@ -1480,8 +1476,8 @@ public final class DefaultConfig extends BlockProtConfig {
 
         if (!bc.contains("auto_drop_to_inventory")) {
             bc.set("auto_drop_to_inventory.enabled", true);
-            bc.set("auto_drop_to_inventory.blocks", Collections.emptyList());
-            BlockProtLogger.log("blocks-patch", "blocks.yml: added missing key 'auto_drop_to_inventory' (disabled by default).");
+            bc.set("auto_drop_to_inventory.blocks", Arrays.asList(null, null));
+            BlockProtLogger.log("blocks-patch", "blocks.yml: added missing key 'auto_drop_to_inventory' (enabled by default).");
             dirty = true;
         }
 
@@ -1510,7 +1506,9 @@ public final class DefaultConfig extends BlockProtConfig {
         lines.add("");
         lines.add("auto_drop_to_inventory:");
         lines.add("  enabled: true");
-        lines.add("  blocks: []");
+        lines.add("  blocks:");
+        lines.add("  -");
+        lines.add("  -");
         lines.add("");
         Files.write(blocksFile.toPath(), lines, StandardCharsets.UTF_8);
     }
