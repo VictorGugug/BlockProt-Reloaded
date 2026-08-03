@@ -44,6 +44,7 @@ import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -59,6 +60,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -119,6 +121,26 @@ public final class BlockProt extends JavaPlugin {
         return instance;
     }
 
+    /**
+     * Creates a {@link PluginCommand} for the Paper plugin loader, which does not
+     * auto-register descriptor commands. The {@link PluginCommand} constructor is
+     * package-private in the Bukkit API, so it is accessed via reflection.
+     */
+    private static PluginCommand createPluginCommand(@NotNull String name) {
+        try {
+            Constructor<PluginCommand> constructor =
+                PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
+            constructor.setAccessible(true);
+            PluginCommand command = constructor.newInstance(name, getInstance());
+            command.setDescription("The main blockprot command");
+            command.setUsage("/blockprot <user|admin>");
+            command.setAliases(Collections.singletonList("bp"));
+            return command;
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Cannot create /blockprot command", e);
+        }
+    }
+
     @NotNull
     public static DefaultConfig getDefaultConfig() throws AssertionError {
         assert defaultConfig != null : "default config should not be null.";
@@ -176,6 +198,7 @@ public final class BlockProt extends JavaPlugin {
     }
 
     @Override
+    @SuppressWarnings("deprecation") // Shut up bro （￣︶￣）↗　
     public void onEnable() {
         if (isRunningCraftBukkit()) {
             this.saveDefaultConfig();
@@ -290,8 +313,19 @@ public final class BlockProt extends JavaPlugin {
             true,
             Translator.get(TranslationKey.CONSOLE__BOOT_REGISTERED));
 
-        Objects.requireNonNull(this.getCommand("blockprot"))
-            .setExecutor(new BlockProtCommand());
+        // Paper's plugin loader (paper-plugin.yml) does not auto-register
+        // descriptor commands and JavaPlugin#getCommand throws on Paper
+        // plugins, so detect the loader via the descriptor and register the
+        // command manually.
+        PluginCommand mainCommand = null;
+        if (!this.getDescription().getCommands().isEmpty()) {
+            mainCommand = (PluginCommand) this.getCommand("blockprot");
+        }
+        if (mainCommand == null) {
+            mainCommand = createPluginCommand("blockprot");
+            Bukkit.getCommandMap().register("blockprot", mainCommand);
+        }
+        mainCommand.setExecutor(new BlockProtCommand());
 
         BlockProtConsole.bootStatus(
             Translator.get(TranslationKey.CONSOLE__BOOT_COMMANDS),
