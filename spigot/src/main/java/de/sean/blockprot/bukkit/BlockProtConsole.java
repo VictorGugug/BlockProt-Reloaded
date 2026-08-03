@@ -20,7 +20,7 @@
 
 package de.sean.blockprot.bukkit;
 
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -141,7 +141,7 @@ public final class BlockProtConsole {
      * lines that already carry {@link #PREFIX} themselves).
      */
     private static void raw(@NotNull String message) {
-        Bukkit.getConsoleSender().sendMessage(LegacyComponentSerializer.legacySection().deserialize(message));
+        ComponentMessages.sendLegacy(Bukkit.getConsoleSender(), message);
         BlockProtLogger.log(message);
     }
 
