@@ -25,6 +25,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -101,7 +102,7 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
         ItemStack backStack = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta backMeta = backStack.getItemMeta();
         if (backMeta != null) {
-            backMeta.displayName(Component.text(Translator.get(TranslationKey.INVENTORIES__BACK)).color(PASTEL_CORAL));
+            ComponentMessages.displayName(backMeta, Component.text(Translator.get(TranslationKey.INVENTORIES__BACK)).color(PASTEL_CORAL));
             backStack.setItemMeta(backMeta);
         }
         inventory.setItem(SLOT_BACK, backStack);
@@ -190,8 +191,8 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
         ItemStack sep = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = sep.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text(label).color(PASTEL_AQUA));
-            meta.lore(List.of());
+            ComponentMessages.displayName(meta, Component.text(label).color(PASTEL_AQUA));
+            ComponentMessages.lore(meta, List.of());
             sep.setItemMeta(meta);
         }
         return sep;
@@ -211,7 +212,7 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
         if (meta != null) {
             NamedTextColor nameColor = active ? NamedTextColor.WHITE : NamedTextColor.DARK_GRAY;
             String suffix = active ? "" : Translator.get(TranslationKey.INVENTORIES__LOCKABLES__OFF_SUFFIX);
-            meta.displayName(Component.text(friendlyName(mat.name()) + suffix).color(nameColor));
+            ComponentMessages.displayName(meta, Component.text(friendlyName(mat.name()) + suffix).color(nameColor));
             List<Component> lore = new ArrayList<>();
             lore.add(Component.text(mat.name()).color(NamedTextColor.DARK_GRAY));
             String status = active
@@ -219,7 +220,7 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
                 : Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__STATUS_INACTIVE);
             lore.add(Component.text(status).color(active ? PASTEL_MINT : PASTEL_CORAL));
             lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__LEFT_CLICK_HINT)).color(PASTEL_MINT));
-            meta.lore(lore);
+            ComponentMessages.lore(meta, lore);
             stack.setItemMeta(meta);
         }
         return stack;

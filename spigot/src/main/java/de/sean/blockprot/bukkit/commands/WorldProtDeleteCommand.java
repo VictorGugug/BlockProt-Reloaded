@@ -29,7 +29,7 @@ import de.sean.blockprot.bukkit.dialogs.ProtdelDialog;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.WorldProtDeleteConfirmInventory;
 import de.sean.blockprot.bukkit.inventories.WorldProtDeleteInventory;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -55,14 +55,12 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS)));
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
             return true;
         }
 
         if (!player.isOp() && !player.hasPermission(Permissions.USER_ADMIN.key())) {
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
+            ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }
 
@@ -70,9 +68,8 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
             String worldName = args[1];
             World world = Bukkit.getWorld(worldName);
             if (world == null) {
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                    Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_WORLD_NOT_FOUND)
-                        .replace("{world}", worldName)));
+                ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_WORLD_NOT_FOUND)
+                    .replace("{world}", worldName));
                 return true;
             }
             if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {

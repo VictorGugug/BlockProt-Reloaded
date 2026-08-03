@@ -39,7 +39,7 @@ import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -105,11 +105,11 @@ public class DebugCommand implements CommandExecutor {
     }
 
     private static void ab(@NotNull Player p, @NotNull String msg) {
-        p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(msg));
+        ComponentMessages.sendLegacyActionBar(p, msg);
     }
 
     private static void chat(@NotNull Player p, @NotNull String msg) {
-        p.sendMessage(LegacyComponentSerializer.legacySection().deserialize(msg));
+        ComponentMessages.sendLegacy(p, msg);
     }
 
     private void runDiagnostics(@NotNull Player player) {

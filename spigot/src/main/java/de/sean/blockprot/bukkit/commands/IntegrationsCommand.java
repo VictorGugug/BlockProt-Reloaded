@@ -26,7 +26,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.dialogs.IntegrationsDialog;
 import de.sean.blockprot.bukkit.integrations.PluginIntegration;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -59,10 +59,9 @@ public class IntegrationsCommand implements CommandExecutor {
             .reduce((left, right) -> left + Translator.get(TranslationKey.MESSAGES__INTEGRATIONS__SEPARATOR) + right)
             .orElse(Translator.get(TranslationKey.MESSAGES__INTEGRATIONS__NONE));
 
-        sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-            Translator.get(TranslationKey.MESSAGES__INTEGRATIONS_ENABLED)
-                .replace("{count}", String.valueOf(enabledIntegrations.size()))
-                .replace("{integrations}", names)));
+        ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__INTEGRATIONS_ENABLED)
+            .replace("{count}", String.valueOf(enabledIntegrations.size()))
+            .replace("{integrations}", names));
         return true;
     }
 

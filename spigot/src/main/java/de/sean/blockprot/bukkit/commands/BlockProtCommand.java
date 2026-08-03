@@ -23,7 +23,7 @@ package de.sean.blockprot.bukkit.commands;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -117,14 +117,12 @@ public final class BlockProtCommand implements TabExecutor {
         if (playerMenuMode) {
             CommandExecutor adminExec = ADMIN_COMMANDS.get(sub);
             if (adminExec != null) {
-                sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                    Translator.get(TranslationKey.MESSAGES__CMD_USAGE_MENUS)));
+                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_MENUS));
                 return true;
             }
             CommandExecutor exec = GUI_COMMANDS.get(sub);
             if (exec == null) {
-                sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                    Translator.get(TranslationKey.MESSAGES__CMD_USAGE_MENUS)));
+                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_MENUS));
                 return true;
             }
             return exec.onCommand(sender, command, label, args);
@@ -136,11 +134,9 @@ public final class BlockProtCommand implements TabExecutor {
             CommandExecutor exec = CLI_COMMANDS.get(sub);
             if (exec == null) {
                 if (GUI_COMMANDS.containsKey(sub)) {
-                    sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                        Translator.get(TranslationKey.MESSAGES__CMD_USAGE_CLI_GUI_ONLY)));
+                    ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_CLI_GUI_ONLY));
                 } else {
-                    sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                        Translator.get(TranslationKey.MESSAGES__CMD_USAGE_CLI)));
+                    ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_CLI));
                 }
                 return true;
             }

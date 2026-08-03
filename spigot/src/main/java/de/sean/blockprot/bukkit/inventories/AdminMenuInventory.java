@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -154,13 +155,11 @@ public class AdminMenuInventory extends BlockProtInventory {
                     BlockProt.getInstance().getDataFolder(), true).run();
             }
             BlockProt.getInstance().reloadConfigAndTranslations();
-            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__ADMIN_RELOAD_DONE)));
+            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__ADMIN_RELOAD_DONE));
 
         } else if (slot == SLOT_UPDATE) {
             player.closeInventory();
-            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE_LORE)));
+            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE_LORE));
             Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(),
                 new UpdateChecker(BlockProt.getPluginVersion(),
                     new ArrayList<>(Bukkit.getOnlinePlayers())));
@@ -174,7 +173,7 @@ public class AdminMenuInventory extends BlockProtInventory {
             String msg = Translator.get(TranslationKey.MESSAGES__ADMIN_INTEGRATIONS)
                 .replace("{count}", String.valueOf(list.size()))
                 .replace("{integrations}", names);
-            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(msg));
+            ComponentMessages.sendLegacyActionBar(player, msg);
 
         } else if (slot == SLOT_STATS) {
             InventoryState newState = new InventoryState(null);
@@ -185,8 +184,7 @@ public class AdminMenuInventory extends BlockProtInventory {
 
         } else if (slot == SLOT_DEBUG) {
             player.closeInventory();
-            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__ADMIN_DEBUG_HINT)));
+            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__ADMIN_DEBUG_HINT));
             player.performCommand("blockprot debug run");
 
         } else if (slot == SLOT_WORLD_EXPIRY) {
@@ -224,9 +222,8 @@ public class AdminMenuInventory extends BlockProtInventory {
                     final OfflinePlayer finalTarget = target;
                     Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
                         if (finalTarget == null || finalTarget.getUniqueId() == null) {
-                            player.sendActionBar(LegacyComponentSerializer.legacySection()
-                                .deserialize(Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_PLAYER_NOT_FOUND)
-                                .replace("{player}", inputName)));
+                            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_PLAYER_NOT_FOUND)
+                                .replace("{player}", inputName));
                             return;
                         }
                         String displayName = finalTarget.getName() != null ? finalTarget.getName() : inputName;
@@ -260,7 +257,7 @@ public class AdminMenuInventory extends BlockProtInventory {
         ItemStack sep = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = sep.getItemMeta();
         if (meta != null) {
-            meta.displayName(net.kyori.adventure.text.Component.text(""));
+            ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(""));
             sep.setItemMeta(meta);
         }
         for (int s : SEPARATOR_SLOTS) {
@@ -269,7 +266,7 @@ public class AdminMenuInventory extends BlockProtInventory {
         ItemStack sectionHeader = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
         ItemMeta hMeta = sectionHeader.getItemMeta();
         if (hMeta != null) {
-            hMeta.displayName(net.kyori.adventure.text.Component.text(""));
+            ComponentMessages.displayName(hMeta, net.kyori.adventure.text.Component.text(""));
             sectionHeader.setItemMeta(hMeta);
         }
         inventory.setItem(9, sectionHeader);
@@ -281,11 +278,11 @@ public class AdminMenuInventory extends BlockProtInventory {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
-        meta.displayName(net.kyori.adventure.text.Component.text(
+        ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(
             name.replaceAll("[§&][0-9a-fk-orx]", "")));
         List<net.kyori.adventure.text.Component> loreList = new ArrayList<>(lore.length);
         for (String s : lore) loreList.add(LegacyComponentSerializer.legacySection().deserialize(s));
-        meta.lore(loreList);
+        ComponentMessages.lore(meta, loreList);
         item.setItemMeta(meta);
         return item;
     }

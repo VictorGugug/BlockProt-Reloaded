@@ -28,8 +28,8 @@ import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.util.PlayerNameResolver;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -60,19 +60,16 @@ public final class TransferCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS)));
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
             return true;
         }
         if (!canUseCommand(sender)) {
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
+            ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }
 
         if (args.length < 2) {
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__TRANSFER_USAGE)));
+            ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_USAGE));
             return true;
         }
 
@@ -83,8 +80,7 @@ public final class TransferCommand implements CommandExecutor {
     private void handleTransferAll(@NotNull Player player, @NotNull String targetName) {
         resolvePlayer(player, targetName, newOwner -> {
             if (newOwner.getUniqueId().equals(player.getUniqueId())) {
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                    Translator.get(TranslationKey.MESSAGES__TRANSFER_SELF)));
+                ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_SELF));
                 return;
             }
 
@@ -93,8 +89,7 @@ public final class TransferCommand implements CommandExecutor {
             List<LocationListEntry> entries = stat.get();
 
             if (entries.isEmpty()) {
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                    Translator.get(TranslationKey.MESSAGES__TRANSFER_ALL_NO_BLOCKS)));
+                ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_ALL_NO_BLOCKS));
                 return;
             }
 
@@ -125,10 +120,9 @@ public final class TransferCommand implements CommandExecutor {
                     } catch (RuntimeException ignored) {}
                 }
                 String name = finalNewOwner.getName() != null ? finalNewOwner.getName() : targetName;
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                    Translator.get(TranslationKey.MESSAGES__TRANSFER_ALL_SUCCESS)
-                        .replace("{count}", String.valueOf(transferred))
-                        .replace("{player}", name)));
+                ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_ALL_SUCCESS)
+                    .replace("{count}", String.valueOf(transferred))
+                    .replace("{player}", name));
             });
         });
     }
@@ -146,7 +140,7 @@ public final class TransferCommand implements CommandExecutor {
                 final String msg = Translator.get(TranslationKey.MESSAGES__TRANSFER_PLAYER_NOT_FOUND)
                     .replace("{player}", name);
                 Bukkit.getScheduler().runTask(BlockProt.getInstance(), () ->
-                    player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(msg)));
+                    ComponentMessages.sendLegacy(player, msg));
                 return;
             }
             final OfflinePlayer resolved = found;

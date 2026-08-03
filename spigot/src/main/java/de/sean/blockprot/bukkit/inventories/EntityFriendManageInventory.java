@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -185,8 +186,6 @@ public final class EntityFriendManageInventory extends BlockProtInventory {
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String text) {
-        player.sendActionBar(
-            net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                .legacySection().deserialize(text));
+        ComponentMessages.sendLegacyActionBar(player, text);
     }
 }

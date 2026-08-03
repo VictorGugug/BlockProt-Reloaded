@@ -33,8 +33,8 @@ import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.util.PlayerNameResolver;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -69,8 +69,7 @@ public final class InfoCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         if (!canUseCommand(sender)) {
-            sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }
 
@@ -85,8 +84,7 @@ public final class InfoCommand implements CommandExecutor {
                 InventoryState.set(player.getUniqueId(), state);
                 new PlayerListInventory().open(player);
             } else {
-                sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                    Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_USAGE)));
+                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_USAGE));
             }
             return true;
         }
@@ -105,7 +103,7 @@ public final class InfoCommand implements CommandExecutor {
                 final String msg = Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_PLAYER_NOT_FOUND)
                     .replace("{player}", targetName);
                 Bukkit.getScheduler().runTask(BlockProt.getInstance(), () ->
-                    sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(msg)));
+                    ComponentMessages.sendLegacy(sender, msg));
                 return;
             }
 
@@ -118,9 +116,8 @@ public final class InfoCommand implements CommandExecutor {
 
                 if (sender instanceof Player player) {
                     if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-                        player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                            Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_HEADER)
-                                .replace("{player}", displayName)));
+                        ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_HEADER)
+                            .replace("{player}", displayName));
                         for (LocationListEntry entry : stat.get()) {
                             Location loc = entry.get();
                             if (loc.getWorld() == null) continue;
@@ -135,7 +132,7 @@ public final class InfoCommand implements CommandExecutor {
                                 .replace("{x}",     String.valueOf(loc.getBlockX()))
                                 .replace("{y}",     String.valueOf(loc.getBlockY()))
                                 .replace("{z}",     String.valueOf(loc.getBlockZ()));
-                            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(line));
+                            ComponentMessages.sendLegacy(player, line);
                         }
                         return;
                     }
@@ -149,15 +146,13 @@ public final class InfoCommand implements CommandExecutor {
 
                 List<LocationListEntry> entries = stat.get();
                 if (entries.isEmpty()) {
-                    sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                        Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_NO_BLOCKS)
-                            .replace("{player}", displayName)));
+                    ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_NO_BLOCKS)
+                        .replace("{player}", displayName));
                     return;
                 }
 
-                sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                    Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_HEADER)
-                        .replace("{player}", displayName)));
+                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_HEADER)
+                    .replace("{player}", displayName));
 
                 final String entryTemplate = Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_ENTRY);
                 for (LocationListEntry entry : entries) {
@@ -175,7 +170,7 @@ public final class InfoCommand implements CommandExecutor {
                         .replace("{x}",     String.valueOf(loc.getBlockX()))
                         .replace("{y}",     String.valueOf(loc.getBlockY()))
                         .replace("{z}",     String.valueOf(loc.getBlockZ()));
-                    sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(line));
+                    ComponentMessages.sendLegacy(sender, line);
                 }
             });
         });

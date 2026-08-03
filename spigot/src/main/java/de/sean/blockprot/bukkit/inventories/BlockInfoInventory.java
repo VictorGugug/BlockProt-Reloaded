@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.FriendSupportingHandler;
 import de.sean.blockprot.bukkit.nbt.RedstoneSettingsHandler;
 import de.sean.blockprot.bukkit.util.BlockUtil;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -160,9 +161,9 @@ public class BlockInfoInventory extends BlockProtInventory {
                         ? online.getPlayerProfile()
                         : BlockProtInventory.createPlayerProfile(ownerUuid, ownerName);
                     skullMeta.setPlayerProfile(pp);
-                    skullMeta.displayName(net.kyori.adventure.text.Component.text(
+                    ComponentMessages.displayName(skullMeta, net.kyori.adventure.text.Component.text(
                         Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
-                    skullMeta.lore(java.util.List.of(
+                    ComponentMessages.lore(skullMeta, java.util.List.of(
                         net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
                             .legacySection().deserialize(
                                 Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LORE)
@@ -226,7 +227,7 @@ public class BlockInfoInventory extends BlockProtInventory {
             ItemStack item = new ItemStack(blockMat, 1);
             org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.displayName(net.kyori.adventure.text.Component.text(blockDisplay));
+                ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(blockDisplay));
                 java.util.List<net.kyori.adventure.text.Component> lore = new java.util.ArrayList<>();
                 if (blockTypeName != null && !blockTypeName.equalsIgnoreCase(cleanName) && !cleanName.isEmpty()) {
                     lore.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
@@ -234,7 +235,7 @@ public class BlockInfoInventory extends BlockProtInventory {
                 }
                 lore.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
                     .legacySection().deserialize(frameLore));
-                meta.lore(lore);
+                ComponentMessages.lore(meta, lore);
                 item.setItemMeta(meta);
             }
             inventory.setItem(1, item);
@@ -242,9 +243,9 @@ public class BlockInfoInventory extends BlockProtInventory {
             ItemStack item = new ItemStack(blockMat, 1);
             org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.displayName(net.kyori.adventure.text.Component.text(blockDisplay));
+                ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(blockDisplay));
                 if (blockTypeName != null && !blockTypeName.equalsIgnoreCase(cleanName) && !cleanName.isEmpty()) {
-                    meta.lore(java.util.List.of(
+                    ComponentMessages.lore(meta, java.util.List.of(
                         net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
                             .legacySection().deserialize("§7" + cleanName)
                     ));

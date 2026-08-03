@@ -58,6 +58,12 @@ public final class TemporaryActionBar {
         UUID uuid = player.getUniqueId();
         cancel(uuid);
 
+        if (!ComponentMessages.isActionBarSupported()) {
+            // No action bar on this server type (e.g. vanilla Spigot): send once as chat.
+            ComponentMessages.sendLegacyActionBar(player, message);
+            return;
+        }
+
         Component component = LegacyComponentSerializer.legacySection().deserialize(message);
         FoliaLib folia = BlockProt.getFoliaLib();
 
@@ -80,7 +86,7 @@ public final class TemporaryActionBar {
         activeTasks.remove(uuid);
         // Clear the action bar next tick via a fire-and-forget task.
         Player online = org.bukkit.Bukkit.getPlayer(uuid);
-        if (online != null) {
+        if (online != null && ComponentMessages.isActionBarSupported()) {
             online.sendActionBar(Component.empty());
         }
     }
@@ -101,7 +107,9 @@ public final class TemporaryActionBar {
                 resendInterval);
         } else {
             activeTasks.remove(uuid);
-            player.sendActionBar(Component.empty());
+            if (ComponentMessages.isActionBarSupported()) {
+                player.sendActionBar(Component.empty());
+            }
         }
     }
 

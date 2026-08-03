@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -157,7 +158,7 @@ public final class BpUnlockInventory extends BlockProtInventory {
                 .replace("{x}",      String.valueOf(block.getX()))
                 .replace("{y}",      String.valueOf(block.getY()))
                 .replace("{z}",      String.valueOf(block.getZ()));
-            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(msg));
+            ComponentMessages.sendLegacyActionBar(player, msg);
 
             refill(player, state);
         }
@@ -211,7 +212,7 @@ public final class BpUnlockInventory extends BlockProtInventory {
             ItemStack paper = new ItemStack(Material.PAPER);
             ItemMeta  m     = paper.getItemMeta();
             if (m != null) {
-                m.displayName(net.kyori.adventure.text.Component.text(
+                ComponentMessages.displayName(m, net.kyori.adventure.text.Component.text(
                     Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_NO_BLOCKS)
                         .replace("{player}", targetName)
                         .replaceAll("[§&][0-9a-fk-orx]", "")));
@@ -256,7 +257,7 @@ public final class BpUnlockInventory extends BlockProtInventory {
         ItemMeta  meta  = stack.getItemMeta();
         if (meta == null) { inventory.setItem(slot, stack); return; }
 
-        meta.displayName(net.kyori.adventure.text.Component.text(
+        ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(
             entry.getTitle().replaceAll("[§&][0-9a-fk-orx]", "")));
 
         List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
@@ -265,7 +266,7 @@ public final class BpUnlockInventory extends BlockProtInventory {
         String ago = entry.getLockedAgoText();
         if (!ago.isEmpty()) lore.add(LegacyComponentSerializer.legacySection().deserialize(ago));
 
-        meta.lore(lore);
+        ComponentMessages.lore(meta, lore);
         stack.setItemMeta(meta);
         inventory.setItem(slot, stack);
     }

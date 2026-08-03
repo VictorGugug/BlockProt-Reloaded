@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.dialogs.AboutDialog;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -88,12 +89,12 @@ public class AboutCommand implements CommandExecutor {
     private static void printPlayerAbout(Player player) {
         String version = BlockProt.getPluginVersion();
         String issuesUrl = "https://github.com/VictorGugug/BlockProt-Reloaded/issues";
-        player.sendMessage(Component.text()
+        ComponentMessages.send(player, Component.text()
             .append(Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__VERSION_LABEL), SOFT_GRAY))
             .append(Component.text(version, PASTEL_GOLD))
             .build());
-        player.sendMessage(Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__CREDIT_LINE), PASTEL_MINT));
-        player.sendMessage(Component.text()
+        ComponentMessages.send(player, Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__CREDIT_LINE), PASTEL_MINT));
+        ComponentMessages.send(player, Component.text()
             .append(Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__REPORT_ISSUES), SOFT_GRAY))
             .append(Component.text(" ", SOFT_GRAY))
             .append(Component.text(issuesUrl, SOFT_BLUE)

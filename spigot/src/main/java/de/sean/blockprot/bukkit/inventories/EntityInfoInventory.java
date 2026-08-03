@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
@@ -128,9 +129,9 @@ public final class EntityInfoInventory extends BlockProtInventory {
                 if (meta != null) {
                     meta.setPlayerProfile(
                         BlockProtInventory.createPlayerProfile(UUID.fromString(ownerUuid), ownerName));
-                    meta.displayName(Component.text(
+                    ComponentMessages.displayName(meta, Component.text(
                         Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
-                    meta.lore(List.of(
+                    ComponentMessages.lore(meta, List.of(
                         LegacyComponentSerializer.legacySection().deserialize(
                             Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LORE)
                                 .replace("{player}", ownerName)),
@@ -178,7 +179,7 @@ public final class EntityInfoInventory extends BlockProtInventory {
                             BlockProtInventory.createPlayerProfile(profile.getUniqueId(), name));
                         EntityNBTHandler.FriendEntry entry = handler.getFriendEntry(profile.getUniqueId().toString());
                         boolean isManager = entry != null && entry.manager();
-                        meta.displayName(Component.text(name + (isManager ? " " + Translator.get(TranslationKey.INVENTORIES__FRIENDS__PERMISSION__MANAGER) : "")));
+                        ComponentMessages.displayName(meta, Component.text(name + (isManager ? " " + Translator.get(TranslationKey.INVENTORIES__FRIENDS__PERMISSION__MANAGER) : "")));
                         skull.setItemMeta(meta);
                     }
                     inventory.setItem(InventoryConstants.lineLength + idx, skull);

@@ -25,6 +25,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Material;
@@ -84,7 +85,7 @@ public final class AutoDropInventory extends BlockProtInventory {
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
                 TextColor nameColor = allActive ? PASTEL_MINT : (noneActive ? PASTEL_CORAL : PASTEL_GOLD);
-                meta.displayName(Component.text(label).color(nameColor));
+                ComponentMessages.displayName(meta, Component.text(label).color(nameColor));
 
                 TextColor statusColor = allActive ? PASTEL_MINT : (noneActive ? PASTEL_CORAL : PASTEL_GOLD);
                 String statusText = allActive
@@ -93,7 +94,7 @@ public final class AutoDropInventory extends BlockProtInventory {
                         ? Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__STATUS_INACTIVE)
                         : active + "/" + total);
 
-                meta.lore(List.of(
+                ComponentMessages.lore(meta, List.of(
                     Component.text(statusText).color(statusColor),
                     Component.text(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__LEFT_CLICK_HINT)).color(PASTEL_MINT),
                     Component.text(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__RIGHT_CLICK_HINT)).color(PASTEL_YELLOW)

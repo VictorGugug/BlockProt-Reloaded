@@ -202,7 +202,7 @@ public final class FriendsAddAllCommand implements CommandExecutor {
     }
 
     private void sendAction(@NotNull Player player, @NotNull String text) {
-        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(text));
+        ComponentMessages.sendLegacyActionBar(player, text);
     }
 
     private boolean isAddAllAlias(@NotNull String value) {

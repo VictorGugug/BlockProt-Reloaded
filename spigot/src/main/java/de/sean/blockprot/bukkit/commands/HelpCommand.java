@@ -24,7 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -108,6 +108,6 @@ public final class HelpCommand implements CommandExecutor {
 
     private void send(@NotNull CommandSender sender, @NotNull String text) {
         if (text.isBlank()) return;
-        sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(text));
+        ComponentMessages.sendLegacy(sender, text);
     }
 }

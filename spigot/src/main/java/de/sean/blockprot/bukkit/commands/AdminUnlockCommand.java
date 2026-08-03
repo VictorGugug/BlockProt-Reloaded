@@ -31,7 +31,7 @@ import de.sean.blockprot.bukkit.inventories.BpUnlockInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
@@ -62,14 +62,12 @@ public final class AdminUnlockCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS)));
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
             return true;
         }
 
         if (!player.hasPermission(Permissions.USER_ADMIN.key()) && !player.isOp()) {
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
+            ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }
 
@@ -78,8 +76,7 @@ public final class AdminUnlockCommand implements CommandExecutor {
                 InfoDialog.show(player, DialogOrigin.ADMIN_MENU);
                 return true;
             }
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_USAGE)));
+            ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_USAGE));
             return true;
         }
 
@@ -88,9 +85,8 @@ public final class AdminUnlockCommand implements CommandExecutor {
         @SuppressWarnings("deprecation")
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
         if (target == null || target.getName() == null) {
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_PLAYER_NOT_FOUND)
-                    .replace("{player}", targetName)));
+            ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_PLAYER_NOT_FOUND)
+                .replace("{player}", targetName));
             return true;
         }
 
@@ -100,9 +96,8 @@ public final class AdminUnlockCommand implements CommandExecutor {
         StatHandler.getStatisticByUuid(stat, target.getUniqueId());
 
         if (stat.get().isEmpty()) {
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_NO_BLOCKS)
-                    .replace("{player}", resolvedName)));
+            ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_NO_BLOCKS)
+                .replace("{player}", resolvedName));
             return true;
         }
 

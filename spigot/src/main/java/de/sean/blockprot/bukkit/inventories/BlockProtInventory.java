@@ -32,6 +32,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import de.tr7zw.changeme.nbtapi.NBTCompound;
 import de.sean.blockprot.bukkit.util.SkinCache;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.BukkitCompat;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -225,9 +226,9 @@ public abstract class BlockProtInventory implements InventoryHolder {
 
         assert meta != null;
         // Use plain Component so Minecraft applies its default white colour: no colour injection.
-        meta.displayName(Component.text(stripColors(text)));
+        ComponentMessages.displayName(meta, Component.text(stripColors(text)));
         if (!lore.isEmpty()) {
-            meta.lore(lore.stream()
+            ComponentMessages.lore(meta, lore.stream()
                 .map(s -> LegacyComponentSerializer.legacySection().deserialize(s))
                 .toList());
         }
@@ -241,7 +242,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) Bukkit.getItemFactory().getItemMeta(material);
         if (meta != null) {
-            meta.displayName(Component.text(stripColors(Translator.get(key))));
+            ComponentMessages.displayName(meta, Component.text(stripColors(Translator.get(key))));
             stack.setItemMeta(meta);
         }
         toggleEnchants(stack, value);
@@ -260,7 +261,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
             assert meta != null;
             meta.setOwningPlayer(player);
             if (player.getName() != null)
-                meta.displayName(Component.text(player.getName()));
+                ComponentMessages.displayName(meta, Component.text(player.getName()));
         } catch (Exception e) {
             BlockProt.getInstance().getLogger().severe("Failed to set skull head for \"" + player.getName() + "\": " + e.getMessage());
         }
@@ -285,7 +286,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
             assert meta != null;
             meta.setPlayerProfile(profile);
             if (profile != null && profile.getName() != null)
-                meta.displayName(Component.text(profile.getName()));
+                ComponentMessages.displayName(meta, Component.text(profile.getName()));
         } catch (Exception e) {
             BlockProt.getInstance().getLogger().severe("Failed to set skull head for \"" + (profile == null ? "" : profile.getName()) + "\": " + e.getMessage());
         }
@@ -428,7 +429,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
         if (meta != null) {
             String displayNameText = stripColors(Translator.get(key)) + ": " +
                 (value ? stripColors(Translator.get(TranslationKey.ENABLED)) : stripColors(Translator.get(TranslationKey.DISABLED)));
-            meta.displayName(Component.text(displayNameText));
+            ComponentMessages.displayName(meta, Component.text(displayNameText));
             stack.setItemMeta(meta);
         }
         toggleOption(stack, value);
@@ -443,7 +444,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
         }
         if (meta != null) {
             // Get current display name as plain text (strip colors from legacy serialization)
-            var displayNameComponent = meta.displayName();
+            var displayNameComponent = ComponentMessages.displayName(meta);
             String name = displayNameComponent != null
                 ? stripColors(LegacyComponentSerializer.legacySection().serialize(displayNameComponent))
                 : "";
@@ -455,10 +456,10 @@ public abstract class BlockProtInventory implements InventoryHolder {
 
             if (meta.hasEnchants() && (toggle == null || !toggle)) {
                 meta.removeEnchant(glow);
-                meta.displayName(Component.text(name + ": " + stripColors(Translator.get(TranslationKey.DISABLED))));
+                ComponentMessages.displayName(meta, Component.text(name + ": " + stripColors(Translator.get(TranslationKey.DISABLED))));
             } else if (!meta.hasEnchants() && (toggle == null || toggle)) {
                 meta.addEnchant(glow, 1, true);
-                meta.displayName(Component.text(name + ": " + stripColors(Translator.get(TranslationKey.ENABLED))));
+                ComponentMessages.displayName(meta, Component.text(name + ": " + stripColors(Translator.get(TranslationKey.ENABLED))));
             }
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
             stack.setItemMeta(meta);

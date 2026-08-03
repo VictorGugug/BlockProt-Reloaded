@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.audit.AuditLogger.AuditEntry;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -240,8 +241,8 @@ public final class AuditInventory extends BlockProtInventory {
                     lore.add(LegacyComponentSerializer.legacySection().deserialize(entry.world() + " " + entry.x() + "," + entry.y() + "," + entry.z()));
                 }
 
-                skullMeta.displayName(net.kyori.adventure.text.Component.text(displayName));
-                skullMeta.lore(lore);
+                ComponentMessages.displayName(skullMeta, net.kyori.adventure.text.Component.text(displayName));
+                ComponentMessages.lore(skullMeta, lore);
                 skull.setItemMeta(skullMeta);
             }
 

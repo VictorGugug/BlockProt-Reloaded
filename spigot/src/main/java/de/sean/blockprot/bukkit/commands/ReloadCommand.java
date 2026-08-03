@@ -24,7 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.listeners.BlockEventListener;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
@@ -43,8 +43,7 @@ public class ReloadCommand implements CommandExecutor {
             new de.sean.blockprot.bukkit.tasks.BackupTask(BlockProt.getInstance().getDataFolder(), true).run();
             de.sean.blockprot.bukkit.config.ReloadCoordinator.commitCommand();
             BlockEventListener.invalidateAllSettings();
-            sender.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__RELOAD_DONE)));
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__RELOAD_DONE));
             return true;
         }
         return false;

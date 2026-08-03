@@ -20,9 +20,11 @@
 
 package de.sean.blockprot.bukkit.inventories;
 
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -57,6 +59,9 @@ public final class AnvilInput implements Listener {
     private static final Method GET_RENAME_TEXT;
     private static final Method SET_REPAIR_COST;
 
+    // Null on server APIs without Player#openAnvil(Location, boolean), e.g. vanilla Spigot.
+    private static final Method OPEN_ANVIL;
+
     static {
         Class<?> viewClass = null;
         Method getRenameText = null;
@@ -71,6 +76,14 @@ public final class AnvilInput implements Listener {
         ANVIL_VIEW_CLASS = viewClass;
         GET_RENAME_TEXT  = getRenameText;
         SET_REPAIR_COST  = setRepairCost;
+
+        Method openAnvil = null;
+        try {
+            openAnvil = Player.class.getMethod("openAnvil", Location.class, boolean.class);
+        } catch (NoSuchMethodException ignored) {
+            // Vanilla Spigot's Bukkit API has no anvil entry point.
+        }
+        OPEN_ANVIL = openAnvil;
     }
 
     private static boolean hasTypedAnvilView() {
@@ -92,6 +105,17 @@ public final class AnvilInput implements Listener {
         } catch (Exception ignored) {}
     }
 
+    /** Opens the anvil inventory, or returns null on APIs without {@code Player#openAnvil}. */
+    @Nullable
+    private static InventoryView openAnvil(@NotNull Player player) {
+        if (OPEN_ANVIL == null) return null;
+        try {
+            return (InventoryView) OPEN_ANVIL.invoke(player, null, true);
+        } catch (ReflectiveOperationException ignored) {
+            return null;
+        }
+    }
+
     @Nullable
     private static String tryGetRenameText(@NotNull InventoryView view) {
         if (GET_RENAME_TEXT == null || ANVIL_VIEW_CLASS == null) return null;
@@ -111,6 +135,7 @@ public final class AnvilInput implements Listener {
         @NotNull Player player,
         @NotNull Plugin plugin,
         @NotNull String initialText,
+        @NotNull String title,
         @Nullable Consumer<String> onConfirm
     ) {
         this.playerUuid = player.getUniqueId();
@@ -118,19 +143,23 @@ public final class AnvilInput implements Listener {
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        // openAnvil available since Bukkit 1.14.
-        InventoryView view = player.openAnvil(null, true);
-        if (view != null) {
-            // Place paper in slot 0 so the client pre-fills the rename field.
-            ItemStack paper = new ItemStack(Material.PAPER);
-            ItemMeta meta = paper.getItemMeta();
-            if (meta != null) {
-                meta.displayName(Component.text(initialText));
-                paper.setItemMeta(meta);
-            }
-            view.getTopInventory().setItem(0, paper);
-            trySetRepairCost(view);
+        InventoryView view = openAnvil(player);
+        if (view == null) {
+            // No anvil entry point in this server's Bukkit API (e.g. vanilla Spigot):
+            // cancel the input and inform the player instead of crashing.
+            unregister();
+            ComponentMessages.sendLegacy(player, title);
+            return;
         }
+        // Place paper in slot 0 so the client pre-fills the rename field.
+        ItemStack paper = new ItemStack(Material.PAPER);
+        ItemMeta meta = paper.getItemMeta();
+        if (meta != null) {
+            ComponentMessages.displayName(meta, Component.text(initialText));
+            paper.setItemMeta(meta);
+        }
+        view.getTopInventory().setItem(0, paper);
+        trySetRepairCost(view);
     }
 
     public static void open(
@@ -140,7 +169,7 @@ public final class AnvilInput implements Listener {
         @NotNull String title,
         @Nullable Consumer<String> onConfirm
     ) {
-        new AnvilInput(player, plugin, initialText, onConfirm);
+        new AnvilInput(player, plugin, initialText, title, onConfirm);
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -175,7 +204,7 @@ public final class AnvilInput implements Listener {
 
         ItemStack output = event.getInventory().getItem(OUTPUT_SLOT);
         if (output != null && output.hasItemMeta()) {
-            Component displayName = output.getItemMeta().displayName();
+            Component displayName = ComponentMessages.displayName(output.getItemMeta());
             if (displayName != null) {
                 String text = PlainTextComponentSerializer.plainText().serialize(displayName);
                 if (!text.isEmpty()) return text;
@@ -184,7 +213,7 @@ public final class AnvilInput implements Listener {
 
         ItemStack input = event.getInventory().getItem(0);
         if (input != null && input.hasItemMeta()) {
-            Component displayName = input.getItemMeta().displayName();
+            Component displayName = ComponentMessages.displayName(input.getItemMeta());
             if (displayName != null) {
                 return PlainTextComponentSerializer.plainText().serialize(displayName);
             }

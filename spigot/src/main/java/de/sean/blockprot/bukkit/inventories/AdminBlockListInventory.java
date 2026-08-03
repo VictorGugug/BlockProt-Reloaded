@@ -25,6 +25,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -100,8 +101,7 @@ public final class AdminBlockListInventory extends BlockProtInventory {
         if (loc.getWorld() == null) return;
 
         if (!admin.hasPermission(Permissions.BLOCKS_TP.key())) {
-            admin.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__NO_PERMISSION_TP)));
+            ComponentMessages.sendLegacyActionBar(admin, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION_TP));
             return;
         }
         admin.closeInventory();
@@ -138,7 +138,7 @@ public final class AdminBlockListInventory extends BlockProtInventory {
             ItemStack paper = new ItemStack(Material.PAPER);
             ItemMeta  m     = paper.getItemMeta();
             if (m != null) {
-                m.displayName(net.kyori.adventure.text.Component.text(
+                ComponentMessages.displayName(m, net.kyori.adventure.text.Component.text(
                     Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_NO_BLOCKS)
                         .replace("{player}", this.targetName)
                         .replaceAll("[§&][0-9a-fk-orx]", "")));
@@ -175,13 +175,13 @@ public final class AdminBlockListInventory extends BlockProtInventory {
         ItemMeta  meta  = stack.getItemMeta();
         if (meta == null) { inventory.setItem(slot, stack); return; }
 
-        meta.displayName(net.kyori.adventure.text.Component.text(
+        ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(
             entry.getTitle().replaceAll("[§&][0-9a-fk-orx]", "")));
         List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
         lore.add(LegacyComponentSerializer.legacySection().deserialize(loreTp));
         String ago = entry.getLockedAgoText();
         if (!ago.isEmpty()) lore.add(LegacyComponentSerializer.legacySection().deserialize(ago));
-        meta.lore(lore);
+        ComponentMessages.lore(meta, lore);
         stack.setItemMeta(meta);
         inventory.setItem(slot, stack);
     }

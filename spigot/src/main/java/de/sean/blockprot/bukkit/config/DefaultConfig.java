@@ -26,8 +26,8 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.tasks.ConfigFileWatcher;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -1153,10 +1153,9 @@ public final class DefaultConfig extends BlockProtConfig {
             actionText + " " + name + " in " + configKey
                 + " (by " + who.getName() + ")");
         if (who.isOnline()) {
-            who.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__LOCKABLES__TOGGLE_FEEDBACK)
-                    .replace("{action}", actionText)
-                    .replace("{name}", name)));
+            ComponentMessages.sendLegacyActionBar(who, Translator.get(TranslationKey.MESSAGES__LOCKABLES__TOGGLE_FEEDBACK)
+                .replace("{action}", actionText)
+                .replace("{name}", name));
         }
 
         return !currentlyActive;
@@ -1246,10 +1245,9 @@ public final class DefaultConfig extends BlockProtConfig {
         BlockProtLogger.log("lockables-batch",
             actionText + " " + changed + " materials in batch (by " + who.getName() + ")");
         if (who.isOnline()) {
-            who.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__LOCKABLES__TOGGLE_FEEDBACK)
-                    .replace("{action}", actionText)
-                    .replace("{name}", String.valueOf(changed) + " blocks")));
+            ComponentMessages.sendLegacyActionBar(who, Translator.get(TranslationKey.MESSAGES__LOCKABLES__TOGGLE_FEEDBACK)
+                .replace("{action}", actionText)
+                .replace("{name}", String.valueOf(changed) + " blocks"));
         }
     }
 
@@ -1313,10 +1311,9 @@ public final class DefaultConfig extends BlockProtConfig {
             actionText + " " + family.name() + " via " + expression + " in " + configKey
                 + " (by " + who.getName() + ")");
         if (who.isOnline()) {
-            who.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__LOCKABLES__TOGGLE_FAMILY_FEEDBACK)
-                    .replace("{action}", actionText)
-                    .replace("{family}", family.name())));
+            ComponentMessages.sendLegacyActionBar(who, Translator.get(TranslationKey.MESSAGES__LOCKABLES__TOGGLE_FAMILY_FEEDBACK)
+                .replace("{action}", actionText)
+                .replace("{family}", family.name()));
         }
     }
 
@@ -1349,10 +1346,9 @@ public final class DefaultConfig extends BlockProtConfig {
             actionText + " " + name + " in auto_drop_to_inventory"
                 + " (by " + who.getName() + ")");
         if (who.isOnline()) {
-            who.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__AUTO_DROP__TOGGLE_FEEDBACK)
-                    .replace("{action}", actionText)
-                    .replace("{name}", name)));
+            ComponentMessages.sendLegacyActionBar(who, Translator.get(TranslationKey.MESSAGES__AUTO_DROP__TOGGLE_FEEDBACK)
+                .replace("{action}", actionText)
+                .replace("{name}", name));
         }
 
         return !currentlyActive;
@@ -1389,10 +1385,9 @@ public final class DefaultConfig extends BlockProtConfig {
             actionText + " " + family.name() + " in auto_drop_to_inventory"
                 + " (by " + who.getName() + ")");
         if (who.isOnline()) {
-            who.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__AUTO_DROP__TOGGLE_FAMILY_FEEDBACK)
-                    .replace("{action}", actionText)
-                    .replace("{family}", family.name())));
+            ComponentMessages.sendLegacyActionBar(who, Translator.get(TranslationKey.MESSAGES__AUTO_DROP__TOGGLE_FAMILY_FEEDBACK)
+                .replace("{action}", actionText)
+                .replace("{family}", family.name()));
         }
 
         return !allActive;

@@ -30,7 +30,7 @@ import de.sean.blockprot.nbt.LockReturnValue;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerInventoryClipboard;
 import de.sean.blockprot.bukkit.tasks.VillagerLocateTask;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
@@ -175,16 +175,14 @@ public class BlockLockInventory extends BlockProtInventory {
                     var container = PlayerInventoryClipboard.get(player.getUniqueId().toString());
                     if (handler != null && container != null) {
                         handler.pasteNbt(container);
-                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                            Translator.get(TranslationKey.MESSAGES__PASTE_DONE)));
+                        ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__PASTE_DONE));
                     }
                 }
                 case PAPER -> {
                     var handler = getNbtHandlerOrNull(block);
                     if (handler != null) {
                         PlayerInventoryClipboard.set(player.getUniqueId().toString(), handler.getNbtCopy());
-                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                            Translator.get(TranslationKey.MESSAGES__COPY_DONE)));
+                        ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__COPY_DONE));
                         closeAndOpen(player, null);
                     }
                 }
@@ -219,8 +217,7 @@ public class BlockLockInventory extends BlockProtInventory {
                     int seconds = BlockProt.getDefaultConfig().getVillagerLocateSeconds();
                     boolean found = VillagerLocateTask.startIfLinked(player, block, seconds);
                     if (!found) {
-                        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                            Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
+                        ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
                     }
                 }
                 case BARRIER -> {
@@ -377,9 +374,7 @@ public class BlockLockInventory extends BlockProtInventory {
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String text) {
-        player.sendActionBar(
-            net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                .legacySection().deserialize(text));
+        ComponentMessages.sendLegacyActionBar(player, text);
     }
 
     private static boolean isStorageType(@NotNull Material m) {

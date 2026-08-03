@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.stats.BukkitListStatistic;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.nbt.stats.ListStatisticItem;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -118,8 +119,7 @@ public final class StatisticListInventory extends BlockProtInventory {
         if (loc.getWorld() == null) return;
 
         if (!player.hasPermission(Permissions.BLOCKS_TP.key())) {
-            player.sendActionBar(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                .legacySection().deserialize(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION_TP)));
+            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION_TP));
             return;
         }
         player.closeInventory();
@@ -220,7 +220,7 @@ public final class StatisticListInventory extends BlockProtInventory {
         ItemStack stack = new ItemStack(material, 1);
         ItemMeta meta = stack.getItemMeta();
         if (meta == null) { inventory.setItem(index, stack); return; }
-        meta.displayName(net.kyori.adventure.text.Component.text(
+        ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(
             name.replaceAll("[\u00a7&][0-9a-fk-orx]", "")));
         List<net.kyori.adventure.text.Component> lore = new ArrayList<>();
         lore.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
@@ -236,7 +236,7 @@ public final class StatisticListInventory extends BlockProtInventory {
                     .legacySection().deserialize(line));
             }
         }
-        meta.lore(lore);
+        ComponentMessages.lore(meta, lore);
         stack.setItemMeta(meta);
         inventory.setItem(index, stack);
     }

@@ -26,6 +26,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -221,7 +222,7 @@ public final class PlayerListInventory extends BlockProtInventory {
         ItemStack skull = new ItemStack(Material.PLAYER_HEAD);
         SkullMeta meta = (SkullMeta) skull.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text(e.name()));
+            ComponentMessages.displayName(meta, Component.text(e.name()));
             List<Component> lore = new ArrayList<>();
             lore.add(LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.INVENTORIES__PLAYER_LIST__BLOCK_COUNT)
@@ -232,7 +233,7 @@ public final class PlayerListInventory extends BlockProtInventory {
                 online
                     ? Translator.get(TranslationKey.INVENTORIES__PLAYER_LIST__ONLINE)
                     : Translator.get(TranslationKey.INVENTORIES__PLAYER_LIST__OFFLINE)));
-            meta.lore(lore);
+            ComponentMessages.lore(meta, lore);
             skull.setItemMeta(meta);
         }
         inventory.setItem(slot, skull);
