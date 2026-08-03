@@ -119,7 +119,7 @@ tasks.withType<JavaCompile> {
 tasks.processResources {
     inputs.property("version", pluginVersion)
 
-    filesMatching(listOf("plugin.yml", "paper-plugin.yml")) {
+    filesMatching(listOf("plugin.yml")) {
         expand("version" to pluginVersion)
     }
 }
