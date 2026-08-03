@@ -23,8 +23,8 @@ icon:
   add:
   toggle_on:
   toggle_off:
-  'True':
-  'False':
+  true:
+  false:
   toggle_on_active:
   toggle_off_inactive:
 about:
@@ -163,6 +163,8 @@ inventories:
     friends_lore:
     stats:
     stats_lore:
+    placements:
+    placements_lore:
     transfer:
     transfer_lore:
     timed:
@@ -486,9 +488,12 @@ console:
   boot_not_available:
   recommended_console_only:
   recommended_blocks_missing:
-  recommended_done:
+  recommended_usage:
+  recommended_blocks_done:
+  recommended_config_done:
   recommended_reload:
   recommended_failed:
+  recommended_already_applied:
   first_start:
     header:
     title:
@@ -517,6 +522,15 @@ dialogs:
     api_label:
     java_label:
     issues_url:
+    credit_line:
+    db_engine_label:
+    db_mysql:
+    db_sqlite:
+    cache_label:
+    cache_suffix:
+    integrations_label:
+    integrations_disabled:
+    integrations_active:
   user_menu:
     header:
   admin_menu:
@@ -527,6 +541,8 @@ dialogs:
     auto_lock_desc:
     hints_desc:
     notifications_desc:
+    prefer_dialogs:
+    prefer_dialogs_desc:
   friends:
     header:
     manage_hint:
@@ -543,6 +559,7 @@ dialogs:
     no_blocks:
     breakdown:
     server_total:
+    placements_title:
   integrations:
     count:
     enabled:
@@ -630,6 +647,8 @@ dialogs:
   switch_view:
   click_disable:
   click_enable:
+  click_disable_single:
+  click_enable_single:
   click_chat:
   return_user_menu:
   return_admin_menu:
@@ -698,7 +717,9 @@ dialogs:
       selector_category:
       selector_hint:
       replace_translations:
+      replace_translations_title:
       fallback_string:
+      fallback_string_title:
       fallback_string_hint:
       status_header:
       toggle_all_enable:
@@ -712,65 +733,105 @@ dialogs:
       active_marker:
     worlds:
       per_worlds_config:
+      per_worlds_config_title:
       excluded_worlds:
+      excluded_worlds_title:
       excluded_worlds_hint:
       excluded_worlds_empty:
     players:
       lock_on_place:
+      lock_on_place_title:
       public_is_friend:
+      public_is_friend_title:
       max_blocks:
+      max_blocks_title:
       max_blocks_hint:
       hint_cooldown:
+      hint_cooldown_title:
       hint_cooldown_hint:
       friend_search:
+      friend_search_title:
       friend_search_hint:
       disable_friends:
+      disable_friends_title:
     blocks:
       modern_family:
+      modern_family_title:
       redstone_disallowed:
+      redstone_disallowed_title:
       simplified_hopper:
+      simplified_hopper_title:
       protect_explosions:
+      protect_explosions_title:
       piston_movement:
+      piston_movement_title:
       shulker_break:
+      shulker_break_title:
       allow_break:
+      allow_break_title:
       spawn_protection:
+      spawn_protection_title:
       lock_effects:
+      lock_effects_title:
       lock_sounds:
+      lock_sounds_title:
       use_menus_de:
+      use_menus_title:
       use_dialogs_de:
+      use_dialogs_title:
       timed_access:
+      timed_access_title:
       timed_access_hint:
     entity:
       protection_enabled:
+      protection_enabled_title:
       auto_protect_tame:
+      auto_protect_tame_title:
       workstation_enabled:
+      workstation_enabled_title:
       workstation_radius:
+      workstation_radius_title:
       workstation_radius_hint:
       workstation_vertical_radius:
+      workstation_vertical_radius_title:
       workstation_vertical_radius_hint:
       villager_locate_seconds:
+      villager_locate_seconds_title:
       villager_locate_seconds_hint:
       menu_item:
+      menu_item_title:
       menu_item_hint:
       menu_item_invalid:
     expiry:
       enabled:
+      enabled_title:
       check_interval:
+      check_interval_title:
       check_interval_hint:
     raid:
       enabled:
+      enabled_title:
     notifications:
       notify_ops:
+      notify_ops_title:
       owner_enabled:
+      owner_enabled_title:
       owner_open:
       owner_take:
       owner_place:
     maintenance:
       inactivity_cleanup:
+      inactivity_cleanup_title:
       inactivity_cleanup_hint:
       auto_reload:
+      auto_reload_title:
+      auto_reload_delay:
+      auto_reload_delay_title:
+      auto_reload_delay_hint:
       session_log:
+      session_log_title:
       backups:
+      backups_title:
     deprecated:
       we_paste_enabled:
 worlds:

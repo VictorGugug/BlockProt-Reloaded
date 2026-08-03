@@ -7,8 +7,10 @@ settings:
       - source: spigot/src/main/resources/lang/translations_cs.yml
       - source: spigot/src/main/resources/lang/translations_de.yml
       - source: spigot/src/main/resources/lang/translations_es.yml
+      - source: spigot/src/main/resources/lang/translations_fi.yml
       - source: spigot/src/main/resources/lang/translations_fr.yml
       - source: spigot/src/main/resources/lang/translations_hu.yml
+      - source: spigot/src/main/resources/lang/translations_id.yml
       - source: spigot/src/main/resources/lang/translations_it.yml
       - source: spigot/src/main/resources/lang/translations_ja.yml
       - source: spigot/src/main/resources/lang/translations_ko.yml

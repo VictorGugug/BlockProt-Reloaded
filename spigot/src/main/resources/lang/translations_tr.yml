@@ -149,6 +149,8 @@ inventories:
     about_lore:
     close:
     close_lore:
+    placements:
+    placements_lore:
   admin_menu:
     title:
     reload:
@@ -475,10 +477,10 @@ icon:
   add:
   toggle_on:
   toggle_off:
-  'True':
-  'False':
   toggle_on_active:
   toggle_off_inactive:
+  true:
+  false:
 console:
   config_change_detected:
   config_reloaded:
@@ -539,7 +541,6 @@ console:
   boot_not_available:
   recommended_console_only:
   recommended_blocks_missing:
-  recommended_done:
   recommended_reload:
   recommended_failed:
   first_start:
@@ -559,6 +560,10 @@ console:
     registered:
     hooked:
     not_installed:
+  recommended_usage:
+  recommended_blocks_done:
+  recommended_config_done:
+  recommended_already_applied:
 dialogs:
   about:
     title:
@@ -570,6 +575,15 @@ dialogs:
     api_label:
     java_label:
     issues_url:
+    credit_line:
+    db_engine_label:
+    db_mysql:
+    db_sqlite:
+    cache_label:
+    cache_suffix:
+    integrations_label:
+    integrations_disabled:
+    integrations_active:
   user_menu:
     header:
   admin_menu:
@@ -580,6 +594,8 @@ dialogs:
     auto_lock_desc:
     hints_desc:
     notifications_desc:
+    prefer_dialogs:
+    prefer_dialogs_desc:
   friends:
     header:
     manage_hint:
@@ -596,6 +612,7 @@ dialogs:
     no_blocks:
     breakdown:
     server_total:
+    placements_title:
   integrations:
     count:
     enabled:
@@ -763,11 +780,15 @@ dialogs:
       click_disable:
       click_enable:
       active_marker:
+      replace_translations_title:
+      fallback_string_title:
     worlds:
       per_worlds_config:
       excluded_worlds:
       excluded_worlds_hint:
       excluded_worlds_empty:
+      per_worlds_config_title:
+      excluded_worlds_title:
     players:
       lock_on_place:
       public_is_friend:
@@ -778,6 +799,12 @@ dialogs:
       friend_search:
       friend_search_hint:
       disable_friends:
+      lock_on_place_title:
+      public_is_friend_title:
+      max_blocks_title:
+      hint_cooldown_title:
+      friend_search_title:
+      disable_friends_title:
     blocks:
       modern_family:
       redstone_disallowed:
@@ -793,6 +820,19 @@ dialogs:
       use_dialogs_de:
       timed_access:
       timed_access_hint:
+      modern_family_title:
+      redstone_disallowed_title:
+      simplified_hopper_title:
+      protect_explosions_title:
+      piston_movement_title:
+      shulker_break_title:
+      allow_break_title:
+      spawn_protection_title:
+      lock_effects_title:
+      lock_sounds_title:
+      use_menus_title:
+      use_dialogs_title:
+      timed_access_title:
     entity:
       protection_enabled:
       auto_protect_tame:
@@ -806,23 +846,44 @@ dialogs:
       menu_item:
       menu_item_hint:
       menu_item_invalid:
+      protection_enabled_title:
+      auto_protect_tame_title:
+      workstation_enabled_title:
+      workstation_radius_title:
+      workstation_vertical_radius_title:
+      villager_locate_seconds_title:
+      menu_item_title:
     expiry:
       enabled:
       check_interval:
       check_interval_hint:
+      enabled_title:
+      check_interval_title:
     raid:
       enabled:
+      enabled_title:
     notifications:
       notify_ops:
       owner_enabled:
       owner_open:
       owner_take:
       owner_place:
+      notify_ops_title:
+      owner_enabled_title:
     maintenance:
       inactivity_cleanup:
       inactivity_cleanup_hint:
       auto_reload:
       session_log:
       backups:
+      inactivity_cleanup_title:
+      auto_reload_title:
+      auto_reload_delay:
+      auto_reload_delay_title:
+      auto_reload_delay_hint:
+      session_log_title:
+      backups_title:
     deprecated:
       we_paste_enabled:
+  click_disable_single:
+  click_enable_single:

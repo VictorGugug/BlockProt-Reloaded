@@ -34,13 +34,9 @@ The English file `translations_en.yml` is the reference. Missing keys fall back 
 
 These languages are available on [GitLocalize](https://gitlocalize.com/repo/10833) and accepting contributions:
 
-cs, de, es, fr, hu, it, ja, ko, nl, pl, pt-br, ru, sk, th, tr, zh-CN, zh-TW
+cs, de, es, fi, fr, hu, id, it, ja, ko, nl, pl, pt-br, ru, sk, th, tr, zh-CN, zh-TW
 
 The editor shows the English source on the left and your translations on the right. Both legacy color codes (`&a`, `&6`) and MiniMessage format (`<gold>`, `<gradient:...>`) are accepted.
-
-### Languages on Discord
-
-fi (Finnish) and id (Indonesian) are managed through the community Discord channel. If you speak either language, join the [Discord server](https://discord.gg/RRcjuMr9Jd) and look for the translation channel to contribute or request a new language.
 
 ## Screenshots
 
@@ -131,7 +127,7 @@ plugins/BlockProtReloaded/
 │   ├── mysql.yml                 MySQL / storage configuration
 │   └── blockprot_audit.sqlite    SQLite access audit log
 ├── lang/
-│   └── translations_*.yml        18 bundled language files
+│   └── translations_*.yml        20 bundled language files
 ├── logs/
 │   ├── blockprot-current.log     Active session log
 │   └── blockprot-YYYY-MM-DD--YYYY-MM-DD.log   Rotated archives
