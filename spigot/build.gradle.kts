@@ -85,6 +85,14 @@ dependencies {
     implementation("com.zaxxer:HikariCP:7.1.0")
     implementation("com.mysql:mysql-connector-j:9.7.0")
 
+    // Adventure: bundled for servers that do not expose Adventure to the plugin
+    // classpath (vanilla Spigot/Bukkit). Paper-based servers resolve net.kyori.*
+    // parent-first, so the bundled copies are only used on servers without it.
+    implementation("net.kyori:adventure-api:4.17.0")
+    implementation("net.kyori:adventure-text-minimessage:4.17.0")
+    implementation("net.kyori:adventure-text-serializer-legacy:4.17.0")
+    implementation("net.kyori:adventure-text-serializer-plain:4.17.0")
+
     // Integrations (soft-depend, provided at runtime by the server)
     compileOnly("com.github.TownyAdvanced:Towny:$townyVersion")
     compileOnly("me.clip:placeholderapi:$papiVersion")
@@ -155,6 +163,11 @@ tasks.shadowJar {
         this.include(dependency("com.mysql:mysql-connector-j"))
         this.include(dependency("org.slf4j:slf4j-api"))
         this.include(dependency("com.github.ben-manes.caffeine:caffeine"))
+        this.include(dependency("net.kyori:adventure-api"))
+        this.include(dependency("net.kyori:adventure-key"))
+        this.include(dependency("net.kyori:adventure-text-minimessage"))
+        this.include(dependency("net.kyori:adventure-text-serializer-legacy"))
+        this.include(dependency("net.kyori:adventure-text-serializer-plain"))
     }
 
     // Output: BlockProtReloaded-1.3.0.jar  /  BlockProtReloaded-1.3.0-SNAPSHOT.jar
