@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
+import de.sean.blockprot.bukkit.tasks.UpdateChecker.GitHubRelease;
 import de.sean.blockprot.util.SemanticVersion;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,9 +74,16 @@ public final class UpdateDialog {
         ));
 
         SemanticVersion cached = UpdateChecker.latestVersion;
+        GitHubRelease cachedRelease = UpdateChecker.latestRelease;
         SemanticVersion currentVersion = new SemanticVersion(pluginVersion);
 
         if (cached != null) {
+            String releaseUrl = cachedRelease != null
+                    && cachedRelease.getHtmlUrl() != null
+                    && !cachedRelease.getHtmlUrl().isBlank()
+                ? cachedRelease.getHtmlUrl()
+                : "https://github.com/VictorGugug/BlockProt-Reloaded/releases/latest";
+
             body.add(DialogBodyEntry.text(Component.empty()));
             body.add(DialogBodyEntry.text(
                 Component.text()
@@ -88,14 +96,6 @@ public final class UpdateDialog {
                 body.add(DialogBodyEntry.text(
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__OUTDATED)), PASTEL_CORAL, TextDecoration.BOLD)
                 ));
-                body.add(DialogBodyEntry.text(
-                    Component.text()
-                        .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__DOWNLOAD)), SOFT_GRAY))
-                        .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__LATEST_LINK_LABEL)), SOFT_BLUE, TextDecoration.UNDERLINED)
-                            .clickEvent(ClickEvent.openUrl("https://github.com/VictorGugug/BlockProt-Reloaded/releases/latest"))
-                            .hoverEvent(HoverEvent.showText(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), SOFT_GRAY))))
-                        .build()
-                ));
             } else if (cached.compareTo(currentVersion) < 0) {
                 body.add(DialogBodyEntry.text(
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__AHEAD)), PASTEL_GOLD, TextDecoration.BOLD)
@@ -103,6 +103,20 @@ public final class UpdateDialog {
             } else {
                 body.add(DialogBodyEntry.text(
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__UP_TO_DATE)), PASTEL_MINT, TextDecoration.BOLD)
+                ));
+            }
+
+            body.add(DialogBodyEntry.text(Component.empty()));
+            body.add(DialogBodyEntry.text(kindLabel(cached)));
+
+            if (cached.compareTo(currentVersion) > 0) {
+                body.add(DialogBodyEntry.text(
+                    Component.text()
+                        .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__DOWNLOAD)), SOFT_GRAY))
+                        .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__VERSION_PREFIX)) + cached.toString(), SOFT_BLUE, TextDecoration.UNDERLINED)
+                            .clickEvent(ClickEvent.openUrl(releaseUrl))
+                            .hoverEvent(HoverEvent.showText(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), SOFT_GRAY))))
+                        .build()
                 ));
             }
         } else {
@@ -136,6 +150,22 @@ public final class UpdateDialog {
         );
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 2);
+    }
+
+    private static Component kindLabel(@NotNull SemanticVersion version) {
+        if (version.isHotfix()) {
+            return Component.text(
+                stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__KIND_HOTFIX)),
+                PASTEL_CORAL, TextDecoration.BOLD);
+        }
+        if (version.isPreRelease()) {
+            return Component.text(
+                stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__KIND_DEV)),
+                PASTEL_GOLD, TextDecoration.BOLD);
+        }
+        return Component.text(
+            stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__KIND_STABLE)),
+            PASTEL_MINT, TextDecoration.BOLD);
     }
 
     private static String stripColor(String s) {

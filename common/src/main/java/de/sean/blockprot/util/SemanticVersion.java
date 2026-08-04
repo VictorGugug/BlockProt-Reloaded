@@ -32,18 +32,21 @@ import java.util.Objects;
  *
  * <p>Pre-release order (lowest -> highest within the same numeric version):
  * <ol>
- *   <li>snapshot / dev (our rolling dev build: formerly "SNAPSHOT")</li>
+ *   <li>snapshot / dev / BDev (rolling dev and beta-dev builds)</li>
  *   <li>alpha.N</li>
  *   <li>beta.N</li>
  *   <li>rc.N</li>
- *   <li>(no suffix): clean release, highest rank</li>
+ *   <li>(no suffix): clean release</li>
+ *   <li>patch.N / fix.N / hotfix[.N]: post-release corrections, ranked
+ *       ABOVE the clean release so a hotfix is always seen as an update
+ *       by servers on its base version</li>
  * </ol>
  *
- * <p>Special suffixes (not ranked above release, treated as equal to their
- * base version for update-check purposes):
+ * <p>Special suffixes:
  * <ul>
- *   <li>patch.N / fix.N / hotfix.N: post-release corrections</li>
  *   <li>exp: experimental branches, never considered an update</li>
+ *   <li>release: legacy tag suffix (e.g. "1.3.3-RELEASE"), normalized to
+ *       a clean release; new tags never use it</li>
  * </ul>
  *
  * @since 0.1.11
@@ -55,6 +58,7 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
     private static final int RANK_BETA     = 2;
     private static final int RANK_RC       = 3;
     private static final int RANK_RELEASE  = 4; // no suffix
+    private static final int RANK_HOTFIX   = 5; // patch.N / fix.N / hotfix[.N]
 
     private final int[] numeric;   // e.g. [1, 3, 0]
     private final String suffix;   // e.g. "alpha.2", "snapshot", "" for release
@@ -86,15 +90,20 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
         suffix  = raw;
 
         suffixRank = switch (base) {
-            case "snapshot", "dev" -> RANK_SNAPSHOT;
-            case "alpha"           -> RANK_ALPHA;
-            case "beta"            -> RANK_BETA;
-            case "rc"              -> RANK_RC;
-            default                -> RANK_RELEASE; // release, patch, fix, hotfix, exp, ""
+            case "snapshot", "dev", "bdev" -> RANK_SNAPSHOT;
+            case "alpha"                   -> RANK_ALPHA;
+            case "beta"                    -> RANK_BETA;
+            case "rc"                      -> RANK_RC;
+            case "release"                 -> RANK_RELEASE; // legacy tags, normalized
+            case "hotfix", "patch", "fix"  -> RANK_HOTFIX;
+            default                        -> RANK_RELEASE; // "", "exp", ...
         };
     }
 
     public boolean isPreRelease() { return suffixRank < RANK_RELEASE; }
+
+    /** Post-release correction (patch/fix/hotfix) of its base version. */
+    public boolean isHotfix() { return suffixRank == RANK_HOTFIX; }
 
     public boolean isExperimental() { return suffix.startsWith("exp"); }
 

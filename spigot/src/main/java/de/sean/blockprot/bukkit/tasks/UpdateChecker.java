@@ -20,7 +20,6 @@
 
 package de.sean.blockprot.bukkit.tasks;
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
@@ -47,6 +46,15 @@ import java.util.List;
 
 /**
  * Checks for new plugin releases on GitHub and notifies ops/admins.
+ *
+ * <p>Release channels are derived from the version suffix (see
+ * {@link SemanticVersion}): clean releases ("1.3.4") and post-release
+ * corrections ("1.3.4-hotfix", "1.3.4-fix.1") are the stable channel;
+ * dev/BDev/alpha/beta/rc builds are the pre-release channel. Servers
+ * running a stable-channel version only see stable-channel updates, so a
+ * hotfix tag is always offered to servers on its base release, while dev
+ * builds are never offered to stable users. Servers on a pre-release
+ * version see everything.
  */
 public final class UpdateChecker implements Runnable {
 
@@ -58,7 +66,7 @@ public final class UpdateChecker implements Runnable {
     private static final String GITHUB_API_URL =
         "https://api.github.com/repos/VictorGugug/BlockProt-Reloaded/releases";
 
-    /** Release page shown to players when an update is available. */
+    /** Fallback release page when the release's own page is unknown. */
     private static final String RELEASE_URL =
         "https://github.com/VictorGugug/BlockProt-Reloaded/releases/latest";
 
@@ -69,6 +77,13 @@ public final class UpdateChecker implements Runnable {
      */
     @Nullable
     public static volatile SemanticVersion latestVersion;
+
+    /**
+     * Full cached release that {@link #latestVersion} was parsed from,
+     * carrying its tag, name and per-tag release page.
+     */
+    @Nullable
+    public static volatile GitHubRelease latestRelease;
 
     @Nullable
     private final List<Player> recipients;
@@ -125,7 +140,7 @@ public final class UpdateChecker implements Runnable {
     @Override
     public void run() {
         if (latestVersion != null) {
-            this.sendMessage(currentVersion, latestVersion);
+            this.sendMessage(currentVersion, latestVersion, latestRelease);
             return;
         }
 
@@ -147,38 +162,45 @@ public final class UpdateChecker implements Runnable {
             if (response.statusCode() != 200) return;
 
             // Parse the list of releases and find the highest version
-            // that is compatible with the current build type.
-            // If running a pre-release we consider all releases.
-            // If running a stable release we only consider stable releases
-            // (but still show ahead-of-release info).
+            // compatible with the current build channel (see class javadoc).
             GitHubRelease[] releases = new com.google.gson.Gson().fromJson(
                 response.body(), GitHubRelease[].class);
 
             SemanticVersion best = null;
+            GitHubRelease bestRelease = null;
             for (GitHubRelease rel : releases) {
                 if (rel.draft) continue;
                 SemanticVersion v = rel.asSemantic();
                 if (v.isExperimental()) continue;
-                // If running stable, prefer stable releases; still track
-                // pre-release channels when we ourselves are a pre-release.
-                if (!currentVersion.isPreRelease() && rel.prerelease) continue;
-                if (best == null || v.compareTo(best) > 0) best = v;
+                // Stable-channel servers (clean release or hotfix) only see
+                // stable-channel candidates; pre-release servers see all.
+                if (!currentVersion.isPreRelease()
+                    && (rel.prerelease || v.isPreRelease())) continue;
+                if (best == null || v.compareTo(best) > 0) {
+                    best = v;
+                    bestRelease = rel;
+                }
             }
 
             if (best == null) return;
             UpdateChecker.latestVersion = best;
-            this.sendMessage(currentVersion, best);
+            UpdateChecker.latestRelease = bestRelease;
+            this.sendMessage(currentVersion, best, bestRelease);
 
         } catch (Exception ignored) { }
     }
 
-    private void sendMessage(SemanticVersion currentVersion, SemanticVersion latestVersion) {
+    private void sendMessage(SemanticVersion currentVersion, SemanticVersion latestVersion,
+                             @Nullable GitHubRelease release) {
         boolean isOutdated = latestVersion.compareTo(currentVersion) > 0;
+        String releaseUrl = release != null && release.htmlUrl != null && !release.htmlUrl.isBlank()
+            ? release.htmlUrl
+            : RELEASE_URL;
 
         if (this.recipients != null && !this.recipients.isEmpty()) {
             String message;
             if (isOutdated) {
-                message = Translator.get(TranslationKey.MESSAGES__UPDATE__OUTDATED)
+                message = Translator.get(outdatedMessageKey(latestVersion))
                     .replace("{version}", latestVersion.toString());
             } else if (latestVersion.compareTo(currentVersion) < 0) {
                 message = Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD)
@@ -188,8 +210,10 @@ public final class UpdateChecker implements Runnable {
             }
             var comp = Component.text(message);
             if (isOutdated) {
-                comp = comp.color(TextColor.color(0xF0E6A0))
-                    .clickEvent(ClickEvent.openUrl(RELEASE_URL))
+                comp = comp.color(latestVersion.isHotfix()
+                        ? TextColor.color(0xF08080)
+                        : TextColor.color(0xF0E6A0))
+                    .clickEvent(ClickEvent.openUrl(releaseUrl))
                     .hoverEvent(HoverEvent.showText(
                         Component.text(Translator.get(TranslationKey.MESSAGES__UPDATE__CLICK_HINT))));
             }
@@ -203,10 +227,13 @@ public final class UpdateChecker implements Runnable {
             onComplete.run();
         } else {
             if (isOutdated) {
+                TranslationKey key = latestVersion.isHotfix()
+                    ? TranslationKey.CONSOLE__UPDATE__AVAILABLE_HOTFIX
+                    : TranslationKey.CONSOLE__UPDATE__AVAILABLE;
                 BlockProt.getInstance().getLogger().warning(
-                    Translator.get(TranslationKey.CONSOLE__UPDATE__AVAILABLE)
+                    Translator.get(key)
                         .replace("{version}", latestVersion.toString())
-                    + " | " + RELEASE_URL);
+                    + " | " + releaseUrl);
             } else if (latestVersion.compareTo(currentVersion) < 0) {
                 BlockProtLogger.log("update-checker",
                     Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD)
@@ -219,11 +246,29 @@ public final class UpdateChecker implements Runnable {
     }
 
     /**
+     * Message template for an available update, chosen by the release channel:
+     * hotfixes (important bug-fix) and pre-releases (dev builds) get their own
+     * wording, everything else uses the standard outdated message.
+     */
+    @Contract("_ -> !null")
+    private static @NotNull TranslationKey outdatedMessageKey(@NotNull SemanticVersion version) {
+        if (version.isHotfix()) return TranslationKey.MESSAGES__UPDATE__OUTDATED_HOTFIX;
+        if (version.isPreRelease()) return TranslationKey.MESSAGES__UPDATE__OUTDATED_DEV;
+        return TranslationKey.MESSAGES__UPDATE__OUTDATED;
+    }
+
+    /**
      * Represents one entry from {@code GET /repos/{owner}/{repo}/releases}.
      */
     public static final class GitHubRelease {
         @SerializedName("tag_name")
         String tagName;
+
+        @SerializedName("html_url")
+        String htmlUrl;
+
+        @SerializedName("name")
+        String name;
 
         @SerializedName("prerelease")
         boolean prerelease;
@@ -238,6 +283,11 @@ public final class UpdateChecker implements Runnable {
                 version = version.substring(1);
             }
             return new SemanticVersion(version);
+        }
+
+        @Nullable
+        public String getHtmlUrl() {
+            return htmlUrl;
         }
     }
 }

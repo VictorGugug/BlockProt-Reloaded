@@ -437,6 +437,8 @@ messages:
     empty_contents: "§8Empty"
   update:
     outdated: "§cBlockProt is outdated! New version: {version}"
+    outdated_hotfix: "§cIMPORTANT: BlockProt has an important bug-fix (hotfix) available: {version}! It fixes bugs from the current release. Click to download it."
+    outdated_dev: "§eBlockProt has a new development build available: {version}"
     ahead: "§eBlockProt version is ahead of release ({version})"
     up_to_date: "§aBlockProt is up-to-date"
     click_hint: "Click to visit the GitHub Releases page"
@@ -481,6 +483,7 @@ console:
   saving_statistics: "Saving statistics to disk..."
   update:
     available: "A newer version of BlockProt Reloaded is available: {version}"
+    available_hotfix: "IMPORTANT: an important bug-fix (hotfix) of BlockProt Reloaded is available: {version}! It fixes bugs from the current release."
     up_to_date: "BlockProt Reloaded is up-to-date"
   viaversion_detected: "ViaVersion {version} detected - multi-version client support active."
   viaversion_api_missing: "ViaVersion plugin present but API class not found - skipping."
@@ -633,12 +636,14 @@ dialogs:
     outdated: "Outdated"
     ahead: "Ahead of Release"
     up_to_date: "Up to date"
+    kind_hotfix: "§cIMPORTANT: bug-fix (hotfix) release"
+    kind_dev: "§eDevelopment build (pre-release)"
+    kind_stable: "§aStable release"
     check_hint: "Run 'Check Now' to check for updates."
     check_now: "Check Now"
     checking: "Checking for updates..."
     download: "Download:"
     version_prefix: " v"
-    latest_link_label: "releases/latest"
   debug:
     title: "Debug Info"
     label_plugin: "BlockProt "

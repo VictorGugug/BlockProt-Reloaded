@@ -371,6 +371,8 @@ messages:
     usage: "§eIngresa una duración (ej. 30d, 12h, 45m) o 0 para desactivar."
   update:
     outdated: "§cBlockProt está desactualizado! Nueva versión: {version}"
+    outdated_hotfix: "§cIMPORTANTE: ¡BlockProt tiene un parche de errores (hotfix) disponible: {version}! Arregla bugs de la versión actual. Clic para descargarlo."
+    outdated_dev: "§eBlockProt tiene una nueva build de desarrollo disponible: {version}"
     ahead: "§eVersión de BlockProt por delante del lanzamiento ({version})"
     up_to_date: "§aBlockProt está actualizado"
     click_hint: "Haz clic para visitar la página de lanzamientos en GitHub"
@@ -488,6 +490,7 @@ console:
   recommended_already_applied: "§7La configuración recomendada de {target} ya se aplicó una vez. Re-ejecuta con §e/bp recommended {target} force §7para volver a aplicarla."
   update:
     available: "Hay una nueva versión de BlockProt Reloaded disponible: {version}"
+    available_hotfix: "IMPORTANTE: hay un parche de errores (hotfix) de BlockProt Reloaded disponible: {version}! Arregla bugs de la versión actual."
     up_to_date: "BlockProt Reloaded está actualizado"
   auto_reload_disabled: "Auto-recarga desactivada (auto_reload_configs: false). La configuración NO se recargará sola - usa /bp reload después de cada cambio."
   boot_configuration: "Configuración"
@@ -647,12 +650,14 @@ dialogs:
     outdated: "Desactualizado"
     ahead: "Por delante del Release"
     up_to_date: "Actualizado"
+    kind_hotfix: "§cIMPORTANTE: parche de errores (hotfix)"
+    kind_dev: "§eBuild de desarrollo (pre-release)"
+    kind_stable: "§aRelease estable"
     check_hint: "Usa 'Comprobar Ahora' para comprobar actualizaciones."
     check_now: "Comprobar Ahora"
     checking: "Comprobando actualizaciones..."
     download: "Descargar:"
     version_prefix: " v"
-    latest_link_label: "releases/latest"
   debug:
     title: "Info de Depuración"
     label_plugin: "BlockProt "
