@@ -31,6 +31,7 @@ import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.util.PlayerNameResolver;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -109,7 +110,11 @@ public final class FriendsAddAllCommand implements CommandExecutor {
 
         final BukkitTask[] clearTask = {null};
         clearTask[0] = Bukkit.getScheduler().runTaskLater(BlockProt.getInstance(),
-            () -> player.sendActionBar(Component.empty()), SEARCH_MSG_TIMEOUT_TICKS);
+            () -> {
+                if (ComponentMessages.isActionBarSupported()) {
+                    player.sendActionBar(Component.empty());
+                }
+            }, SEARCH_MSG_TIMEOUT_TICKS);
 
         Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
             OfflinePlayer target = resolveOfflinePlayer(targetName);
@@ -123,7 +128,11 @@ public final class FriendsAddAllCommand implements CommandExecutor {
                 Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
                     sendAction(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
                     Bukkit.getScheduler().runTaskLater(BlockProt.getInstance(),
-                        () -> player.sendActionBar(Component.empty()), SEARCH_MSG_TIMEOUT_TICKS);
+                        () -> {
+                            if (ComponentMessages.isActionBarSupported()) {
+                                player.sendActionBar(Component.empty());
+                            }
+                        }, SEARCH_MSG_TIMEOUT_TICKS);
                 });
                 return;
             }
@@ -137,7 +146,9 @@ public final class FriendsAddAllCommand implements CommandExecutor {
                         Translator.get(TranslationKey.MESSAGES__TRANSFER_SELF)));
                     return;
                 }
-                player.sendActionBar(Component.empty());
+                if (ComponentMessages.isActionBarSupported()) {
+                    player.sendActionBar(Component.empty());
+                }
                 int modified = applyAddAllToOwnedBlocks(player, targetUuid);
 
                 PlayerSettingsHandler settings = new PlayerSettingsHandler(player);

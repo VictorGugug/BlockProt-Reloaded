@@ -26,6 +26,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -104,8 +105,7 @@ public final class WorldLockableDetailInventory extends BlockProtInventory {
         if (slot < 0 || slot >= getSize()) return;
 
         if (slot == SLOT_BACK) {
-            InventoryState.set(player.getUniqueId(), state);
-            player.openInventory(new WorldLockableSelectionInventory().fill(player));
+            goBack(player, state);
             return;
         }
 
@@ -248,8 +248,8 @@ public final class WorldLockableDetailInventory extends BlockProtInventory {
                     friendly = friendly.substring(0, i) + Character.toUpperCase(friendly.charAt(i)) + friendly.substring(i + 1);
                 }
             }
-            meta.displayName(Component.text(friendly).color(nameColor));
-            meta.lore(List.of(
+            ComponentMessages.displayName(meta, Component.text(friendly).color(nameColor));
+            ComponentMessages.lore(meta, List.of(
                 Component.text(mat.name()).color(NamedTextColor.DARK_GRAY),
                 Component.text(active ? "§a" + Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_ACTIVE)
                                        : "§c" + Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_INACTIVE))

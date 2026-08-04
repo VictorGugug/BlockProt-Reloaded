@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -88,7 +89,7 @@ public final class WorldExpiryInventory extends BlockProtInventory {
             ItemStack stack = new ItemStack(active ? Material.CLOCK : Material.GRAY_DYE);
             ItemMeta meta = stack.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text(w.getName())
+                ComponentMessages.displayName(meta, Component.text(w.getName())
                     .color(active ? NamedTextColor.WHITE : NamedTextColor.DARK_GRAY));
                 List<Component> lore = new ArrayList<>();
                 if (active) {
@@ -103,7 +104,7 @@ public final class WorldExpiryInventory extends BlockProtInventory {
                 lore.add(LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.INVENTORIES__WORLD_EXPIRY__ENVIRONMENT_LABEL)
                     + w.getEnvironment().name()));
-                meta.lore(lore);
+                ComponentMessages.lore(meta, lore);
                 stack.setItemMeta(meta);
             }
             inventory.setItem(i - start, stack);

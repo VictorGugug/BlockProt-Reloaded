@@ -23,7 +23,11 @@ package de.sean.blockprot.bukkit.inventories;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.VersionCompat;
+import de.sean.blockprot.bukkit.commands.AboutCommand;
+import de.sean.blockprot.bukkit.commands.TransferCommand;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -36,6 +40,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class UserMenuInventory extends BlockProtInventory {
 
@@ -101,6 +106,7 @@ public class UserMenuInventory extends BlockProtInventory {
             InventoryState newState = new InventoryState(null);
             newState.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
             newState.origin = InventoryState.MenuOrigin.USER_MENU;
+            newState.originStack.push(InventoryState.MenuOrigin.USER_MENU);
             InventoryState.set(player.getUniqueId(), newState);
             player.openInventory(new UserSettingsInventory().fill(player));
             new PlayerSettingsHandler(player).setHasPlayerInteractedWithMenu(true);
@@ -108,6 +114,7 @@ public class UserMenuInventory extends BlockProtInventory {
             InventoryState newState = new InventoryState(null);
             newState.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
             newState.origin = InventoryState.MenuOrigin.USER_MENU;
+            newState.originStack.push(InventoryState.MenuOrigin.USER_MENU);
             InventoryState.set(player.getUniqueId(), newState);
             var inv = new FriendManageInventory().fill(player);
             if (inv != null) player.openInventory(inv);
@@ -115,14 +122,26 @@ public class UserMenuInventory extends BlockProtInventory {
             InventoryState newState = new InventoryState(null);
             newState.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
             newState.origin = InventoryState.MenuOrigin.USER_MENU;
+            newState.originStack.push(InventoryState.MenuOrigin.USER_MENU);
             InventoryState.set(player.getUniqueId(), newState);
             player.openInventory(new StatisticsInventory().fill(player));
         } else if (slot == SLOT_TRANSFER) {
             player.closeInventory();
-            player.performCommand("blockprot transferall");
+            Consumer<String> handleName = name -> {
+                if (name == null || name.isBlank()) return;
+                TransferCommand.transferAll(player, name);
+            };
+            String prompt = Translator.get(TranslationKey.INVENTORIES__TRANSFER__SEARCH_PROMPT);
+            if (VersionCompat.isPaper()) {
+                ChatInput.open(player, BlockProt.getInstance(), handleName);
+            } else if (SignInput.isSupported()) {
+                SignInput.open(player, BlockProt.getInstance(), prompt, handleName);
+            } else {
+                AnvilInput.open(player, BlockProt.getInstance(), "", prompt, handleName);
+            }
         } else if (slot == SLOT_ABOUT) {
             player.closeInventory();
-            player.performCommand("blockprot about");
+            AboutCommand.showAbout(player);
         } else if (slot == SLOT_BACK) {
             goBack(player, state);
         }
@@ -135,7 +154,7 @@ public class UserMenuInventory extends BlockProtInventory {
         ItemStack sep = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
         ItemMeta meta = sep.getItemMeta();
         if (meta != null) {
-            meta.displayName(net.kyori.adventure.text.Component.text(""));
+            ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(""));
             sep.setItemMeta(meta);
         }
         for (int s : SEPARATOR_SLOTS) {
@@ -147,11 +166,11 @@ public class UserMenuInventory extends BlockProtInventory {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
-        meta.displayName(net.kyori.adventure.text.Component.text(
+        ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(
             name.replaceAll("[§&][0-9a-fk-orx]", "")));
         List<net.kyori.adventure.text.Component> l = new ArrayList<>();
         for (String s : lore) l.add(LegacyComponentSerializer.legacySection().deserialize(s));
-        meta.lore(l);
+        ComponentMessages.lore(meta, l);
         item.setItemMeta(meta);
         return item;
     }

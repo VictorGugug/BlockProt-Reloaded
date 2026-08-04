@@ -42,7 +42,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import com.destroystokyo.paper.profile.PlayerProfile;
+import org.bukkit.profile.PlayerProfile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -58,6 +58,7 @@ import java.util.UUID;
  * GUI that shows the access history for a protected block or entity.
  * Owners see denied attempts. Admins also get a teleport button.
  */
+@SuppressWarnings("deprecation")
 public final class AuditInventory extends BlockProtInventory {
 
     public AuditInventory() { super(true); }
@@ -289,6 +290,6 @@ public final class AuditInventory extends BlockProtInventory {
     private static void applyOwnerProfile(
             @NotNull org.bukkit.inventory.meta.SkullMeta meta,
             @NotNull PlayerProfile profile) {
-        meta.setPlayerProfile(profile);
+        meta.setOwnerProfile(profile);
     }
 }

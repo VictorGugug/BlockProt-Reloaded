@@ -290,9 +290,12 @@ public final class DefaultConfig extends BlockProtConfig {
         }
         if (listContainsIgnoreCase(excludedWorlds, world.getName())) return true;
         try {
+            // NamespacedKey#value() is a Paper-only accessor; Spigot only has getKey().
+            // Catching Throwable (not Exception) is required: NoSuchMethodError is an
+            // Error, not an Exception, and was silently escaping this guard before.
             String keyVal = world.getKey().value();
             if (listContainsIgnoreCase(excludedWorlds, keyVal)) return true;
-        } catch (Exception ignored) {}
+        } catch (Throwable ignored) {}
         return false;
     }
 

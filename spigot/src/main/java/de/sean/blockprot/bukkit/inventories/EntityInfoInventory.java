@@ -49,6 +49,7 @@ import java.util.UUID;
  * <p>Mirrors {@link BlockInfoInventory}'s layout exactly: owner skull (slot 0),
  * a name/type label (slot 1), pagination controls, and the paginated friend list.
  */
+@SuppressWarnings("deprecation")
 public final class EntityInfoInventory extends BlockProtInventory {
 
     private Entity entity;
@@ -127,7 +128,7 @@ public final class EntityInfoInventory extends BlockProtInventory {
                 ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
                 SkullMeta meta = (SkullMeta) skull.getItemMeta();
                 if (meta != null) {
-                    meta.setPlayerProfile(
+                    meta.setOwnerProfile(
                         BlockProtInventory.createPlayerProfile(UUID.fromString(ownerUuid), ownerName));
                     ComponentMessages.displayName(meta, Component.text(
                         Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
@@ -175,7 +176,7 @@ public final class EntityInfoInventory extends BlockProtInventory {
                     ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
                     SkullMeta meta = (SkullMeta) skull.getItemMeta();
                     if (meta != null) {
-                        meta.setPlayerProfile(
+                        meta.setOwnerProfile(
                             BlockProtInventory.createPlayerProfile(profile.getUniqueId(), name));
                         EntityNBTHandler.FriendEntry entry = handler.getFriendEntry(profile.getUniqueId().toString());
                         boolean isManager = entry != null && entry.manager();

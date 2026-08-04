@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -179,7 +180,7 @@ public final class RaidDetectionListener implements Listener {
 
         boolean hasTp = player.hasPermission(Permissions.BLOCKS_TP.key());
         Component chat = buildChatComponent(coordsMsg, hasTp, loc);
-        player.sendMessage(chat);
+        ComponentMessages.send(player, chat);
     }
 
     @NotNull

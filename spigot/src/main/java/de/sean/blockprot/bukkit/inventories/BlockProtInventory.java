@@ -49,7 +49,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.destroystokyo.paper.profile.PlayerProfile;
+import org.bukkit.profile.PlayerProfile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -64,6 +64,7 @@ import java.util.function.Function;
  *
  * @since 0.2.2
  */
+@SuppressWarnings("deprecation")
 public abstract class BlockProtInventory implements InventoryHolder {
     protected Inventory inventory;
 
@@ -104,7 +105,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
     protected final Inventory createInventory() {
         var name = getDefaultInventoryName();
         if (name != null) {
-            return Bukkit.createInventory(this, getSize(),
+            return ComponentMessages.createInventory(this, getSize(),
                 net.kyori.adventure.text.Component.text(stripColors(name)));
         } else {
             return Bukkit.createInventory(this, getSize());
@@ -117,7 +118,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
 
     @NotNull
     protected final Inventory createInventory(@NotNull String title) {
-        return Bukkit.createInventory(this, getSize(),
+        return ComponentMessages.createInventory(this, getSize(),
             net.kyori.adventure.text.Component.text(stripColors(title)));
     }
 
@@ -284,10 +285,10 @@ public abstract class BlockProtInventory implements InventoryHolder {
 
         try {
             assert meta != null;
-            meta.setPlayerProfile(profile);
+            if (profile != null) meta.setOwnerProfile(profile);
             if (profile != null && profile.getName() != null)
                 ComponentMessages.displayName(meta, Component.text(profile.getName()));
-        } catch (Exception e) {
+        } catch (Throwable e) {
             BlockProt.getInstance().getLogger().severe("Failed to set skull head for \"" + (profile == null ? "" : profile.getName()) + "\": " + e.getMessage());
         }
 
@@ -309,7 +310,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
      */
     public void setPlayerSkullAsync(int index, @NotNull Player player, @NotNull UUID uuid, @NotNull String name) {
         // Render a placeholder first so the slot is never empty.
-        setPlayerSkull(index, Bukkit.createProfile(uuid, name));
+        setPlayerSkull(index, createPlayerProfile(uuid, name));
 
         SkinCache.getOrFetchAsync(name, uuid).thenAcceptAsync(freshProfile -> {
             if (!player.isOnline()) return;
@@ -323,13 +324,21 @@ public abstract class BlockProtInventory implements InventoryHolder {
         return SkinCache.hasSkin(profile);
     }
 
-    @NotNull
+    @Nullable
     public static PlayerProfile createPlayerProfile(@NotNull final UUID uuid, @NotNull final String name) {
-        return Bukkit.createProfile(uuid, name);
+        try {
+            return Bukkit.createProfile(uuid, name);
+        } catch (Throwable ignored) {
+            return null;
+        }
     }
 
     protected void goBack(@NotNull final Player player, @NotNull final InventoryState state) {
-        switch (state.origin) {
+        InventoryState.MenuOrigin parent = state.originStack.isEmpty()
+            ? state.origin
+            : state.originStack.pop();
+        state.origin = state.originStack.isEmpty() ? InventoryState.MenuOrigin.NONE : state.originStack.peek();
+        switch (parent) {
             case BLOCK_LOCK -> {
                 var block = state.getBlock();
                 var handler = getNbtHandlerOrNull(block);
@@ -347,6 +356,13 @@ public abstract class BlockProtInventory implements InventoryHolder {
             }
             case STATISTICS -> player.openInventory(new StatisticsInventory().fill(player));
             case USER_SETTINGS -> player.openInventory(new UserSettingsInventory().fill(player));
+            case LOCKABLES -> player.openInventory(new LockablesInventory().fill(player, state.currentPageIndex));
+            case AUTO_DROP -> player.openInventory(new AutoDropInventory().fill(player));
+            case WORLD_LOCKABLE_SELECTION -> player.openInventory(new WorldLockableSelectionInventory().fill(player));
+            case PLAYER_LIST -> {
+                state.origin = InventoryState.MenuOrigin.ADMIN_MENU;
+                new PlayerListInventory().open(player);
+            }
             default -> closeAndOpen(player, null);
         }
     }

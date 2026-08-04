@@ -204,6 +204,7 @@ public final class LockablesInventory extends BlockProtInventory {
 
         if (slot == SLOT_WORLDS && BlockProt.getDefaultConfig().isPerWorldsConfigEnabled()) {
             state.currentPageIndex = cachedPage;
+            state.originStack.push(InventoryState.MenuOrigin.LOCKABLES);
             InventoryState.set(player.getUniqueId(), state);
             player.openInventory(new WorldLockableSelectionInventory().fill(player));
             return;
@@ -211,6 +212,7 @@ public final class LockablesInventory extends BlockProtInventory {
 
         if (slot == SLOT_AUTO_DROP) {
             state.currentPageIndex = cachedPage;
+            state.originStack.push(InventoryState.MenuOrigin.LOCKABLES);
             InventoryState.set(player.getUniqueId(), state);
             player.openInventory(new AutoDropInventory().fill(player));
             return;

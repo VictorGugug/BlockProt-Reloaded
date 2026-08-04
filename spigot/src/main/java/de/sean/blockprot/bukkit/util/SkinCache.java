@@ -20,9 +20,9 @@
 
 package de.sean.blockprot.bukkit.util;
 
-import com.destroystokyo.paper.profile.PlayerProfile;
 import de.sean.blockprot.bukkit.BlockProt;
 import org.bukkit.Bukkit;
+import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,11 +33,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Asynchronous Mojang-API skin resolver using Paper's native {@code PlayerProfile.update()}.
+ * Asynchronous Mojang-API skin resolver using Bukkit's {@code PlayerProfile.update()}.
  *
  * <p>On offline-mode servers the player UUID is derived from the name (offline UUID v3)
- * and does not correspond to any Mojang profile: the Paper API still works because it
- * looks up by name.  For cracked players without a Mojang account this falls back to
+ * and does not correspond to any Mojang profile: the lookup still works because it
+ * resolves by name.  For cracked players without a Mojang account this falls back to
  * SkinsRestorer (if installed).
  *
  * <p>Results are cached per username until the server restarts.
@@ -60,7 +60,7 @@ public final class SkinCache {
     /**
      * Asynchronously returns a {@link PlayerProfile} with a resolved skin.
      *
-     * <p>Uses Paper's built-in {@code PlayerProfile.update()} (Mojang API) and then
+     * <p>Uses Bukkit's built-in {@code PlayerProfile.update()} (Mojang API) and then
      * falls back to SkinsRestorer if no texture was returned.
      *
      * @param name Player name (case-insensitive cache key).
@@ -73,8 +73,22 @@ public final class SkinCache {
         PlayerProfile cached = cache.get(key);
         if (cached != null) return CompletableFuture.completedFuture(cached);
 
-        PlayerProfile profile = Bukkit.createProfile(uuid, name);
-        return profile.update()
+        // Bukkit.createProfile(UUID, String) returns org.bukkit.profile.PlayerProfile,
+        // the standard cross-platform API present on Paper and Spigot alike. The
+        // NoSuchMethodError catch here is a defensive fallback for older server builds.
+        PlayerProfile profile;
+        try {
+            profile = Bukkit.createProfile(uuid, name);
+        } catch (NoSuchMethodError e) {
+            PlayerProfile srProfile = resolveSkinsRestorer(uuid, name);
+            if (srProfile != null) {
+                cache.put(key, srProfile);
+                return CompletableFuture.completedFuture(srProfile);
+            }
+            return CompletableFuture.failedFuture(e);
+        }
+        CompletableFuture<PlayerProfile> updateFuture = profile.update().thenApply(p -> (PlayerProfile) p);
+        return updateFuture
             .exceptionally(ex -> {
                 BlockProt.getInstance().getLogger().warning("Skin fetch failed for " + name + ": " + ex.getMessage());
                 return profile;
@@ -90,7 +104,7 @@ public final class SkinCache {
                     cache.put(key, srProfile);
                     return srProfile;
                 }
-                // No texture available at all — cache the non-textured profile so we don't
+                // No texture available at all: cache the non-textured profile so we don't
                 // hammer the API every time.  The skull will use the server's default (Steve/Alex).
                 cache.put(key, updated);
                 return updated;
@@ -129,7 +143,7 @@ public final class SkinCache {
             textures.setSkin(URI.create(skinUrl).toURL());
             profile.setTextures(textures);
             return profile;
-        } catch (Exception ignored) {
+        } catch (Throwable ignored) {
             return null;
         }
     }

@@ -116,12 +116,7 @@ public final class AutoDropInventory extends BlockProtInventory {
         if (slot < 0 || slot >= getSize()) return;
 
         if (slot == SLOT_BACK) {
-            InventoryState ns = InventoryState.builder()
-                .origin(state.origin)
-                .build();
-            ns.currentPageIndex = 0;
-            InventoryState.set(player.getUniqueId(), ns);
-            player.openInventory(new LockablesInventory().fill(player, 0));
+            goBack(player, state);
             return;
         }
 
@@ -131,6 +126,7 @@ public final class AutoDropInventory extends BlockProtInventory {
                     BlockProt.getDefaultConfig().toggleAutoDropFamily(fe.family(), player);
                     player.openInventory(fill(player));
                 } else {
+                    state.originStack.push(InventoryState.MenuOrigin.AUTO_DROP);
                     player.openInventory(new AutoDropFamilyInventory().fill(player, fe.family(), 0, state));
                 }
                 return;

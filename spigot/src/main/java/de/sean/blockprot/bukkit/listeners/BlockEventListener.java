@@ -38,6 +38,7 @@ import de.sean.blockprot.bukkit.nbt.stats.BlockCountStatistic;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import de.sean.blockprot.bukkit.util.BlockUtil;
 import de.sean.blockprot.nbt.LockReturnValue;
+import de.sean.blockprot.bukkit.VersionCompat;
 import de.tr7zw.changeme.nbtapi.NBT;
 import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -298,7 +299,7 @@ public class BlockEventListener implements Listener {
                             StatHandler.removeContainer(event.getPlayer(), block);
                         }
                     } else {
-                        BlockState freshState = block.getState(true);
+                        BlockState freshState = VersionCompat.getBlockState(block, true);
                         if (freshState instanceof org.bukkit.block.TileState) {
                             handler.setName(BlockUtil.getHumanReadableBlockName(block.getType()));
                             handler.applyToOtherContainer();

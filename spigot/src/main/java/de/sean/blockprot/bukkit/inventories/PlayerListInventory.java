@@ -56,6 +56,7 @@ import java.util.List;
  *
  * Clicking a player skull opens AdminBlockListInventory for that player.
  */
+@SuppressWarnings("deprecation")
 public final class PlayerListInventory extends BlockProtInventory {
 
     /** Sort modes cycled on sort-button click. */
@@ -134,10 +135,9 @@ public final class PlayerListInventory extends BlockProtInventory {
             PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
             StatHandler.getStatisticByUuid(stat, entry.player().getUniqueId());
 
-            InventoryState ns = new InventoryState(null);
-            ns.currentPageIndex = 0;
-            ns.origin = InventoryState.MenuOrigin.ADMIN_MENU;
-            InventoryState.set(admin.getUniqueId(), ns);
+            state.currentPageIndex = 0;
+            state.originStack.push(InventoryState.MenuOrigin.PLAYER_LIST);
+            InventoryState.set(admin.getUniqueId(), state);
             admin.openInventory(new AdminBlockListInventory().fill(admin, displayName, stat));
             return;
         }
@@ -163,7 +163,7 @@ public final class PlayerListInventory extends BlockProtInventory {
             }
             case SLOT_BACK -> {
                 cancelLoad();
-                closeAndOpen(admin, new de.sean.blockprot.bukkit.inventories.AdminMenuInventory().fill(admin));
+                goBack(admin, state);
             }
         }
     }
@@ -211,7 +211,9 @@ public final class PlayerListInventory extends BlockProtInventory {
                     ItemStack skull = inventory.getItem(slot);
                     if (skull == null || skull.getType() != Material.PLAYER_HEAD) return;
                     if (!(skull.getItemMeta() instanceof SkullMeta meta)) return;
-                    meta.setPlayerProfile(profile);
+                    if (profile != null) {
+                        try { meta.setOwnerProfile(profile); } catch (Throwable ignored) {}
+                    }
                     skull.setItemMeta(meta);
                 });
             }

@@ -168,6 +168,9 @@ tasks.shadowJar {
         this.include(dependency("net.kyori:adventure-text-minimessage"))
         this.include(dependency("net.kyori:adventure-text-serializer-legacy"))
         this.include(dependency("net.kyori:adventure-text-serializer-plain"))
+        this.include(dependency("net.kyori:option"))
+        this.include(dependency("net.kyori:examination-api"))
+        this.include(dependency("net.kyori:examination-string"))
     }
 
     // Output: BlockProtReloaded-1.3.0.jar  /  BlockProtReloaded-1.3.0-SNAPSHOT.jar

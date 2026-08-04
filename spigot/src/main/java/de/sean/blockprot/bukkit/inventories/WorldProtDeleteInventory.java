@@ -22,6 +22,7 @@ package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -97,8 +98,7 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
                 return;
             }
             case PAGE_SIZE + 2 -> {
-                player.closeInventory();
-                InventoryState.remove(player.getUniqueId());
+                goBack(player, state);
                 return;
             }
         }
@@ -108,8 +108,6 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
         if (idx < 0 || idx >= worlds.size()) return;
 
         World selected = worlds.get(idx);
-        InventoryState.remove(player.getUniqueId());
-
         WorldProtDeleteConfirmInventory confirm = new WorldProtDeleteConfirmInventory();
         Inventory inv = confirm.fill(player, selected.getName());
         player.openInventory(inv);
@@ -122,9 +120,12 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
     public Inventory fill(@NotNull Player player, @Nullable String searchFilter) {
         this.filter = searchFilter;
 
-        InventoryState state = InventoryState.builder().build();
+        InventoryState state = InventoryState.get(player.getUniqueId());
+        if (state == null) {
+            state = InventoryState.builder().build();
+            InventoryState.set(player.getUniqueId(), state);
+        }
         state.currentPageIndex = 0;
-        InventoryState.set(player.getUniqueId(), state);
 
         inventory = createInventory();
         return populateInventory(player, state);
@@ -149,12 +150,12 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
             ItemStack item = new ItemStack(worldMaterial(w), 1);
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text(w.getName()));
+                ComponentMessages.displayName(meta, Component.text(w.getName()));
                 List<Component> lore = new ArrayList<>();
                 lore.add(LegacyComponentSerializer.legacySection()
                     .deserialize(hintKey));
                 lore.add(Component.text(Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__ENVIRONMENT) + w.getEnvironment().name()));
-                meta.lore(lore);
+                ComponentMessages.lore(meta, lore);
                 item.setItemMeta(meta);
             }
             inventory.setItem(i, item);

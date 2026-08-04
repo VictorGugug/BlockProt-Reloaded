@@ -29,6 +29,7 @@ import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -68,7 +69,7 @@ public final class UnlockDialog {
         @SuppressWarnings("deprecation")
         OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
         if (target == null || !target.hasPlayedBefore()) {
-            player.sendMessage(Component.text(
+            ComponentMessages.send(player, Component.text(
                 stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__PLAYER_NOT_FOUND))
                     .replace("{player}", targetName), PASTEL_CORAL));
             return;
@@ -79,7 +80,7 @@ public final class UnlockDialog {
         List<LocationListEntry> allBlocks = stat.get();
 
         if (allBlocks.isEmpty()) {
-            player.sendMessage(Component.text(
+            ComponentMessages.send(player, Component.text(
                 stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__NO_BLOCKS))
                     .replace("{player}", targetName), SOFT_GRAY));
             return;
@@ -162,16 +163,16 @@ public final class UnlockDialog {
                                 ProtectedBlockCache.unmark(block);
                                 try { StatHandler.removeContainerByUuid(targetUuid, loc.clone()); }
                                 catch (IllegalArgumentException ignored) {}
-                                p.sendMessage(Component.text(
+                                ComponentMessages.send(p, Component.text(
                                     stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__UNLOCKED))
                                         .replace("{location}", desc), PASTEL_MINT));
                             } else {
-                                p.sendMessage(Component.text(
+                                ComponentMessages.send(p, Component.text(
                                     stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__NOT_OWNED))
                                         .replace("{player}", targetName), PASTEL_CORAL));
                             }
                         } catch (Exception e) {
-                            p.sendMessage(Component.text(
+                            ComponentMessages.send(p, Component.text(
                                 stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__FAILED)), PASTEL_CORAL));
                         }
                         show(p, backOrigin, targetName, safePage);

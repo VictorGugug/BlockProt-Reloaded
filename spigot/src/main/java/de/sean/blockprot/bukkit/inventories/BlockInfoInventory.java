@@ -36,12 +36,14 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
 /**
  * Inventory showing block info: owner, friends, redstone settings, and linked item frame.
  */
+@SuppressWarnings("deprecation")
 public class BlockInfoInventory extends BlockProtInventory {
     public BlockInfoInventory() { super(true); }
     private final int maxSkulls = getSize() - InventoryConstants.lineLength;
@@ -157,10 +159,8 @@ public class BlockInfoInventory extends BlockProtInventory {
                 if (skullMeta != null) {
                     // Use the online player's profile if available (has real skin immediately).
                     Player online = Bukkit.getPlayer(ownerUuid);
-                    final var pp = online != null
-                        ? online.getPlayerProfile()
-                        : BlockProtInventory.createPlayerProfile(ownerUuid, ownerName);
-                    skullMeta.setPlayerProfile(pp);
+                    final var pp = getOnlineProfileOrCreate(online, ownerUuid, ownerName);
+                    skullMeta.setOwnerProfile(pp);
                     ComponentMessages.displayName(skullMeta, net.kyori.adventure.text.Component.text(
                         Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
                     ComponentMessages.lore(skullMeta, java.util.List.of(
@@ -179,20 +179,22 @@ public class BlockInfoInventory extends BlockProtInventory {
                     if (online == null) {
                         final UUID finalUuid = ownerUuid;
                         final String finalName = ownerName;
-                        Bukkit.createProfile(finalUuid, finalName).update()
-                            .thenAcceptAsync(freshProfile -> {
-                                if (!player.isOnline()) return;
-                                Inventory top = player.getOpenInventory().getTopInventory();
-                                if (top == null || top.getHolder() != BlockInfoInventory.this) return;
-                                org.bukkit.inventory.ItemStack existing = top.getItem(0);
-                                if (existing == null || existing.getType() != Material.PLAYER_HEAD) return;
-                                org.bukkit.inventory.meta.SkullMeta sm =
-                                    (org.bukkit.inventory.meta.SkullMeta) existing.getItemMeta();
-                                if (sm != null) {
-                                    sm.setPlayerProfile(freshProfile);
-                                    existing.setItemMeta(sm);
-                                }
-                            }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
+                        try {
+                            Bukkit.createProfile(finalUuid, finalName).update()
+                                .thenAcceptAsync(freshProfile -> {
+                                    if (!player.isOnline()) return;
+                                    Inventory top = player.getOpenInventory().getTopInventory();
+                                    if (top == null || top.getHolder() != BlockInfoInventory.this) return;
+                                    org.bukkit.inventory.ItemStack existing = top.getItem(0);
+                                    if (existing == null || existing.getType() != Material.PLAYER_HEAD) return;
+                                    org.bukkit.inventory.meta.SkullMeta sm =
+                                        (org.bukkit.inventory.meta.SkullMeta) existing.getItemMeta();
+                                    if (sm != null) {
+                                        try { sm.setPlayerProfile(freshProfile); } catch (Throwable ignored) {}
+                                        existing.setItemMeta(sm);
+                                    }
+                                }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
+                        } catch (Throwable ignored) {}
                     }
                 } else {
                     inventory.setItem(0, ownerSkull);
@@ -315,5 +317,23 @@ public class BlockInfoInventory extends BlockProtInventory {
         );
 
         return inventory;
+    }
+
+    /**
+     * Returns the online player's own profile (has the real skin immediately, no lookup needed)
+     * when available. {@code Player#getPlayerProfile()} is guarded because on some servers it is
+     * compiled against a different {@code PlayerProfile} return type than the one actually present
+     * at runtime, which throws {@link NoSuchMethodError} rather than a catchable exception type.
+     */
+    @Nullable
+    private static org.bukkit.profile.PlayerProfile getOnlineProfileOrCreate(
+        Player online, @NotNull UUID uuid, @NotNull String name
+    ) {
+        if (online != null) {
+            try {
+                return online.getPlayerProfile();
+            } catch (Throwable ignored) {}
+        }
+        return BlockProtInventory.createPlayerProfile(uuid, name);
     }
 }

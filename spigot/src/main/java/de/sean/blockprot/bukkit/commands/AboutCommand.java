@@ -77,6 +77,14 @@ public class AboutCommand implements CommandExecutor {
         return true;
     }
 
+    /**
+     * Prints the player-facing about summary. Used by both the CLI and the
+     * inventory menus (which cannot open dialogs).
+     */
+    public static void showAbout(@NotNull Player player) {
+        printPlayerAbout(player);
+    }
+
     private static void printConsoleAbout() {
         String version = BlockProt.getPluginVersion();
         String issuesUrl = "https://github.com/VictorGugug/BlockProt-Reloaded/issues";

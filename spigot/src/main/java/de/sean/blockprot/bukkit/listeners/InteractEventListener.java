@@ -25,6 +25,7 @@ import de.sean.blockprot.bukkit.dialogs.BlockLockDialog;
 import de.sean.blockprot.bukkit.events.BlockAccessEvent;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -174,7 +175,7 @@ public class InteractEventListener implements Listener {
 
     private void sendMessage(@NotNull Player player, @NotNull String text, boolean asChat) {
         var comp = LegacyComponentSerializer.legacySection().deserialize(text);
-        if (asChat) player.sendMessage(comp);
+        if (asChat) ComponentMessages.send(player, comp);
         else player.sendActionBar(comp);
     }
 
@@ -182,7 +183,7 @@ public class InteractEventListener implements Listener {
         var comp = Component.text(text);
         if (command != null) comp = comp.clickEvent(ClickEvent.runCommand(command));
         if (tooltip != null) comp = comp.hoverEvent(HoverEvent.showText(Component.text(tooltip)));
-        if (asChat) player.sendMessage(comp);
+        if (asChat) ComponentMessages.send(player, comp);
         else player.sendActionBar(comp);
     }
 

@@ -357,6 +357,7 @@ messages:
   admin_integrations: "§7Integrations ({count}): {integrations}"
   admin_info_hint: "§7Use §f/bp info <player>§7 to list their protected blocks."
   admin_debug_hint: "§7Running diagnostics..."
+  admin_config_no_gui: "§eThe config editor requires the dialog API (Paper 1.21.7+). Edit config.yml manually."
   admin_unlock_success: "§aBlock at {x} {y} {z} ({world}) has been unlocked."
   admin_unlock_failed: "§cFailed to unlock that block. It may not be protected or lockable."
   admin_unlock_usage: "§cUsage: /bp unlock <player>  (requires blockprot.admin)"

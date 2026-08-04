@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.WorldsConfig;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -78,7 +79,7 @@ public final class WorldLockableSelectionInventory extends BlockProtInventory {
             ItemStack item = new ItemStack(enabled ? Material.GRASS_BLOCK : Material.BARRIER);
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.displayName(Component.text("§e" + wName));
+                ComponentMessages.displayName(meta, Component.text("§e" + wName));
                 List<Component> lore = new ArrayList<>();
                 lore.add(Component.text("§7" + Translator.get(TranslationKey.WORLDS__STATUS)
                     + ": " + (enabled ? "§a" + Translator.get(TranslationKey.ENABLED)
@@ -88,7 +89,7 @@ public final class WorldLockableSelectionInventory extends BlockProtInventory {
                 if (wc != null && wc.hasWorldConfig(w)) {
                     lore.add(Component.text("§8" + Translator.get(TranslationKey.WORLDS__WORLD_CONFIG_HINT)));
                 }
-                meta.lore(lore);
+                ComponentMessages.lore(meta, lore);
                 item.setItemMeta(meta);
             }
             inventory.setItem(slot, item);
@@ -123,6 +124,7 @@ public final class WorldLockableSelectionInventory extends BlockProtInventory {
             List<World> worlds = Bukkit.getWorlds();
             if (idx < worlds.size()) {
                 World w = worlds.get(idx);
+                state.originStack.push(InventoryState.MenuOrigin.WORLD_LOCKABLE_SELECTION);
                 InventoryState.set(player.getUniqueId(), state);
                 player.openInventory(new WorldLockableDetailInventory(w).fill(player));
             }

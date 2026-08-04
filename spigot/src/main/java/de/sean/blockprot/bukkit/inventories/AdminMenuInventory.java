@@ -24,6 +24,11 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtAPI;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.VersionCompat;
+import de.sean.blockprot.bukkit.commands.AboutCommand;
+import de.sean.blockprot.bukkit.commands.DebugCommand;
+import de.sean.blockprot.bukkit.dialogs.AdminConfigDialog;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
@@ -136,17 +141,28 @@ public class AdminMenuInventory extends BlockProtInventory {
             InventoryState newState = InventoryState.builder()
                 .origin(InventoryState.MenuOrigin.ADMIN_MENU)
                 .build();
+            newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
             newState.currentPageIndex = 0;
             InventoryState.set(player.getUniqueId(), newState);
             player.openInventory(new LockablesInventory().fill(player, 0));
 
         } else if (slot == SLOT_CONFIG) {
             player.closeInventory();
-            player.performCommand("blockprot admin");
+            if (VersionCompat.hasDialogApi()) {
+                AdminConfigDialog.show(player, DialogOrigin.ADMIN_MENU);
+            } else {
+                ComponentMessages.sendLegacyActionBar(player,
+                    Translator.get(TranslationKey.MESSAGES__ADMIN_CONFIG_NO_GUI));
+            }
 
         } else if (slot == SLOT_AUTO_DROP) {
-            player.closeInventory();
-            player.performCommand("blockprot admin");
+            InventoryState newState = InventoryState.builder()
+                .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                .build();
+            newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
+            newState.currentPageIndex = 0;
+            InventoryState.set(player.getUniqueId(), newState);
+            player.openInventory(new AutoDropInventory().fill(player));
 
         } else if (slot == SLOT_RELOAD) {
             player.closeInventory();
@@ -179,18 +195,19 @@ public class AdminMenuInventory extends BlockProtInventory {
             InventoryState newState = new InventoryState(null);
             newState.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
             newState.origin = InventoryState.MenuOrigin.ADMIN_MENU;
+            newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
             InventoryState.set(player.getUniqueId(), newState);
             player.openInventory(new StatisticsInventory().fill(player));
 
         } else if (slot == SLOT_DEBUG) {
             player.closeInventory();
-            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__ADMIN_DEBUG_HINT));
-            player.performCommand("blockprot debug run");
+            DebugCommand.run(player);
 
         } else if (slot == SLOT_WORLD_EXPIRY) {
             InventoryState newState = InventoryState.builder()
                 .origin(InventoryState.MenuOrigin.ADMIN_MENU)
                 .build();
+            newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
             newState.currentPageIndex = 0;
             InventoryState.set(player.getUniqueId(), newState);
             player.openInventory(new WorldExpiryInventory().fill(player, 0));
@@ -199,13 +216,14 @@ public class AdminMenuInventory extends BlockProtInventory {
             InventoryState newState = InventoryState.builder()
                 .origin(InventoryState.MenuOrigin.ADMIN_MENU)
                 .build();
+            newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
             newState.currentPageIndex = 0;
             InventoryState.set(player.getUniqueId(), newState);
             player.openInventory(new WorldProtDeleteInventory().fill(player, ""));
 
         } else if (slot == SLOT_ABOUT) {
             player.closeInventory();
-            player.performCommand("blockprot about");
+            AboutCommand.showAbout(player);
 
         } else if (slot == SLOT_INFO) {
             player.closeInventory();
@@ -232,6 +250,7 @@ public class AdminMenuInventory extends BlockProtInventory {
                         InventoryState ns = new InventoryState(null);
                         ns.currentPageIndex = 0;
                         ns.origin = InventoryState.MenuOrigin.ADMIN_MENU;
+                        ns.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
                         InventoryState.set(player.getUniqueId(), ns);
                         player.openInventory(new AdminBlockListInventory().fill(player, displayName, stat));
                     });

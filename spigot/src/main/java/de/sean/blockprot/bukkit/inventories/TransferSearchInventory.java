@@ -156,8 +156,7 @@ public final class TransferSearchInventory extends BlockProtInventory {
     private void doTransfer(@NotNull Player player, @NotNull Block block, @NotNull OfflinePlayer target) {
         if (target.getUniqueId() == null) { player.closeInventory(); return; }
         if (target.getUniqueId().equals(player.getUniqueId())) {
-            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__TRANSFER_SELF_GUI)));
+            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_SELF_GUI));
             closeAndOpen(player, new BlockLockInventory().fill(player, block.getType(), new BlockNBTHandler(block)));
             return;
         }
@@ -167,8 +166,7 @@ public final class TransferSearchInventory extends BlockProtInventory {
         catch (RuntimeException e) { player.closeInventory(); return; }
 
         if (!handler.isOwner(player.getUniqueId())) {
-            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__TRANSFER_NOT_OWNER_GUI)));
+            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_NOT_OWNER_GUI));
             player.closeInventory();
             return;
         }
@@ -186,12 +184,10 @@ public final class TransferSearchInventory extends BlockProtInventory {
                 StatHandler.addBlockByUuid(target.getUniqueId(), block.getLocation());
             }
             String name = target.getName() != null ? target.getName() : target.getUniqueId().toString().substring(0, 8);
-            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__TRANSFER_SUCCESS).replace("{player}", name)));
+            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_SUCCESS).replace("{player}", name));
             player.closeInventory();
         } else {
-            player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
-                Translator.get(TranslationKey.MESSAGES__TRANSFER_FAILED)));
+            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_FAILED));
             closeAndOpen(player, new BlockLockInventory().fill(player, block.getType(), new BlockNBTHandler(block)));
         }
     }

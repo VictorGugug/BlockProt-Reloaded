@@ -64,6 +64,27 @@ public final class InventoryState {
     @NotNull
     public MenuOrigin origin = MenuOrigin.NONE;
 
+    /**
+     * Stack of menus the player navigated through. Each menu pushes its own
+     * {@link MenuOrigin} before opening a submenu; the back button pops it so
+     * navigation always returns to the actual parent window, regardless of how
+     * deep the player went. Empty when the menu chain is a single level (the
+     * {@link #origin} field alone describes the parent).
+     */
+    @NotNull
+    public final ArrayDeque<MenuOrigin> originStack = new ArrayDeque<>();
+
+    /** Pushes a menu onto the navigation stack. */
+    public void pushOrigin(@NotNull MenuOrigin origin) {
+        originStack.push(origin);
+    }
+
+    /** Pops the last pushed menu; {@link MenuOrigin#NONE} when the stack is empty. */
+    @NotNull
+    public MenuOrigin popOrigin() {
+        return originStack.isEmpty() ? MenuOrigin.NONE : originStack.pop();
+    }
+
     public InventoryState(@Nullable Block block) {
         this.block = block;
     }
@@ -136,6 +157,10 @@ public final class InventoryState {
         FRIEND_MANAGE,
         STATISTICS,
         USER_SETTINGS,
+        LOCKABLES,
+        AUTO_DROP,
+        WORLD_LOCKABLE_SELECTION,
+        PLAYER_LIST,
     }
 
     public static Builder builder() { return new Builder(); }

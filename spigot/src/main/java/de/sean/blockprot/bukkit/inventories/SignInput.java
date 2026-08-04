@@ -93,8 +93,7 @@ public final class SignInput implements Listener {
         try {
             Sign sign = (Sign) block.getState();
             if (!prompt.isEmpty()) {
-                Component promptComponent = LegacyComponentSerializer.legacySection().deserialize(prompt);
-                sign.getSide(Side.FRONT).line(0, promptComponent);
+                setPromptLine(sign, prompt);
                 sign.update(true, false);
             }
 
@@ -107,6 +106,21 @@ public final class SignInput implements Listener {
         }
 
         block.setType(originalType, false);
+    }
+
+    /**
+     * Sets the prompt on the sign's front line 0. Uses the Component-based {@code SignSide#line}
+     * where available, falling back to the legacy {@code Sign#setLine(int, String)} on servers
+     * whose {@code SignSide} implementation does not have the Component overload.
+     */
+    @SuppressWarnings("deprecation")
+    private static void setPromptLine(@NotNull Sign sign, @NotNull String prompt) {
+        Component promptComponent = LegacyComponentSerializer.legacySection().deserialize(prompt);
+        try {
+            sign.getSide(Side.FRONT).line(0, promptComponent);
+        } catch (Throwable ignored) {
+            sign.setLine(0, prompt);
+        }
     }
 
     /**
@@ -133,14 +147,30 @@ public final class SignInput implements Listener {
 
         event.setCancelled(true);
 
-        Component lineComp = event.line(0);
-        String result = lineComp != null
-            ? LegacyComponentSerializer.legacySection().serialize(lineComp).trim()
-            : "";
+        String result = readLine0(event);
         result = result.replaceAll("\u00a7r$", "").trim();
 
         unregister();
         if (onConfirm != null) onConfirm.accept(result);
+    }
+
+    /**
+     * Reads line 0 of a sign change, preferring the Component-based {@code SignChangeEvent#line}
+     * and falling back to the legacy {@code SignChangeEvent#getLine(int)} on servers whose event
+     * implementation does not have the Component overload.
+     */
+    @SuppressWarnings("deprecation")
+    @NotNull
+    private static String readLine0(@NotNull SignChangeEvent event) {
+        try {
+            Component lineComp = event.line(0);
+            return lineComp != null
+                ? LegacyComponentSerializer.legacySection().serialize(lineComp).trim()
+                : "";
+        } catch (Throwable ignored) {
+            String legacyLine = event.getLine(0);
+            return legacyLine != null ? legacyLine.trim() : "";
+        }
     }
 
     private void unregister() {

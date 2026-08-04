@@ -118,7 +118,7 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
         if (slot < 0 || slot >= getSize()) return;
 
         if (slot == SLOT_BACK) {
-            player.openInventory(new AutoDropInventory().fill(player));
+            goBack(player, state);
             return;
         }
 

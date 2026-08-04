@@ -25,6 +25,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import de.sean.blockprot.bukkit.listeners.BlockEventListener;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -102,16 +103,10 @@ public class UserSettingsInventory extends BlockProtInventory {
             case PLAYER_HEAD -> {
                 state.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
                 state.origin = InventoryState.MenuOrigin.USER_SETTINGS;
+                state.originStack.push(InventoryState.MenuOrigin.USER_SETTINGS);
                 closeAndOpen(player, new FriendManageInventory().fill(player));
             }
-            case BLACK_STAINED_GLASS_PANE -> {
-                if (state.origin == InventoryState.MenuOrigin.NONE
-                        || state.origin == InventoryState.MenuOrigin.USER_SETTINGS) {
-                    player.closeInventory();
-                } else {
-                    player.openInventory(new UserMenuInventory().fill(player));
-                }
-            }
+            case BLACK_STAINED_GLASS_PANE -> goBack(player, state);
             default -> closeAndOpen(player, null);
         }
         event.setCancelled(true);
@@ -172,7 +167,7 @@ public class UserSettingsInventory extends BlockProtInventory {
                             if (stack != null) {
                                 var meta = stack.getItemMeta();
                                 if (meta != null) {
-                                    meta.displayName(net.kyori.adventure.text.Component.text(
+                                    ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(
                                         Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE)
                                             .replaceAll("[§&][0-9a-fk-orx]", "")));
                                     stack.setItemMeta(meta);
@@ -189,8 +184,9 @@ public class UserSettingsInventory extends BlockProtInventory {
         }
 
         InventoryState st = InventoryState.get(player.getUniqueId());
-        if (st != null && st.origin != InventoryState.MenuOrigin.NONE
-                && st.origin != InventoryState.MenuOrigin.USER_SETTINGS) {
+        if (st != null && (!st.originStack.isEmpty()
+                || (st.origin != InventoryState.MenuOrigin.NONE
+                    && st.origin != InventoryState.MenuOrigin.USER_SETTINGS))) {
             setBackButton();
         } else {
             setItemStack(getSize() - 1, Material.BLACK_STAINED_GLASS_PANE,

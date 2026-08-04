@@ -50,8 +50,12 @@ public final class VersionCompat {
     public static final int PATCH;
 
     static {
-        // Bukkit.getMinecraftVersion() returns e.g. "1.21.4" or "26.1.2"
-        String raw = Bukkit.getMinecraftVersion();
+        String raw;
+        try {
+            raw = Bukkit.getMinecraftVersion();
+        } catch (NoSuchMethodError ignored) {
+            raw = Bukkit.getBukkitVersion().split("-")[0];
+        }
         String[] parts = raw.split("\\.");
 
         int major = 0, minor = 0, patch = 0;
@@ -64,7 +68,6 @@ public final class VersionCompat {
         MAJOR = major;
         MINOR = minor;
         PATCH = patch;
-        // Year-based scheme: first segment ≥ 26 AND ≤ 99 (avoids mistaking a 1.x build)
         NEW_SCHEME = (major >= 26 && major <= 99);
     }
 
@@ -118,7 +121,11 @@ public final class VersionCompat {
 
     @NotNull
     public static String getVersionString() {
-        return Bukkit.getMinecraftVersion();
+        try {
+            return Bukkit.getMinecraftVersion();
+        } catch (NoSuchMethodError ignored) {
+            return Bukkit.getBukkitVersion().split("-")[0];
+        }
     }
 
     @NotNull
@@ -128,5 +135,19 @@ public final class VersionCompat {
             NEW_SCHEME ? "year-based " + MAJOR + ".x" : "classic 1.x",
             isPaper() ? "Paper" : "Spigot"
         );
+    }
+
+    /**
+     * Obtains a {@link org.bukkit.block.BlockState} safely.
+     * Uses Paper's {@code Block#getState(boolean)} overload when present, falling back to
+     * standard Spigot's {@code Block#getState()} when missing.
+     */
+    @NotNull
+    public static org.bukkit.block.BlockState getBlockState(@NotNull org.bukkit.block.Block block, boolean useSnapshot) {
+        try {
+            return block.getState(useSnapshot);
+        } catch (NoSuchMethodError ignored) {
+            return block.getState();
+        }
     }
 }

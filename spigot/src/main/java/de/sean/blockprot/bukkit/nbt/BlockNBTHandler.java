@@ -75,6 +75,19 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
     private final boolean isTileEntity;
 
     /**
+     * Gets a live {@link BlockState} for NBT modification. {@code Block.getState(boolean)}
+     * is a Paper-only overload; on Spigot it falls back to the no-arg {@code getState()}.
+     */
+    @NotNull
+    private static BlockState getLiveState(@NotNull final Block block) {
+        try {
+            return block.getState(true);
+        } catch (Throwable ignored) {
+            return block.getState();
+        }
+    }
+
+    /**
      * Create a new handler for given {@code block}.
      *
      * @param block The block we want to use and get the
@@ -93,7 +106,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
             container = new NBTBlock(block).getData();
         } else if (BlockProt.getDefaultConfig().isLockableTileEntity(this.block.getType(), this.block.getWorld())) {
             isTileEntity = true;
-            container = new NBTTileEntity(block.getState(true)).getPersistentDataContainer();
+            container = new NBTTileEntity(getLiveState(block)).getPersistentDataContainer();
         } else {
             throw new RuntimeException("Given block " + block.getType() + " is not a lockable block/tile entity");
         }
@@ -119,7 +132,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
     protected void onFriendsMutated() {
         if (isTileEntity) {
             final String friendsKey = LOCK_ATTRIBUTE;
-            NBT.modify(block.getState(true), nbt -> {
+            NBT.modify(getLiveState(block), nbt -> {
                 if (container.hasTag(friendsKey)) {
                     nbt.getOrCreateCompound(friendsKey).mergeCompound(
                         container.getOrCreateCompound(friendsKey));
@@ -145,7 +158,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
      */
     public void setOwner(@NotNull final String owner) {
         if (isTileEntity) {
-            NBT.modify(block.getState(true), nbt -> {
+            NBT.modify(getLiveState(block), nbt -> {
                 nbt.setString(OWNER_ATTRIBUTE, owner);
             });
         }
@@ -212,7 +225,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
 
     public void setName(@NotNull String name) {
         if (isTileEntity) {
-            NBT.modify(block.getState(true), nbt -> {
+            NBT.modify(getLiveState(block), nbt -> {
                 nbt.setString(NAME_ATTRIBUTE, name);
             });
         }
@@ -241,7 +254,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
 
     public void setLinkedItemFrameUuid(@NotNull String uuid) {
         if (isTileEntity) {
-            NBT.modify(block.getState(true), nbt -> {
+            NBT.modify(getLiveState(block), nbt -> {
                 nbt.setString(LINKED_ITEM_FRAME_ATTRIBUTE, uuid);
             });
         }
@@ -250,7 +263,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
 
     public void clearLinkedItemFrameUuid() {
         if (isTileEntity) {
-            NBT.modify(block.getState(true), nbt -> {
+            NBT.modify(getLiveState(block), nbt -> {
                 nbt.removeKey(LINKED_ITEM_FRAME_ATTRIBUTE);
             });
         }

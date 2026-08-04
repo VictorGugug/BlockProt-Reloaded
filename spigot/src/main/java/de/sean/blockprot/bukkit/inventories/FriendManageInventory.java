@@ -117,6 +117,7 @@ public final class FriendManageInventory extends BlockProtInventory {
                 if (index >= 0 && index < state.friendResultCache.size()) {
                     state.currentFriend = state.friendResultCache.get(index);
                     state.origin = InventoryState.MenuOrigin.FRIEND_MANAGE;
+                    state.originStack.push(InventoryState.MenuOrigin.FRIEND_MANAGE);
                     var inv = new FriendDetailInventory().fill(player);
                     closeAndOpen(player, inv);
                 }

@@ -95,13 +95,21 @@ public class DebugCommand implements CommandExecutor {
                 return true;
             }
             case "run" -> {
-                ab(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS));
-                Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(),
-                    () -> runDiagnostics(player));
+                run(player);
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Shows the diagnostics hint and runs the diagnostic suite asynchronously.
+     * Used by both the CLI and the admin menu.
+     */
+    public static void run(@NotNull Player player) {
+        ab(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS));
+        Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(),
+            () -> new DebugCommand().runDiagnostics(player));
     }
 
     private static void ab(@NotNull Player p, @NotNull String msg) {
@@ -596,7 +604,10 @@ public class DebugCommand implements CommandExecutor {
                 net.kyori.adventure.text.Component.text(Translator.get(TranslationKey.MESSAGES__DEBUG__INVENTORY_TITLE)));
             BlockProtLogger.pass("Bukkit.createInventory OK size=" + inv.getSize());
             p.incrementAndGet();
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            // Catches NoSuchMethodError too (e.g. the Component-title overload missing
+            // on Spigot/CraftBukkit), not just Exception, so this self-test reports a
+            // clean fail instead of crashing the whole diagnostics task.
             BlockProtLogger.fail("createInventory", e.getMessage()); f.incrementAndGet();
         }
     }

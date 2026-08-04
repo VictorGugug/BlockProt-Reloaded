@@ -29,6 +29,7 @@ import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.listeners.HopperEventListener;
 import de.sean.blockprot.bukkit.storage.HybridDatabase;
 import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -214,14 +215,14 @@ public final class ProtdelDialog {
                                        @NotNull DialogBridge bridge, @NotNull DialogOrigin backOrigin) {
         World world = Bukkit.getWorld(worldName);
         if (world == null) {
-            player.sendMessage(Component.text(
+            ComponentMessages.send(player, Component.text(
                 stripColor(Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_WORLD_NOT_FOUND))
                     .replace("{world}", worldName), PASTEL_CORAL));
             show(player, null, backOrigin);
             return;
         }
 
-        player.sendMessage(Component.text(
+        ComponentMessages.send(player, Component.text(
             stripColor(Translator.get(TranslationKey.DIALOGS__PROTDEL__DELETING))
                 .replace("{world}", worldName), SOFT_GRAY));
 
@@ -306,7 +307,7 @@ public final class ProtdelDialog {
                         : stripColor(Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_DONE))
                             .replace("{world}", worldName)
                             .replace("{count}", String.valueOf(counter[0]));
-                    player.sendMessage(Component.text(msg, counter[0] == 0 ? SOFT_GRAY : PASTEL_MINT));
+                    ComponentMessages.send(player, Component.text(msg, counter[0] == 0 ? SOFT_GRAY : PASTEL_MINT));
                     show(player, null, backOrigin);
                 }
             }
@@ -352,7 +353,7 @@ public final class ProtdelDialog {
                     cancel();
                     String msg = stripColor(Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_UNDO_DONE))
                         .replace("{count}", String.valueOf(restored[0]));
-                    player.sendMessage(Component.text(msg, PASTEL_MINT));
+                    ComponentMessages.send(player, Component.text(msg, PASTEL_MINT));
                 }
             }
         }.runTaskTimer(BlockProt.getInstance(), 0L, 1L);

@@ -35,6 +35,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -48,7 +49,9 @@ import java.util.function.Consumer;
 
 /**
  * Server-side anvil text input, compatible with Paper/Spigot 1.20.x through 26.1.x.
- * Uses reflection for AnvilView (1.21.4+) with fallback for older servers.
+ * Uses reflection for AnvilView (1.21.4+) with fallback for older servers, and for
+ * opening the anvil itself: Paper's {@code Player#openAnvil} when present, otherwise
+ * a virtual {@link InventoryType#ANVIL} inventory that works on plain Spigot too.
  */
 public final class AnvilInput implements Listener {
 
@@ -105,15 +108,24 @@ public final class AnvilInput implements Listener {
         } catch (Exception ignored) {}
     }
 
-    /** Opens the anvil inventory, or returns null on APIs without {@code Player#openAnvil}. */
-    @Nullable
-    private static InventoryView openAnvil(@NotNull Player player) {
-        if (OPEN_ANVIL == null) return null;
-        try {
-            return (InventoryView) OPEN_ANVIL.invoke(player, null, true);
-        } catch (ReflectiveOperationException ignored) {
-            return null;
+    /**
+     * Opens the anvil inventory. Uses Paper's {@code Player#openAnvil(Location, boolean)}
+     * when available for a real anvil-block experience; falls back to a virtual
+     * {@link InventoryType#ANVIL} inventory (standard Bukkit API, available on plain
+     * Spigot/CraftBukkit too) so the feature keeps working without Paper's API.
+     */
+    @NotNull
+    @SuppressWarnings("deprecation")
+    private static InventoryView openAnvil(@NotNull Player player, @NotNull String title) {
+        if (OPEN_ANVIL != null) {
+            try {
+                return (InventoryView) OPEN_ANVIL.invoke(player, null, true);
+            } catch (ReflectiveOperationException ignored) {
+                // Fall through to the virtual-inventory fallback below.
+            }
         }
+        Inventory anvil = Bukkit.createInventory(player, InventoryType.ANVIL, title);
+        return player.openInventory(anvil);
     }
 
     @Nullable
@@ -143,14 +155,7 @@ public final class AnvilInput implements Listener {
 
         Bukkit.getPluginManager().registerEvents(this, plugin);
 
-        InventoryView view = openAnvil(player);
-        if (view == null) {
-            // No anvil entry point in this server's Bukkit API (e.g. vanilla Spigot):
-            // cancel the input and inform the player instead of crashing.
-            unregister();
-            ComponentMessages.sendLegacy(player, title);
-            return;
-        }
+        InventoryView view = openAnvil(player, title);
         // Place paper in slot 0 so the client pre-fills the rename field.
         ItemStack paper = new ItemStack(Material.PAPER);
         ItemMeta meta = paper.getItemMeta();

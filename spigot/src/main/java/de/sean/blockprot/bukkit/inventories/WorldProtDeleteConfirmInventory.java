@@ -29,6 +29,7 @@ import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.listeners.HopperEventListener;
 import de.sean.blockprot.bukkit.storage.HybridDatabase;
 import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -118,8 +119,11 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
 
     public Inventory fill(@NotNull Player player, @NotNull String worldName) {
         this.worldName = worldName;
-        InventoryState state = InventoryState.builder().build();
-        InventoryState.set(player.getUniqueId(), state);
+        InventoryState state = InventoryState.get(player.getUniqueId());
+        if (state == null) {
+            state = InventoryState.builder().build();
+            InventoryState.set(player.getUniqueId(), state);
+        }
         inventory = createInventory();
         renderSlots(player);
         return inventory;
@@ -151,7 +155,7 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
     private void executeDelete(@NotNull Player player) {
         World world = Bukkit.getWorld(worldName);
         if (world == null) {
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+            ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_WORLD_NOT_FOUND)
                     .replace("{world}", worldName)));
             player.closeInventory();
@@ -243,7 +247,7 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
                         : Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_DONE)
                               .replace("{world}", worldName)
                               .replace("{count}", String.valueOf(count));
-                    player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(msg));
+                    ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(msg));
                 }
             }
         }.runTaskTimer(BlockProt.getInstance(), 0L, 1L);
@@ -252,7 +256,7 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
     private void executeUndo(@NotNull Player player) {
         List<ProtectionSnapshot> snapshots = UNDO_SNAPSHOTS.remove(player.getUniqueId());
         if (snapshots == null || snapshots.isEmpty()) {
-            player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+            ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_UNDO_NOTHING)));
             player.closeInventory();
             InventoryState.remove(player.getUniqueId());
@@ -294,14 +298,13 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
                     cancel();
                     String msg = Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_UNDO_DONE)
                         .replace("{count}", String.valueOf(restored[0]));
-                    player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(msg));
+                    ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(msg));
                 }
             }
         }.runTaskTimer(BlockProt.getInstance(), 0L, 1L);
     }
 
     private void goBackToSelector(@NotNull Player player) {
-        InventoryState.remove(player.getUniqueId());
         WorldProtDeleteInventory selector = new WorldProtDeleteInventory();
         player.openInventory(selector.fill(player, null));
     }
@@ -319,10 +322,10 @@ public final class WorldProtDeleteConfirmInventory extends BlockProtInventory {
         ItemStack item = new ItemStack(material, 1);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            meta.displayName(Component.text(name.replaceAll("[§&][0-9a-fk-orx]", "")));
+            ComponentMessages.displayName(meta, Component.text(name.replaceAll("[§&][0-9a-fk-orx]", "")));
             List<Component> lore = new ArrayList<>();
             lore.add(LegacyComponentSerializer.legacySection().deserialize(loreLine));
-            meta.lore(lore);
+            ComponentMessages.lore(meta, lore);
             item.setItemMeta(meta);
         }
         inventory.setItem(slot, item);

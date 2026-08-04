@@ -91,6 +91,7 @@ public final class StatisticsInventory extends BlockProtInventory {
                 int slot = event.getSlot();
                 if (slot >= 0 && slot < page.size()) {
                     state.origin = InventoryState.MenuOrigin.STATISTICS;
+                    state.originStack.push(InventoryState.MenuOrigin.STATISTICS);
                     openStatInventory(page.get(slot), (Player) event.getWhoClicked());
                 }
                 break;

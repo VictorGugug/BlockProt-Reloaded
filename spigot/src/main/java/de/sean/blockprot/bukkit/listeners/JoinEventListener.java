@@ -26,6 +26,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.util.SkinCache;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -70,26 +71,26 @@ public class JoinEventListener implements Listener {
             if (!BlockProt.getDefaultConfig().hasConfiguredBlocks()) {
                 String line = Translator.get(TranslationKey.MESSAGES__FIRST_RUN__HEADER)
                     .replace("{line}", " ".repeat(48));
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(line));
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(line));
+                ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.MESSAGES__FIRST_RUN__TITLE)));
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP1)
                         .replace("{command}", "/bp lockables")));
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP1_CLICK)
                         .replace("{command}", "/bp lockables"))
                     .clickEvent(ClickEvent.suggestCommand("/bp lockables")));
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP2)
                         .replace("{file}", "blocks.yml")));
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP3)
                         .replace("{url}", "https://github.com/VictorGugug/BlockProt-Reloaded")));
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.MESSAGES__FIRST_RUN__STEP4)
                         .replace("{command}", "/bp recommended")));
-                player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+                ComponentMessages.send(player, LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.MESSAGES__FIRST_RUN__FOOTER)
                         .replace("{line}", " ".repeat(48))));
             }
@@ -107,7 +108,7 @@ public class JoinEventListener implements Listener {
                         .clickEvent(ClickEvent.suggestCommand("/tp " + extractCoordsHint(alertLine)));
                     msg = msg.append(Component.space()).append(tpLink);
                 }
-                player.sendMessage(msg);
+                ComponentMessages.send(player, msg);
             }
         }
     }

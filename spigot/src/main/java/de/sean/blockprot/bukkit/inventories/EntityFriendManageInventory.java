@@ -23,6 +23,7 @@ package de.sean.blockprot.bukkit.inventories;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Bukkit;
@@ -39,6 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * Friend management menu for protected entities.
@@ -166,7 +168,7 @@ public final class EntityFriendManageInventory extends BlockProtInventory {
 
     private void openAddFriendInput(@NotNull Player player) {
         player.closeInventory();
-        ChatInput.open(player, BlockProt.getInstance(), text -> {
+        Consumer<String> handleName = text -> {
             if (text == null || text.isBlank()) return;
             Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
                 try {
@@ -182,7 +184,15 @@ public final class EntityFriendManageInventory extends BlockProtInventory {
                     });
                 } catch (Exception ignored) {}
             });
-        });
+        };
+        String prompt = Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH);
+        if (VersionCompat.isPaper()) {
+            ChatInput.open(player, BlockProt.getInstance(), handleName);
+        } else if (SignInput.isSupported()) {
+            SignInput.open(player, BlockProt.getInstance(), prompt, handleName);
+        } else {
+            AnvilInput.open(player, BlockProt.getInstance(), prompt, prompt, handleName);
+        }
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String text) {

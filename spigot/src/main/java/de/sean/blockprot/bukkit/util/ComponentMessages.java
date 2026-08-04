@@ -22,8 +22,11 @@ package de.sean.blockprot.bukkit.util;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -114,6 +117,7 @@ public final class ComponentMessages {
     }
 
     /** Sets an item's display name natively when supported, otherwise as a legacy colour-coded string. */
+    @SuppressWarnings("deprecation")
     public static void displayName(@NotNull ItemMeta meta, @NotNull Component displayName) {
         if (COMPONENT_ITEM_META_SUPPORTED) {
             meta.displayName(displayName);
@@ -123,6 +127,7 @@ public final class ComponentMessages {
     }
 
     /** Reads an item's display name as a component. */
+    @SuppressWarnings("deprecation")
     @Nullable
     public static Component displayName(@NotNull ItemMeta meta) {
         if (COMPONENT_ITEM_META_SUPPORTED) {
@@ -133,9 +138,10 @@ public final class ComponentMessages {
     }
 
     /** Sets an item's lore natively when supported, otherwise as legacy colour-coded strings. */
-    public static void lore(@NotNull ItemMeta meta, @NotNull List<Component> lore) {
+    @SuppressWarnings("deprecation")
+    public static void lore(@NotNull ItemMeta meta, @NotNull List<? extends Component> lore) {
         if (COMPONENT_ITEM_META_SUPPORTED) {
-            meta.lore(lore);
+            meta.lore(new ArrayList<>(lore));
         } else {
             List<String> lines = new ArrayList<>(lore.size());
             for (Component line : lore) {
@@ -146,6 +152,7 @@ public final class ComponentMessages {
     }
 
     /** Reads an item's lore as components. */
+    @SuppressWarnings("deprecation") // Shut up (～￣▽￣)～
     @Nullable
     public static List<Component> lore(@NotNull ItemMeta meta) {
         if (COMPONENT_ITEM_META_SUPPORTED) {
@@ -158,6 +165,24 @@ public final class ComponentMessages {
             lines.add(LEGACY.deserialize(line));
         }
         return lines;
+    }
+
+    /**
+     * Creates an inventory with a component title natively when supported, otherwise
+     * with a legacy colour-coded string title.
+     *
+     * <p>{@code Bukkit.createInventory(InventoryHolder, int, Component)} is a Paper-only
+     * overload; Spigot/CraftBukkit only expose the {@code String}-title overload and throw
+     * {@link NoSuchMethodError} on the Component one.
+     */
+    @NotNull
+    @SuppressWarnings("deprecation")
+    public static Inventory createInventory(@NotNull InventoryHolder holder, int size, @NotNull Component title) {
+        try {
+            return Bukkit.createInventory(holder, size, title);
+        } catch (NoSuchMethodError e) {
+            return Bukkit.createInventory(holder, size, LEGACY.serialize(title));
+        }
     }
 
     private static boolean hasMethod(@NotNull Class<?> type, @NotNull String methodName) {

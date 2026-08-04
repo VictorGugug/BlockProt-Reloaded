@@ -26,6 +26,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.util.SemanticVersion;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -193,7 +194,7 @@ public final class UpdateChecker implements Runnable {
                         Component.text(Translator.get(TranslationKey.MESSAGES__UPDATE__CLICK_HINT))));
             }
             for (Player player : recipients) {
-                player.sendMessage(comp);
+                ComponentMessages.send(player, comp);
             }
             if (onComplete != null) {
                 onComplete.run();

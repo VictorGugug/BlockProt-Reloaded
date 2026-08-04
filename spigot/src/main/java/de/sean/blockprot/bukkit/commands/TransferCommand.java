@@ -77,7 +77,15 @@ public final class TransferCommand implements CommandExecutor {
         return true;
     }
 
-    private void handleTransferAll(@NotNull Player player, @NotNull String targetName) {
+    /**
+     * Transfers ownership of every block the given player owns to the player
+     * with the given name. Used by both the CLI and the inventory menu.
+     */
+    public static void transferAll(@NotNull Player player, @NotNull String targetName) {
+        handleTransferAll(player, targetName);
+    }
+
+    private static void handleTransferAll(@NotNull Player player, @NotNull String targetName) {
         resolvePlayer(player, targetName, newOwner -> {
             if (newOwner.getUniqueId().equals(player.getUniqueId())) {
                 ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_SELF));
@@ -127,7 +135,7 @@ public final class TransferCommand implements CommandExecutor {
         });
     }
 
-    private void resolvePlayer(@NotNull Player player, @NotNull String name,
+    private static void resolvePlayer(@NotNull Player player, @NotNull String name,
                                 @NotNull java.util.function.Consumer<OfflinePlayer> callback) {
         Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
             OfflinePlayer found = PlayerNameResolver.findOfflinePlayer(name);

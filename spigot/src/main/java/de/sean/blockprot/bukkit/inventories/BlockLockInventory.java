@@ -98,16 +98,19 @@ public class BlockLockInventory extends BlockProtInventory {
                     case PLAYER_HEAD -> {
                         if (!isManager) break;
                         state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
+                        state.originStack.push(InventoryState.MenuOrigin.BLOCK_LOCK);
                         closeAndOpen(player, new EntityFriendManageInventory().fill(player, entity, eHandler));
                     }
                     case REDSTONE -> {
                         if (!isManager) break;
                         state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
+                        state.originStack.push(InventoryState.MenuOrigin.BLOCK_LOCK);
                         closeAndOpen(player, new EntityBlockSettingsInventory().fill(player, entity, eHandler));
                     }
                     case COMPASS -> {
                         if (!isManager) break;
                         state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
+                        state.originStack.push(InventoryState.MenuOrigin.BLOCK_LOCK);
                         closeAndOpen(player, new EntityInfoInventory().fill(player, entity, eHandler));
                     }
                     case ENDER_PEARL -> {
@@ -118,11 +121,13 @@ public class BlockLockInventory extends BlockProtInventory {
                         if (!isManager) break;
                         if (!(entity instanceof InventoryHolder)) break;
                         state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
+                        state.originStack.push(InventoryState.MenuOrigin.BLOCK_LOCK);
                         closeAndOpen(player, new EntityInspectContentsInventory(entity).fill());
                     }
                     case CLOCK -> {
                         if (!isManager) break;
                         state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
+                        state.originStack.push(InventoryState.MenuOrigin.BLOCK_LOCK);
                         closeAndOpen(player, new AuditInventory().fillForEntity(player, entity));
                     }
                 case BARRIER -> {
@@ -157,15 +162,18 @@ public class BlockLockInventory extends BlockProtInventory {
             switch (item.getType()) {
                 case PLAYER_HEAD -> {
                     state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
+                    state.originStack.push(InventoryState.MenuOrigin.BLOCK_LOCK);
                     closeAndOpen(player, new FriendManageInventory().fill(player));
                 }
                 case REDSTONE -> {
                     state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
+                    state.originStack.push(InventoryState.MenuOrigin.BLOCK_LOCK);
                     var handler = getNbtHandlerOrNull(block);
                     closeAndOpen(player, handler == null ? null : new RedstoneSettingsInventory().fill(player, state));
                 }
                 case COMPASS -> {
                     state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
+                    state.originStack.push(InventoryState.MenuOrigin.BLOCK_LOCK);
                     var handler = getNbtHandlerOrNull(block);
                     if (handler != null) closeAndOpen(player, new BlockInfoInventory().fill(player, handler));
                 }
@@ -205,10 +213,12 @@ public class BlockLockInventory extends BlockProtInventory {
                 }
                 case SPYGLASS -> {
                     state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
+                    state.originStack.push(InventoryState.MenuOrigin.BLOCK_LOCK);
                     closeAndOpen(player, new BlockInspectContentsInventory(player).fill());
                 }
                 case CLOCK -> {
                     state.origin = InventoryState.MenuOrigin.BLOCK_LOCK;
+                    state.originStack.push(InventoryState.MenuOrigin.BLOCK_LOCK);
                     closeAndOpen(player, new AuditInventory().fill(player));
                 }
                 case EMERALD -> {
