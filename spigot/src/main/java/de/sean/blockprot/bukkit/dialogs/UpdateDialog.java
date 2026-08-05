@@ -153,18 +153,23 @@ public final class UpdateDialog {
     }
 
     private static Component kindLabel(@NotNull SemanticVersion version) {
+        String base = version.baseVersion();
         if (version.isHotfix()) {
             return Component.text(
-                stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__KIND_HOTFIX)),
+                stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__KIND_HOTFIX))
+                    .replace("{version}", version.toString())
+                    .replace("{base_version}", base),
                 PASTEL_CORAL, TextDecoration.BOLD);
         }
         if (version.isPreRelease()) {
             return Component.text(
-                stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__KIND_DEV)),
+                stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__KIND_DEV))
+                    .replace("{version}", version.toString()),
                 PASTEL_GOLD, TextDecoration.BOLD);
         }
         return Component.text(
-            stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__KIND_STABLE)),
+            stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__KIND_STABLE))
+                .replace("{version}", version.toString()),
             PASTEL_MINT, TextDecoration.BOLD);
     }
 

@@ -48,6 +48,17 @@ public final class VersionValidator {
         boolean isPaper = VersionCompat.isPaper();
         boolean hasTypedViews = VersionCompat.hasTypedInventoryViews();
 
+        String software = VersionCompat.getServerSoftwareName();
+        if (!VersionCompat.isPaperFamily()) {
+            warn(Translator.get(TranslationKey.CONSOLE__SOFTWARE_UNSUPPORTED)
+                .replace("{software}", software));
+            BlockProtLogger.warn("Unsupported server software: " + software + ". "
+                + "Supported: Paper and Paper forks (Paper, Purpur, Folia, Pufferfish, Leaf, ...).");
+        } else {
+            BlockProtLogger.log("startup-checks",
+                "Server software: " + software + " (Paper family)");
+        }
+
         if (javaMajor < 21) {
             warn(Translator.get(TranslationKey.CONSOLE__JAVA_TOO_OLD)
                 .replace("{version}", javaVersion));

@@ -39,6 +39,7 @@ import de.sean.blockprot.bukkit.tasks.BackupTask;
 import de.sean.blockprot.bukkit.tasks.InactivityCleanupTask;
 import de.sean.blockprot.bukkit.tasks.WorldExpiryTask;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
+import de.sean.blockprot.util.SemanticVersion;
 import com.tcoded.folialib.FoliaLib;
 import de.tr7zw.changeme.nbtapi.utils.MinecraftVersion;
 import org.bstats.bukkit.Metrics;
@@ -217,9 +218,12 @@ public final class BlockProt extends JavaPlugin {
         BlockProtLogger.log("=== Startup: BlockProt v" + version + " ===");
         BlockProtLogger.log("Server: " + Bukkit.getVersion());
         BlockProtLogger.log("Runtime: " + VersionCompat.getDiagnosticString());
+        VersionValidator.validateStartup();
         if (VersionCompat.is26Family()) {
             BlockProtLogger.log("Version scheme: " + VersionCompat.MAJOR + ".x year-based detected.");
         }
+
+        announceBuildChannel(version);
 
         BlockProtConsole.bootStatus(
             Translator.get(TranslationKey.CONSOLE__BOOT_CONFIGURATION),
@@ -228,7 +232,12 @@ public final class BlockProt extends JavaPlugin {
 
         StatHandler.enable();
 
-        if (isMigrationPerformed && defaultConfig.isBackupsEnabled()) {
+        // Back up existing data before startup when a migration was performed,
+        // or when running an experimental (BEDev/snapshot) build, whose
+        // storage code may not have been battle-tested yet.
+        boolean experimentalBuild = false;
+        try { experimentalBuild = new SemanticVersion(version).isPreRelease(); } catch (Exception ignored) {}
+        if ((isMigrationPerformed || experimentalBuild) && defaultConfig.isBackupsEnabled()) {
             new BackupTask(this.getDataFolder()).run();
         }
         saveResourceSilent("worlds.yml", false);
@@ -378,6 +387,29 @@ public final class BlockProt extends JavaPlugin {
         BlockProtConsole.printStartupBanner(version);
 
         super.onEnable();
+    }
+
+    /**
+     * Prints the build channel (stable release, hotfix, or experimental
+     * BEDev build) at startup so admins immediately know what they run.
+     */
+    private void announceBuildChannel(@NotNull String version) {
+        try {
+            SemanticVersion sv = new SemanticVersion(version);
+            String msg;
+            if (sv.isHotfix()) {
+                msg = Translator.get(TranslationKey.CONSOLE__BOOT_BUILD_HOTFIX)
+                    .replace("{version}", version)
+                    .replace("{base}", sv.baseVersion());
+            } else if (sv.isPreRelease()) {
+                msg = Translator.get(TranslationKey.CONSOLE__BOOT_BUILD_EXPERIMENTAL)
+                    .replace("{version}", version);
+            } else {
+                msg = Translator.get(TranslationKey.CONSOLE__BOOT_BUILD_STABLE)
+                    .replace("{version}", version);
+            }
+            getLogger().info(msg);
+        } catch (Exception ignored) {}
     }
 
     @Override

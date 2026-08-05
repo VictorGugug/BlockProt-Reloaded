@@ -32,6 +32,7 @@ import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.FriendHandler;
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -351,7 +352,7 @@ public class InventoryEventListener implements Listener {
 
     private void sendMessage(@NotNull HumanEntity player, @NotNull String text) {
         if (!(player instanceof Player p)) return;
-        p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(text));
+        ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(text));
     }
 
     /**
@@ -370,7 +371,7 @@ public class InventoryEventListener implements Listener {
             if (owner != null && owner.isOnline()) {
                 // Respect per-player notification preference
                 if (!new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(owner).getNotificationsEnabled()) return;
-                owner.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(message));
+                ComponentMessages.sendActionBar(owner, LegacyComponentSerializer.legacySection().deserialize(message));
             }
         } catch (IllegalArgumentException ignored) {}
     }

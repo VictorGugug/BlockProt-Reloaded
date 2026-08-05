@@ -87,7 +87,7 @@ public final class TemporaryActionBar {
         // Clear the action bar next tick via a fire-and-forget task.
         Player online = org.bukkit.Bukkit.getPlayer(uuid);
         if (online != null && ComponentMessages.isActionBarSupported()) {
-            online.sendActionBar(Component.empty());
+            ComponentMessages.sendActionBar(online, Component.empty());
         }
     }
 
@@ -97,7 +97,7 @@ public final class TemporaryActionBar {
         if (!activeTasks.containsKey(uuid)) return; // was cancelled
         if (!player.isOnline()) { activeTasks.remove(uuid); return; }
 
-        player.sendActionBar(component);
+        ComponentMessages.sendActionBar(player, component);
         remaining[0] -= resendInterval;
 
         if (remaining[0] > 0) {
@@ -108,7 +108,7 @@ public final class TemporaryActionBar {
         } else {
             activeTasks.remove(uuid);
             if (ComponentMessages.isActionBarSupported()) {
-                player.sendActionBar(Component.empty());
+                ComponentMessages.sendActionBar(player, Component.empty());
             }
         }
     }

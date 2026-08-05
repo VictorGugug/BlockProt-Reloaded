@@ -170,13 +170,13 @@ public class InteractEventListener implements Listener {
     }
 
     private void sendMessage(@NotNull Player player, @NotNull String text) {
-        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(text));
+        ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(text));
     }
 
     private void sendMessage(@NotNull Player player, @NotNull String text, boolean asChat) {
         var comp = LegacyComponentSerializer.legacySection().deserialize(text);
         if (asChat) ComponentMessages.send(player, comp);
-        else player.sendActionBar(comp);
+        else ComponentMessages.sendActionBar(player, comp);
     }
 
     private void sendEventsMessage(@NotNull Player player, @NotNull String text, boolean asChat, @Nullable String command, @Nullable String tooltip) {
@@ -184,7 +184,7 @@ public class InteractEventListener implements Listener {
         if (command != null) comp = comp.clickEvent(ClickEvent.runCommand(command));
         if (tooltip != null) comp = comp.hoverEvent(HoverEvent.showText(Component.text(tooltip)));
         if (asChat) ComponentMessages.send(player, comp);
-        else player.sendActionBar(comp);
+        else ComponentMessages.sendActionBar(player, comp);
     }
 
     private static class LockHintMessageCooldown {

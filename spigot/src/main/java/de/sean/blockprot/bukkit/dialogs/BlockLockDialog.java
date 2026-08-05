@@ -32,6 +32,7 @@ import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.nbt.LockReturnValue;
 import de.sean.blockprot.bukkit.nbt.PlayerInventoryClipboard;
 import de.sean.blockprot.bukkit.tasks.VillagerLocateTask;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -134,7 +135,7 @@ public final class BlockLockDialog {
                 if (isNotProtected) {
                     LockReturnValue ret = handler.lockBlock(p);
                     if (!ret.success && ret.reason != null) {
-                        p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                        ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
                             Translator.get(ret.reason)));
                     }
                 } else {
@@ -214,7 +215,7 @@ public final class BlockLockDialog {
                         int seconds = BlockProt.getDefaultConfig().getVillagerLocateSeconds();
                         boolean found = VillagerLocateTask.startIfLinked(p, block, seconds);
                         if (!found) {
-                            p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
                                 Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
                         }
                     }
@@ -230,7 +231,7 @@ public final class BlockLockDialog {
                         if (handler != null && container != null) {
                             handler.pasteNbt(container);
                             PlayerInventoryClipboard.remove(p.getUniqueId().toString());
-                            p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                            ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
                                 Translator.get(TranslationKey.MESSAGES__PASTE_DONE)));
                         }
                         show(p, block, handler);
@@ -243,7 +244,7 @@ public final class BlockLockDialog {
                 NamedTextColor.WHITE,
                 p -> {
                     PlayerInventoryClipboard.set(p.getUniqueId().toString(), handler.getNbtCopy());
-                    p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                    ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
                         Translator.get(TranslationKey.MESSAGES__COPY_DONE)));
                     show(p, block, handler);
                 }
@@ -353,7 +354,7 @@ public final class BlockLockDialog {
                     if (canManage) {
                         handler.clearOwner();
                     } else {
-                        p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                        ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
                             Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
                     }
                 }
@@ -382,7 +383,7 @@ public final class BlockLockDialog {
                 actions.add(actionBtn(
                     stripColor(Translator.get(TranslationKey.INVENTORIES__TRANSFER__BUTTON)),
                     PASTEL_CORAL,
-                    p -> p.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+                    p -> ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
                         Translator.get(TranslationKey.INVENTORIES__ENTITY__TRANSFER_NOT_AVAILABLE)))
                 ));
 

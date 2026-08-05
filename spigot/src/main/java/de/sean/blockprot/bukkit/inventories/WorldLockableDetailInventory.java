@@ -184,7 +184,7 @@ public final class WorldLockableDetailInventory extends BlockProtInventory {
             actionText + " " + material.name() + " in world " + world.getName()
                 + " (by " + who.getName() + ")");
         if (who.isOnline()) {
-            who.sendActionBar(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(
+            ComponentMessages.sendActionBar(who, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__LOCKABLES__TOGGLE_FEEDBACK)
                     .replace("{action}", actionText)
                     .replace("{name}", material.name() + " §7(" + world.getName() + ")")));

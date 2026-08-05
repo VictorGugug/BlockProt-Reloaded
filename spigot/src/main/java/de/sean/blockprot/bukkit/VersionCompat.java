@@ -23,6 +23,8 @@ package de.sean.blockprot.bukkit;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Set;
+
 /**
  * Runtime Minecraft version detection utility.
  *
@@ -105,6 +107,29 @@ public final class VersionCompat {
         }
     }
 
+    private static final Set<String> PAPER_FAMILY_NAMES = Set.of(
+        "Paper", "Purpur", "Folia", "Pufferfish", "Leaf", "Leaves", "Gale"
+    );
+
+    /**
+     * Returns the name of the running server software as reported by the
+     * server implementation itself (Paper, Purpur, Folia, Spigot, CraftBukkit, ...).
+     */
+    @NotNull
+    public static String getServerSoftwareName() {
+        String name = Bukkit.getName();
+        return (name == null || name.isBlank()) ? "Unknown" : name;
+    }
+
+    /**
+     * Returns true when the server is Paper or a Paper fork. Every Paper fork
+     * ships the Paper API classes; the known-name list covers forks detected
+     * by name alone.
+     */
+    public static boolean isPaperFamily() {
+        return isPaper() || PAPER_FAMILY_NAMES.contains(getServerSoftwareName());
+    }
+
     /**
      * Returns true if the running server exposes Paper's dialog API (1.21.7+).
      * Checked by class presence rather than version number so a non-Paper fork
@@ -133,7 +158,7 @@ public final class VersionCompat {
         return String.format("MC %s (%s, %s)",
             getVersionString(),
             NEW_SCHEME ? "year-based " + MAJOR + ".x" : "classic 1.x",
-            isPaper() ? "Paper" : "Spigot"
+            getServerSoftwareName()
         );
     }
 

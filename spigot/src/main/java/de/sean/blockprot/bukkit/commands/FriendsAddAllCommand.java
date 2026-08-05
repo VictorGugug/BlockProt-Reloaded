@@ -112,7 +112,7 @@ public final class FriendsAddAllCommand implements CommandExecutor {
         clearTask[0] = Bukkit.getScheduler().runTaskLater(BlockProt.getInstance(),
             () -> {
                 if (ComponentMessages.isActionBarSupported()) {
-                    player.sendActionBar(Component.empty());
+                    ComponentMessages.sendActionBar(player, Component.empty());
                 }
             }, SEARCH_MSG_TIMEOUT_TICKS);
 
@@ -130,7 +130,7 @@ public final class FriendsAddAllCommand implements CommandExecutor {
                     Bukkit.getScheduler().runTaskLater(BlockProt.getInstance(),
                         () -> {
                             if (ComponentMessages.isActionBarSupported()) {
-                                player.sendActionBar(Component.empty());
+                                ComponentMessages.sendActionBar(player, Component.empty());
                             }
                         }, SEARCH_MSG_TIMEOUT_TICKS);
                 });
@@ -147,7 +147,7 @@ public final class FriendsAddAllCommand implements CommandExecutor {
                     return;
                 }
                 if (ComponentMessages.isActionBarSupported()) {
-                    player.sendActionBar(Component.empty());
+                    ComponentMessages.sendActionBar(player, Component.empty());
                 }
                 int modified = applyAddAllToOwnedBlocks(player, targetUuid);
 

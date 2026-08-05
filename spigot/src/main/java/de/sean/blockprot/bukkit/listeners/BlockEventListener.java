@@ -37,6 +37,7 @@ import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.BlockCountStatistic;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import de.sean.blockprot.bukkit.util.BlockUtil;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.nbt.LockReturnValue;
 import de.sean.blockprot.bukkit.VersionCompat;
 import de.tr7zw.changeme.nbtapi.NBT;
@@ -261,7 +262,7 @@ public class BlockEventListener implements Listener {
                     if (!lock.success) {
                         event.setCancelled(true);
                         if (lock.reason != null) {
-                            event.getPlayer().sendActionBar(
+                            ComponentMessages.sendActionBar(event.getPlayer(),
                             LegacyComponentSerializer.legacySection().deserialize(Translator.get(lock.reason)));
                         }
                         return;
@@ -271,7 +272,7 @@ public class BlockEventListener implements Listener {
                         .filter(fh -> PluginIntegration.filterFriendByUuidForAll(UUID.fromString(fh.getName()), event.getPlayer(), block))
                         .forEach(handler::addFriend);
 
-                    event.getPlayer().sendActionBar(
+                    ComponentMessages.sendActionBar(event.getPlayer(),
                         LegacyComponentSerializer.legacySection().deserialize(
                             Translator.get(TranslationKey.MESSAGES__LOCK_ON_PLACE_SUCCESS)
                         )

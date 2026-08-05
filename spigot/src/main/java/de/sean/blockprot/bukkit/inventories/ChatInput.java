@@ -23,6 +23,7 @@ package de.sean.blockprot.bukkit.inventories;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -74,7 +75,7 @@ public final class ChatInput implements Listener {
         String prompt = Translator.get(TranslationKey.MESSAGES__CHAT_INPUT_PROMPT)
             .replace("{cancel}", cancelWord);
         var component = LegacyComponentSerializer.legacySection().deserialize(prompt);
-        player.sendActionBar(component);
+        ComponentMessages.sendActionBar(player, component);
 
         // Schedule expiry after 15 seconds (300 ticks).
         BlockProt.getFoliaLib().getScheduler().runLater(() -> {

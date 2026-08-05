@@ -204,11 +204,15 @@ public class BlockInfoInventory extends BlockProtInventory {
             }
         }
 
-        // Slot 1: show the actual block type (CHEST, FURNACE, etc.) with its name.
+        // Slot 1: show the block with its custom name (if set) as the primary
+        // display, falling back to the actual block type (CHEST, FURNACE, ...).
         Material blockMat = handler.block != null ? handler.block.getType() : Material.OAK_SIGN;
         blockMat = getProperMaterial(blockMat);
         final String cleanName = handler.getName().replaceAll("[§&][0-9a-fk-orx]", "");
-        final String blockDisplay = blockTypeName != null ? blockTypeName : cleanName;
+        final String materialDisplay = blockTypeName != null ? blockTypeName : cleanName;
+        final boolean hasCustomName = !cleanName.isEmpty() && !cleanName.equalsIgnoreCase(
+            handler.block != null ? handler.block.getType().name() : "");
+        final String blockDisplay = hasCustomName ? cleanName : materialDisplay;
 
         String linkedFrameUuid = handler.getLinkedItemFrameUuid();
         if (!linkedFrameUuid.isEmpty()) {
@@ -231,9 +235,9 @@ public class BlockInfoInventory extends BlockProtInventory {
             if (meta != null) {
                 ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(blockDisplay));
                 java.util.List<net.kyori.adventure.text.Component> lore = new java.util.ArrayList<>();
-                if (blockTypeName != null && !blockTypeName.equalsIgnoreCase(cleanName) && !cleanName.isEmpty()) {
+                if (hasCustomName && !materialDisplay.equalsIgnoreCase(cleanName)) {
                     lore.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                        .legacySection().deserialize("§7" + cleanName));
+                        .legacySection().deserialize("§7" + materialDisplay));
                 }
                 lore.add(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
                     .legacySection().deserialize(frameLore));
@@ -246,10 +250,10 @@ public class BlockInfoInventory extends BlockProtInventory {
             org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
             if (meta != null) {
                 ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(blockDisplay));
-                if (blockTypeName != null && !blockTypeName.equalsIgnoreCase(cleanName) && !cleanName.isEmpty()) {
+                if (hasCustomName && !materialDisplay.equalsIgnoreCase(cleanName)) {
                     ComponentMessages.lore(meta, java.util.List.of(
                         net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                            .legacySection().deserialize("§7" + cleanName)
+                            .legacySection().deserialize("§7" + materialDisplay)
                     ));
                 }
                 item.setItemMeta(meta);

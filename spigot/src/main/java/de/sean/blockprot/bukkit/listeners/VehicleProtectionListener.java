@@ -31,6 +31,7 @@ import de.sean.blockprot.bukkit.inventories.BlockLockInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -98,7 +99,7 @@ public final class VehicleProtectionListener implements Listener {
         if (handler.isProtected()) return;
 
         handler.setOwner(player.getUniqueId().toString());
-        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(
+        ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(
             Translator.get(TranslationKey.MESSAGES__LOCK_ON_PLACE_SUCCESS)));
         BlockProtLogger.log("entity-protection", "AUTO-LOCKED "
             + entity.getType().name() + " entity=" + entity.getUniqueId()
@@ -273,6 +274,6 @@ public final class VehicleProtectionListener implements Listener {
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String text) {
-        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(text));
+        ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(text));
     }
 }

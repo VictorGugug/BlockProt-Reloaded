@@ -50,9 +50,9 @@ import java.util.List;
  * <p>Release channels are derived from the version suffix (see
  * {@link SemanticVersion}): clean releases ("1.3.4") and post-release
  * corrections ("1.3.4-hotfix", "1.3.4-fix.1") are the stable channel;
- * dev/BDev/alpha/beta/rc builds are the pre-release channel. Servers
+ * BEDev/snapshot builds are the experimental pre-release channel. Servers
  * running a stable-channel version only see stable-channel updates, so a
- * hotfix tag is always offered to servers on its base release, while dev
+ * hotfix tag is always offered to servers on its base release, while BEDev
  * builds are never offered to stable users. Servers on a pre-release
  * version see everything.
  */
@@ -201,7 +201,8 @@ public final class UpdateChecker implements Runnable {
             String message;
             if (isOutdated) {
                 message = Translator.get(outdatedMessageKey(latestVersion))
-                    .replace("{version}", latestVersion.toString());
+                    .replace("{version}", latestVersion.toString())
+                    .replace("{base_version}", latestVersion.baseVersion());
             } else if (latestVersion.compareTo(currentVersion) < 0) {
                 message = Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD)
                     .replace("{version}", latestVersion.toString());
@@ -233,6 +234,7 @@ public final class UpdateChecker implements Runnable {
                 BlockProt.getInstance().getLogger().warning(
                     Translator.get(key)
                         .replace("{version}", latestVersion.toString())
+                        .replace("{base_version}", latestVersion.baseVersion())
                     + " | " + releaseUrl);
             } else if (latestVersion.compareTo(currentVersion) < 0) {
                 BlockProtLogger.log("update-checker",
@@ -247,8 +249,8 @@ public final class UpdateChecker implements Runnable {
 
     /**
      * Message template for an available update, chosen by the release channel:
-     * hotfixes (important bug-fix) and pre-releases (dev builds) get their own
-     * wording, everything else uses the standard outdated message.
+     * hotfixes (important bug-fix) and experimental pre-releases (BEDev builds)
+     * get their own wording, everything else uses the standard outdated message.
      */
     @Contract("_ -> !null")
     private static @NotNull TranslationKey outdatedMessageKey(@NotNull SemanticVersion version) {

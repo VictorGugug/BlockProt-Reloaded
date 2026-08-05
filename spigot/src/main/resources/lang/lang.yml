@@ -12,34 +12,34 @@ fallback_language: translations_en.yml
 languages:
   # Reference languages (actively maintained, always complete)
   en: true
-  # K: 0%
+  # K: 100%
   es: true
-  # K: 0%
+  # K: 100%
 
   # Community translations (may have missing keys)
   cs: false
-  # K: 0%
+  # K: 10%
   de: false
-  # K: 0%
+  # K: 16%
   fr: false
-  # K: 0%
+  # K: 16%
   it: false
-  # K: 0%
+  # K: 16%
   ja: false
-  # K: 0%
+  # K: 10%
   ko: false
-  # K: 0%
+  # K: 10%
   pl: false
-  # K: 0%
+  # K: 10%
   pt-br: false
-  # K: 0%
+  # K: 16%
   ru: false
-  # K: 0%
+  # K: 16%
   sk: false
-  # K: 0%
+  # K: 10%
   tr: false
-  # K: 0%
+  # K: 10%
   zh-CN: false
-  # K: 0%
+  # K: 10%
   zh-TW: false
-  # K: 0%
+  # K: 10%

@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -111,7 +112,7 @@ public final class EntityFriendManageDialog {
                             handler.addFriend(target.getUniqueId().toString());
                             Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> show(p, entity, handler));
                         } else {
-                            p.sendActionBar(net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(
+                            ComponentMessages.sendActionBar(p, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(
                                 Translator.get(TranslationKey.MESSAGES__FRIEND_PLAYER_NOT_FOUND)));
                         }
                     });

@@ -32,10 +32,8 @@ import java.util.Objects;
  *
  * <p>Pre-release order (lowest -> highest within the same numeric version):
  * <ol>
- *   <li>snapshot / dev / BDev (rolling dev and beta-dev builds)</li>
- *   <li>alpha.N</li>
- *   <li>beta.N</li>
- *   <li>rc.N</li>
+ *   <li>snapshot / bedev (BEDev, with "bdev" kept as a legacy alias; rolling
+ *       experimental dev and beta-dev builds)</li>
  *   <li>(no suffix): clean release</li>
  *   <li>patch.N / fix.N / hotfix[.N]: post-release corrections, ranked
  *       ABOVE the clean release so a hotfix is always seen as an update
@@ -53,17 +51,14 @@ import java.util.Objects;
  */
 public class SemanticVersion implements Comparable<SemanticVersion> {
 
-    private static final int RANK_SNAPSHOT = 0;
-    private static final int RANK_ALPHA    = 1;
-    private static final int RANK_BETA     = 2;
-    private static final int RANK_RC       = 3;
-    private static final int RANK_RELEASE  = 4; // no suffix
-    private static final int RANK_HOTFIX   = 5; // patch.N / fix.N / hotfix[.N]
+    private static final int RANK_SNAPSHOT = 0; // snapshot / bedev / bdev (BEDev builds)
+    private static final int RANK_RELEASE  = 1; // no suffix
+    private static final int RANK_HOTFIX   = 2; // patch.N / fix.N / hotfix[.N]
 
     private final int[] numeric;   // e.g. [1, 3, 0]
-    private final String suffix;   // e.g. "alpha.2", "snapshot", "" for release
+    private final String suffix;   // e.g. "bedev.2", "snapshot", "" for release
     private final int suffixRank;  // pre-computed rank
-    private final int suffixN;     // numeric part of suffix (alpha.2 -> 2), 0 if absent
+    private final int suffixN;     // numeric part of suffix (bedev.2 -> 2), 0 if absent
 
     public SemanticVersion(@NotNull final String version) {
         // Split on first '-' only: keeps "SNAPSHOT-3" together as extension.
@@ -79,10 +74,10 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
         }
 
         // Normalise suffix: "snapshot-3" and "snapshot" both become "snapshot".
-        // Strip trailing numeric counter (e.g. "SNAPSHOT-3" -> "snapshot", "alpha.2" -> "alpha").
+        // Strip trailing numeric counter (e.g. "SNAPSHOT-3" -> "snapshot", "bedev.2" -> "bedev").
         String base = raw.replaceAll("-\\d+$", "").replaceAll("\\.\\d+$", "");
 
-        // Extract numeric part of suffix if present (e.g. alpha.2 -> 2).
+        // Extract numeric part of suffix if present (e.g. bedev.2 -> 2).
         int n = 0;
         java.util.regex.Matcher m = java.util.regex.Pattern.compile("[.\\-](\\d+)$").matcher(raw);
         if (m.find()) { try { n = Integer.parseInt(m.group(1)); } catch (NumberFormatException ignored) {} }
@@ -90,13 +85,10 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
         suffix  = raw;
 
         suffixRank = switch (base) {
-            case "snapshot", "dev", "bdev" -> RANK_SNAPSHOT;
-            case "alpha"                   -> RANK_ALPHA;
-            case "beta"                    -> RANK_BETA;
-            case "rc"                      -> RANK_RC;
-            case "release"                 -> RANK_RELEASE; // legacy tags, normalized
-            case "hotfix", "patch", "fix"  -> RANK_HOTFIX;
-            default                        -> RANK_RELEASE; // "", "exp", ...
+            case "snapshot", "bedev", "bdev" -> RANK_SNAPSHOT; // BEDev (beta-dev) builds
+            case "release"                   -> RANK_RELEASE; // legacy tags, normalized
+            case "hotfix", "patch", "fix"    -> RANK_HOTFIX;
+            default                          -> RANK_RELEASE; // "", "exp", ...
         };
     }
 
@@ -106,6 +98,19 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
     public boolean isHotfix() { return suffixRank == RANK_HOTFIX; }
 
     public boolean isExperimental() { return suffix.startsWith("exp"); }
+
+    /**
+     * The plain numeric version this version is based on, without any
+     * suffix (e.g. "1.3.4-hotfix" -> "1.3.4"). Useful to tell players
+     * which release a hotfix corrects.
+     */
+    @NotNull
+    public String baseVersion() {
+        return Arrays.stream(numeric)
+            .mapToObj(String::valueOf)
+            .reduce((a, b) -> a + "." + b)
+            .orElse("0");
+    }
 
     @Override
     public int compareTo(@NotNull final SemanticVersion other) {
@@ -118,7 +123,7 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
         }
         // 2. Same numeric: compare suffix rank.
         if (suffixRank != other.suffixRank) return Integer.compare(suffixRank, other.suffixRank);
-        // 3. Same rank: compare the suffix counter (alpha.1 < alpha.2).
+        // 3. Same rank: compare the suffix counter (bedev.1 < bedev.2).
         return Integer.compare(suffixN, other.suffixN);
     }
 

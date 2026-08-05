@@ -67,6 +67,15 @@ public final class BlockInfoDialog {
             .append(Component.text("(" + block.getType().name() + ")", SOFT_GRAY))
             .build()));
 
+        String customName = handler.getName();
+        if (customName != null && !customName.isEmpty()
+                && !customName.equalsIgnoreCase(block.getType().name())) {
+            body.add(DialogBodyEntry.text(Component.text()
+                .append(Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__NAME_LABEL)), SOFT_GRAY))
+                .append(Component.text(" " + stripColor(customName), NamedTextColor.WHITE))
+                .build()));
+        }
+
         String ownerUuid = handler.getOwner();
         if (ownerUuid != null && !ownerUuid.isEmpty()) {
             String ownerName = getPlayerName(ownerUuid);

@@ -175,7 +175,7 @@ public final class RaidDetectionListener implements Listener {
 
     private void sendAlertToOnline(@NotNull Player player, @NotNull String alertMsg,
                                    @NotNull String coordsMsg, @NotNull Location loc) {
-        player.sendActionBar(LegacyComponentSerializer.legacySection().deserialize(alertMsg));
+        ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(alertMsg));
 
 
         boolean hasTp = player.hasPermission(Permissions.BLOCKS_TP.key());
