@@ -434,6 +434,13 @@ public final class BlockProt extends JavaPlugin {
                 break;
             }
         }
+        if (UpdateChecker.latestVersion == null) {
+            // The asynchronous check may still be in flight (GitHub's API
+            // can be slow). Fall back to a synchronous check with its own
+            // timeouts so a real result is printed instead of defaulting
+            // to "not checked" whenever the API merely answers slowly.
+            new UpdateChecker(version, () -> {}).run();
+        }
         SemanticVersion latest = UpdateChecker.latestVersion;
         if (latest == null) {
             BlockProtConsole.bootColored(

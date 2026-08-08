@@ -513,7 +513,7 @@ console:
   boot_update: "Update Check"
   boot_update_up_to_date: "Up to date ({version})"
   boot_update_outdated: "New version available: {version}"
-  boot_update_ahead: "Running a newer version than the latest release ({version})"
+  boot_update_ahead: "Ahead of latest release ({version})"
   boot_update_not_checked: "Not checked"
   boot_update_download: "Download: {url}"
 
