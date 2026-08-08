@@ -378,7 +378,8 @@ messages:
     outdated: "§cBlockProt está desactualizado! Nueva versión estable: {version}"
     outdated_hotfix: "§cIMPORTANTE: ¡BlockProt tiene un parche de errores (hotfix) disponible: {version}! Arregla bugs de la versión actual ({base_version}). Clic para descargarlo."
     outdated_dev: "§eBlockProt tiene una nueva build de desarrollo experimental (BEDev) disponible: {version}. NO es una versión estable y solo se publica en GitHub."
-    ahead: "§eVersión de BlockProt por delante del lanzamiento ({version})"
+    ahead: "§eBlockProt Reloaded está por delante del lanzamiento publicado ({version})"
+    ahead_hotfix: "§eBlockProt Reloaded está ejecutando el hotfix {version}, por delante del lanzamiento publicado ({base_version})"
     up_to_date: "§aBlockProt está actualizado"
     click_hint: "Haz clic para visitar la página de lanzamientos en GitHub"
   lockables:

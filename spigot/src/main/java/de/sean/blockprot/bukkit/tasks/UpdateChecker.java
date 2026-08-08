@@ -206,8 +206,12 @@ public final class UpdateChecker implements Runnable {
                     .replace("{version}", latestVersion.toString())
                     .replace("{base_version}", latestVersion.baseVersion());
             } else if (latestVersion.compareTo(currentVersion) < 0) {
-                message = Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD)
-                    .replace("{version}", latestVersion.toString());
+                message = currentVersion.isHotfix()
+                    ? Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD_HOTFIX)
+                        .replace("{version}", currentVersion.toString())
+                        .replace("{base_version}", currentVersion.baseVersion())
+                    : Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD)
+                        .replace("{version}", latestVersion.toString());
             } else {
                 message = Translator.get(TranslationKey.MESSAGES__UPDATE__UP_TO_DATE);
             }
@@ -241,9 +245,13 @@ public final class UpdateChecker implements Runnable {
                         .replace("{base_version}", latestVersion.baseVersion())
                     + " | " + releaseUrl);
             } else if (latestVersion.compareTo(currentVersion) < 0) {
-                BlockProtLogger.log("update-checker",
-                    Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD)
-                        .replace("{version}", latestVersion.toString()));
+                String aheadMessage = currentVersion.isHotfix()
+                    ? Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD_HOTFIX)
+                        .replace("{version}", currentVersion.toString())
+                        .replace("{base_version}", currentVersion.baseVersion())
+                    : Translator.get(TranslationKey.MESSAGES__UPDATE__AHEAD)
+                        .replace("{version}", latestVersion.toString());
+                BlockProtLogger.log("update-checker", aheadMessage);
             } else {
                 BlockProtLogger.log("update-checker",
                     Translator.get(TranslationKey.CONSOLE__UPDATE__UP_TO_DATE));

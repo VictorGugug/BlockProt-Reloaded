@@ -443,7 +443,8 @@ messages:
     outdated: "§cBlockProt is outdated! New stable version: {version}"
     outdated_hotfix: "§cIMPORTANT: BlockProt has an important bug-fix (hotfix) available: {version}! It fixes bugs from the current release ({base_version}). Click to download it."
     outdated_dev: "§eBlockProt has a new experimental development build (BEDev) available: {version}. It is NOT a stable version and is only published on GitHub."
-    ahead: "§eBlockProt version is ahead of release ({version})"
+    ahead: "§eBlockProt Reloaded is ahead of the published release ({version})"
+    ahead_hotfix: "§eBlockProt Reloaded is running hotfix {version}, ahead of the published release ({base_version})"
     up_to_date: "§aBlockProt is up-to-date"
     click_hint: "Click to visit the GitHub Releases page"
 
