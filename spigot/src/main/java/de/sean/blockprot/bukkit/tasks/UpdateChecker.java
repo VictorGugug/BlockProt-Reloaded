@@ -30,7 +30,9 @@ import de.sean.blockprot.util.SemanticVersion;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.Contract;
@@ -214,6 +216,8 @@ public final class UpdateChecker implements Runnable {
                 comp = comp.color(latestVersion.isHotfix()
                         ? TextColor.color(0xF08080)
                         : TextColor.color(0xF0E6A0))
+                    .append(Component.text(" | " + Translator.get(TranslationKey.DIALOGS__UPDATE__DOWNLOAD), TextColor.color(0xF0E6A0))
+                        .append(Component.text(releaseUrl, NamedTextColor.WHITE, TextDecoration.UNDERLINED)))
                     .clickEvent(ClickEvent.openUrl(releaseUrl))
                     .hoverEvent(HoverEvent.showText(
                         Component.text(Translator.get(TranslationKey.MESSAGES__UPDATE__CLICK_HINT))));
