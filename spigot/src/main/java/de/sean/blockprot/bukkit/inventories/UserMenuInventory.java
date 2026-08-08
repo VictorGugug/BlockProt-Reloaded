@@ -23,7 +23,6 @@ package de.sean.blockprot.bukkit.inventories;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
-import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.commands.AboutCommand;
 import de.sean.blockprot.bukkit.commands.TransferCommand;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
@@ -131,14 +130,7 @@ public class UserMenuInventory extends BlockProtInventory {
                 if (name == null || name.isBlank()) return;
                 TransferCommand.transferAll(player, name);
             };
-            String prompt = Translator.get(TranslationKey.INVENTORIES__TRANSFER__SEARCH_PROMPT);
-            if (VersionCompat.isPaper()) {
-                ChatInput.open(player, BlockProt.getInstance(), handleName);
-            } else if (SignInput.isSupported()) {
-                SignInput.open(player, BlockProt.getInstance(), prompt, handleName);
-            } else {
-                AnvilInput.open(player, BlockProt.getInstance(), "", prompt, handleName);
-            }
+            TextInput.open(player, BlockProt.getInstance(), handleName);
         } else if (slot == SLOT_ABOUT) {
             player.closeInventory();
             AboutCommand.showAbout(player);

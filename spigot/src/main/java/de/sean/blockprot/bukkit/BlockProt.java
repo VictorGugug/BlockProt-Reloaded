@@ -218,7 +218,6 @@ public final class BlockProt extends JavaPlugin {
         BlockProtLogger.log("=== Startup: BlockProt v" + version + " ===");
         BlockProtLogger.log("Server: " + Bukkit.getVersion());
         BlockProtLogger.log("Runtime: " + VersionCompat.getDiagnosticString());
-        VersionValidator.validateStartup();
         if (VersionCompat.is26Family()) {
             BlockProtLogger.log("Version scheme: " + VersionCompat.MAJOR + ".x year-based detected.");
         }
@@ -353,6 +352,9 @@ public final class BlockProt extends JavaPlugin {
             true,
             java.lang.management.ManagementFactory.getRuntimeMXBean().getUptime() + " ms",
             true);
+
+        // Compatibility warnings print below the full boot checklist, never mixed into it.
+        VersionValidator.validateStartup();
 
         // First-run guide: buffered so it prints directly under the banner, before the boot checklist.
         if (isFirstStart() && !defaultConfig.hasConfiguredBlocks()) {

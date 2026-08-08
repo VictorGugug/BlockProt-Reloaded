@@ -24,7 +24,6 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.inventories.AnvilInput;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.FriendHandler;
 import de.sean.blockprot.bukkit.nbt.FriendSupportingHandler;
@@ -126,11 +125,14 @@ public final class FriendManageDialog {
             p -> {
                 Consumer<String> handleName = text -> {
                     Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
-                        OfflinePlayer target = Bukkit.getOfflinePlayer(text);
-                        if (target.getName() != null && target.hasPlayedBefore()) {
-                            handler.addFriend(target.getUniqueId().toString());
-                            handler.applyToOtherContainer();
-                            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> showForBlock(p, block, handler));
+                        double minimumSimilarity = BlockProt.getDefaultConfig().getFriendSearchSimilarityPercentage();
+                        var match = de.sean.blockprot.bukkit.util.PlayerLookup.findBestMatch(text, minimumSimilarity, p.getUniqueId());
+                        if (match != null) {
+                            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                                handler.addFriend(match.getKey().toString());
+                                handler.applyToOtherContainer();
+                                showForBlock(p, block, handler);
+                            });
                         } else {
                             ComponentMessages.sendActionBar(p, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(
                                 Translator.get(TranslationKey.MESSAGES__FRIEND_PLAYER_NOT_FOUND)));
@@ -286,16 +288,7 @@ public final class FriendManageDialog {
     }
 
     private static void openFriendNameInput(@NotNull Player p, @NotNull Consumer<String> handleName) {
-        if (de.sean.blockprot.bukkit.VersionCompat.isPaper()) {
-            de.sean.blockprot.bukkit.inventories.ChatInput.open(p, BlockProt.getInstance(), handleName);
-        } else {
-            String prompt = Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH);
-            if (de.sean.blockprot.bukkit.inventories.SignInput.isSupported()) {
-                de.sean.blockprot.bukkit.inventories.SignInput.open(p, BlockProt.getInstance(), prompt, handleName);
-            } else {
-                AnvilInput.open(p, BlockProt.getInstance(), "", prompt, handleName);
-            }
-        }
+        de.sean.blockprot.bukkit.inventories.TextInput.open(p, BlockProt.getInstance(), handleName);
     }
 
     private static String stripColor(String s) {

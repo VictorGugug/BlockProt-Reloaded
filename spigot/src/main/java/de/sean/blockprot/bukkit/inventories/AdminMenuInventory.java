@@ -256,13 +256,8 @@ public class AdminMenuInventory extends BlockProtInventory {
                     });
                 });
             };
-            if (SignInput.isSupported()) {
-                SignInput.open(player, BlockProt.getInstance(),
-                    Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO), handleName);
-            } else {
-                AnvilInput.open(player, BlockProt.getInstance(), "",
-                    Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO), handleName);
-            }
+            TextInput.open(player, BlockProt.getInstance(),
+                Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO), handleName);
 
         } else if (slot == SLOT_BACK) {
             goBack(player, state);

@@ -24,15 +24,13 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
-import io.papermc.paper.event.player.AsyncChatEvent;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,17 +39,18 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * Chat-based text input. Closes the player's inventory, shows a prompt in chat,
- * and calls onConfirm on the main thread. Typing the cancel word aborts silently.
- * The input session expires automatically after 15 seconds.
+ * Chat-based text input for servers that lack Paper's {@code AsyncChatEvent}
+ * (plain Spigot/CraftBukkit). Mirrors {@link ChatInput} exactly, but listens
+ * on the legacy {@link AsyncPlayerChatEvent}, which every Bukkit-family
+ * server implements. Only references standard Bukkit API classes, so it is
+ * safe to load on any server software.
  *
- * <p>Tab-completion via {@code AsyncTabCompleteEvent} is not supported on Paper 26.x
- * (the class was removed). The prompt works normally without it.
- *
- * <p>Requires Paper. On plain Spigot servers {@link LegacyChatInput} is used
- * instead.
+ * <p>Together with {@link ChatInput}, this replaces the earlier anvil-inventory
+ * fallback as the default text-input path everywhere in the plugin: the
+ * anvil GUI had been observed to open and close in a loop and crash on some
+ * Spigot builds. Use {@link TextInput#open} rather than this class directly.
  */
-public final class ChatInput implements Listener {
+public final class LegacyChatInput implements Listener {
 
     private final UUID playerUuid;
     private final Plugin plugin;
@@ -59,7 +58,7 @@ public final class ChatInput implements Listener {
     private final String cancelWord;
     private boolean consumed = false;
 
-    private ChatInput(
+    private LegacyChatInput(
             @NotNull Player player,
             @NotNull Plugin plugin,
             @Nullable String promptSubject,
@@ -83,8 +82,7 @@ public final class ChatInput implements Listener {
             prompt = Translator.get(TranslationKey.MESSAGES__CHAT_INPUT_PROMPT)
                 .replace("{cancel}", cancelWord);
         }
-        var component = LegacyComponentSerializer.legacySection().deserialize(prompt);
-        ComponentMessages.sendActionBar(player, component);
+        ComponentMessages.sendLegacyActionBar(player, prompt);
 
         // Schedule expiry after 15 seconds (300 ticks).
         BlockProt.getFoliaLib().getScheduler().runLater(() -> {
@@ -99,7 +97,7 @@ public final class ChatInput implements Listener {
             @NotNull Plugin plugin,
             @Nullable Consumer<String> onConfirm
     ) {
-        new ChatInput(player, plugin, null, onConfirm);
+        new LegacyChatInput(player, plugin, null, onConfirm);
     }
 
     public static void open(
@@ -108,20 +106,22 @@ public final class ChatInput implements Listener {
             @NotNull String promptSubject,
             @Nullable Consumer<String> onConfirm
     ) {
-        new ChatInput(player, plugin, promptSubject, onConfirm);
+        new LegacyChatInput(player, plugin, promptSubject, onConfirm);
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
-    public void onChat(AsyncChatEvent event) {
+    @SuppressWarnings("deprecation")
+    public void onChat(AsyncPlayerChatEvent event) {
         if (!event.getPlayer().getUniqueId().equals(playerUuid)) return;
         event.setCancelled(true);
 
-        final String text = PlainTextComponentSerializer.plainText().serialize(event.message()).trim();
+        final String text = event.getMessage().trim();
 
         if (text.equalsIgnoreCase(cancelWord)) {
-            event.getPlayer().sendMessage(LegacyComponentSerializer.legacySection().deserialize(
+            ComponentMessages.sendLegacy(
+                event.getPlayer(),
                 Translator.get(TranslationKey.MESSAGES__CHAT_INPUT_CANCELLED)
-            ));
+            );
             unregister();
             return;
         }

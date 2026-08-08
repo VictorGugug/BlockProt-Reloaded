@@ -25,6 +25,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.integrations.PluginIntegration;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
+import de.sean.blockprot.bukkit.util.PlayerLookup;
 import de.sean.blockprot.bukkit.util.StringUtil;
 import de.sean.blockprot.nbt.FriendModifyAction;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -42,7 +43,6 @@ import org.enginehub.squirrelid.Profile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -183,16 +183,10 @@ public class FriendSearchResultInventory extends BlockProtInventory {
         @Override
         public void run() {
             double minimumSimilarity = BlockProt.getDefaultConfig().getFriendSearchSimilarityPercentage();
-            final var offlinePlayers = Bukkit.getOfflinePlayers();
 
             try {
-                var filterStream = Arrays.stream(offlinePlayers)
-                    .filter(op -> op.getName() != null && !op.getUniqueId().equals(player.getUniqueId()))
-                    .filter(op -> {
-                        UUID uuid = op.getUniqueId();
-                        return uuid != null && (uuid.version() == 3 || uuid.version() == 4 || uuid.version() == 0);
-                    })
-                    .map(op -> new org.enginehub.squirrelid.Profile(op.getUniqueId(), op.getName()))
+                var filterStream = PlayerLookup.candidates(player.getUniqueId()).entrySet().stream()
+                    .map(e -> new org.enginehub.squirrelid.Profile(e.getKey(), e.getValue()))
                     .map(p -> new ImmutablePair<>(p, compareStrings(p.getName(), searchQuery)))
                     .filter(pair -> pair.right >= minimumSimilarity)
                     .sorted((a, b) -> b.right.compareTo(a.right))

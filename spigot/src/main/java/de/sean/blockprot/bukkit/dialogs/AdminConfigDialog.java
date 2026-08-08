@@ -647,7 +647,7 @@ public final class AdminConfigDialog {
 
         List<DialogButton> buttons = new ArrayList<>();
         DefaultConfig cfg = BlockProt.getDefaultConfig();
-        boolean raidEnabled = BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", true);
+        boolean raidEnabled = BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", false);
         buttons.add(toggleBtn("raid_detection.enabled", "raid_detection.enabled",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__RAID__ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__RAID__ENABLED),

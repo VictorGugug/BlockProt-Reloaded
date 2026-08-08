@@ -266,7 +266,7 @@ public final class BlockLockDialog {
                             int amount = item.getAmount();
                             Component line = Component.text()
                                 .append(Component.text(itemName, NamedTextColor.WHITE))
-                                .append(Component.text(" x" + amount, SOFT_GRAY))
+                                .append(Component.text(Translator.get(TranslationKey.MESSAGES__ITEM_COUNT_SUFFIX).replace("{amount}", String.valueOf(amount)), SOFT_GRAY))
                                 .build();
                             inspectBody.add(DialogBodyEntry.text(line));
                         }
@@ -400,7 +400,7 @@ public final class BlockLockDialog {
                                 String itemName = formatMaterialName(item.getType().name());
                                 inspectBody.add(Component.text()
                                     .append(Component.text(itemName, NamedTextColor.WHITE))
-                                    .append(Component.text(" x" + item.getAmount(), SOFT_GRAY))
+                                    .append(Component.text(Translator.get(TranslationKey.MESSAGES__ITEM_COUNT_SUFFIX).replace("{amount}", String.valueOf(item.getAmount())), SOFT_GRAY))
                                     .build());
                             }
                         }

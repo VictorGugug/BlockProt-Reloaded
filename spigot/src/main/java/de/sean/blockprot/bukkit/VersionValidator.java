@@ -52,8 +52,6 @@ public final class VersionValidator {
         if (!VersionCompat.isPaperFamily()) {
             warn(Translator.get(TranslationKey.CONSOLE__SOFTWARE_UNSUPPORTED)
                 .replace("{software}", software));
-            BlockProtLogger.warn("Unsupported server software: " + software + ". "
-                + "Supported: Paper and Paper forks (Paper, Purpur, Folia, Pufferfish, Leaf, ...).");
         } else {
             BlockProtLogger.log("startup-checks",
                 "Server software: " + software + " (Paper family)");
@@ -62,18 +60,14 @@ public final class VersionValidator {
         if (javaMajor < 21) {
             warn(Translator.get(TranslationKey.CONSOLE__JAVA_TOO_OLD)
                 .replace("{version}", javaVersion));
-            BlockProtLogger.warn("Java " + javaVersion + " detected, requires Java 21 or higher.");
         }
 
         if (!isPaper) {
             warn(Translator.get(TranslationKey.CONSOLE__NOT_PAPER));
-            BlockProtLogger.warn("Not running on Paper. Chat-based player search requires Paper/PaperMC. " +
-                "Falling back to anvil GUI.");
         }
 
         if (!hasTypedViews && VersionCompat.isAtLeast(1, 20, 0) && !VersionCompat.is26Family()) {
             warn(Translator.get(TranslationKey.CONSOLE__TYPED_VIEWS_FALLBACK));
-            BlockProtLogger.warn("Typed inventory views unavailable (1.21.0 to 1.21.3). Using fallback methods.");
         }
 
         if (javaMajor >= 21 && isPaper && (hasTypedViews || !VersionCompat.isAtLeast(1, 20, 0))) {
@@ -93,6 +87,6 @@ public final class VersionValidator {
     }
 
     private static void warn(@NotNull String message) {
-        BlockProt.getInstance().getLogger().warning(message);
+        BlockProtConsole.warn(message);
     }
 }

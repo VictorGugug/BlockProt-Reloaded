@@ -128,9 +128,16 @@ public final class BlockProtConsole {
             return;
         }
 
+        boolean previousWasWarning = false;
+        boolean separatorPrinted = false;
         for (StartupLine line : lines) {
+            if (line.isWarning() && !previousWasWarning && !separatorPrinted) {
+                raw("");
+                separatorPrinted = true;
+            }
             String tag = line.isWarning() ? WARN_TAG : "";
             raw(PREFIX + tag + line.message());
+            previousWasWarning = line.isWarning();
         }
         raw("");
     }

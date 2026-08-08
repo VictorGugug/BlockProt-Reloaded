@@ -59,15 +59,17 @@ public final class StringUtil {
 
     /**
      * Returns a similarity score between 0.0 (completely different) and 1.0 (identical).
-     * Based on normalized Levenshtein distance.
+     * Based on normalized Levenshtein distance, case-insensitive.
      *
      * @param a first string
      * @param b second string
      * @return similarity in [0.0, 1.0]
      */
     public static double similarity(@NotNull String a, @NotNull String b) {
-        String longer  = a.length() >= b.length() ? a : b;
-        String shorter = a.length() <  b.length() ? a : b;
+        String lowerA = a.toLowerCase(java.util.Locale.ROOT);
+        String lowerB = b.toLowerCase(java.util.Locale.ROOT);
+        String longer  = lowerA.length() >= lowerB.length() ? lowerA : lowerB;
+        String shorter = lowerA.length() <  lowerB.length() ? lowerA : lowerB;
         int len = longer.length();
         if (len == 0) return 1.0;
         return (len - levenshtein(longer, shorter)) / (double) len;

@@ -172,13 +172,8 @@ public final class WorldExpiryInventory extends BlockProtInventory {
             InventoryState.set(player.getUniqueId(), state);
             player.openInventory(fill(player, cachedPage));
         };
-        if (SignInput.isSupported()) {
-            SignInput.open(player, BlockProt.getInstance(),
-                Translator.get(TranslationKey.MESSAGES__WORLD_EXPIRY__USAGE), handleInput);
-        } else {
-            AnvilInput.open(player, BlockProt.getInstance(), "",
-                Translator.get(TranslationKey.MESSAGES__WORLD_EXPIRY__USAGE), handleInput);
-        }
+        TextInput.open(player, BlockProt.getInstance(),
+            Translator.get(TranslationKey.MESSAGES__WORLD_EXPIRY__USAGE), handleInput);
     }
 
     @Override

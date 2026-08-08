@@ -442,7 +442,7 @@ public class DebugCommand implements CommandExecutor {
 
     private void checkRaidDetection(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
-            boolean enabled = BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", true);
+            boolean enabled = BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", false);
             boolean explosionProtect = BlockProt.getDefaultConfig().shouldProtectLockedBlocksFromExplosions();
             AuditLogger auditPresent = BlockProt.getAuditLogger();
 

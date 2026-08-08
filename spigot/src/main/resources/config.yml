@@ -152,7 +152,7 @@ world_expiry:
 
 raid_detection:
   # Protect locked blocks or entities from raids.
-  enabled: true
+  enabled: false
 
 # -------------------------------------------------------------------
 # -- Notifications --

@@ -23,7 +23,6 @@ package de.sean.blockprot.bukkit.dialogs;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
-import de.sean.blockprot.bukkit.inventories.AnvilInput;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import java.util.ArrayList;
 import java.util.List;
@@ -106,19 +105,20 @@ public final class EntityFriendManageDialog {
                 bridge.closeDialog(p);
                 Consumer<String> handleName = text -> {
                     Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
-                        @SuppressWarnings("deprecation")
-                        OfflinePlayer target = Bukkit.getOfflinePlayer(text);
-                        if (target.getName() != null && target.hasPlayedBefore()) {
-                            handler.addFriend(target.getUniqueId().toString());
-                            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> show(p, entity, handler));
+                        double minimumSimilarity = BlockProt.getDefaultConfig().getFriendSearchSimilarityPercentage();
+                        var match = de.sean.blockprot.bukkit.util.PlayerLookup.findBestMatch(text, minimumSimilarity, p.getUniqueId());
+                        if (match != null) {
+                            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                                handler.addFriend(match.getKey().toString());
+                                show(p, entity, handler);
+                            });
                         } else {
                             ComponentMessages.sendActionBar(p, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(
                                 Translator.get(TranslationKey.MESSAGES__FRIEND_PLAYER_NOT_FOUND)));
                         }
                     });
                 };
-                AnvilInput.open(p, BlockProt.getInstance(), "",
-                    Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH), handleName);
+                de.sean.blockprot.bukkit.inventories.TextInput.open(p, BlockProt.getInstance(), handleName);
             }
         ));
 

@@ -23,9 +23,7 @@ package de.sean.blockprot.bukkit.inventories;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
-import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
-import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
@@ -168,34 +166,13 @@ public final class EntityFriendManageInventory extends BlockProtInventory {
 
     private void openAddFriendInput(@NotNull Player player) {
         player.closeInventory();
+        final Entity searchEntity = entity;
+        final EntityNBTHandler searchHandler = handler;
         Consumer<String> handleName = text -> {
-            if (text == null || text.isBlank()) return;
-            Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
-                try {
-                    var profile = BlockProt.getProfileService().findByName(text);
-                    if (profile == null) {
-                        sendActionBar(player, Translator.get(TranslationKey.MESSAGES__FRIEND_PLAYER_NOT_FOUND));
-                        return;
-                    }
-                    Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
-                        handler.addFriend(profile.getUniqueId().toString());
-                        Inventory inv = fill(player, entity, handler);
-                        if (inv != null) player.openInventory(inv);
-                    });
-                } catch (Exception ignored) {}
-            });
+            if (text == null || text.isBlank() || searchEntity == null || searchHandler == null) return;
+            Inventory inv = new EntityFriendSearchResultInventory().fill(player, searchEntity, searchHandler, text);
+            if (inv != null) player.openInventory(inv);
         };
-        String prompt = Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH);
-        if (VersionCompat.isPaper()) {
-            ChatInput.open(player, BlockProt.getInstance(), handleName);
-        } else if (SignInput.isSupported()) {
-            SignInput.open(player, BlockProt.getInstance(), prompt, handleName);
-        } else {
-            AnvilInput.open(player, BlockProt.getInstance(), prompt, prompt, handleName);
-        }
-    }
-
-    private void sendActionBar(@NotNull Player player, @NotNull String text) {
-        ComponentMessages.sendLegacyActionBar(player, text);
+        TextInput.open(player, BlockProt.getInstance(), handleName);
     }
 }

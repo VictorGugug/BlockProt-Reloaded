@@ -102,7 +102,7 @@ public final class RaidDetectionListener implements Listener {
     }
 
     private void checkBlocks(@NotNull List<Block> blocks, @Nullable Entity source, @NotNull Location origin) {
-        if (!BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", true)) return;
+        if (!BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", false)) return;
         for (Block block : blocks) {
             if (!BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) continue;
 

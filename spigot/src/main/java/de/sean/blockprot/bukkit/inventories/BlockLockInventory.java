@@ -197,14 +197,13 @@ public class BlockLockInventory extends BlockProtInventory {
                 case NAME_TAG -> {
                     player.closeInventory();
                     final Block nameBlock = block;
-                    var currentName = new BlockNBTHandler(nameBlock).getName();
                     Consumer<String> handleName = text -> {
                         new BlockNBTHandler(nameBlock).setName(text);
                         Inventory inventory = new BlockLockInventory().fill(player, nameBlock.getType(), new BlockNBTHandler(nameBlock));
                         if (inventory != null) player.openInventory(inventory);
                     };
-                    AnvilInput.open(player, BlockProt.getInstance(), currentName,
-                        Translator.get(TranslationKey.INVENTORIES__SET_BLOCK_NAME), handleName);
+                    String title = Translator.get(TranslationKey.INVENTORIES__SET_BLOCK_NAME);
+                    TextInput.open(player, BlockProt.getInstance(), title, handleName);
                 }
                 case ENDER_PEARL -> {
                     final Block transferBlock = block;

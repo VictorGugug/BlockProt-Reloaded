@@ -23,8 +23,6 @@ package de.sean.blockprot.bukkit.dialogs;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
-import de.sean.blockprot.bukkit.inventories.AnvilInput;
-import de.sean.blockprot.bukkit.inventories.SignInput;
 import java.util.List;
 import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
@@ -256,28 +254,19 @@ public final class AdminConfigValueDialog {
     }
 
     /**
-     * Opens the sign/anvil prompt directly, for servers without the Dialog
+     * Opens the chat-input prompt directly, for servers without the Dialog
      * API. Kept as a public entry point so non-dialog admin screens (or a
      * future inventory-based settings menu) can reuse it without duplicating
-     * the SignInput/AnvilInput branching.
+     * the {@link de.sean.blockprot.bukkit.inventories.TextInput} call.
      */
     public static void openFallback(@NotNull Player player, @NotNull String configKey,
                                      @NotNull String currentValue, @NotNull Consumer<String> onRawSubmit) {
         String prompt = stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTER_NEW_VALUE))
             .replace("{key}", configKey).replace("{value}", currentValue);
-        if (SignInput.isSupported()) {
-            SignInput.open(player, BlockProt.getInstance(),
-                stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NEW_VALUE_PROMPT))
-                    .replace("{key}", configKey), input -> {
-                if (input == null || input.isBlank()) return;
-                onRawSubmit.accept(input.trim());
-            });
-        } else {
-            AnvilInput.open(player, BlockProt.getInstance(), currentValue, prompt, input -> {
-                if (input == null || input.isBlank()) return;
-                onRawSubmit.accept(input.trim());
-            });
-        }
+        de.sean.blockprot.bukkit.inventories.TextInput.open(player, BlockProt.getInstance(), prompt, input -> {
+            if (input == null || input.isBlank()) return;
+            onRawSubmit.accept(input.trim());
+        });
     }
 
     private static String stripColor(String s) {

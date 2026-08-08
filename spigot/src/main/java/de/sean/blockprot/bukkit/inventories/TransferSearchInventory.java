@@ -23,7 +23,6 @@ package de.sean.blockprot.bukkit.inventories;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
-import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
@@ -43,7 +42,6 @@ import org.enginehub.squirrelid.Profile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -77,15 +75,8 @@ public final class TransferSearchInventory extends BlockProtInventory {
         if (existing != null) preserved.menuPermissions = existing.menuPermissions;
         InventoryState.set(player.getUniqueId(), preserved);
 
-        String prompt = Translator.get(TranslationKey.INVENTORIES__TRANSFER__SEARCH_PROMPT);
-        if (VersionCompat.isPaper()) {
-            ChatInput.open(player, BlockProt.getInstance(),
-                text -> openResult(player, text));
-        } else {
-            AnvilInput.open(player, BlockProt.getInstance(),
-                prompt, prompt,
-                text -> openResult(player, text));
-        }
+        TextInput.open(player, BlockProt.getInstance(),
+            text -> openResult(player, text));
     }
 
     /** @deprecated Use {@link #openSearch(Player, org.bukkit.block.Block)} instead. */
@@ -238,15 +229,8 @@ public final class TransferSearchInventory extends BlockProtInventory {
         @Override
         public void run() {
             try {
-                final var offlinePlayers = Bukkit.getOfflinePlayers();
-
-                Arrays.stream(offlinePlayers)
-                    .filter(op -> op.getName() != null && !op.getUniqueId().equals(player.getUniqueId()))
-                    .filter(op -> {
-                        java.util.UUID uuid = op.getUniqueId();
-                        return uuid != null && (uuid.version() == 3 || uuid.version() == 4 || uuid.version() == 0);
-                    })
-                    .map(op -> new org.enginehub.squirrelid.Profile(op.getUniqueId(), op.getName()))
+                de.sean.blockprot.bukkit.util.PlayerLookup.candidates(player.getUniqueId()).entrySet().stream()
+                    .map(e -> new org.enginehub.squirrelid.Profile(e.getKey(), e.getValue()))
                     .map(p -> new org.apache.commons.lang3.tuple.ImmutablePair<>(p, similarity(p.getName(), query)))
                     .filter(pair -> pair.right >= minSimilarity)
                     .sorted((a, b) -> b.right.compareTo(a.right))

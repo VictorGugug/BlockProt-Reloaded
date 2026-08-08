@@ -21,43 +21,20 @@
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.TranslationKey;
-import de.sean.blockprot.bukkit.Translator;
-import de.sean.blockprot.bukkit.VersionCompat;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Opens a chat or sign input to search for a friend to add.
+ * Opens a chat input to search for a friend to add.
  */
 public class FriendSearchInventory {
     public static void openChatInput(@NotNull final Player requestingPlayer) {
-        if (VersionCompat.isPaper()) {
-            ChatInput.open(
-                requestingPlayer,
-                BlockProt.getInstance(),
-                text -> handleResult(requestingPlayer, text)
-            );
-        } else {
-            String prompt = Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH);
-            if (SignInput.isSupported()) {
-                SignInput.open(
-                    requestingPlayer,
-                    BlockProt.getInstance(),
-                    prompt,
-                    text -> handleResult(requestingPlayer, text)
-                );
-            } else {
-                AnvilInput.open(
-                    requestingPlayer,
-                    BlockProt.getInstance(),
-                    prompt,
-                    prompt,
-                    text -> handleResult(requestingPlayer, text)
-                );
-            }
-        }
+        TextInput.open(
+            requestingPlayer,
+            BlockProt.getInstance(),
+            text -> handleResult(requestingPlayer, text)
+        );
     }
 
     private static void handleResult(@NotNull Player player, String text) {

@@ -69,7 +69,25 @@ public class RecommendedCommand implements CommandExecutor {
             return true;
         }
 
-        String target = args[1].toLowerCase(Locale.ROOT);
+        String first = args[1].toLowerCase(Locale.ROOT);
+
+        if (first.equals("undo")) {
+            if (args.length != 3) {
+                sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE));
+                return true;
+            }
+            String undoTarget = args[2].toLowerCase(Locale.ROOT);
+            if (!undoTarget.equals("blocks") && !undoTarget.equals("config") && !undoTarget.equals("all")) {
+                sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE));
+                return true;
+            }
+            if (undoTarget.equals("blocks")) return undoBlocks(sender);
+            if (undoTarget.equals("config")) return undoConfig(sender);
+            undoBlocks(sender);
+            return undoConfig(sender);
+        }
+
+        String target = first;
         if (!target.equals("blocks") && !target.equals("config") && !target.equals("all")) {
             sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE));
             return true;
@@ -89,6 +107,100 @@ public class RecommendedCommand implements CommandExecutor {
         }
         applyBlocks(sender, force);
         return applyConfig(sender, force);
+    }
+
+    /**
+     * Reverts {@code /bp recommended blocks} back to an empty blocks.yml (all lockable
+     * lists and auto-drop cleared) and clears the {@code recommended_blocks_applied} flag
+     * so the preset can be re-applied fresh. No-ops (with a message) if the preset was
+     * never applied.
+     */
+    private boolean undoBlocks(@NotNull CommandSender sender) {
+        BlockProt plugin = BlockProt.getInstance();
+        File blocksFile = new File(plugin.getDataFolder(), "blocks.yml");
+
+        if (!blocksFile.exists()) {
+            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_BLOCKS_MISSING));
+            return true;
+        }
+
+        try {
+            YamlConfiguration cfg = YamlConfiguration.loadConfiguration(blocksFile);
+
+            if (!cfg.getBoolean("recommended_blocks_applied", false)) {
+                String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_NOTHING)
+                    .replace("{target}", "blocks");
+                sender.sendMessage(message);
+                BlockProtLogger.log("recommended", message);
+                return true;
+            }
+
+            cfg.set("lockable_tile_entities", List.of());
+            cfg.set("lockable_shulker_boxes", List.of());
+            cfg.set("lockable_blocks", List.of());
+            cfg.set("lockable_doors", List.of());
+            cfg.set("lockable_entities", List.of());
+            cfg.set("auto_drop_to_inventory.enabled", true);
+            cfg.set("auto_drop_to_inventory.blocks", List.of());
+            cfg.set("recommended_blocks_applied", false);
+
+            if (plugin.getFileWatcher() != null) {
+                plugin.getFileWatcher().suppressPath("blocks.yml");
+            }
+            DefaultConfig.sanitizeBlocksListsForSave(cfg, false);
+            cfg = DefaultConfig.reorderBlocksKeys(cfg);
+            cfg.save(blocksFile);
+            DefaultConfig.prependBlocksHeader(blocksFile);
+
+            String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_DONE)
+                .replace("{target}", "blocks");
+            BlockProtConsole.info(message);
+            BlockProtLogger.log("recommended", message);
+            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+
+            if (plugin.getFileWatcher() != null) {
+                plugin.getFileWatcher().requestProgrammaticReload();
+            }
+        } catch (IOException e) {
+            BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)
+                .replace("{file}", "blocks.yml"));
+            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)
+                .replace("{file}", "blocks.yml")
+                .replace("{error}", e.getMessage()));
+        }
+
+        return true;
+    }
+
+    /**
+     * Reverts {@code /bp recommended config} back to config.yml's shipped defaults for
+     * {@code modern_family_blocks}, {@code use_menus} and {@code use_dialogs} (all false),
+     * and clears the {@code recommended_config_applied} flag. No-ops (with a message) if
+     * the preset was never applied.
+     */
+    private boolean undoConfig(@NotNull CommandSender sender) {
+        DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
+
+        if (!defaultConfig.getBukkitConfig().getBoolean("recommended_config_applied", false)) {
+            String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_NOTHING)
+                .replace("{target}", "config");
+            sender.sendMessage(message);
+            BlockProtLogger.log("recommended", message);
+            return true;
+        }
+
+        defaultConfig.setAndSave("modern_family_blocks", false);
+        defaultConfig.setAndSave("use_menus", false);
+        defaultConfig.setAndSave("use_dialogs", false);
+        defaultConfig.setAndSave("recommended_config_applied", false);
+
+        String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_DONE)
+            .replace("{target}", "config");
+        BlockProtConsole.info(message);
+        BlockProtLogger.log("recommended", message);
+        BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+
+        return true;
     }
 
     private boolean applyBlocks(@NotNull CommandSender sender, boolean force) {
@@ -181,6 +293,9 @@ public class RecommendedCommand implements CommandExecutor {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 2) {
+            return List.of("blocks", "config", "all", "undo");
+        }
+        if (args.length == 3 && args[1].equalsIgnoreCase("undo")) {
             return List.of("blocks", "config", "all");
         }
         if (args.length == 3 && (args[1].equalsIgnoreCase("blocks") || args[1].equalsIgnoreCase("config") || args[1].equalsIgnoreCase("all"))) {
