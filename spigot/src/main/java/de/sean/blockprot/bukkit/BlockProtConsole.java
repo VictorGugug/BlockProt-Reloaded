@@ -188,6 +188,21 @@ public final class BlockProtConsole {
         bootStatus(label, false, status, false);
     }
 
+    /**
+     * Prints one boot checklist line with an explicit status color (used by
+     * the update check, whose green/red/orange states do not map to the
+     * active/inactive pair of {@link #bootStatus}).
+     */
+    public static void bootColored(@NotNull String label, @NotNull String status, @NotNull String statusColor) {
+        String paddedLabel = padRight(label, 16);
+        info("  " + CONNECTOR_GRAY + "├─" + " " + LABEL_GRAY + paddedLabel + "  " + statusColor + "● " + statusColor + status);
+    }
+
+    /** Prints an indented continuation line under a boot checklist line. */
+    public static void bootIndented(@NotNull String message, @NotNull String color) {
+        info("  " + CONNECTOR_GRAY + "│   " + color + message);
+    }
+
     public static void info(@NotNull String message) {
         emit(message.startsWith("  ") ? message : "  " + message);
     }

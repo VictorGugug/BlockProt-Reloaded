@@ -515,6 +515,12 @@ console:
   boot_build_stable: "Ejecutando la versión estable {version}."
   boot_build_hotfix: "Ejecutando el hotfix {version} de la versión actual ({base})."
   boot_build_experimental: "Ejecutando una build de desarrollo experimental (BEDev) {version}. NO es una versión estable; se ha creado una copia de seguridad."
+  boot_update: "Comprobación de actualización"
+  boot_update_up_to_date: "Actualizado ({version})"
+  boot_update_outdated: "Nueva versión disponible: {version}"
+  boot_update_ahead: "Ejecutando una versión más nueva que el último lanzamiento ({version})"
+  boot_update_not_checked: "No comprobado"
+  boot_update_download: "Descargar: {url}"
   boot:
     configuration: "Configuración"
     listeners: "Eventos"

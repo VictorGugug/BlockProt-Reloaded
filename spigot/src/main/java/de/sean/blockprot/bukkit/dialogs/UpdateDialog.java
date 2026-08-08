@@ -116,6 +116,9 @@ public final class UpdateDialog {
                         .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__VERSION_PREFIX)) + cached.toString(), SOFT_BLUE, TextDecoration.UNDERLINED)
                             .clickEvent(ClickEvent.openUrl(releaseUrl))
                             .hoverEvent(HoverEvent.showText(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), SOFT_GRAY))))
+                        .append(Component.text(" | " + releaseUrl, NamedTextColor.WHITE, TextDecoration.UNDERLINED)
+                            .clickEvent(ClickEvent.openUrl(releaseUrl))
+                            .hoverEvent(HoverEvent.showText(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), SOFT_GRAY))))
                         .build()
                 ));
             }

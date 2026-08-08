@@ -203,7 +203,7 @@ public final class BlockProt extends JavaPlugin {
         BlockProtConsole.beginStartup(this.getLogger());
 
         foliaLib = new FoliaLib(this);
-        foliaLib.getScheduler().runAsync(task -> new UpdateChecker(BlockProt.getPluginVersion()).run());
+        foliaLib.getScheduler().runAsync(task -> new UpdateChecker(BlockProt.getPluginVersion(), () -> {}).run());
         MinecraftVersion.disableUpdateCheck();
         this.saveDefaultConfig();
         migrateOldLockableListsFromConfigYml();
@@ -345,6 +345,8 @@ public final class BlockProt extends JavaPlugin {
         boolean auditActive = auditLogger != null;
         BlockProtConsole.bootStatus("Audit Logger", auditActive, auditActive ? "Active" : "Disabled");
 
+        printBootUpdateStatus(version);
+
         foliaLib.getScheduler().runAsync(task -> populateProtectedBlockCache());
 
         BlockProtConsole.bootStatus(
@@ -412,6 +414,64 @@ public final class BlockProt extends JavaPlugin {
             }
             getLogger().info(msg);
         } catch (Exception ignored) {}
+    }
+
+    /**
+     * Prints the update check result as one boot checklist line. The check
+     * itself runs asynchronously; this method waits only a short bounded
+     * time for its cached result before printing, so the line always shows
+     * the real outcome (up to date, outdated with download link, or ahead
+     * of the latest release).
+     */
+    private void printBootUpdateStatus(@NotNull String version) {
+        String label = Translator.get(TranslationKey.CONSOLE__BOOT_UPDATE);
+        long deadline = System.currentTimeMillis() + 3000;
+        while (UpdateChecker.latestVersion == null && System.currentTimeMillis() < deadline) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        SemanticVersion latest = UpdateChecker.latestVersion;
+        if (latest == null) {
+            BlockProtConsole.bootColored(
+                label,
+                Translator.get(TranslationKey.CONSOLE__BOOT_UPDATE_NOT_CHECKED),
+                BlockProtConsole.PASTEL_GRAY);
+            return;
+        }
+        SemanticVersion current = new SemanticVersion(version);
+        int cmp = latest.compareTo(current);
+        if (cmp > 0) {
+            String releaseUrl = UpdateChecker.latestRelease != null
+                && UpdateChecker.latestRelease.getHtmlUrl() != null
+                && !UpdateChecker.latestRelease.getHtmlUrl().isBlank()
+                ? UpdateChecker.latestRelease.getHtmlUrl()
+                : "https://github.com/VictorGugug/BlockProt-Reloaded/releases/latest";
+            BlockProtConsole.bootColored(
+                label,
+                Translator.get(TranslationKey.CONSOLE__BOOT_UPDATE_OUTDATED)
+                    .replace("{version}", latest.toString()),
+                BlockProtConsole.PASTEL_CORAL);
+            BlockProtConsole.bootIndented(
+                Translator.get(TranslationKey.CONSOLE__BOOT_UPDATE_DOWNLOAD)
+                    .replace("{url}", releaseUrl),
+                BlockProtConsole.SOFT_BLUE);
+        } else if (cmp < 0) {
+            BlockProtConsole.bootColored(
+                label,
+                Translator.get(TranslationKey.CONSOLE__BOOT_UPDATE_AHEAD)
+                    .replace("{version}", latest.toString()),
+                BlockProtConsole.PASTEL_GOLD);
+        } else {
+            BlockProtConsole.bootColored(
+                label,
+                Translator.get(TranslationKey.CONSOLE__BOOT_UPDATE_UP_TO_DATE)
+                    .replace("{version}", latest.toString()),
+                BlockProtConsole.PASTEL_MINT);
+        }
     }
 
     @Override
