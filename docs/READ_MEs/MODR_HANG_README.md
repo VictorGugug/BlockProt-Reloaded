@@ -1,5 +1,6 @@
-# BlockProt Reloaded - Modrinth & Hangar Description
+<img src="https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BlockProtReloaded.png" alt="BlockProt Reloaded" />
 
+---
 BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper and Spigot servers (Minecraft 1.21.1 through the current 26.x line). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
 
 
