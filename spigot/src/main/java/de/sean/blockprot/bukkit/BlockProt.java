@@ -148,7 +148,7 @@ public final class BlockProt extends JavaPlugin {
     @Nullable public static HybridDatabase getHybridDatabase() { return hybridDatabase; }
 
     @Override
-    @SuppressWarnings("deprecation") // Shut up bro （￣︶￣）↗　
+    @SuppressWarnings("deprecation") // Shut up bro: legacy API, planned cleanup　
     public void onLoad() {
         instance = this;
         pluginVersion = this.getDescription().getVersion();
@@ -290,6 +290,7 @@ public final class BlockProt extends JavaPlugin {
         registerEvent(pm, new VillagerWorkstationProtectionListener());
         registerEvent(pm, new ItemFrameListener());
         registerEvent(pm, new VehicleProtectionListener());
+        registerEvent(pm, new AutoDropEntityListener());
         registerEvent(pm, new RaidDetectionListener());
         registerEvent(pm, new WorldEditPasteListener(this));
 

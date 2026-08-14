@@ -150,37 +150,8 @@ public class UserSettingsInventory extends BlockProtInventory {
         );
 
         if (!BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {
-            setItemStack(
-                SLOT_FRIENDS,
-                Material.PLAYER_HEAD,
-                Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE)
-            );
-            Bukkit.getScheduler().runTaskAsynchronously(
-                BlockProt.getInstance(),
-                () -> {
-                    try {
-                        var profile = BlockProtInventory.createPlayerProfile(
-                            player.getUniqueId(), player.getName());
-                        Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
-                            setPlayerSkull(SLOT_FRIENDS, profile);
-                            var stack = inventory.getItem(SLOT_FRIENDS);
-                            if (stack != null) {
-                                var meta = stack.getItemMeta();
-                                if (meta != null) {
-                                    ComponentMessages.displayName(meta, net.kyori.adventure.text.Component.text(
-                                        Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE)
-                                            .replaceAll("[§&][0-9a-fk-orx]", "")));
-                                    stack.setItemMeta(meta);
-                                    inventory.setItem(SLOT_FRIENDS, stack);
-                                }
-                            }
-                        });
-                    } catch (Exception e) {
-                        BlockProt.getInstance().getLogger().warning(
-                            "Failed to load player skull for UserSettings: " + e.getMessage());
-                    }
-                }
-            );
+            setPlayerSkullAsync(SLOT_FRIENDS, player, player.getUniqueId(), player.getName(),
+                Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE));
         }
 
         InventoryState st = InventoryState.get(player.getUniqueId());

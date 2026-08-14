@@ -23,8 +23,6 @@ package de.sean.blockprot.bukkit.nbt;
 import de.tr7zw.changeme.nbtapi.NBTCompound;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.EnumSet;
-
 /**
  * The friend handler used by {@link BlockNBTHandler} to handle
  * each of the {@link NBTCompound} used in the "friends" sub-tag of each block.
@@ -66,55 +64,6 @@ public final class FriendHandler extends NBTHandler<NBTCompound> {
     }
 
     /**
-     * Read the access flags of this block as a bitset.
-     *
-     * @return A bitset of all access flags of this block.
-     * @deprecated Access flags feature has been removed
-     * @since 0.4.7
-     */
-    @Deprecated
-    private int getAccessFlagsBitset() {
-        return 0;
-    }
-
-    /**
-     * Sets the access flag bitset for this block.
-     *
-     * @param flagsBitset The new bitset.
-     * @deprecated Access flags feature has been removed
-     * @since 0.4.7
-     */
-    @Deprecated
-    private void setAccessFlagsBitset(final int flagsBitset) {
-        // Access flags feature removed
-    }
-
-    /**
-     * Read the access flags of this block.
-     *
-     * @return A {@link EnumSet} of all flags for this block.
-     * @deprecated Access flags feature has been removed
-     * @since 0.3.0
-     */
-    @NotNull
-    @Deprecated
-    public EnumSet<BlockAccessFlag> getAccessFlags() {
-        return EnumSet.noneOf(BlockAccessFlag.class);
-    }
-
-    /**
-     * Sets the access flags for this block.
-     *
-     * @param flags The new flags to use.
-     * @deprecated Access flags feature has been removed
-     * @since 0.3.0
-     */
-    @Deprecated
-    public void setAccessFlags(@NotNull final EnumSet<BlockAccessFlag> flags) {
-        // Access flags feature removed
-    }
-
-    /**
      * Checks if this player can read the contents of the parent block.
      * Access control has been removed.
      *
@@ -137,14 +86,14 @@ public final class FriendHandler extends NBTHandler<NBTCompound> {
     }
 
     /**
-     * A manager is allowed to edit redstone settings and remove/add
-     * and edit friends of a block they have this permission on.
+     * Checks if this player is a manager of the parent block.
+     * Access control has been removed.
      *
-     * @return True, if the player is such a manager.
+     * @return Always false - access flags have been removed
      * @since 1.0.0
      */
     public boolean isManager() {
-        return getAccessFlags().contains(BlockAccessFlag.MANAGER);
+        return false;
     }
 
     /**

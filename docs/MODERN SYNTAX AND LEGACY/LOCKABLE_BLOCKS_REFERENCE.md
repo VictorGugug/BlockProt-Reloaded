@@ -3,6 +3,8 @@
 Complete list of every block and entity that can be locked, organized by family and sub-family.
 Covers all Minecraft versions up to 1.21.x / 26.1 (The Copper Age).
 
+For the same catalog organized by family: see `LOCKABLE_BLOCKS_BY_FAMILY.md`.
+
 For the family expression syntax used in modern mode: see `BLOCK_FAMILY_SYNTAX.md`.
 For the in-game block browser and how to use it: see the `/bp lockables` section below.
 For a step-by-step setup walkthrough aimed at new servers: see `../READ_MEs/ADMIN_GUIDE.md`. For the player-facing usage guide: see `../READ_MEs/PLAYER_GUIDE.md`.

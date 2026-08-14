@@ -26,6 +26,13 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker.GitHubRelease;
 import de.sean.blockprot.util.SemanticVersion;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_PURPLE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_BLUE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_GRAY;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,13 +47,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public final class UpdateDialog {
-
-    private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
-    private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
-    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
-    private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
-    private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
-    private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
 
     private UpdateDialog() {}
 
@@ -174,10 +174,6 @@ public final class UpdateDialog {
             stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__KIND_STABLE))
                 .replace("{version}", version.toString()),
             PASTEL_MINT, TextDecoration.BOLD);
-    }
-
-    private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component originHint(DialogOrigin origin) {

@@ -22,7 +22,15 @@ package de.sean.blockprot.bukkit.dialogs;
 
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.commands.TransferCommand;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_PURPLE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_BLUE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_GRAY;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
 import java.util.ArrayList;
 import java.util.List;
 import net.kyori.adventure.text.Component;
@@ -34,13 +42,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public final class UserMenuDialog {
-
-    private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
-    private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
-    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
-    private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
-    private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
-    private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
 
     private UserMenuDialog() {}
 
@@ -61,6 +62,7 @@ public final class UserMenuDialog {
         String friends = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__FRIENDS));
         String placements = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__PLACEMENTS));
         String about = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__ABOUT));
+        String transfer = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__TRANSFER));
 
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(
@@ -89,6 +91,32 @@ public final class UserMenuDialog {
             p -> StatsDialog.showUserStats(p, DialogOrigin.USER_MENU)
         );
 
+        DialogButton transferBtn = new DialogButton("transfer",
+            Component.text(transfer, NamedTextColor.WHITE),
+            tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__TRANSFER_LORE)), SOFT_BLUE),
+            p -> {
+                List<DialogBodyEntry> inputBody = new ArrayList<>();
+                inputBody.add(DialogBodyEntry.text(Component.text(
+                    stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__TRANSFER_LORE)), SOFT_GRAY)));
+                DialogTextField field = DialogTextField.of(
+                    "transfer_target",
+                    Component.text(transfer, NamedTextColor.WHITE),
+                    "",
+                    stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CONFIRM_VALUE))
+                );
+                DialogButton inputBack = new DialogButton("cancel",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), TextColor.color(0x888888)),
+                    back -> show(back, backOrigin)
+                );
+                bridge.showValueInput(p,
+                    Component.text(transfer, PASTEL_GOLD, TextDecoration.BOLD),
+                    inputBody, field,
+                    name -> TransferCommand.transferAll(p, name),
+                    inputBack);
+            }
+        );
+
         DialogButton aboutBtn = new DialogButton("about",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__ABOUT)) + about, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__ABOUT)), PASTEL_GOLD),
@@ -103,15 +131,12 @@ public final class UserMenuDialog {
         );
 
         List<DialogButton> actions = new ArrayList<>();
-        actions.add(settingsBtn);
         actions.add(friendsBtn);
+        actions.add(settingsBtn);
         actions.add(statsBtn);
+        actions.add(transferBtn);
         actions.add(aboutBtn);
         bridge.showMultiAction(player, title, body, actions, exitBtn, 2);
-    }
-
-    private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component tooltip(String description, TextColor accent) {

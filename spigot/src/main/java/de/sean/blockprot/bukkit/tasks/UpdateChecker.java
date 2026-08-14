@@ -34,7 +34,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -63,7 +62,7 @@ public final class UpdateChecker implements Runnable {
     /**
      * GitHub Releases API endpoint for this fork.
      * {@code /releases/latest} only returns stable releases.
-     * We use {@code /releases} (list) so we can also detect pre-releases.
+     * {@code /releases} (list) is used instead so pre-releases are also detected.
      */
     private static final String GITHUB_API_URL =
         "https://api.github.com/repos/VictorGugug/BlockProt-Reloaded/releases";
@@ -104,23 +103,6 @@ public final class UpdateChecker implements Runnable {
         this.recipients = null;
         this.onComplete = null;
         this.currentVersion = new SemanticVersion(version);
-    }
-
-    @Deprecated
-    public UpdateChecker(@NotNull final PluginDescriptionFile description) {
-        this.pluginVersion = description.getVersion();
-        this.recipients = null;
-        this.onComplete = null;
-        this.currentVersion = new SemanticVersion(description.getVersion());
-    }
-
-    @Deprecated
-    public UpdateChecker(@NotNull final PluginDescriptionFile description,
-                         @Nullable final List<Player> recipients) {
-        this.recipients = recipients;
-        this.pluginVersion = description.getVersion();
-        this.onComplete = null;
-        this.currentVersion = new SemanticVersion(description.getVersion());
     }
 
     public UpdateChecker(@NotNull final String version,
@@ -236,9 +218,7 @@ public final class UpdateChecker implements Runnable {
             onComplete.run();
         } else {
             if (isOutdated) {
-                TranslationKey key = latestVersion.isHotfix()
-                    ? TranslationKey.CONSOLE__UPDATE__AVAILABLE_HOTFIX
-                    : TranslationKey.CONSOLE__UPDATE__AVAILABLE;
+                TranslationKey key = consoleOutdatedKey(latestVersion);
                 BlockProt.getInstance().getLogger().warning(
                     Translator.get(key)
                         .replace("{version}", latestVersion.toString())
@@ -269,6 +249,18 @@ public final class UpdateChecker implements Runnable {
         if (version.isHotfix()) return TranslationKey.MESSAGES__UPDATE__OUTDATED_HOTFIX;
         if (version.isPreRelease()) return TranslationKey.MESSAGES__UPDATE__OUTDATED_DEV;
         return TranslationKey.MESSAGES__UPDATE__OUTDATED;
+    }
+
+    /**
+     * Console counterpart of {@link #outdatedMessageKey}: the same channel
+     * split so a BEDev candidate offered to a pre-release server is announced
+     * as an experimental build, not as a "stable" version.
+     */
+    @Contract("_ -> !null")
+    private static @NotNull TranslationKey consoleOutdatedKey(@NotNull SemanticVersion version) {
+        if (version.isHotfix()) return TranslationKey.CONSOLE__UPDATE__AVAILABLE_HOTFIX;
+        if (version.isPreRelease()) return TranslationKey.CONSOLE__UPDATE__AVAILABLE_DEV;
+        return TranslationKey.CONSOLE__UPDATE__AVAILABLE;
     }
 
     /**

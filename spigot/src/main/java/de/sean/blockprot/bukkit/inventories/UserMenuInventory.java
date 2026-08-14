@@ -43,14 +43,20 @@ import java.util.function.Consumer;
 
 public class UserMenuInventory extends BlockProtInventory {
 
-    private static final int SLOT_SETTINGS   = 10;
     private static final int SLOT_FRIENDS    = 11;
-    private static final int SLOT_STATS      = 12;
+    private static final int SLOT_SETTINGS   = 12;
+    private static final int SLOT_STATS      = 13;
     private static final int SLOT_TRANSFER   = 14;
-    private static final int SLOT_ABOUT      = 16;
+    private static final int SLOT_ABOUT      = 15;
     private static final int SLOT_BACK       = 49;
 
-    private static final int[] SEPARATOR_SLOTS = {0,1,2,3,4,5,6,7,8, 9,13,17, 18,19,20,21,22,23,24,25,26, 27,28,29,30,31,32,33,34,35, 36,37,38,39,40,41,42,43,44, 45,46,47,48,50,51,52,53};
+    private static final int[] SEPARATOR_SLOTS = {
+        0,1,2,3,4,5,6,7,8, 9,10, 16,17,
+        18,19,20,21,22,23,24,25,26,
+        27,28,29,30,31,32,33,34,35,
+        36,37,38,39,40,41,42,43,44,
+        45,46,47,48, 50,51,52,53
+    };
 
     public UserMenuInventory() { super(false); }
 
@@ -66,12 +72,12 @@ public class UserMenuInventory extends BlockProtInventory {
         inventory = createInventory();
         fillSeparators();
 
+        setPlayerSkullAsync(SLOT_FRIENDS, player, player.getUniqueId(), player.getName(),
+            Translator.get(TranslationKey.INVENTORIES__USER_MENU__FRIENDS),
+            Translator.get(TranslationKey.INVENTORIES__USER_MENU__FRIENDS_LORE));
         inventory.setItem(SLOT_SETTINGS, item(Material.WRITABLE_BOOK,
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__SETTINGS),
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__SETTINGS_LORE)));
-        inventory.setItem(SLOT_FRIENDS, item(Material.PLAYER_HEAD,
-            Translator.get(TranslationKey.INVENTORIES__USER_MENU__FRIENDS),
-            Translator.get(TranslationKey.INVENTORIES__USER_MENU__FRIENDS_LORE)));
         inventory.setItem(SLOT_STATS, item(Material.BOOK,
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__PLACEMENTS),
             Translator.get(TranslationKey.INVENTORIES__USER_MENU__PLACEMENTS_LORE)));

@@ -107,7 +107,7 @@ public final class FriendDetailInventory extends BlockProtInventory {
                 final var profile = BlockProt.getProfileService().findByUuid(uuid);
                 assert profile != null;
                 final String pName = profile.getName() != null ? profile.getName() : uuid.toString();
-                setPlayerSkull(0, BlockProtInventory.createPlayerProfile(profile.getUniqueId(), pName));
+                setPlayerSkullAsync(0, player, profile.getUniqueId(), pName);
             } catch (Exception e) {
                 BlockProt.getInstance().getLogger().warning("Failed to find PlayerProfile: " + uuid);
             }

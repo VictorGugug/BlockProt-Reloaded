@@ -36,7 +36,6 @@ import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.BukkitCompat;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
@@ -120,28 +119,6 @@ public abstract class BlockProtInventory implements InventoryHolder {
     protected final Inventory createInventory(@NotNull String title) {
         return ComponentMessages.createInventory(this, getSize(),
             net.kyori.adventure.text.Component.text(stripColors(title)));
-    }
-
-    @Deprecated
-    protected final void modifyFriendsForAction(
-        @NotNull final Player player,
-        @NotNull final OfflinePlayer friend,
-        @NotNull final FriendModifyAction action
-    ) {
-        applyChanges(
-            player,
-            (handler) -> handler.modifyFriends(
-                player.getUniqueId().toString(),
-                friend.getUniqueId().toString(),
-                action
-            ),
-            (handler) -> {
-                switch (action) {
-                    case ADD_FRIEND -> handler.addFriend(friend.getUniqueId().toString());
-                    case REMOVE_FRIEND -> handler.removeFriend(friend.getUniqueId().toString());
-                }
-            }
-        );
     }
 
     protected final void modifyFriendsForAction(
@@ -250,27 +227,6 @@ public abstract class BlockProtInventory implements InventoryHolder {
         inventory.setItem(index, stack);
     }
 
-    @Deprecated
-    public void setPlayerSkull(int index, OfflinePlayer player) {
-        final ItemStack stack = new ItemStack(Material.PLAYER_HEAD, 1);
-        SkullMeta meta = (SkullMeta) stack.getItemMeta();
-        if (meta == null) {
-            meta = (SkullMeta) Bukkit.getItemFactory().getItemMeta(Material.PLAYER_HEAD);
-        }
-
-        try {
-            assert meta != null;
-            meta.setOwningPlayer(player);
-            if (player.getName() != null)
-                ComponentMessages.displayName(meta, Component.text(player.getName()));
-        } catch (Exception e) {
-            BlockProt.getInstance().getLogger().severe("Failed to set skull head for \"" + player.getName() + "\": " + e.getMessage());
-        }
-
-        stack.setItemMeta(meta);
-        inventory.setItem(index, stack);
-    }
-
     public void setPlayerSkull(int index, @Nullable final PlayerProfile profile) {
         if (!Bukkit.isPrimaryThread()) {
             // Inventory mutations must happen on the main thread. Defer.
@@ -309,15 +265,58 @@ public abstract class BlockProtInventory implements InventoryHolder {
      * @param name   Player name to display on the skull.
      */
     public void setPlayerSkullAsync(int index, @NotNull Player player, @NotNull UUID uuid, @NotNull String name) {
-        // Render a placeholder first so the slot is never empty.
+        setPlayerSkullAsync(index, player, uuid, name, (String) null, (List<String>) null);
+    }
+
+    public void setPlayerSkullAsync(int index, @NotNull Player player, @NotNull UUID uuid, @NotNull String name, @Nullable String lore) {
+        setPlayerSkullAsync(index, player, uuid, name, null, lore != null ? List.of(lore) : null);
+    }
+
+    public void setPlayerSkullAsync(int index, @NotNull Player player, @NotNull UUID uuid, @NotNull String name, @Nullable String customTitle, @Nullable String lore) {
+        setPlayerSkullAsync(index, player, uuid, name, customTitle, lore != null ? List.of(lore) : null);
+    }
+
+    public void setPlayerSkullAsync(int index, @NotNull Player player, @NotNull UUID uuid, @NotNull String name, @Nullable String customTitle, @Nullable List<String> lore) {
+        PlayerProfile immediate = SkinCache.getCachedOrOnlineProfile(name, uuid);
+        if (immediate != null) {
+            setPlayerSkull(index, immediate);
+            if (customTitle != null) setDisplayName(index, customTitle);
+            if (lore != null && !lore.isEmpty()) setLoreList(index, lore);
+            return;
+        }
+
         setPlayerSkull(index, createPlayerProfile(uuid, name));
+        if (customTitle != null) setDisplayName(index, customTitle);
+        if (lore != null && !lore.isEmpty()) setLoreList(index, lore);
 
         SkinCache.getOrFetchAsync(name, uuid).thenAcceptAsync(freshProfile -> {
             if (!player.isOnline()) return;
             Inventory top = player.getOpenInventory().getTopInventory();
             if (top == null || top.getHolder() != BlockProtInventory.this) return;
             setPlayerSkull(index, freshProfile);
+            if (customTitle != null) setDisplayName(index, customTitle);
+            if (lore != null && !lore.isEmpty()) setLoreList(index, lore);
         }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
+    }
+
+    private void setDisplayName(int index, @NotNull String title) {
+        ItemStack stack = inventory.getItem(index);
+        if (stack == null) return;
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) return;
+        ComponentMessages.displayName(meta, LegacyComponentSerializer.legacySection().deserialize(title));
+        stack.setItemMeta(meta);
+    }
+
+    private void setLoreList(int index, @NotNull List<String> lore) {
+        ItemStack stack = inventory.getItem(index);
+        if (stack == null) return;
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) return;
+        ComponentMessages.lore(meta, lore.stream()
+            .map(s -> LegacyComponentSerializer.legacySection().deserialize(s))
+            .toList());
+        stack.setItemMeta(meta);
     }
 
     public static boolean hasSkin(@Nullable PlayerProfile profile) {
@@ -333,7 +332,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
         }
     }
 
-    protected void goBack(@NotNull final Player player, @NotNull final InventoryState state) {
+    public void goBack(@NotNull final Player player, @NotNull final InventoryState state) {
         InventoryState.MenuOrigin parent = state.originStack.isEmpty()
             ? state.origin
             : state.originStack.pop();
@@ -407,11 +406,6 @@ public abstract class BlockProtInventory implements InventoryHolder {
             case FRIEND_SEARCH -> block == null ? null : getNbtHandlerOrNull(block);
             case DEFAULT_FRIEND_SEARCH -> player == null ? null : new PlayerSettingsHandler(player);
         };
-    }
-
-    @Deprecated
-    protected ItemStack toggleEnchants(@NotNull final ItemStack stack) {
-        return toggleEnchants(stack, null);
     }
 
     @NotNull

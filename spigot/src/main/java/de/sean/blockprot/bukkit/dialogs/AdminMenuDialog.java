@@ -27,6 +27,13 @@ import de.sean.blockprot.bukkit.config.ReloadCoordinator;
 import de.sean.blockprot.bukkit.config.ReloadReport;
 import de.sean.blockprot.bukkit.listeners.BlockEventListener;
 import de.sean.blockprot.bukkit.tasks.BackupTask;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_PURPLE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_BLUE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_GRAY;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
 import java.util.ArrayList;
 import java.util.List;
 import net.kyori.adventure.text.Component;
@@ -40,13 +47,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public final class AdminMenuDialog {
-
-    private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
-    private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
-    private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
-    private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
-    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
-    private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
 
     private AdminMenuDialog() {}
 
@@ -152,6 +152,12 @@ public final class AdminMenuDialog {
             p -> ProtdelDialog.show(p, null, DialogOrigin.ADMIN_MENU)
         );
 
+        DialogButton aboutBtn = new DialogButton("about",
+            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)), NamedTextColor.WHITE),
+            tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)), PASTEL_GOLD),
+            p -> AboutDialog.show(p)
+        );
+
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
         DialogButton exitBtn = new DialogButton("exit",
             Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
@@ -162,18 +168,15 @@ public final class AdminMenuDialog {
         List<DialogButton> actions = new ArrayList<>();
         actions.add(lockablesBtn);
         actions.add(configBtn);
-        actions.add(reloadBtn);
-        actions.add(updateBtn);
-        actions.add(integrationsBtn);
+        actions.add(protdelBtn);
         actions.add(statsBtn);
+        actions.add(integrationsBtn);
+        actions.add(updateBtn);
+        actions.add(reloadBtn);
         actions.add(debugBtn);
         actions.add(infoBtn);
-        actions.add(protdelBtn);
+        actions.add(aboutBtn);
         bridge.showMultiAction(player, title, body, actions, exitBtn, 2);
-    }
-
-    private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component tooltip(String description, TextColor accent) {

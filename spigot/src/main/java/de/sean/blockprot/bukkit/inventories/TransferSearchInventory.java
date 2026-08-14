@@ -79,15 +79,6 @@ public final class TransferSearchInventory extends BlockProtInventory {
             text -> openResult(player, text));
     }
 
-    /** @deprecated Use {@link #openSearch(Player, org.bukkit.block.Block)} instead. */
-    @Deprecated
-    public static void openSearch(@NotNull Player player) {
-        InventoryState state = InventoryState.get(player.getUniqueId());
-        org.bukkit.block.Block block = state != null ? state.getBlock() : null;
-        if (block == null) return;
-        openSearch(player, block);
-    }
-
     private static void openResult(@NotNull Player player, @Nullable String text) {
         if (text == null || text.isBlank()) return;
         Inventory inv = new TransferSearchInventory().fill(player, text);

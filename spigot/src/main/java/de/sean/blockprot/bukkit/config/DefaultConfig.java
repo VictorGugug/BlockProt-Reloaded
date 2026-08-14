@@ -230,6 +230,8 @@ public final class DefaultConfig extends BlockProtConfig {
             if (knownGoodTileEntities.contains(m)) return true;
             if (name.contains("COPPER_CHEST") || name.contains("COPPER_TRAPPED_CHEST")) return true;
             if (name.endsWith("_SHELF")) return true;
+            if (name.endsWith("_SIGN") || name.endsWith("_WALL_SIGN")
+                || name.endsWith("_HANGING_SIGN") || name.endsWith("_WALL_HANGING_SIGN")) return true;
             if (name.equals("DECORATED_POT") || name.equals("CHISELED_BOOKSHELF") || name.equals("CRAFTER")) return true;
             if (name.equals("JUKEBOX")) return true;
             return false;
@@ -1510,7 +1512,4 @@ public final class DefaultConfig extends BlockProtConfig {
         lines.add("");
         Files.write(blocksFile.toPath(), lines, StandardCharsets.UTF_8);
     }
-
-    @Deprecated
-    public void migrateLegacyBlocksIfNeeded() {}
 }

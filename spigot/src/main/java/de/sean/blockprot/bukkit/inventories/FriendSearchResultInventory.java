@@ -116,7 +116,7 @@ public class FriendSearchResultInventory extends BlockProtInventory {
         InventoryState state = InventoryState.get(player.getUniqueId());
         if (state == null) return inventory;
 
-        updateTask = Bukkit.getScheduler().runTaskTimer(BlockProt.getInstance(), new ResultUpdateTask(state), 0, 1);
+        updateTask = Bukkit.getScheduler().runTaskTimer(BlockProt.getInstance(), new ResultUpdateTask(state, player), 0, 1);
         loadTask = Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), new AsyncResultLoadTask(state, player, searchQuery));
 
         for (int i = 0; i < maxResults; i++) {
@@ -128,10 +128,12 @@ public class FriendSearchResultInventory extends BlockProtInventory {
 
     private class ResultUpdateTask implements Runnable {
         InventoryState state;
+        Player player;
         int playersIndex = 0;
 
-        ResultUpdateTask(@NotNull InventoryState state) {
+        ResultUpdateTask(@NotNull InventoryState state, @NotNull Player player) {
             this.state = state;
+            this.player = player;
         }
 
         @Override
@@ -158,7 +160,7 @@ public class FriendSearchResultInventory extends BlockProtInventory {
                 state.friendResultCache.add(profile.getUniqueId());
 
                 final String pName = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
-                setPlayerSkull(playersIndex, BlockProtInventory.createPlayerProfile(profile.getUniqueId(), pName));
+                setPlayerSkullAsync(playersIndex, player, profile.getUniqueId(), pName);
                 ++playersIndex;
             }
 

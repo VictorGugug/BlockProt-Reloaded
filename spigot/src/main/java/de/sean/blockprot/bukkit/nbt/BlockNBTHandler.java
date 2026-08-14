@@ -29,6 +29,7 @@ import de.sean.blockprot.bukkit.listeners.HopperEventListener;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import de.sean.blockprot.bukkit.storage.HybridDatabase;
 import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
+import de.sean.blockprot.bukkit.util.AsyncGuard;
 import de.sean.blockprot.bukkit.util.BlockUtil;
 import de.sean.blockprot.nbt.FriendModifyAction;
 import de.sean.blockprot.nbt.LockReturnValue;
@@ -99,6 +100,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
     @SuppressWarnings("deprecation")
     public BlockNBTHandler(@NotNull final Block block) throws RuntimeException {
         super(LOCK_ATTRIBUTE);
+        AsyncGuard.assertBlockAccess(block, "BlockNBTHandler.<init>");
         this.block = block;
 
         if (BlockProt.getDefaultConfig().isLockableBlock(this.block.getType(), this.block.getWorld())) {

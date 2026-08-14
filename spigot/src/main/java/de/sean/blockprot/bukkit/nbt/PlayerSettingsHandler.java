@@ -27,7 +27,6 @@ import de.sean.blockprot.util.BlockProtUtil;
 import de.tr7zw.changeme.nbtapi.NBTCompound;
 import de.tr7zw.changeme.nbtapi.NBTEntity;
 import de.tr7zw.changeme.nbtapi.NBTType;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -148,16 +147,6 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
         if (container.hasTag(PLAYER_SEARCH_HISTORY)) {
             container.removeKey(PLAYER_SEARCH_HISTORY);
         }
-    }
-
-    @Deprecated
-    public void addPlayerToSearchHistory(@NotNull final OfflinePlayer player) {
-        this.addPlayerToSearchHistory(player.getUniqueId());
-    }
-
-    @Deprecated
-    public void addPlayerToSearchHistory(@NotNull final String playerUuid) {
-        this.addPlayerToSearchHistory(UUID.fromString(playerUuid));
     }
 
     /**

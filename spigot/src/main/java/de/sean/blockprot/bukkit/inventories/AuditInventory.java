@@ -26,8 +26,10 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.audit.AuditLogger.AuditEntry;
+import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.util.SkinCache;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -183,6 +185,19 @@ public final class AuditInventory extends BlockProtInventory {
             entries = audit.getEntriesForBlock(blockWorld, blockX, blockY, blockZ, 500);
         }
 
+        String ownerUuid = null;
+        if (block != null) {
+            BlockNBTHandler ownerHandler = new BlockNBTHandler(block);
+            if (ownerHandler.isProtected()) ownerUuid = ownerHandler.getOwner();
+        } else if (entitySource != null) {
+            EntityNBTHandler ownerHandler = new EntityNBTHandler(entitySource);
+            if (ownerHandler.isProtected()) ownerUuid = ownerHandler.getOwner();
+        }
+        final String ownerFilter = ownerUuid;
+        if (ownerFilter != null) {
+            entries.removeIf(e -> ownerFilter.equals(e.playerUuid()));
+        }
+
         if (entries.isEmpty()) {
             setItemStack(22, Material.PAPER, Translator.get(TranslationKey.INVENTORIES__AUDIT__NO_ENTRIES));
             setBackButton();
@@ -248,6 +263,20 @@ public final class AuditInventory extends BlockProtInventory {
             }
 
             inventory.setItem(i, skull);
+
+            final int skullSlot = i;
+            final String skinName = entry.playerName() != null ? entry.playerName() : entry.playerUuid();
+            final UUID skinUuid = UUID.fromString(entry.playerUuid());
+            SkinCache.getOrFetchAsync(skinName, skinUuid).thenAcceptAsync(freshProfile -> {
+                if (inventory.getViewers().isEmpty()) return;
+                ItemStack existing = inventory.getItem(skullSlot);
+                if (existing == null || existing.getType() != Material.PLAYER_HEAD) return;
+                org.bukkit.inventory.meta.SkullMeta sm = (org.bukkit.inventory.meta.SkullMeta) existing.getItemMeta();
+                if (sm != null) {
+                    try { sm.setOwnerProfile(freshProfile); } catch (Throwable ignored2) {}
+                    existing.setItemMeta(sm);
+                }
+            }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
         }
 
         setItemStack(45, Material.CYAN_STAINED_GLASS_PANE,  TranslationKey.INVENTORIES__LAST_PAGE);

@@ -28,6 +28,7 @@ import de.sean.blockprot.bukkit.nbt.FriendSupportingHandler;
 import de.sean.blockprot.bukkit.nbt.RedstoneSettingsHandler;
 import de.sean.blockprot.bukkit.util.BlockUtil;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.util.SkinCache;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -147,61 +148,46 @@ public class BlockInfoInventory extends BlockProtInventory {
         }
 
         if (!owner.isEmpty()) {
+            UUID parsedOwnerUuid = null;
+            try { parsedOwnerUuid = UUID.fromString(owner); } catch (Throwable ignored) {}
+            final UUID ownerUuid = parsedOwnerUuid != null ? parsedOwnerUuid : player.getUniqueId();
+
+            String initialOwnerName = owner;
             try {
-                final var profile = BlockProt.getProfileService().findByUuid(UUID.fromString(owner));
-                assert profile != null;
-                final String ownerName = profile.getName() != null ? profile.getName() : owner.substring(0, 8);
-                final int friendCount = filteredFriends.size();
-                final UUID ownerUuid = profile.getUniqueId();
-                final ItemStack ownerSkull = new ItemStack(Material.PLAYER_HEAD, 1);
-                final org.bukkit.inventory.meta.SkullMeta skullMeta =
-                    (org.bukkit.inventory.meta.SkullMeta) ownerSkull.getItemMeta();
-                if (skullMeta != null) {
-                    // Use the online player's profile if available (has real skin immediately).
-                    Player online = Bukkit.getPlayer(ownerUuid);
-                    final var pp = getOnlineProfileOrCreate(online, ownerUuid, ownerName);
-                    skullMeta.setOwnerProfile(pp);
-                    ComponentMessages.displayName(skullMeta, net.kyori.adventure.text.Component.text(
-                        Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
-                    ComponentMessages.lore(skullMeta, java.util.List.of(
-                        net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                            .legacySection().deserialize(
-                                Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LORE)
-                                    .replace("{player}", ownerName)),
-                        net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
-                            .legacySection().deserialize(
-                                Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__FRIEND_COUNT)
-                                    .replace("{count}", String.valueOf(friendCount)))
-                    ));
-                    ownerSkull.setItemMeta(skullMeta);
-                    inventory.setItem(0, ownerSkull);
-                    // Schedule skin refresh for offline / non-cached players via Paper API.
-                    if (online == null) {
-                        final UUID finalUuid = ownerUuid;
-                        final String finalName = ownerName;
-                        try {
-                            Bukkit.createProfile(finalUuid, finalName).update()
-                                .thenAcceptAsync(freshProfile -> {
-                                    if (!player.isOnline()) return;
-                                    Inventory top = player.getOpenInventory().getTopInventory();
-                                    if (top == null || top.getHolder() != BlockInfoInventory.this) return;
-                                    org.bukkit.inventory.ItemStack existing = top.getItem(0);
-                                    if (existing == null || existing.getType() != Material.PLAYER_HEAD) return;
-                                    org.bukkit.inventory.meta.SkullMeta sm =
-                                        (org.bukkit.inventory.meta.SkullMeta) existing.getItemMeta();
-                                    if (sm != null) {
-                                        try { sm.setPlayerProfile(freshProfile); } catch (Throwable ignored) {}
-                                        existing.setItemMeta(sm);
-                                    }
-                                }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
-                        } catch (Throwable ignored) {}
-                    }
-                } else {
-                    inventory.setItem(0, ownerSkull);
+                var off = Bukkit.getOfflinePlayer(ownerUuid);
+                if (off.getName() != null) initialOwnerName = off.getName();
+            } catch (Throwable ignored) {}
+
+            final int friendCount = filteredFriends.size();
+
+            // Slot 0 gets a skull immediately, from local/cached data only (no
+            // network calls on the primary thread). The exact display name and
+            // skin texture are resolved off-thread below and applied once, so
+            // the head does not visibly change more than once after opening.
+            placeOwnerSkull(ownerUuid, initialOwnerName, friendCount);
+
+            final String initialNameForAsync = initialOwnerName;
+            Bukkit.getScheduler().runTaskAsynchronously(
+                BlockProt.getInstance(),
+                () -> {
+                    String resolvedName = initialNameForAsync;
+                    try {
+                        var profile = BlockProt.getProfileService().findByUuid(ownerUuid);
+                        if (profile != null && profile.getName() != null) resolvedName = profile.getName();
+                    } catch (Throwable ignored) {}
+                    final String finalName = resolvedName;
+
+                    SkinCache.getOrFetchAsync(finalName, ownerUuid).whenCompleteAsync(
+                        (freshProfile, error) -> {
+                            if (!player.isOnline()) return;
+                            Inventory top = player.getOpenInventory().getTopInventory();
+                            if (top == null || top.getHolder() != BlockInfoInventory.this) return;
+                            updateOwnerSkull(top, finalName, friendCount, error == null ? freshProfile : null);
+                        },
+                        runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable)
+                    );
                 }
-            } catch (Exception e) {
-                BlockProt.getInstance().getLogger().warning("Failed to update PlayerProfile: " + e.getMessage());
-            }
+            );
         }
 
         // Slot 1: show the block with its custom name (if set) as the primary
@@ -324,20 +310,74 @@ public class BlockInfoInventory extends BlockProtInventory {
     }
 
     /**
-     * Returns the online player's own profile (has the real skin immediately, no lookup needed)
-     * when available. {@code Player#getPlayerProfile()} is guarded because on some servers it is
-     * compiled against a different {@code PlayerProfile} return type than the one actually present
-     * at runtime, which throws {@link NoSuchMethodError} rather than a catchable exception type.
+     * Places the owner skull at slot 0 from local/cached data only. Catches
+     * {@link Throwable}, not just {@link Exception}, since a PlayerProfile
+     * API mismatch across server implementations can throw {@link NoSuchMethodError}.
      */
-    @Nullable
-    private static org.bukkit.profile.PlayerProfile getOnlineProfileOrCreate(
-        Player online, @NotNull UUID uuid, @NotNull String name
-    ) {
-        if (online != null) {
-            try {
-                return online.getPlayerProfile();
-            } catch (Throwable ignored) {}
+    private void placeOwnerSkull(@NotNull UUID ownerUuid, @NotNull String ownerName, int friendCount) {
+        try {
+            org.bukkit.profile.PlayerProfile ownerProfile = SkinCache.getCachedOrOnlineProfile(ownerName, ownerUuid);
+            if (ownerProfile == null) {
+                ownerProfile = createPlayerProfile(ownerUuid, ownerName);
+            }
+            inventory.setItem(0, buildOwnerSkullItem(ownerName, friendCount, ownerProfile));
+        } catch (Throwable e) {
+            BlockProt.getInstance().getLogger().warning("Failed to place owner skull in BlockInfoInventory: " + e.getMessage());
         }
-        return BlockProtInventory.createPlayerProfile(uuid, name);
+    }
+
+    /**
+     * Applies the resolved owner name and, if present, skin texture to the
+     * skull already sitting in slot 0. Only touches the texture when
+     * {@code profile} is non-null, so a failed skin fetch never blanks a
+     * skull that was already showing a placeholder texture.
+     */
+    private void updateOwnerSkull(@NotNull Inventory top, @NotNull String ownerName, int friendCount,
+                                   @Nullable org.bukkit.profile.PlayerProfile profile) {
+        try {
+            ItemStack existing = top.getItem(0);
+            if (existing == null || existing.getType() != Material.PLAYER_HEAD) return;
+            org.bukkit.inventory.meta.SkullMeta skullMeta =
+                (org.bukkit.inventory.meta.SkullMeta) existing.getItemMeta();
+            if (skullMeta == null) return;
+            if (profile != null) {
+                try { skullMeta.setOwnerProfile(profile); } catch (Throwable ignored) {}
+            }
+            applyOwnerMeta(skullMeta, ownerName, friendCount);
+            existing.setItemMeta(skullMeta);
+        } catch (Throwable e) {
+            BlockProt.getInstance().getLogger().warning("Failed to refresh owner skull in BlockInfoInventory: " + e.getMessage());
+        }
+    }
+
+    @NotNull
+    private ItemStack buildOwnerSkullItem(@NotNull String ownerName, int friendCount,
+                                           @Nullable org.bukkit.profile.PlayerProfile ownerProfile) {
+        final ItemStack ownerSkull = new ItemStack(Material.PLAYER_HEAD, 1);
+        final org.bukkit.inventory.meta.SkullMeta skullMeta =
+            (org.bukkit.inventory.meta.SkullMeta) ownerSkull.getItemMeta();
+        if (skullMeta != null) {
+            if (ownerProfile != null) {
+                try { skullMeta.setOwnerProfile(ownerProfile); } catch (Throwable ignored) {}
+            }
+            applyOwnerMeta(skullMeta, ownerName, friendCount);
+            ownerSkull.setItemMeta(skullMeta);
+        }
+        return ownerSkull;
+    }
+
+    private void applyOwnerMeta(@NotNull org.bukkit.inventory.meta.SkullMeta skullMeta, @NotNull String ownerName, int friendCount) {
+        ComponentMessages.displayName(skullMeta, net.kyori.adventure.text.Component.text(
+            Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
+        ComponentMessages.lore(skullMeta, java.util.List.of(
+            net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                .legacySection().deserialize(
+                    Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LORE)
+                        .replace("{player}", ownerName)),
+            net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                .legacySection().deserialize(
+                    Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__FRIEND_COUNT)
+                        .replace("{count}", String.valueOf(friendCount)))
+        ));
     }
 }

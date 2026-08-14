@@ -23,7 +23,6 @@ package de.sean.blockprot.util;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 /**
  * Semantic version with full pre-release awareness.
@@ -125,17 +124,6 @@ public class SemanticVersion implements Comparable<SemanticVersion> {
         if (suffixRank != other.suffixRank) return Integer.compare(suffixRank, other.suffixRank);
         // 3. Same rank: compare the suffix counter (bedev.1 < bedev.2).
         return Integer.compare(suffixN, other.suffixN);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof SemanticVersion)) return false;
-        return this.compareTo((SemanticVersion) obj) == 0;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(Arrays.hashCode(numeric), suffix);
     }
 
     @Override

@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.config;
 
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.util.StringUtil;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -114,6 +115,16 @@ public final class BlockFamilyParser {
     private static final Map<SubFamily, Set<Material>> SUBFAMILY_MEMBERS = new EnumMap<>(SubFamily.class);
 
     static { buildFamilies(); }
+
+    private static final List<Material> SEARCH_UNIVERSE = buildSearchUniverse();
+
+    private static List<Material> buildSearchUniverse() {
+        LinkedHashSet<Material> all = new LinkedHashSet<>();
+        for (Family family : Family.values()) {
+            all.addAll(FAMILY_MEMBERS.getOrDefault(family, Collections.emptySet()));
+        }
+        return List.copyOf(all);
+    }
 
     private static void buildFamilies() {
         Set<Material> tiles    = new LinkedHashSet<>();
@@ -259,6 +270,60 @@ public final class BlockFamilyParser {
         }
         return null;
     }
+
+    /**
+     * Searches every family member with a creative-style query ranking:
+     * exact match, starts-with, word-prefix, contains, word-contains,
+     * then Levenshtein distance of at most 2. Multi-word queries must
+     * match on every word; scores add. Ties break on shorter name first,
+     * then alphabetically.
+     */
+    @NotNull
+    public static List<Material> searchMaterials(@NotNull String query) {
+        String[] words = query.trim().toUpperCase(Locale.ROOT).split("[\\s_]+");
+        if (words.length == 0 || words[0].isEmpty()) return Collections.emptyList();
+
+        List<Scored> results = new ArrayList<>();
+        for (Material m : SEARCH_UNIVERSE) {
+            String name = m.name().replace("_", " ");
+            int score = 0;
+            for (String word : words) {
+                int wordScore = scoreWord(word, name);
+                if (wordScore == 0) { score = 0; break; }
+                score += wordScore;
+            }
+            if (score > 0) results.add(new Scored(m, score));
+        }
+
+        results.sort((a, b) -> {
+            if (a.score != b.score) return Integer.compare(b.score, a.score);
+            int len = Integer.compare(a.material.name().length(), b.material.name().length());
+            if (len != 0) return len;
+            return a.material.name().compareTo(b.material.name());
+        });
+
+        List<Material> out = new ArrayList<>(results.size());
+        for (Scored s : results) out.add(s.material);
+        return out;
+    }
+
+    private static int scoreWord(@NotNull String word, @NotNull String name) {
+        if (name.equals(word)) return 10000;
+        if (name.startsWith(word)) return 5000;
+        String[] tokens = name.split("\\s+");
+        for (String token : tokens) {
+            if (token.startsWith(word)) return 4000;
+        }
+        if (name.contains(word)) return 3000;
+        for (String token : tokens) {
+            if (token.contains(word)) return 2000;
+        }
+        int distance = StringUtil.levenshtein(word, name);
+        if (distance <= 2) return 1000 - distance;
+        return 0;
+    }
+
+    private record Scored(@NotNull Material material, int score) {}
 
     @NotNull
     public static Set<Material> parse(@Nullable Object raw, @NotNull Family family) {

@@ -28,12 +28,21 @@ import org.jetbrains.annotations.Nullable;
 public final class DialogBridgeFactory {
 
     private static @Nullable DialogBridge bridge;
+    private static @Nullable DialogBridge testBridge;
     private static boolean loggedNoApi = false;
 
     private DialogBridgeFactory() {}
 
+    /**
+     * Overrides the active bridge for diagnostic runs. Pass null to restore.
+     */
+    public static void setTestBridge(@Nullable DialogBridge test) {
+        testBridge = test;
+    }
+
     @Nullable
     public static DialogBridge getBridge() {
+        if (testBridge != null) return testBridge;
         if (bridge != null) return bridge;
         if (!VersionCompat.hasDialogApi()) {
             if (!loggedNoApi) {

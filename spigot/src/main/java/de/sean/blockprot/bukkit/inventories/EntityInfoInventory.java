@@ -25,6 +25,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.util.SkinCache;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
@@ -124,12 +125,13 @@ public final class EntityInfoInventory extends BlockProtInventory {
                 var profile = BlockProt.getProfileService().findByUuid(UUID.fromString(ownerUuid));
                 String ownerName = (profile != null && profile.getName() != null)
                     ? profile.getName() : ownerUuid.substring(0, 8);
+                final UUID oUuid = UUID.fromString(ownerUuid);
 
                 ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
                 SkullMeta meta = (SkullMeta) skull.getItemMeta();
                 if (meta != null) {
                     meta.setOwnerProfile(
-                        BlockProtInventory.createPlayerProfile(UUID.fromString(ownerUuid), ownerName));
+                        BlockProtInventory.createPlayerProfile(oUuid, ownerName));
                     ComponentMessages.displayName(meta, Component.text(
                         Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL)));
                     ComponentMessages.lore(meta, List.of(
@@ -143,6 +145,19 @@ public final class EntityInfoInventory extends BlockProtInventory {
                     skull.setItemMeta(meta);
                 }
                 inventory.setItem(0, skull);
+
+                SkinCache.getOrFetchAsync(ownerName, oUuid).thenAcceptAsync(freshProfile -> {
+                    if (!player.isOnline()) return;
+                    Inventory top = player.getOpenInventory().getTopInventory();
+                    if (top == null || top.getHolder() != EntityInfoInventory.this) return;
+                    ItemStack existing = top.getItem(0);
+                    if (existing == null || existing.getType() != Material.PLAYER_HEAD) return;
+                    SkullMeta sm = (SkullMeta) existing.getItemMeta();
+                    if (sm != null) {
+                        try { sm.setOwnerProfile(freshProfile); } catch (Throwable ignored2) {}
+                        existing.setItemMeta(sm);
+                    }
+                }, runnable -> org.bukkit.Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
             } catch (Exception ignored) {}
         }
 
@@ -171,19 +186,14 @@ public final class EntityInfoInventory extends BlockProtInventory {
                 for (var profile : profiles) {
                     int idx = uuidSnapshot.indexOf(profile.getUniqueId());
                     if (idx < 0) continue;
-                    String name = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
-
-                    ItemStack skull = new ItemStack(Material.PLAYER_HEAD, 1);
-                    SkullMeta meta = (SkullMeta) skull.getItemMeta();
-                    if (meta != null) {
-                        meta.setOwnerProfile(
-                            BlockProtInventory.createPlayerProfile(profile.getUniqueId(), name));
-                        EntityNBTHandler.FriendEntry entry = handler.getFriendEntry(profile.getUniqueId().toString());
-                        boolean isManager = entry != null && entry.manager();
-                        ComponentMessages.displayName(meta, Component.text(name + (isManager ? " " + Translator.get(TranslationKey.INVENTORIES__FRIENDS__PERMISSION__MANAGER) : "")));
-                        skull.setItemMeta(meta);
-                    }
-                    inventory.setItem(InventoryConstants.lineLength + idx, skull);
+                    final String pName = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
+                    final UUID pUuid = profile.getUniqueId();
+                    final int slot = InventoryConstants.lineLength + idx;
+                    EntityNBTHandler.FriendEntry entry = handler.getFriendEntry(pUuid.toString());
+                    boolean isManager = entry != null && entry.manager();
+                    final String lore = isManager ? Translator.get(TranslationKey.INVENTORIES__FRIENDS__PERMISSION__MANAGER) : null;
+                    org.bukkit.Bukkit.getScheduler().runTask(BlockProt.getInstance(),
+                        () -> setPlayerSkullAsync(slot, player, pUuid, pName, lore));
                 }
             } catch (Exception ignored) {}
         });

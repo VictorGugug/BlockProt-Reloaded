@@ -36,6 +36,13 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_PURPLE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_BLUE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_GRAY;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -49,13 +56,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public final class FriendManageDialog {
-
-    private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
-    private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
-    private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
-    private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
-    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
-    private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
 
     private FriendManageDialog() {}
 
@@ -289,10 +289,6 @@ public final class FriendManageDialog {
 
     private static void openFriendNameInput(@NotNull Player p, @NotNull Consumer<String> handleName) {
         de.sean.blockprot.bukkit.inventories.TextInput.open(p, BlockProt.getInstance(), handleName);
-    }
-
-    private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static Component originHint(DialogOrigin origin) {

@@ -50,6 +50,7 @@ public final class AutoDropInventory extends BlockProtInventory {
 
     private record FamilyEntry(BlockFamilyParser.Family family, Material icon, int slot) {}
 
+    private static final int SLOT_SEARCH = 4;
     private static final int SLOT_BACK = 26;
 
     private static final List<FamilyEntry> FAMILIES = List.of(
@@ -104,6 +105,18 @@ public final class AutoDropInventory extends BlockProtInventory {
             inventory.setItem(fe.slot(), stack);
         }
 
+        ItemStack searchStack = new ItemStack(Material.COMPASS);
+        ItemMeta searchMeta = searchStack.getItemMeta();
+        if (searchMeta != null) {
+            ComponentMessages.displayName(searchMeta,
+                Component.text(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH)).color(PASTEL_YELLOW));
+            ComponentMessages.lore(searchMeta, List.of(
+                Component.text(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_LORE)).color(PASTEL_MINT)
+            ));
+            searchStack.setItemMeta(searchMeta);
+        }
+        inventory.setItem(SLOT_SEARCH, searchStack);
+
         setBackButton(SLOT_BACK);
         return inventory;
     }
@@ -117,6 +130,11 @@ public final class AutoDropInventory extends BlockProtInventory {
 
         if (slot == SLOT_BACK) {
             goBack(player, state);
+            return;
+        }
+
+        if (slot == SLOT_SEARCH) {
+            AutoDropSearchInventory.startSearchFromInventory(player);
             return;
         }
 

@@ -47,6 +47,8 @@ public final class BlockProtLogger {
     @Nullable private static PrintWriter writer         = null;
     @Nullable private static File        currentLogFile = null;
     @Nullable private static File        logsDir        = null;
+    @Nullable private static PrintWriter reportWriter   = null;
+    @Nullable private static File        reportLogFile  = null;
 
     private static boolean enabled = true;
     private static int rotationCount = 0;
@@ -157,10 +159,17 @@ public final class BlockProtLogger {
 
     public static void log(@NotNull String message) {
         if (!enabled) return;
-        checkFile();
-        if (writer == null) return;
         String line = "[" + LocalDateTime.now().format(LINE_FMT) + "] "
             + COLOR_STRIP.matcher(message).replaceAll("");
+        // While a debug report is active, output goes to the report file only,
+        // keeping the session log clean of diagnostic noise.
+        if (reportWriter != null) {
+            reportWriter.println(line);
+            reportWriter.flush();
+            return;
+        }
+        checkFile();
+        if (writer == null) return;
         writer.println(line);
         writer.flush();
         lastKnownLength = currentLogFile != null ? currentLogFile.length() : 0;
@@ -197,5 +206,35 @@ public final class BlockProtLogger {
     @Nullable
     public static File getCurrentLogFile() {
         return currentLogFile;
+    }
+
+    public static void startDebugReport() {
+        if (logsDir == null) return;
+        if (!logsDir.isDirectory() && !logsDir.mkdirs()) return;
+        String ts = LocalDateTime.now().format(FILE_FMT);
+        reportLogFile = new File(logsDir, "debug-report-" + ts + ".log");
+        try {
+            reportWriter = new PrintWriter(new OutputStreamWriter(
+                new FileOutputStream(reportLogFile), StandardCharsets.UTF_8));
+            reportWriter.println("=== BlockProt Reloaded debug report " + ts + " ===");
+        } catch (IOException e) {
+            reportWriter = null;
+            reportLogFile = null;
+        }
+    }
+
+    public static void endDebugReport() {
+        if (reportWriter != null) {
+            reportWriter.println("=== End of debug report ===");
+            reportWriter.flush();
+            reportWriter.close();
+        }
+        reportWriter = null;
+        reportLogFile = null;
+    }
+
+    @Nullable
+    public static File getDebugReportFile() {
+        return reportLogFile;
     }
 }

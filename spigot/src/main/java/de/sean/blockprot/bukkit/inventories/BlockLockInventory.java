@@ -274,7 +274,8 @@ public class BlockLockInventory extends BlockProtInventory {
             }
 
             if (!BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {
-                setItemStack(2, Material.PLAYER_HEAD, TranslationKey.INVENTORIES__FRIENDS__MANAGE);
+                setPlayerSkullAsync(2, player, player.getUniqueId(), player.getName(),
+                    Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE));
             }
 
             setItemStack(3, Material.NAME_TAG, TranslationKey.INVENTORIES__SET_BLOCK_NAME);
@@ -337,7 +338,8 @@ public class BlockLockInventory extends BlockProtInventory {
             }
 
             if (!BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {
-                setItemStack(2, Material.PLAYER_HEAD, TranslationKey.INVENTORIES__FRIENDS__MANAGE);
+                setPlayerSkullAsync(2, player, player.getUniqueId(), player.getName(),
+                    Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE));
             }
 
             if (hasInventory) {

@@ -4,30 +4,23 @@
  * This file is part of BlockProt Reloaded <https://github.com/VictorGugug/BlockProt-Reloaded>.
  * Based on BlockProt <https://github.com/spnda/BlockProt>.
  *
- * BlockProt Reloaded is free software: you can redistribute it and/or modify
+ * BlockProt is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * BlockProt Reloaded is distributed in the hope that it will be useful,
+ * BlockProt is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with BlockProt Reloaded. If not, see <https://www.gnu.org/licenses/>.
+ * along with BlockProt.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package de.sean.blockprot.bukkit.integrations;
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
-import com.sk89q.worldguard.protection.flags.StateFlag;
-import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
-import com.sk89q.worldguard.protection.regions.RegionQuery;
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.events.BlockAccessEvent;
 import de.sean.blockprot.bukkit.events.BlockAccessMenuEvent;
 import de.sean.blockprot.bukkit.events.BlockLockOnPlaceEvent;
@@ -49,13 +42,17 @@ import org.jetbrains.annotations.Nullable;
  * <p>The flag is registered in {@link #load()}, which {@code BlockProt.onLoad()}
  * calls for every registered integration; this must happen while WorldGuard is
  * loaded but not yet enabled, per WorldGuard's custom-flag registration timing.
+ *
+ * <p>All WorldGuard-specific logic lives in {@link WorldGuardSupport}, a separate
+ * class loaded lazily: WorldGuard classes cannot be referenced from this class at
+ * all, not even inside method bodies, because the JVM eagerly resolves the types
+ * participating in cross-name assignability checks while verifying the class, so
+ * any direct reference would throw {@code NoClassDefFoundError} at construction
+ * time on servers without WorldGuard installed.
  */
 public final class WorldGuardIntegration extends PluginIntegration implements Listener {
 
     private static final String ENABLE_FLAG_FUNCTIONALITY = "enable_flag_functionality";
-
-    @Nullable
-    private static StateFlag ALLOW_BLOCKPROT_FLAG;
 
     private boolean enabled = false;
 
@@ -72,17 +69,8 @@ public final class WorldGuardIntegration extends PluginIntegration implements Li
     public void load() {
         if (getPlugin() == null) return;
         try {
-            var registry = WorldGuard.getInstance().getFlagRegistry();
-            StateFlag flag = new StateFlag("allow-blockprot", true);
-            registry.register(flag);
-            ALLOW_BLOCKPROT_FLAG = flag;
-        } catch (FlagConflictException e) {
-            var existing = WorldGuard.getInstance().getFlagRegistry().get("allow-blockprot");
-            if (existing instanceof StateFlag sf) {
-                ALLOW_BLOCKPROT_FLAG = sf;
-            }
+            WorldGuardSupport.registerFlag();
         } catch (NoClassDefFoundError ignored) {
-            ALLOW_BLOCKPROT_FLAG = null;
         }
     }
 
@@ -103,21 +91,18 @@ public final class WorldGuardIntegration extends PluginIntegration implements Li
         return BlockProt.getInstance().getPlugin("WorldGuard");
     }
 
-    private boolean isFlagFunctionalityEnabled() {
-        return configuration.getBoolean(ENABLE_FLAG_FUNCTIONALITY, true);
-    }
-
     /**
      * True if BlockProt protections are allowed at {@code block}'s location, per
-     * the {@code allow-blockprot} region flag. Always true if the flag failed to
-     * register, if flag functionality is disabled in config, or if no region
-     * covering the block sets the flag to deny.
+     * the {@code allow-blockprot} region flag. Always true when flag functionality
+     * is disabled in config or when WorldGuard is not installed.
      */
     private boolean isAllowedByFlag(@NotNull Player who, @NotNull Block block) {
-        if (ALLOW_BLOCKPROT_FLAG == null || !isFlagFunctionalityEnabled()) return true;
-        RegionQuery query = WorldGuard.getInstance().getPlatform().getRegionContainer().createQuery();
-        var localPlayer = WorldGuardPlugin.inst().wrapPlayer(who);
-        return query.testState(BukkitAdapter.adapt(block.getLocation()), localPlayer, ALLOW_BLOCKPROT_FLAG);
+        try {
+            if (!configuration.getBoolean(ENABLE_FLAG_FUNCTIONALITY, true)) return true;
+            return WorldGuardSupport.isAllowedByFlag(who, block);
+        } catch (NoClassDefFoundError ignored) {
+            return true;
+        }
     }
 
     @EventHandler

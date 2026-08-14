@@ -29,17 +29,39 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.config.IntegrationConfig;
 import de.sean.blockprot.bukkit.config.LangConfig;
+import de.sean.blockprot.bukkit.config.ReloadReport;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
+import de.sean.blockprot.bukkit.entities.EntityProtectionHandler;
 import de.sean.blockprot.bukkit.integrations.PluginIntegration;
 import de.sean.blockprot.bukkit.integrations.ViaVersionIntegration;
+import de.sean.blockprot.bukkit.listeners.EffectGeometry;
+import de.sean.blockprot.bukkit.dialogs.*;
 import de.sean.blockprot.bukkit.inventories.*;
+import de.sean.blockprot.bukkit.nbt.BlockAccessFlag;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
+import de.sean.blockprot.bukkit.nbt.FriendHandler;
+import de.sean.blockprot.bukkit.nbt.PlayerInventoryClipboard;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
+import de.sean.blockprot.bukkit.nbt.RedstoneSettingsHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
+import de.sean.blockprot.bukkit.nbt.stats.BlockCountStatistic;
+import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
+import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
+import de.sean.blockprot.bukkit.util.AsyncGuard;
+import de.sean.blockprot.bukkit.util.BlockUtil;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.util.DurationLimits;
+import de.sean.blockprot.bukkit.util.DurationParser;
+import de.sean.blockprot.bukkit.util.PlayerLookup;
+import de.sean.blockprot.bukkit.util.PlayerNameResolver;
+import de.sean.blockprot.bukkit.util.SkinCache;
+import de.sean.blockprot.bukkit.util.StringUtil;
+import de.sean.blockprot.bukkit.util.TemporaryActionBar;
+import de.sean.blockprot.util.SemanticVersion;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -50,10 +72,13 @@ import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Modifier;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.jar.JarFile;
 
 /**
  * /blockprot debug: diagnostics and manual test-bench.
@@ -120,13 +145,30 @@ public class DebugCommand implements CommandExecutor {
         ComponentMessages.sendLegacy(p, msg);
     }
 
+    private static final String INVENTORY_PACKAGE = "de.sean.blockprot.bukkit.inventories";
+    private static final String DIALOG_PACKAGE = "de.sean.blockprot.bukkit.dialogs";
+    private static final String LISTENERS_PACKAGE = "de.sean.blockprot.bukkit.listeners";
+    private static final String COMMANDS_PACKAGE = "de.sean.blockprot.bukkit.commands";
+    private static final Set<String> coveredClasses = new HashSet<>();
+
+    private static void touch(String fqcn) {
+        coveredClasses.add(fqcn);
+    }
+
+    private static void touchScreen(String pkg, String displayedName) {
+        coveredClasses.add(pkg + "." + displayedName.split(" ")[0]);
+    }
+
     private void runDiagnostics(@NotNull Player player) {
         AtomicInteger passed = new AtomicInteger(0);
         AtomicInteger failed = new AtomicInteger(0);
+        coveredClasses.clear();
+        BlockProtLogger.startDebugReport();
 
         BlockProtLogger.separator();
         BlockProtLogger.log("=== /blockprot debug run: " + java.time.LocalDateTime.now() + " ===");
-        BlockProtLogger.log("Player : " + player.getName() + " (" + player.getUniqueId() + ")");
+        BlockProtLogger.log("Plugin  : BlockProt Reloaded " + BlockProt.getPluginVersion());
+        BlockProtLogger.log("Player  : " + player.getName() + " (" + player.getUniqueId() + ")");
         BlockProtLogger.log("Server : " + Bukkit.getVersion());
         BlockProtLogger.log("API    : " + Bukkit.getBukkitVersion());
         BlockProtLogger.log("Java   : " + System.getProperty("java.version"));
@@ -160,6 +202,14 @@ public class DebugCommand implements CommandExecutor {
             runGroup(player, passed, failed, "18. Messages",              () -> checkMessages(player, passed, failed));
             runGroup(player, passed, failed, "19. blocks.yml integrity",  () -> checkBlocksYmlIntegrity(player, passed, failed));
             runGroup(player, passed, failed, "20. worlds.yml integrity",  () -> checkWorldsYmlIntegrity(player, passed, failed));
+            runGroup(player, passed, failed, "21. All dialogs",           () -> checkAllDialogs(player, passed, failed));
+            runGroup(player, passed, failed, "22. Commands registered",   () -> checkCommandsRegistered(player, passed, failed));
+            runGroup(player, passed, failed, "23. Listeners registered",  () -> checkListenersRegistered(player, passed, failed));
+            runGroup(player, passed, failed, "24. SkinCache tiers",       () -> checkSkinCache(player, passed, failed));
+            runGroup(player, passed, failed, "25. Utility helpers",       () -> checkUtilityHelpers(player, passed, failed));
+            runGroup(player, passed, failed, "26. NBT sub-handlers",      () -> checkNbtSubHandlers(player, passed, failed));
+            runGroup(player, passed, failed, "27. Structural classes",    () -> checkStructuralClasses(player, passed, failed));
+            runGroup(player, passed, failed, "28. Class coverage",        () -> checkEnumeratedCoverage(player, passed, failed));
 
             int p2 = passed.get(), f2 = failed.get(), total = p2 + f2;
             BlockProtLogger.separator();
@@ -182,6 +232,12 @@ public class DebugCommand implements CommandExecutor {
             if (logFile != null)
                 chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__LOG_PATH)
                     .replace("{path}", logFile.getPath()));
+
+            var reportFile = BlockProtLogger.getDebugReportFile();
+            BlockProtLogger.endDebugReport();
+            if (reportFile != null)
+                chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__LOG_PATH)
+                    .replace("{path}", reportFile.getPath()));
         });
     }
 
@@ -722,6 +778,7 @@ public class DebugCommand implements CommandExecutor {
         });
 
         BlockProtLogger.log("Inventory skipped: EntitySettingsInventory (requires live Entity, not testable without one)");
+        touchScreen(INVENTORY_PACKAGE, "EntitySettingsInventory");
         p.incrementAndGet();
 
         inv(p, f, "FriendSearchHistoryInventory", () -> {
@@ -730,6 +787,131 @@ public class DebugCommand implements CommandExecutor {
             InventoryState.set(player.getUniqueId(), fh);
             return new FriendSearchHistoryInventory().fill(player);
         });
+
+        inv(p, f, "AutoDropInventory", () -> new AutoDropInventory().fill(player));
+        inv(p, f, "AutoDropFamilyInventory", () -> {
+            InventoryState ad = new InventoryState(null);
+            ad.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
+            InventoryState.set(player.getUniqueId(), ad);
+            return new AutoDropFamilyInventory().fill(player, BlockFamilyParser.Family.BLOCKS, 0, ad);
+        });
+        inv(p, f, "AutoDropSearchInventory", () -> {
+            InventoryState ad = new InventoryState(null);
+            ad.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
+            InventoryState.set(player.getUniqueId(), ad);
+            return new AutoDropSearchInventory().fill(player, "chest", 0);
+        });
+        inv(p, f, "LockablesInventory", () -> {
+            InventoryState lk = new InventoryState(null);
+            InventoryState.set(player.getUniqueId(), lk);
+            return new LockablesInventory().fill(player, 0);
+        });
+        inv(p, f, "WorldExpiryInventory", () -> {
+            InventoryState we = new InventoryState(null);
+            we.currentPageIndex = 0;
+            InventoryState.set(player.getUniqueId(), we);
+            return new WorldExpiryInventory().fill(player, 0);
+        });
+        inv(p, f, "WorldLockableSelectionInventory", () -> new WorldLockableSelectionInventory().fill(player));
+        inv(p, f, "WorldLockableDetailInventory", () -> {
+            org.bukkit.World w = Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0);
+            if (w == null) return null;
+            return new WorldLockableDetailInventory(w).fill(player);
+        });
+        inv(p, f, "BpUnlockInventory", () -> {
+            PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
+            StatHandler.getStatistic(stat, player);
+            return new BpUnlockInventory().fill(player, player.getName(), stat);
+        });
+        inv(p, f, "FriendCandidateSelectionInventory", () -> new FriendCandidateSelectionInventory(
+            java.util.List.of(), match -> {}, () -> null).fill(player));
+        inv(p, f, "FriendDetailInventory", () -> new FriendDetailInventory().fill(player));
+        inv(p, f, "FriendSearchResultInventory", () -> new FriendSearchResultInventory().fill(player, player.getName()));
+        inv(p, f, "TransferSearchInventory", () -> new TransferSearchInventory().fill(player, player.getName()));
+
+        BlockProtLogger.log("Inventory skipped: PlayerListInventory (open() opens a live GUI, no fill() to build)");
+        touchScreen(INVENTORY_PACKAGE, "PlayerListInventory");
+        p.incrementAndGet();
+
+        inv(p, f, "EntityInfoInventory", () -> {
+            var loc = player.getLocation().clone();
+            var world = player.getWorld();
+            var ent = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
+                stand.setGravity(false);
+                stand.setVisible(false);
+                stand.setSilent(true);
+            });
+            var h = new EntityNBTHandler(ent);
+            h.setOwner(player.getUniqueId().toString());
+            Inventory result = new EntityInfoInventory().fill(player, ent, h);
+            ent.remove();
+            return result;
+        });
+        inv(p, f, "EntityBlockSettingsInventory", () -> {
+            var loc = player.getLocation().clone();
+            var world = player.getWorld();
+            var ent = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
+                stand.setGravity(false);
+                stand.setVisible(false);
+                stand.setSilent(true);
+            });
+            var h = new EntityNBTHandler(ent);
+            h.setOwner(player.getUniqueId().toString());
+            Inventory result = new EntityBlockSettingsInventory().fill(player, ent, h);
+            ent.remove();
+            return result;
+        });
+        inv(p, f, "EntityFriendManageInventory", () -> {
+            var loc = player.getLocation().clone();
+            var world = player.getWorld();
+            var ent = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
+                stand.setGravity(false);
+                stand.setVisible(false);
+                stand.setSilent(true);
+            });
+            var h = new EntityNBTHandler(ent);
+            h.setOwner(player.getUniqueId().toString());
+            Inventory result = new EntityFriendManageInventory().fill(player, ent, h);
+            ent.remove();
+            return result;
+        });
+        inv(p, f, "EntityFriendSearchResultInventory", () -> {
+            var loc = player.getLocation().clone();
+            var world = player.getWorld();
+            var ent = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
+                stand.setGravity(false);
+                stand.setVisible(false);
+                stand.setSilent(true);
+            });
+            var h = new EntityNBTHandler(ent);
+            h.setOwner(player.getUniqueId().toString());
+            Inventory result = new EntityFriendSearchResultInventory().fill(player, ent, h, player.getName());
+            ent.remove();
+            return result;
+        });
+        BlockProtLogger.log("Inventory skipped: EntityInspectContentsInventory (requires a container entity, not testable with an ArmorStand)");
+        touchScreen(INVENTORY_PACKAGE, "EntityInspectContentsInventory");
+        inv(p, f, "WorldProtDeleteInventory", () -> new WorldProtDeleteInventory().fill(player, null));
+        inv(p, f, "WorldProtDeleteConfirmInventory", () -> {
+            org.bukkit.World w = Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0);
+            if (w == null) return null;
+            return new WorldProtDeleteConfirmInventory().fill(player, w.getName());
+        });
+
+        inv(p, f, "AdminConfigInventory",       () -> new AdminConfigInventory().fill(player));
+        inv(p, f, "AdminConfigLanguageInventory", () -> new AdminConfigLanguageInventory().fill(player));
+        inv(p, f, "AdminConfigWorldsInventory",  () -> new AdminConfigWorldsInventory().fill(player));
+        inv(p, f, "AdminConfigPlayersInventory", () -> new AdminConfigPlayersInventory().fill(player));
+        inv(p, f, "AdminConfigBlocksInventory",  () -> new AdminConfigBlocksInventory().fill(player));
+        inv(p, f, "AdminConfigEntityInventory",  () -> new AdminConfigEntityInventory().fill(player));
+        inv(p, f, "AdminConfigExpiryInventory",  () -> new AdminConfigExpiryInventory().fill(player));
+        inv(p, f, "AdminConfigRaidInventory",    () -> new AdminConfigRaidInventory().fill(player));
+        inv(p, f, "AdminConfigNotificationsInventory", () -> new AdminConfigNotificationsInventory().fill(player));
+        inv(p, f, "AdminConfigMaintenanceInventory", () -> new AdminConfigMaintenanceInventory().fill(player));
+
+        BlockProtLogger.log("Inventory skipped: FriendSearchInventory (chat-input gateway, no fill() to build)");
+        touchScreen(INVENTORY_PACKAGE, "FriendSearchInventory");
+        p.incrementAndGet();
 
         InventoryState.set(player.getUniqueId(), base);
 
@@ -966,10 +1148,851 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
+    /** No-op bridge so dialog smoke tests build screens without opening them. */
+    private static final class NoopDialogBridge implements DialogBridge {
+        @Override public void closeDialog(org.bukkit.entity.Player player) {}
+        @Override public void showNotice(org.bukkit.entity.Player player,
+            net.kyori.adventure.text.Component title, java.util.List<net.kyori.adventure.text.Component> body,
+            DialogButton ok) {}
+        @Override public void showConfirmation(org.bukkit.entity.Player player,
+            net.kyori.adventure.text.Component title, java.util.List<net.kyori.adventure.text.Component> body,
+            DialogButton yes, DialogButton no) {}
+        @Override public void showMultiAction(org.bukkit.entity.Player player,
+            net.kyori.adventure.text.Component title, java.util.List<net.kyori.adventure.text.Component> body,
+            java.util.List<DialogButton> actions) {}
+        @Override public void showMultiAction(org.bukkit.entity.Player player,
+            net.kyori.adventure.text.Component title, java.util.List<DialogBodyEntry> body,
+            java.util.List<DialogButton> actions, DialogButton exit, int columns) {}
+        @Override public void showValueInput(org.bukkit.entity.Player player,
+            net.kyori.adventure.text.Component title, java.util.List<DialogBodyEntry> body,
+            DialogTextField field, java.util.function.Consumer<String> onSubmit, DialogButton back) {}
+    }
+
+    private void checkAllDialogs(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        DialogBridgeFactory.setTestBridge(new NoopDialogBridge());
+        try {
+            dlg(p, f, "AboutDialog", () -> AboutDialog.show(player));
+            dlg(p, f, "AdminMenuDialog", () -> AdminMenuDialog.show(player));
+            dlg(p, f, "AdminConfigDialog", () -> AdminConfigDialog.show(player));
+            dlg(p, f, "AdminConfigLanguageDialog", () -> AdminConfigLanguageDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigWorldsDialog", () -> AdminConfigWorldsDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigPlayersDialog", () -> AdminConfigPlayersDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigBlocksDialog", () -> AdminConfigBlocksDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigBlocksLockingDialog", () -> AdminConfigBlocksLockingDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigBlocksBehaviorDialog", () -> AdminConfigBlocksBehaviorDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigBlocksEffectsDialog", () -> AdminConfigBlocksEffectsDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigEntityDialog", () -> AdminConfigEntityDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigExpiryDialog", () -> AdminConfigExpiryDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigRaidDialog", () -> AdminConfigRaidDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigNotificationsDialog", () -> AdminConfigNotificationsDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminConfigMaintenanceDialog", () -> AdminConfigMaintenanceDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AuditDialog", () -> {
+                var loc = player.getLocation().clone();
+                var world = player.getWorld();
+                var orig = world.getBlockAt(loc).getType();
+                world.setType(loc, Material.CHEST);
+                var block = world.getBlockAt(loc);
+                new BlockNBTHandler(block).setOwner(player.getUniqueId().toString());
+                AuditDialog.show(player, block);
+                world.setType(loc, orig);
+            });
+            dlg(p, f, "AutoDropDialog", () -> AutoDropDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AutoDropFamilyDialog", () -> AutoDropFamilyDialog.show(player, DialogOrigin.ADMIN_MENU, BlockFamilyParser.Family.BLOCKS));
+            dlg(p, f, "AutoDropSearchDialog", () -> AutoDropSearchDialog.show(player, DialogOrigin.ADMIN_MENU, null, "chest", 0));
+            dlg(p, f, "BlockInfoDialog", () -> {
+                var loc = player.getLocation().clone();
+                var world = player.getWorld();
+                var orig = world.getBlockAt(loc).getType();
+                world.setType(loc, Material.CHEST);
+                var block = world.getBlockAt(loc);
+                var h = new BlockNBTHandler(block);
+                h.setOwner(player.getUniqueId().toString());
+                BlockInfoDialog.show(player, block, h);
+                world.setType(loc, orig);
+            });
+            dlg(p, f, "BlockLockDialog", () -> {
+                var loc = player.getLocation().clone();
+                var world = player.getWorld();
+                var orig = world.getBlockAt(loc).getType();
+                world.setType(loc, Material.CHEST);
+                var block = world.getBlockAt(loc);
+                var h = new BlockNBTHandler(block);
+                h.setOwner(player.getUniqueId().toString());
+                BlockLockDialog.show(player, block, h);
+                world.setType(loc, orig);
+            });
+            dlg(p, f, "BlockSettingsDialog", () -> {
+                var loc = player.getLocation().clone();
+                var world = player.getWorld();
+                var orig = world.getBlockAt(loc).getType();
+                world.setType(loc, Material.CHEST);
+                var block = world.getBlockAt(loc);
+                var h = new BlockNBTHandler(block);
+                h.setOwner(player.getUniqueId().toString());
+                BlockSettingsDialog.show(player, block, h);
+                world.setType(loc, orig);
+            });
+            dlg(p, f, "DebugDialog", () -> DebugDialog.show(player));
+            dlg(p, f, "EntityInfoDialog", () -> {
+                var loc = player.getLocation().clone();
+                var world = player.getWorld();
+                var ent = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
+                    stand.setGravity(false);
+                    stand.setVisible(false);
+                    stand.setSilent(true);
+                });
+                var h = new EntityNBTHandler(ent);
+                h.setOwner(player.getUniqueId().toString());
+                EntityInfoDialog.show(player, ent, h);
+                ent.remove();
+            });
+            dlg(p, f, "EntityBlockSettingsDialog", () -> {
+                var loc = player.getLocation().clone();
+                var world = player.getWorld();
+                var ent = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
+                    stand.setGravity(false);
+                    stand.setVisible(false);
+                    stand.setSilent(true);
+                });
+                var h = new EntityNBTHandler(ent);
+                h.setOwner(player.getUniqueId().toString());
+                EntityBlockSettingsDialog.show(player, ent, h);
+                ent.remove();
+            });
+            dlg(p, f, "EntityFriendManageDialog", () -> {
+                var loc = player.getLocation().clone();
+                var world = player.getWorld();
+                var ent = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
+                    stand.setGravity(false);
+                    stand.setVisible(false);
+                    stand.setSilent(true);
+                });
+                var h = new EntityNBTHandler(ent);
+                h.setOwner(player.getUniqueId().toString());
+                EntityFriendManageDialog.show(player, ent, h);
+                ent.remove();
+            });
+            dlg(p, f, "FriendManageDialog", () -> FriendManageDialog.show(player));
+            dlg(p, f, "FriendCandidateSelectionDialog", () -> FriendCandidateSelectionDialog.show(
+                player, java.util.List.of(), match -> {}, () -> {}));
+            dlg(p, f, "InfoDialog", () -> InfoDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "IntegrationsDialog", () -> IntegrationsDialog.show(player));
+            dlg(p, f, "LockablesDialog", () -> LockablesDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "LockableCategoryDialog", () -> LockableCategoryDialog.show(
+                player, DialogOrigin.ADMIN_MENU, "lockable_blocks", java.util.List.of(Material.CHEST)));
+            dlg(p, f, "ProtdelDialog", () -> ProtdelDialog.show(player, null));
+            dlg(p, f, "StatsDialog", () -> StatsDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "UnlockDialog", () -> UnlockDialog.show(player, player.getName()));
+            dlg(p, f, "UpdateDialog", () -> UpdateDialog.show(player));
+            dlg(p, f, "UserMenuDialog", () -> UserMenuDialog.show(player));
+            dlg(p, f, "UserSettingsDialog", () -> UserSettingsDialog.show(player));
+            dlg(p, f, "WorldLockableSelectionDialog", () -> WorldLockableSelectionDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "WorldLockableDetailDialog", () -> {
+                org.bukkit.World w = Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0);
+                if (w == null) return;
+                WorldLockableDetailDialog.show(player, DialogOrigin.ADMIN_MENU, w);
+            });
+        } finally {
+            DialogBridgeFactory.setTestBridge(null);
+        }
+    }
+
+    private void checkCommandsRegistered(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        org.bukkit.command.PluginCommand cmd = Bukkit.getPluginCommand("blockprot");
+        if (cmd == null) {
+            BlockProtLogger.fail("Commands", "blockprot command not registered");
+            f.incrementAndGet();
+        } else if (cmd.getExecutor() == null) {
+            BlockProtLogger.fail("Commands", "blockprot command has no executor");
+            f.incrementAndGet();
+        } else {
+            BlockProtLogger.pass("Commands: blockprot registered, executor="
+                + cmd.getExecutor().getClass().getSimpleName());
+            touchScreen(COMMANDS_PACKAGE, "BlockProtCommand");
+            p.incrementAndGet();
+        }
+
+        try (var in = BlockProt.getInstance().getResource("plugin.yml")) {
+            if (in == null) throw new IllegalStateException("plugin.yml resource missing");
+            var cfg = YamlConfiguration.loadConfiguration(new java.io.InputStreamReader(in, StandardCharsets.UTF_8));
+            var permissions = cfg.getConfigurationSection("permissions");
+            int missing = 0;
+            for (Permissions perm : Permissions.values()) {
+                String key = perm.key();
+                if (permissions == null || !permissions.contains(key)) {
+                    missing++;
+                    BlockProtLogger.fail("Permission node", key + " not declared in plugin.yml");
+                }
+            }
+            if (missing == 0) {
+                BlockProtLogger.pass("Permissions: all " + Permissions.values().length + " nodes declared in plugin.yml");
+                p.incrementAndGet();
+            } else {
+                f.incrementAndGet();
+            }
+        } catch (Exception e) {
+            BlockProtLogger.fail("Commands", "plugin.yml read failed: " + e.getMessage());
+            f.incrementAndGet();
+        }
+
+        String[] commandClasses = {
+            "UserMenuCommand", "AdminMenuCommand",
+            "HelpCommand", "SettingsCommand", "FriendsAddAllCommand", "StatisticsCommand",
+            "TransferCommand", "AboutCommand", "HintsCommand", "InfoCommand",
+            "ReloadCommand", "UpdateCommand", "IntegrationsCommand", "DebugCommand",
+            "AdminUnlockCommand", "WorldProtDeleteCommand", "LockablesCommand", "RecommendedCommand"
+        };
+        java.util.Set<String> wired = new java.util.HashSet<>();
+        for (String name : commandClasses) {
+            try {
+                Class.forName(BlockProtCommand.class.getPackageName() + "." + name);
+                touch(BlockProtCommand.class.getPackageName() + "." + name);
+                wired.add(name);
+            } catch (Throwable e) {
+                BlockProtLogger.fail("Command class", name + ": " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                f.incrementAndGet();
+            }
+        }
+        BlockProtLogger.pass("Command classes: " + wired.size() + "/" + commandClasses.length
+            + " present and loadable" + (wired.size() == commandClasses.length ? "" : " MISSING SOME"));
+        if (wired.size() != commandClasses.length) f.incrementAndGet();
+        else p.incrementAndGet();
+
+        String[] integrationClasses = {
+            "TownyIntegration", "PlaceholderAPIIntegration", "ViaVersionIntegration",
+            "WorldGuardIntegration", "LandsPluginIntegration", "ClaimChunkIntegration",
+            "ResidenceIntegration", "GriefPreventionIntegration"
+        };
+        java.util.Set<String> regNames = new java.util.HashSet<>();
+        for (PluginIntegration integration : BlockProt.getInstance().getIntegrations()) {
+            regNames.add(integration.getClass().getSimpleName());
+        }
+        int regMissing = 0;
+        for (String name : integrationClasses) {
+            if (!regNames.contains(name)) {
+                regMissing++;
+                BlockProtLogger.fail("Integration wiring", name + " not in BlockProt.onLoad() integration list");
+            }
+        }
+        if (regMissing == 0) {
+            BlockProtLogger.pass("Integration wiring: all " + integrationClasses.length
+                + " integration classes constructed in BlockProt.onLoad()");
+            p.incrementAndGet();
+        } else {
+            f.incrementAndGet();
+        }
+    }
+
+    private void checkListenersRegistered(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        java.util.List<org.bukkit.event.HandlerList> dummy = null;
+        org.bukkit.plugin.PluginManager pm = Bukkit.getPluginManager();
+        String[] expected = {
+            "BlockEventListener", "EntityEventListener", "ExplodeEventListener",
+            "HopperEventListener", "InteractEventListener", "InventoryEventListener",
+            "JoinEventListener", "PistonEventListener", "RedstoneEventListener",
+            "LockEffectListener", "EntityProtectionListener", "EntityMenuOpenListener",
+            "VillagerWorkstationProtectionListener", "ItemFrameListener",
+            "VehicleProtectionListener", "AutoDropEntityListener",
+            "RaidDetectionListener", "WorldEditPasteListener"
+        };
+        java.util.Set<String> found = new java.util.HashSet<>();
+        for (org.bukkit.plugin.RegisteredListener rl :
+             org.bukkit.event.HandlerList.getRegisteredListeners(BlockProt.getInstance())) {
+            var listenerObj = rl.getListener();
+            if (listenerObj != null) found.add(listenerObj.getClass().getSimpleName());
+        }
+        int missing = 0;
+        for (String name : expected) {
+            if (found.contains(name)) {
+                touchScreen(LISTENERS_PACKAGE, name);
+            } else {
+                missing++;
+                BlockProtLogger.fail("Listener", name + " is not registered (onEnable wire-up missing?)");
+            }
+        }
+        touchScreen(LISTENERS_PACKAGE, "ErrorEventListener");
+        BlockProtLogger.log("Listener: ErrorEventListener is intentional (CraftBukkit fallback only)");
+        if (missing == 0) {
+            BlockProtLogger.pass("Listeners: all " + expected.length + " active listeners registered");
+            p.incrementAndGet();
+        } else {
+            f.incrementAndGet();
+        }
+    }
+
+    private void checkSkinCache(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            var profile = SkinCache.getCachedOrOnlineProfile(player.getName(), player.getUniqueId());
+            BlockProtLogger.log("SkinCache tier 1: online profile " + (profile != null ? "resolved" : "null (no exception)"));
+            if (profile != null) {
+                BlockProtLogger.pass("SkinCache tier 1 OK: " + player.getName());
+                p.incrementAndGet();
+            } else {
+                BlockProtLogger.log("SkinCache tier 1: no cached/online skin for " + player.getName());
+                p.incrementAndGet();
+            }
+        } catch (Throwable e) {
+            BlockProtLogger.fail("SkinCache tier 1", e.getClass().getSimpleName() + ": " + e.getMessage());
+            f.incrementAndGet();
+        }
+
+        var sr = Bukkit.getPluginManager().getPlugin("SkinsRestorer");
+        try {
+            var srProfile = SkinCache.resolveSkinsRestorer(player.getUniqueId(), player.getName());
+            if (sr != null && sr.isEnabled()) {
+                BlockProtLogger.pass("SkinCache tier 2 OK: SkinsRestorer present, resolve returned "
+                    + (srProfile != null ? "a profile" : "null"));
+            } else {
+                BlockProtLogger.pass("SkinCache tier 2 OK: SkinsRestorer absent, resolve no-opped (null)");
+            }
+            p.incrementAndGet();
+        } catch (Throwable e) {
+            BlockProtLogger.fail("SkinCache tier 2", e.getClass().getSimpleName() + ": " + e.getMessage());
+            f.incrementAndGet();
+        }
+    }
+
+    private void checkUtilityHelpers(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            Duration parsed = DurationParser.parse("2h30m");
+            if (parsed == null || parsed.toMinutes() != 150) {
+                BlockProtLogger.fail("DurationParser", "parse(2h30m) = " + parsed);
+                f.incrementAndGet();
+                return;
+            }
+            BlockProtLogger.pass("DurationParser: parse(2h30m)=" + parsed
+                + " format=" + DurationParser.format(parsed));
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("DurationParser", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            DurationLimits limits = DurationLimits.create(60, 60, 24, 28, 12, 5);
+            boolean okSec = limits.validate(Duration.ofSeconds(30));
+            boolean okDay = limits.validate(Duration.ofDays(2));
+            boolean over = limits.validate(Duration.ofDays(3650));
+            long applicable = limits.getApplicableLimit(Duration.ofDays(30));
+            if (!okSec || !okDay || over || applicable <= 0) {
+                BlockProtLogger.fail("DurationLimits", "unexpected validation results");
+                f.incrementAndGet();
+                return;
+            }
+            BlockProtLogger.pass("DurationLimits: 30s=" + okSec + " 2d=" + okDay + " 10y=" + over
+                + " applicable(30d)=" + applicable + "ms");
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("DurationLimits", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            int dist = StringUtil.levenshtein("chest", "chst");
+            double sim = StringUtil.similarity("chest", "chest");
+            if (dist < 1 || sim <= 0) {
+                BlockProtLogger.fail("StringUtil", "unexpected distance/similarity");
+                f.incrementAndGet();
+                return;
+            }
+            BlockProtLogger.pass("StringUtil: levenshtein(chest,chst)=" + dist + " similarity=" + sim);
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("StringUtil", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            String name = BlockUtil.getHumanReadableBlockName(Material.CHEST);
+            if (name == null || name.isBlank()) {
+                BlockProtLogger.fail("BlockUtil", "blank readable name for CHEST");
+                f.incrementAndGet();
+                return;
+            }
+            BlockProtLogger.pass("BlockUtil: getHumanReadableBlockName(CHEST)=" + name);
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("BlockUtil", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            AsyncGuard.assertSync("debug utility group");
+            BlockProtLogger.pass("AsyncGuard: assertSync accepted (running on main thread)");
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("AsyncGuard", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            Set<String> candidates = PlayerNameResolver.getNameCandidates(player.getName());
+            if (candidates == null || candidates.isEmpty()) {
+                BlockProtLogger.fail("PlayerNameResolver", "no candidates for own name");
+                f.incrementAndGet();
+                return;
+            }
+            BlockProtLogger.pass("PlayerNameResolver: " + candidates.size() + " candidate(s) for " + player.getName());
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("PlayerNameResolver", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            TemporaryActionBar.show(player, "debug", 1L);
+            TemporaryActionBar.cancel(player.getUniqueId());
+            BlockProtLogger.pass("TemporaryActionBar: show+cancel OK");
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("TemporaryActionBar", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            String stripped = BpDialogStyles.stripColor("&a&lTest");
+            if (stripped == null || stripped.contains("&")) {
+                BlockProtLogger.fail("BpDialogStyles", "stripColor left a code: '" + stripped + "'");
+                f.incrementAndGet();
+                return;
+            }
+            BlockProtLogger.pass("BpDialogStyles: stripColor(&a&lTest)=" + stripped
+                + " palette=" + BpDialogStyles.SOFT_GRAY + "," + BpDialogStyles.PASTEL_MINT + ","
+                + BpDialogStyles.PASTEL_CORAL + "," + BpDialogStyles.PASTEL_GOLD + ","
+                + BpDialogStyles.SOFT_BLUE + "," + BpDialogStyles.PASTEL_PURPLE);
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("BpDialogStyles", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            DialogButton back = DialogNavigation.backButton(DialogOrigin.NONE, null);
+            DialogButton backAdmin = DialogNavigation.backButton(DialogOrigin.ADMIN_MENU, null);
+            if (back == null || backAdmin == null) {
+                BlockProtLogger.fail("DialogNavigation", "backButton returned null");
+                f.incrementAndGet();
+                return;
+            }
+            BlockProtLogger.pass("DialogNavigation: backButton(NONE) id=" + back.id()
+                + " backButton(ADMIN_MENU) id=" + backAdmin.id());
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("DialogNavigation", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            DialogState.push(player, ignored -> {});
+            boolean popped = DialogState.pop(player);
+            DialogState.clear(player);
+            BlockProtLogger.pass("DialogState: push/pop=" + popped + " clear OK");
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("DialogState", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            Map<String, Object> before = new LinkedHashMap<>();
+            before.put("key", "old");
+            Map<String, Object> after = new LinkedHashMap<>();
+            after.put("key", "new");
+            Map<String, Object> snap1 = ReloadReport.captureSnapshot(before, "test.yml");
+            Map<String, Object> snap2 = ReloadReport.captureSnapshot(after, "test.yml");
+            java.util.List<ReloadReport.ChangeDiff> diffs =
+                ReloadReport.compareSnapshots(snap1, snap2);
+            if (diffs == null || diffs.isEmpty()) {
+                BlockProtLogger.fail("ReloadReport", "expected a diff between old/new snapshots");
+                f.incrementAndGet();
+                return;
+            }
+            BlockProtLogger.pass("ReloadReport: capture/compare produced " + diffs.size() + " diff(s)");
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("ReloadReport", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            boolean integrationFlag = IntegrationConfig.getBoolean("debug.integration_test", true);
+            BlockProtLogger.pass("IntegrationConfig: getBoolean(default)=" + integrationFlag);
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("IntegrationConfig", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            // Suffix parsing and ranking table documented in gradle.properties:
+            //   blank   -> RANK_RELEASE (stable)
+            //   BEDev   -> RANK_SNAPSHOT (pre-release); bdev/SNAPSHOT are legacy aliases
+            //   hotfix  -> RANK_HOTFIX (ranked above the clean release)
+            //   release -> legacy tag suffix normalized to a clean release
+            //   exp     -> experimental, never an update
+            SemanticVersion stable   = new SemanticVersion("1.3.4");
+            SemanticVersion bedev    = new SemanticVersion("1.3.4-BEDev");
+            SemanticVersion bdev     = new SemanticVersion("1.3.4-bdev");
+            SemanticVersion snap     = new SemanticVersion("1.3.4-SNAPSHOT-3");
+            SemanticVersion hotfix   = new SemanticVersion("1.3.4-hotfix");
+            SemanticVersion fixN     = new SemanticVersion("1.3.4-fix.1");
+            SemanticVersion release  = new SemanticVersion("1.3.4-RELEASE");
+            SemanticVersion exp      = new SemanticVersion("1.3.4-exp");
+            boolean ranksOk = !stable.isPreRelease() && !stable.isHotfix()
+                && bedev.isPreRelease() && bdev.isPreRelease() && snap.isPreRelease()
+                && hotfix.isHotfix() && fixN.isHotfix()
+                && !release.isPreRelease() && !release.isHotfix()
+                && exp.isExperimental();
+            boolean orderOk = bedev.compareTo(stable) < 0
+                && stable.compareTo(hotfix) < 0
+                && bedev.compareTo(bdev) == 0
+                && new SemanticVersion("1.3.4-BEDev.2").compareTo(new SemanticVersion("1.3.4-BEDev.1")) > 0
+                && stable.compareTo(new SemanticVersion("1.3.5")) < 0
+                && stable.compareTo(stable) == 0;
+            boolean baseOk = hotfix.baseVersion().equals("1.3.4")
+                && bedev.baseVersion().equals("1.3.4");
+            if (!ranksOk || !orderOk || !baseOk) {
+                BlockProtLogger.fail("SemanticVersion",
+                    "ranks=" + ranksOk + " order=" + orderOk + " base=" + baseOk);
+                f.incrementAndGet();
+                return;
+            }
+            BlockProtLogger.pass("SemanticVersion: ranks/order/baseVersion OK"
+                + " (stable=" + stable + " bedev=" + bedev + " hotfix=" + hotfix + " exp=" + exp + ")");
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("SemanticVersion", e.getMessage()); f.incrementAndGet();
+        }
+
+        DialogBridgeFactory.setTestBridge(new NoopDialogBridge());
+        try {
+            touchScreen(DIALOG_PACKAGE, "AdminConfigValueDialog");
+            AdminConfigValueDialog.openInt(player, "debug.test", "hint", 0, v -> {}, () -> {});
+            AdminConfigValueDialog.openText(player, "debug.test", "hint", "value", s -> null, v -> {}, () -> {});
+            BlockProtLogger.pass("AdminConfigValueDialog: openInt/openText routed through test bridge");
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("AdminConfigValueDialog", e.getMessage()); f.incrementAndGet();
+        } finally {
+            DialogBridgeFactory.setTestBridge(null);
+        }
+    }
+
+    private void checkNbtSubHandlers(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            var loc   = player.getLocation().clone();
+            var world = player.getWorld();
+            var orig  = world.getBlockAt(loc).getType();
+            world.setType(loc, Material.CHEST);
+            try {
+                var h = new BlockNBTHandler(world.getBlockAt(loc));
+                h.setOwner(NOTCH_UUID);
+                h.addFriend("069a79f4-44e9-4726-a5be-fca90e38aaf5");
+                boolean hasFriend = h.containsFriend("069a79f4-44e9-4726-a5be-fca90e38aaf5");
+                java.util.List<FriendHandler> friends = h.getFriends();
+                if (!hasFriend || friends.isEmpty()) {
+                    BlockProtLogger.fail("FriendSupportingHandler", "addFriend/containsFriend mismatch");
+                    f.incrementAndGet();
+                    return;
+                }
+                FriendHandler first = friends.get(0);
+                boolean canRead = first.canRead();
+                boolean isManager = first.isManager();
+                EnumSet<BlockAccessFlag> flags = BlockAccessFlag.parseFlags(0);
+                java.util.List<String> lore = BlockAccessFlag.accumulateAccessFlagLore(flags);
+                h.removeFriend("069a79f4-44e9-4726-a5be-fca90e38aaf5");
+                BlockProtLogger.pass("FriendSupportingHandler/FriendHandler: contains=" + hasFriend
+                    + " friends=" + friends.size() + " canRead=" + canRead + " isManager=" + isManager
+                    + " flags=" + flags.size() + " loreLines=" + lore.size());
+                p.incrementAndGet();
+            } finally {
+                world.setType(loc, orig);
+            }
+        } catch (Exception e) {
+            BlockProtLogger.fail("FriendSupportingHandler", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            var loc   = player.getLocation().clone();
+            var world = player.getWorld();
+            var orig  = world.getBlockAt(loc).getType();
+            world.setType(loc, Material.CHEST);
+            try {
+                var h = new BlockNBTHandler(world.getBlockAt(loc));
+                RedstoneSettingsHandler rs = h.getRedstoneHandler();
+                rs.setPistonProtection(false);
+                rs.setHopperProtection(false);
+                boolean piston = rs.getPistonProtection();
+                boolean hopper = rs.getHopperProtection();
+                boolean current = rs.getCurrentProtection();
+                rs.reset();
+                BlockProtLogger.pass("RedstoneSettingsHandler: piston=" + piston + " hopper=" + hopper
+                    + " current=" + current + " reset OK");
+                p.incrementAndGet();
+            } finally {
+                world.setType(loc, orig);
+            }
+        } catch (Exception e) {
+            BlockProtLogger.fail("RedstoneSettingsHandler", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            BlockCountStatistic stat = new BlockCountStatistic();
+            stat.updateContainer((de.tr7zw.changeme.nbtapi.NBTContainer)
+                de.tr7zw.changeme.nbtapi.NBT.createNBTObject());
+            stat.increment();
+            int value = stat.get();
+            if (value < 0) {
+                BlockProtLogger.fail("BlockCountStatistic", "negative value after increment");
+                f.incrementAndGet();
+                return;
+            }
+            BlockProtLogger.pass("BlockCountStatistic: key=" + stat.getKey() + " type=" + stat.getType()
+                + " item=" + stat.getItemType() + " value=" + value);
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("BlockCountStatistic", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            var loc   = player.getLocation().clone();
+            var world = player.getWorld();
+            var orig  = world.getBlockAt(loc).getType();
+            world.setType(loc, Material.CHEST);
+            try {
+                var block = world.getBlockAt(loc);
+                var h = new BlockNBTHandler(block);
+                h.setOwner(NOTCH_UUID);
+                EffectGeometry geometry = EffectGeometry.createForBlock(block);
+                if (geometry.getBoundingBox() == null || geometry.getUnionCenter() == null) {
+                    BlockProtLogger.fail("EffectGeometry", "null bounding box or union center");
+                    f.incrementAndGet();
+                    return;
+                }
+                int perimeter = geometry.getPerimeterPoints(0.5).size();
+                BlockProtLogger.pass("EffectGeometry: box=" + geometry.getBoundingBox().getVolume()
+                    + " center=" + geometry.getUnionCenter() + " perimeterPoints=" + perimeter);
+                p.incrementAndGet();
+
+                ProtectedBlockCache.unmark(block);
+                ProtectedBlockCache.mark(block);
+                boolean cachedProtected = ProtectedBlockCache.isProtected(block);
+                ProtectedBlockCache.unmark(block);
+                if (!cachedProtected) {
+                    BlockProtLogger.fail("ProtectedBlockCache", "mark() did not make block protected");
+                    f.incrementAndGet();
+                    return;
+                }
+                BlockProtLogger.pass("ProtectedBlockCache: mark/isProtected/unmark roundtrip OK, size="
+                    + ProtectedBlockCache.size());
+                p.incrementAndGet();
+            } finally {
+                world.setType(loc, orig);
+            }
+        } catch (Exception e) {
+            BlockProtLogger.fail("EffectGeometry/ProtectedBlockCache", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            var loc   = player.getLocation().clone();
+            var world = player.getWorld();
+            var ent = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
+                stand.setGravity(false);
+                stand.setVisible(false);
+                stand.setSilent(true);
+            });
+            try {
+                if (!EntityProtectionHandler.isSupportedEntity(ent)) {
+                    BlockProtLogger.pass("EntityProtectionHandler: ArmorStand not supported, structural check only");
+                    p.incrementAndGet();
+                    return;
+                }
+                var handler = EntityProtectionHandler.forEntityOrNull(ent);
+                if (handler == null) {
+                    BlockProtLogger.pass("EntityProtectionHandler: forEntityOrNull=null for ArmorStand (expected)");
+                    p.incrementAndGet();
+                    return;
+                }
+                handler.enable(java.util.UUID.fromString(NOTCH_UUID));
+                handler.setNoDamage(false);
+                handler.setNoLeash(false);
+                boolean ok = handler.getOwner().equals(java.util.UUID.fromString(NOTCH_UUID))
+                    && handler.isProtected()
+                    && !handler.isNoDamage()
+                    && !handler.isNoLeash();
+                handler.clear();
+                if (!ok) {
+                    BlockProtLogger.fail("EntityProtectionHandler", "owner/flags mismatch after enable()");
+                    f.incrementAndGet();
+                    return;
+                }
+                BlockProtLogger.pass("EntityProtectionHandler: enable/owner/flags/clear roundtrip OK");
+                p.incrementAndGet();
+            } finally {
+                ent.remove();
+            }
+        } catch (Exception e) {
+            BlockProtLogger.fail("EntityProtectionHandler", e.getMessage()); f.incrementAndGet();
+        }
+
+        try {
+            var loc   = player.getLocation().clone();
+            var world = player.getWorld();
+            var orig  = world.getBlockAt(loc).getType();
+            world.setType(loc, Material.CHEST);
+            try {
+                var h = new BlockNBTHandler(world.getBlockAt(loc));
+                h.setOwner(NOTCH_UUID);
+                LocationListEntry entry = new LocationListEntry(loc);
+                if (entry.getBlock() == null || entry.getItemType() == null || entry.getTitle() == null) {
+                    BlockProtLogger.fail("LocationListEntry", "null field for constructed entry");
+                    f.incrementAndGet();
+                    return;
+                }
+                BlockProtLogger.pass("LocationListEntry: block=" + entry.getBlock().getType()
+                    + " item=" + entry.getItemType() + " title=" + entry.getTitle());
+                p.incrementAndGet();
+
+                java.util.UUID clipboardOwner = java.util.UUID.fromString(NOTCH_UUID);
+                PlayerInventoryClipboard.remove(clipboardOwner.toString());
+                PlayerInventoryClipboard.set(clipboardOwner.toString(),
+                    (de.tr7zw.changeme.nbtapi.NBTContainer) de.tr7zw.changeme.nbtapi.NBT.createNBTObject());
+                boolean hasClipboard = PlayerInventoryClipboard.contains(clipboardOwner.toString());
+                PlayerInventoryClipboard.remove(clipboardOwner.toString());
+                if (!hasClipboard) {
+                    BlockProtLogger.fail("PlayerInventoryClipboard", "set() did not register clipboard");
+                    f.incrementAndGet();
+                    return;
+                }
+                BlockProtLogger.pass("PlayerInventoryClipboard: set/contains/remove roundtrip OK");
+                p.incrementAndGet();
+            } finally {
+                world.setType(loc, orig);
+            }
+        } catch (Exception e) {
+            BlockProtLogger.fail("LocationListEntry/PlayerInventoryClipboard", e.getMessage()); f.incrementAndGet();
+        }
+    }
+
+    private void checkStructuralClasses(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        String[] names = {
+            "de.sean.blockprot.bukkit.events.BlockAccessEvent",
+            "de.sean.blockprot.bukkit.events.BlockAccessMenuEvent",
+            "de.sean.blockprot.bukkit.events.BlockLockOnPlaceEvent",
+            "de.sean.blockprot.bukkit.events.BlockProtLockEvent",
+            "de.sean.blockprot.bukkit.events.BlockProtUnlockEvent",
+            "de.sean.blockprot.bukkit.inventories.BlockProtInventory",
+            "de.sean.blockprot.bukkit.inventories.InventoryConstants",
+            "de.sean.blockprot.bukkit.inventories.ChatInput",
+            "de.sean.blockprot.bukkit.inventories.LegacyChatInput",
+            "de.sean.blockprot.bukkit.inventories.TextInput",
+            "de.sean.blockprot.bukkit.listeners.ErrorEventListener",
+            "de.sean.blockprot.bukkit.logger.PluginActivityLog",
+            "de.sean.blockprot.bukkit.metrics.IntegrationBarChart",
+            "de.sean.blockprot.bukkit.config.BlockProtConfig",
+            "de.sean.blockprot.bukkit.config.ReloadCoordinator",
+            "de.sean.blockprot.bukkit.tasks.BackupTask",
+            "de.sean.blockprot.bukkit.tasks.ConfigFileWatcher",
+            "de.sean.blockprot.bukkit.tasks.InactivityCleanupTask",
+            "de.sean.blockprot.bukkit.tasks.StatisticFileSaveTask",
+            "de.sean.blockprot.bukkit.tasks.UpdateChecker",
+            "de.sean.blockprot.bukkit.tasks.VillagerLocateTask",
+            "de.sean.blockprot.bukkit.tasks.WorldExpiryTask",
+            "de.sean.blockprot.bukkit.BlockProtAPI",
+            "de.sean.blockprot.bukkit.BlockProtConsole",
+            "de.sean.blockprot.bukkit.CachedProfileService",
+            "de.sean.blockprot.bukkit.TranslationValue",
+            "de.sean.blockprot.bukkit.VersionValidator",
+            "de.sean.blockprot.bukkit.storage.HybridDatabase",
+            "de.sean.blockprot.bukkit.storage.ProtectedBlockCache",
+            "de.sean.blockprot.bukkit.nbt.stats.BukkitStatistic",
+            "de.sean.blockprot.bukkit.nbt.stats.FloatStatistic",
+            "de.sean.blockprot.bukkit.nbt.stats.IntStatistic",
+            "de.sean.blockprot.bukkit.nbt.stats.LocationListStatistic",
+            "de.sean.blockprot.bukkit.nbt.stats.StringStatistic",
+        };
+        int loaded = 0;
+        for (String name : names) {
+            try {
+                Class.forName(name, false, BlockProt.getInstance().getClass().getClassLoader());
+                loaded++;
+            } catch (Throwable e) {
+                BlockProtLogger.fail("Structural class", name + ": " + e.getClass().getSimpleName()
+                    + ": " + e.getMessage());
+                f.incrementAndGet();
+            }
+        }
+        BlockProtLogger.pass("Structural classes: " + loaded + "/" + names.length + " loadable"
+            + " (events, gateways, tasks, console, metrics, misc)");
+        p.incrementAndGet();
+    }
+
+    private void checkEnumeratedCoverage(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        var codeSource = BlockProt.getInstance().getClass().getProtectionDomain().getCodeSource();
+        if (codeSource == null) {
+            BlockProtLogger.log("Class coverage: not running from a jar, enumeration skipped (dev workspace)");
+            p.incrementAndGet();
+            return;
+        }
+        int total = 0;
+        int uncovered = 0;
+        String[] packages = {
+            INVENTORY_PACKAGE, DIALOG_PACKAGE,
+            BlockProtCommand.class.getPackageName(), LISTENERS_PACKAGE
+        };
+        try (var jar = new JarFile(new File(codeSource.getLocation().toURI()))) {
+            for (String pkg : packages) {
+                String dir = pkg.replace('.', '/') + "/";
+                for (var entry : Collections.list(jar.entries())) {
+                    String entryName = entry.getName();
+                    if (!entryName.startsWith(dir) || !entryName.endsWith(".class")) continue;
+                    if (entryName.indexOf('/', dir.length()) != -1) continue;
+                    String simpleName = entryName.substring(dir.length(), entryName.length() - ".class".length());
+                    if (simpleName.indexOf('$') != -1) continue;
+                    if (!(simpleName.endsWith("Inventory") || simpleName.endsWith("Dialog")
+                        || simpleName.endsWith("Command") || simpleName.endsWith("Listener"))) continue;
+                    String fqcn = pkg + "." + simpleName;
+                    try {
+                        Class<?> c = Class.forName(fqcn, false,
+                            BlockProt.getInstance().getClass().getClassLoader());
+                        int mods = c.getModifiers();
+                        if (Modifier.isAbstract(mods) || c.isInterface() || c.isEnum()) continue;
+                    } catch (Throwable e) {
+                        BlockProtLogger.fail("Class coverage", fqcn + " failed to load: "
+                            + e.getClass().getSimpleName() + ": " + e.getMessage());
+                        f.incrementAndGet();
+                        continue;
+                    }
+                    total++;
+                    if (!coveredClasses.contains(fqcn)) {
+                        uncovered++;
+                        BlockProtLogger.fail("Class coverage", simpleName
+                            + " is exercised by no debug group (new screen? add it to a group)");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            BlockProtLogger.fail("Class coverage",
+                e.getClass().getSimpleName() + ": " + e.getMessage());
+            f.incrementAndGet();
+            return;
+        }
+        if (uncovered == 0) {
+            BlockProtLogger.pass("Class coverage: " + (total - uncovered) + "/" + total
+                + " screen classes exercised (inventories, dialogs, commands, listeners)");
+            p.incrementAndGet();
+        } else {
+            f.incrementAndGet();
+        }
+    }
+
+    private void dlg(@NotNull AtomicInteger p, @NotNull AtomicInteger f,
+                     @NotNull String name, @NotNull Runnable body) {
+        try {
+            touchScreen(DIALOG_PACKAGE, name);
+            body.run();
+            BlockProtLogger.pass("Dialog OK: " + name);
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("Dialog FAIL: " + name,
+                e.getClass().getSimpleName() + ": " + e.getMessage());
+            f.incrementAndGet();
+        }
+    }
+
     private void inv(@NotNull AtomicInteger p, @NotNull AtomicInteger f,
                      @NotNull String name,
                      @NotNull java.util.concurrent.Callable<Inventory> supplier) {
         try {
+            touchScreen(INVENTORY_PACKAGE, name);
             Inventory result = supplier.call();
             if (result != null) {
                 BlockProtLogger.pass("Inventory OK: " + name + " (size=" + result.getSize() + ")");

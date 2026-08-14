@@ -12,14 +12,12 @@ bin
 .classpath
 .project
 .DS_Store
+/docs/ZYZ
 
 spigot/run/
 fabric/run/
 
-/BlockProt-Reloaded-1.3.2-RELEASE
-/docs/ZYZ
-/spigot/src/main/resources/langp
-/images/RELEASE TITLES/BHH
-/BlockProt-Reloaded-1.3.3-RELEASE
+/images/RELEASE TITLES/MODELS
+
 docs/READ_MEs/PLAYER_GUIDE.md
 docs/READ_MEs/ADMIN_GUIDE.md

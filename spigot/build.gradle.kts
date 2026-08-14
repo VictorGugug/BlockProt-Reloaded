@@ -119,11 +119,6 @@ java {
 
 val pluginVersion: String = project.version.toString()
 
-tasks.withType<JavaCompile> {
-    options.compilerArgs.add("-Xlint:-deprecation")
-    options.compilerArgs.add("-Xlint:-removal")
-}
-
 tasks.processResources {
     inputs.property("version", pluginVersion)
 

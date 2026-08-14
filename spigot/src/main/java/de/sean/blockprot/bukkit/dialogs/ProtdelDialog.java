@@ -128,10 +128,12 @@ public final class ProtdelDialog {
         buttons.addAll(undoNav);
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
-        DialogButton exitBtn = new DialogButton("exit",
-            Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
-            AdminMenuDialog.originHint(exitOrigin),
-            AdminMenuDialog.originBack(player, exitOrigin)
+        DialogButton exitBtn = DialogNavigation.backButton(
+            exitOrigin,
+            exitOrigin == DialogOrigin.ADMIN_MENU ? p -> AdminMenuDialog.show(p)
+                : exitOrigin == DialogOrigin.USER_MENU ? p -> UserMenuDialog.show(p)
+                : null,
+            exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__RETURN_PREVIOUS : null
         );
 
         bridge.showMultiAction(player, title, body, buttons, exitBtn, 2);
@@ -170,10 +172,10 @@ public final class ProtdelDialog {
         }
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
-        DialogButton exitBtn = new DialogButton("exit",
-            Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
-            Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin == DialogOrigin.NONE ? null : p -> showWorldSelector(p, bridge, backOrigin)
+        DialogButton exitBtn = DialogNavigation.backButton(
+            exitOrigin,
+            exitOrigin == DialogOrigin.NONE ? null : p -> showWorldSelector(p, bridge, backOrigin),
+            exitOrigin == DialogOrigin.NONE ? null : TranslationKey.DIALOGS__RETURN_PREVIOUS
         );
 
         bridge.showMultiAction(player, title, body, buttons, exitBtn, 1);

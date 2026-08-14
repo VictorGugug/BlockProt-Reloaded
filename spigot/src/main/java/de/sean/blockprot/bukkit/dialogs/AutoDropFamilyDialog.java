@@ -36,6 +36,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /** Dialog counterpart of {@code AutoDropFamilyInventory}: per-material toggles for one family. */
 public final class AutoDropFamilyDialog {
@@ -51,11 +52,23 @@ public final class AutoDropFamilyDialog {
 
     public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
                             @NotNull BlockFamilyParser.Family family) {
-        show(player, backOrigin, family, 0);
+        show(player, backOrigin, family, 0, null);
+    }
+
+    public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
+                            @NotNull BlockFamilyParser.Family family,
+                            @Nullable DialogButton.DialogClickHandler parentBack) {
+        show(player, backOrigin, family, 0, parentBack);
     }
 
     public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
                             @NotNull BlockFamilyParser.Family family, int page) {
+        show(player, backOrigin, family, page, null);
+    }
+
+    public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
+                            @NotNull BlockFamilyParser.Family family, int page,
+                            @Nullable DialogButton.DialogClickHandler parentBack) {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
 
@@ -98,7 +111,7 @@ public final class AutoDropFamilyDialog {
                         : stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE_SINGLE)), c)),
                 p -> {
                     cfg.toggleAutoDropMaterial(mat, p);
-                    show(p, backOrigin, family, safePage);
+                    show(p, backOrigin, family, safePage, parentBack);
                 }
             ));
         }
@@ -109,7 +122,7 @@ public final class AutoDropFamilyDialog {
             Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__LEFT_CLICK_HINT)), TextColor.color(0x888888)),
             p -> {
                 cfg.toggleAutoDropFamily(family, p);
-                show(p, backOrigin, family, safePage);
+                show(p, backOrigin, family, safePage, parentBack);
             }
         ));
 
@@ -118,13 +131,13 @@ public final class AutoDropFamilyDialog {
             navButtons.add(new DialogButton("prev",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, family, safePage - 1)));
+                p -> show(p, backOrigin, family, safePage - 1, parentBack)));
         }
         if (safePage + 1 < totalPages) {
             navButtons.add(new DialogButton("next",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, family, safePage + 1)));
+                p -> show(p, backOrigin, family, safePage + 1, parentBack)));
         }
 
         buttons.addAll(navButtons);
@@ -133,7 +146,7 @@ public final class AutoDropFamilyDialog {
         DialogButton backBtn = new DialogButton("back",
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            p -> AutoDropDialog.show(p, backOrigin)
+            p -> AutoDropDialog.show(p, backOrigin, parentBack)
         );
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 3);

@@ -25,6 +25,13 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.RedstoneSettingsHandler;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_PURPLE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_BLUE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_GRAY;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
 import java.util.ArrayList;
 import java.util.List;
 import net.kyori.adventure.text.Component;
@@ -38,13 +45,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 public final class BlockSettingsDialog {
-
-    private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
-    private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
-    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
-    private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
-    private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
-    private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
 
     private BlockSettingsDialog() {}
 
@@ -137,10 +137,6 @@ public final class BlockSettingsDialog {
     private static DialogButton cmdBtn(String id, String label, TextColor color, DialogButton.DialogClickHandler handler) {
         return new DialogButton(id, Component.text(label, color),
             Component.text(label, TextColor.color(0x888888)), handler);
-    }
-
-    private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
     private static String formatMaterialName(String name) {

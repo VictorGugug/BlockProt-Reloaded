@@ -24,6 +24,14 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
+import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_PURPLE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_BLUE;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_GRAY;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,13 +47,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class AuditDialog {
-
-    private static final TextColor SOFT_GRAY = TextColor.color(0xAAAAAA);
-    private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
-    private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
-    private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
-    private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
-    private static final TextColor PASTEL_PURPLE = TextColor.color(0xC8A0E0);
 
     private static final int PER_PAGE = 8;
     private static final SimpleDateFormat DATE_FMT = new SimpleDateFormat("dd/MM HH:mm");
@@ -83,6 +84,12 @@ public final class AuditDialog {
 
         List<AuditLogger.AuditEntry> allEntries = audit.getEntriesForBlock(
             location.getWorld().getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ(), 500);
+
+        BlockNBTHandler ownerHandler = new BlockNBTHandler(location.getBlock());
+        if (ownerHandler.isProtected() && ownerHandler.getOwner() != null) {
+            String ownerUuid = ownerHandler.getOwner();
+            allEntries.removeIf(e -> ownerUuid.equals(e.playerUuid()));
+        }
 
         allEntries.removeIf(e -> filterPlayerUuid != null && !e.playerUuid().equals(filterPlayerUuid));
 
@@ -167,9 +174,5 @@ public final class AuditDialog {
             default -> TranslationKey.INVENTORIES__AUDIT__ACTION_UNKNOWN;
         };
         return stripColor(Translator.get(key));
-    }
-
-    private static String stripColor(String s) {
-        return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 }

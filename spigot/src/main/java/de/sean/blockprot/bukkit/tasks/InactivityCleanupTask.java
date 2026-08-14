@@ -29,13 +29,17 @@ import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 
 /**
@@ -78,6 +82,7 @@ public final class InactivityCleanupTask implements Runnable {
             int batchEnd = Math.min(batchStart + BATCH_SIZE, size);
             List<OfflinePlayer> batch = all.subList(batchStart, batchEnd);
 
+            List<Candidate> candidates = new ArrayList<>();
             for (OfflinePlayer offline : batch) {
                 if (offline.isOnline()) continue;
                 if (offline.getLastSeen() > cutoff) continue;
@@ -93,20 +98,16 @@ public final class InactivityCleanupTask implements Runnable {
                     for (var entry : stat.get()) {
                         var loc = entry.get();
                         if (loc.getWorld() == null) continue;
-                        try {
-                            var block = loc.getWorld().getBlockAt(loc);
-                            if (!BlockProt.getDefaultConfig().isLockable(block.getType())) continue;
-                            var handler = new BlockNBTHandler(block);
-                            if (handler.isOwner(offline.getUniqueId())) {
-                                handler.clear();
-                                handler.applyToOtherContainer();
-                                HopperEventListener.invalidate(block);
-                                StatHandler.removeContainerByUuid(offline.getUniqueId(), loc.clone());
-                                total.incrementAndGet();
-                            }
-                        } catch (Exception ignored) {}
+                        candidates.add(new Candidate(loc.clone(), offline.getUniqueId()));
                     }
                 } catch (Exception ignored) {}
+            }
+
+            if (!candidates.isEmpty()) {
+                CompletableFuture.allOf(candidates.stream()
+                    .map(candidate -> BlockProt.getFoliaLib().getScheduler().runAtLocation(
+                        candidate.location(), task -> processCandidate(candidate, total)))
+                    .toArray(CompletableFuture[]::new)).join();
             }
 
             // Yield between batches to avoid prolonged GC pressure.
@@ -131,4 +132,21 @@ public final class InactivityCleanupTask implements Runnable {
             }
         });
     }
+
+    private void processCandidate(@NotNull Candidate candidate, @NotNull AtomicInteger total) {
+        try {
+            var block = candidate.location().getWorld().getBlockAt(candidate.location());
+            if (!BlockProt.getDefaultConfig().isLockable(block.getType())) return;
+            var handler = new BlockNBTHandler(block);
+            if (handler.isOwner(candidate.ownerUuid())) {
+                handler.clear();
+                handler.applyToOtherContainer();
+                HopperEventListener.invalidate(block);
+                StatHandler.removeContainerByUuid(candidate.ownerUuid(), candidate.location());
+                total.incrementAndGet();
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private record Candidate(Location location, UUID ownerUuid) {}
 }

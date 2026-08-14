@@ -22,25 +22,23 @@ package de.sean.blockprot.bukkit.util;
 
 import de.sean.blockprot.bukkit.BlockProt;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Asynchronous Mojang-API skin resolver using Bukkit's {@code PlayerProfile.update()}.
- *
- * <p>On offline-mode servers the player UUID is derived from the name (offline UUID v3)
- * and does not correspond to any Mojang profile: the lookup still works because it
- * resolves by name.  For cracked players without a Mojang account this falls back to
- * SkinsRestorer (if installed).
- *
- * <p>Results are cached per username until the server restarts.
  */
 @SuppressWarnings("deprecation")
 public final class SkinCache {
@@ -49,33 +47,48 @@ public final class SkinCache {
 
     private SkinCache() {}
 
-    /**
-     * Fire-and-forget pre-fetch: starts the async resolution and returns immediately.
-     * The result will be cached for subsequent {@link #getOrFetchAsync} calls.
-     */
     public static void getOrFetch(@NotNull String name, @NotNull UUID uuid) {
         getOrFetchAsync(name, uuid);
     }
 
-    /**
-     * Asynchronously returns a {@link PlayerProfile} with a resolved skin.
-     *
-     * <p>Uses Bukkit's built-in {@code PlayerProfile.update()} (Mojang API) and then
-     * falls back to SkinsRestorer if no texture was returned.
-     *
-     * @param name Player name (case-insensitive cache key).
-     * @param uuid The UUID to use when creating the profile.
-     * @return A future that completes with the best available profile (may not have textures).
-     */
+    @Nullable
+    public static PlayerProfile getCachedOrOnlineProfile(@NotNull String name, @NotNull UUID uuid) {
+        String key = name.toLowerCase();
+        PlayerProfile cached = cache.get(key);
+        if (cached != null && hasSkin(cached)) return cached;
+
+        try {
+            Player online = Bukkit.getPlayer(uuid);
+            if (online == null) online = Bukkit.getPlayerExact(name);
+            if (online != null) {
+                PlayerProfile op = online.getPlayerProfile();
+                if (hasSkin(op)) {
+                    cache.put(key, op);
+                    return op;
+                }
+            }
+        } catch (Throwable ignored) {}
+        return null;
+    }
+
     @NotNull
     public static CompletableFuture<PlayerProfile> getOrFetchAsync(@NotNull String name, @NotNull UUID uuid) {
         String key = name.toLowerCase();
         PlayerProfile cached = cache.get(key);
-        if (cached != null) return CompletableFuture.completedFuture(cached);
+        if (cached != null && hasSkin(cached)) return CompletableFuture.completedFuture(cached);
 
-        // Bukkit.createProfile(UUID, String) returns org.bukkit.profile.PlayerProfile,
-        // the standard cross-platform API present on Paper and Spigot alike. The
-        // NoSuchMethodError catch here is a defensive fallback for older server builds.
+        try {
+            Player online = Bukkit.getPlayer(uuid);
+            if (online == null) online = Bukkit.getPlayerExact(name);
+            if (online != null) {
+                PlayerProfile op = online.getPlayerProfile();
+                if (hasSkin(op)) {
+                    cache.put(key, op);
+                    return CompletableFuture.completedFuture(op);
+                }
+            }
+        } catch (Throwable ignored) {}
+
         PlayerProfile profile;
         try {
             profile = Bukkit.createProfile(uuid, name);
@@ -89,26 +102,38 @@ public final class SkinCache {
         }
         CompletableFuture<PlayerProfile> updateFuture = profile.update().thenApply(p -> (PlayerProfile) p);
         return updateFuture
-            .exceptionally(ex -> {
-                BlockProt.getInstance().getLogger().warning("Skin fetch failed for " + name + ": " + ex.getMessage());
-                return profile;
-            })
+            .exceptionally(ex -> profile)
             .thenApply(updated -> {
                 if (hasSkin(updated)) {
                     cache.put(key, updated);
                     return updated;
                 }
-                // Fallback: SkinsRestorer (offline-mode premium/custom skins)
-                PlayerProfile srProfile = resolveSkinsRestorer(uuid, name);
-                if (srProfile != null) {
-                    cache.put(key, srProfile);
-                    return srProfile;
-                }
-                // No texture available at all: cache the non-textured profile so we don't
-                // hammer the API every time.  The skull will use the server's default (Steve/Alex).
-                cache.put(key, updated);
-                return updated;
-            });
+                return null;
+            })
+            .thenCompose(updated -> updated != null
+                ? CompletableFuture.completedFuture(updated)
+                : CompletableFuture.supplyAsync(() -> {
+                    try {
+                        PlayerProfile nameOnlyProfile = Bukkit.createProfile(name);
+                        PlayerProfile updatedNameProfile = nameOnlyProfile.update().join();
+                        if (hasSkin(updatedNameProfile)) {
+                            cache.put(key, updatedNameProfile);
+                            return updatedNameProfile;
+                        }
+                    } catch (Throwable ignored) {}
+
+                    PlayerProfile srProfile = resolveSkinsRestorer(uuid, name);
+                    if (srProfile != null) {
+                        cache.put(key, srProfile);
+                        return srProfile;
+                    }
+                    PlayerProfile pdProfile = resolvePlayerDb(name);
+                    if (pdProfile != null) {
+                        cache.put(key, pdProfile);
+                        return pdProfile;
+                    }
+                    return profile;
+                }));
     }
 
     /**
@@ -154,6 +179,89 @@ public final class SkinCache {
             return profile.getTextures() != null && profile.getTextures().getSkin() != null;
         } catch (Exception ignored) {
             return false;
+        }
+    }
+
+    /**
+     * Third-tier fallback: resolves a real Mojang UUID from the player name via
+     * the free PlayerDB API, then fetches the signed texture from the Mojang
+     * sessionserver. Both calls are blocking, so callers must run them off the
+     * primary thread.
+     *
+     * @return a populated {@link PlayerProfile}, or {@code null}.
+     */
+    @Nullable
+    public static PlayerProfile resolvePlayerDb(@NotNull String name) {
+        String mojangUuid = fetchPlayerDbUuid(name);
+        if (mojangUuid == null) return null;
+        String skinUrl = fetchSessionserverTexture(UUID.fromString(mojangUuid));
+        if (skinUrl == null) return null;
+        try {
+            PlayerProfile profile = Bukkit.createProfile(UUID.fromString(mojangUuid), name);
+            PlayerTextures textures = profile.getTextures();
+            textures.setSkin(URI.create(skinUrl).toURL());
+            profile.setTextures(textures);
+            return profile;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private static String fetchPlayerDbUuid(@NotNull String name) {
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://playerdb.co/api/player/minecraft/" + name))
+                .header("User-Agent", "BlockProt-Reloaded-SkinCache")
+                .timeout(Duration.ofSeconds(5))
+                .GET()
+                .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) return null;
+            var root = com.google.gson.JsonParser.parseString(response.body()).getAsJsonObject();
+            if (!root.has("data") || !root.getAsJsonObject("data").has("player")) return null;
+            var player = root.getAsJsonObject("data").getAsJsonObject("player");
+            if (!player.has("id")) return null;
+            return player.get("id").getAsString();
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private static String fetchSessionserverTexture(@NotNull UUID uuid) {
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid))
+                .header("User-Agent", "BlockProt-Reloaded-SkinCache")
+                .timeout(Duration.ofSeconds(5))
+                .GET()
+                .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) return null;
+            var root = com.google.gson.JsonParser.parseString(response.body()).getAsJsonObject();
+            if (!root.has("properties")) return null;
+            for (var element : root.getAsJsonArray("properties")) {
+                var property = element.getAsJsonObject();
+                if (!property.has("name") || !"textures".equals(property.get("name").getAsString())) continue;
+                if (!property.has("value")) return null;
+                String decoded = new String(
+                    java.util.Base64.getDecoder().decode(property.get("value").getAsString()),
+                    java.nio.charset.StandardCharsets.UTF_8);
+                var texturesRoot = com.google.gson.JsonParser.parseString(decoded).getAsJsonObject();
+                if (!texturesRoot.has("textures") || !texturesRoot.getAsJsonObject("textures").has("SKIN")) return null;
+                return texturesRoot.getAsJsonObject("textures")
+                    .getAsJsonObject("SKIN").get("url").getAsString();
+            }
+            return null;
+        } catch (Throwable ignored) {
+            return null;
         }
     }
 }

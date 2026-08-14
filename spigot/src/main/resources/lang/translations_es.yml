@@ -79,6 +79,7 @@ inventories:
     the_public: Público
     the_public_desc: Representa todos los jugadores en este servidor.
     make_public: Hacer público
+    select_candidate: Selecciona un candidato
     permissions: Permisos
     permission:
       read: Leer
@@ -88,21 +89,6 @@ inventories:
   block_settings:
     title: Ajustes del Bloque
     owner_only_movement: Movimiento solo para el propietario
-  # Grupos de protección
-  groups:
-    title: "§8[§bGrupo§8] §fGestionar"
-    button: "§bGrupo de Protección"
-    button_lore: "Gestiona el grupo al que pertenece este bloque."
-    create: "§aCrear grupo"
-    create_lore: "Crea un nuevo grupo con este bloque como primer miembro."
-    join: "§bUnirse a grupo"
-    join_lore: "Ingresa un ID de grupo para unirte a uno existente."
-    dissolve: "§cDisolver grupo"
-    dissolve_lore: "Elimina todos los bloques del grupo y lo borra."
-    leave: "§eSalir del grupo"
-    leave_lore: "Elimina solo este bloque del grupo."
-    member_count: "§7Miembros: §f{count}"
-    no_group: "§7Este bloque no pertenece a ningún grupo."
   statistics:
     statistics: Estadísticas
     player_statistics: Estadísticas del jugador
@@ -277,13 +263,13 @@ inventories:
   auto_drop:
     title: "Auto-Drop al Inventario"
     family_title: "Auto-Drop: {family}"
+    search: "Buscar Bloques"
+    search_lore: "Busca un bloque por nombre."
+    search_title: "Busqueda: {query}"
     left_click_hint: "Clic izquierdo: seleccionar bloques individuales"
     right_click_hint: "Clic derecho: activar/desactivar toda la familia"
     status_active: "Estado: ACTIVO"
     status_inactive: "Estado: INACTIVO"
-  integrations:
-    separator: "§7, "
-    none: "§8-"
 
 messages:
   permission_granted: Protegido.
@@ -338,10 +324,10 @@ messages:
   no_permission_tp: "§c[✗] Sin permiso: blockprot.blocks.tp"
   remote_unlock_warning: "§e! Desproteger remotamente.\n§7Haz clic de nuevo para confirmar."
   admin_reload_done: "§aConfig y traducciones recargadas."
+  admin_reload_failed: "§cLa recarga falló: {error}"
   admin_integrations: "§7Integraciones ({count}): {integrations}"
   admin_info_hint: "§7Usa §f/bp info <jugador>§7 para ver sus bloques protegidos."
   admin_debug_hint: "§7Ejecutando diagnósticos..."
-  admin_config_no_gui: "§eEl editor de configuración requiere la API de diálogos (Paper 1.21.7+). Edita config.yml manualmente."
   notify_opened: "§7{player} §fabrió tu §e{block}§f."
   notify_item_taken: "§7{player} §ftomó §e{amount}x {item}§f de tu §e{block}§f."
   notify_item_placed: "§7{player} §fpuso §e{amount}x {item}§f en tu §e{block}§f."
@@ -359,8 +345,6 @@ messages:
   timed_access_granted: "§aAcceso temporal concedido por §f{duration}§a."
   timed_access_over_max: "§cLa duración supera el máximo configurado ({duration})."
   timed_access_invalid_state: "§cEl acceso temporal solo está disponible para amigos en un bloque específico."
-  user_transfer_hint: "§7Mira un bloque tuyo y usa: §f/bp transfer <jugador>"
-  user_timed_hint: "§7Mira un bloque tuyo y usa: §f/bp timed <jugador> <segundos>"
   # -- Admin unlock / /bp unlock GUI --
   admin_unlock_success: "§aBloque en {x} {y} {z} ({world}) desprotegido."
   admin_unlock_failed: "§cNo se pudo desproteger ese bloque."
@@ -389,14 +373,7 @@ messages:
   auto_drop:
     toggle_feedback: "{action} {name} en auto_drop_to_inventory"
     toggle_family_feedback: "{action} {family} en auto_drop_to_inventory"
-  groups:
-    created: "§aGrupo creado. Este bloque es ahora el primer miembro."
-    dissolved: "§aGrupo disuelto. Se eliminaron {count} bloque(s) del grupo."
-    joined: "§aBloque añadido al grupo."
-    left: "§aBloque eliminado del grupo."
-    not_owner: "§cNo eres el dueño de este bloque."
-    already_in_group: "§cEste bloque ya pertenece a un grupo. Sal del grupo actual primero."
-    disabled: "§cLos grupos de protección están desactivados en este servidor."
+    search_no_results: "No se encontraron bloques para '{query}'."
   debug_usage: "§cUso: /bp debug <run|...>"
   console_warn_prefix: "§c[BlockProt AVISO] "
   cmd_usage_menus: "§cUso: /bp <user|admin>"
@@ -453,8 +430,6 @@ console:
   audit_logger_started: "Registro de auditoría iniciado."
   audit_logger_failed: "No se pudo iniciar el registro de auditoría: {error}"
   worldedit_listener_enabled: "Monitor de auto-protección de pegados WorldEdit activado."
-  claims_system_enabled: "Sistema de parcelas activado."
-  claims_system_disabled: "Sistema de parcelas desactivado (claims_enabled=false)."
   worlds_yml_syntax_error: "worlds.yml tiene un error de sintaxis YAML; restaurando valores por defecto: {error}"
   worlds_yml_restored: "worlds.yml restaurado desde los valores internos."
   worlds_yml_restore_failed: "No se pudo restaurar worlds.yml: {error}"
@@ -500,6 +475,7 @@ console:
   update:
     available: "Hay una nueva versión ESTABLE de BlockProt Reloaded disponible: {version}"
     available_hotfix: "IMPORTANTE: hay un parche de errores (hotfix) de BlockProt Reloaded disponible: {version}! Arregla bugs de la versión actual ({base_version})."
+    available_dev: "Hay una nueva build de desarrollo experimental (BEDev) de BlockProt Reloaded disponible: {version}. NO es una versión estable y solo se publica en GitHub."
     up_to_date: "BlockProt Reloaded está actualizado"
   auto_reload_disabled: "Auto-recarga desactivada (auto_reload_configs: false). La configuración NO se recargará sola - usa /bp reload después de cada cambio."
   boot_configuration: "Configuración"
@@ -522,15 +498,6 @@ console:
   boot_update_ahead: "Más nueva que el último release ({version})"
   boot_update_not_checked: "No comprobado"
   boot_update_download: "Descargar: {url}"
-  boot:
-    configuration: "Configuración"
-    listeners: "Eventos"
-    commands: "Comandos"
-    startup_time: "Tiempo de inicio"
-    loaded: "Cargado"
-    registered: "Registrado"
-    hooked: "Conectado"
-    not_installed: "No instalado"
   migration_start: "Migrando datos de {source} a {target}..."
   migration_done: "Migración desde {source} completada. Se conservó la configuración y las listas de bloques anteriores. La carpeta antigua no fue modificada."
   migration_failed: "La migración desde {source} falló: {error}"
@@ -577,6 +544,8 @@ dialogs:
   friends:
     header: "Amigos"
     manage_hint: "Administra tu lista de amigos predeterminados:"
+    select_candidate_hint: "¿A quién querías decir? Selecciona un candidato:"
+    select_candidate_score: "Similitud: {score}%"
     public_make: "Hacer Público"
     public_current: "Actualmente: Público"
     private_current: "Actualmente: Privado"
@@ -607,6 +576,8 @@ dialogs:
       workstations: "Estaciones"
       interactive: "Interactivos"
       entities: "Entidades"
+  auto_drop:
+    search_prompt: "Escribe el nombre del bloque"
   info:
     header: "Jugadores con Bloques"
     protected_blocks: "Bloques protegidos de"
@@ -691,17 +662,7 @@ dialogs:
 
   admin_config:
     title: "Config Admin"
-    header: "Config Admin"
     hint: "Selecciona una sección de config.yml para editar:"
-    cat_general: "General"
-    cat_general_desc: "Ajustes generales del plugin."
-    cat_protection: "Protección"
-    cat_protection_desc: "Comportamiento de protección de bloques."
-    cat_mechanics: "Mecánicas"
-    cat_mechanics_desc: "Ajustes de mecánicas del juego."
-    cat_limits: "Límites"
-    cat_limits_desc: "Límites de jugadores y bloques."
-    cat_notifications_desc: "Ajustes de notificaciones."
     cat_language: "Idioma"
     cat_worlds: "Mundos"
     cat_players: "Jugadores y amigos"
@@ -723,28 +684,6 @@ dialogs:
     new_value_prompt: "nuevo {key}"
     invalid_number: "§cNumero invalido: {input}"
     confirm_value: "Confirmar"
-    lock_on_place: "Auto-bloquear bloques al colocarlos."
-    public_is_friend: "Los bloques públicos cuentan como amigos."
-    redstone_disallowed: "No permitir interacción con redstone por defecto."
-    auto_reload: "Recargar configuración al cambiar archivo."
-    toggle_lang: "Cambiar versión de idioma."
-    protect_explosions: "Proteger bloques bloqueados de explosiones."
-    piston_movement: "Evitar que pistones muevan bloques bloqueados."
-    shulker_break: "Limpiar protección al romper un shulker."
-    allow_break: "Permitir romper bloques protegidos (datos se conservan)."
-    spawn_protection: "Respetar la protección de spawn vanilla."
-    simplified_hopper: "Lógica de tolva simplificada para rendimiento."
-    lock_effects: "Mostrar partículas en bloques bloqueados."
-    lock_sounds: "Reproducir sonidos en bloques bloqueados."
-    world_expiry: "Activar caducidad global de protecciones inactivas."
-    entity_protection: "Activar protección de entidades."
-    backups: "Crear copias de seguridad automáticas."
-    session_log: "Activar registro de sesión."
-    max_blocks: "Máximo de bloques por jugador (-1 = ilimitado)."
-    hint_cooldown: "Cooldown entre ayudas (segundos)."
-    friend_search: "Umbral de similitud (0.0-1.0)."
-    notify_updates: "Notificar a operadores sobre actualizaciones."
-    owner_notifications: "Permitir notificaciones al dueño."
     language:
       language_file: "El archivo de idioma para traducciones."
       toggle_category: "Activar o Desactivar Idiomas"
@@ -817,6 +756,9 @@ dialogs:
       timed_access: "Duración máxima de acceso temporal (días)."
       timed_access_title: "Duración Máxima de Acceso"
       timed_access_hint: "Máx días"
+      locking_title: "Bloqueo"
+      behavior_title: "Comportamiento"
+      effects_title: "Efectos"
     entity:
       protection_enabled: "Activar protección de entidades."
       protection_enabled_title: "Protección de Entidades"
@@ -872,7 +814,6 @@ dialogs:
 
 worlds:
   scan_start: "Escaneando mundos... ({count} cargados)"
-  scan_world_added: "Mundo '{world}' agregado a worlds.yml con proteccion activada."
   scan_complete: "Escaneo de mundos completado: {count} mundo(s) detectado(s), {added} agregado(s) a worlds.yml. Detalles en el log de sesion."
   status: "Estado"
   protected_count: "Bloques protegidos"

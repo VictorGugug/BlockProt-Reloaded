@@ -155,8 +155,11 @@ public final class EntityFriendManageInventory extends BlockProtInventory {
                 for (var profile : profiles) {
                     int idx = uuidSnapshot.indexOf(profile.getUniqueId());
                     if (idx < 0) continue;
-                    String name = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
-                    setPlayerSkull(idx, BlockProtInventory.createPlayerProfile(profile.getUniqueId(), name));
+                    final String pName = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
+                    final UUID pUuid = profile.getUniqueId();
+                    final int slot = idx;
+                    Bukkit.getScheduler().runTask(BlockProt.getInstance(),
+                        () -> setPlayerSkullAsync(slot, player, pUuid, pName));
                 }
             } catch (Exception ignored) {}
         });

@@ -35,6 +35,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Dialog counterpart of {@code AutoDropInventory}: lists the families eligible
@@ -59,6 +60,11 @@ public final class AutoDropDialog {
     private AutoDropDialog() {}
 
     public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin) {
+        show(player, backOrigin, null);
+    }
+
+    public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
+                            @Nullable DialogButton.DialogClickHandler parentBack) {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
 
@@ -90,14 +96,27 @@ public final class AutoDropDialog {
                     .append(Component.text(" (" + active + "/" + total + ")", TextColor.color(0x888888)))
                     .build(),
                 Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__LEFT_CLICK_HINT)), TextColor.color(0x888888)),
-                p -> AutoDropFamilyDialog.show(p, backOrigin, family)
+                p -> AutoDropFamilyDialog.show(p, backOrigin, family, parentBack)
             ));
         }
+
+        DialogButton searchBtn = new DialogButton("search",
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__SEARCH))
+                + stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH)), NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_LORE)), TextColor.color(0x888888)),
+            p -> {
+                bridge.closeDialog(p);
+                de.sean.blockprot.bukkit.inventories.AutoDropSearchInventory.startSearchFromDialog(p, backOrigin, parentBack);
+            }
+        );
+        buttons.add(searchBtn);
 
         DialogButton backBtn = new DialogButton("back",
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            p -> LockablesDialog.show(p, backOrigin)
+            parentBack != null
+                ? parentBack
+                : backOrigin == DialogOrigin.ADMIN_MENU ? p -> AdminMenuDialog.show(p) : null
         );
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 1);

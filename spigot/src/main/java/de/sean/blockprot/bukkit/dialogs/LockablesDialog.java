@@ -25,6 +25,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.config.WorldsConfig;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -34,6 +35,7 @@ import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -106,8 +108,21 @@ public final class LockablesDialog {
         buttons.add(new DialogButton("auto_drop",
             Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP)), SOFT_BLUE),
             Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP_LORE)), TextColor.color(0x888888)),
-            p -> AutoDropDialog.show(p, backOrigin)
+            p -> AutoDropDialog.show(p, backOrigin, q -> LockablesDialog.show(q, backOrigin))
         ));
+
+        if (cfg.isPerWorldsConfigEnabled()) {
+            int worldCount = Bukkit.getWorlds().size();
+            int configuredCount = worldsConfigCount();
+            buttons.add(new DialogButton("world_lockables",
+                Component.text(stripColor(Translator.get(TranslationKey.WORLDS__PER_WORLD_CONFIG)), PASTEL_PURPLE),
+                Component.join(JoinConfiguration.newlines(),
+                    Component.text(worldCount + " " + stripColor(Translator.get(TranslationKey.WORLDS__WORLDS)), TextColor.color(0x888888)),
+                    Component.text(stripColor(Translator.get(TranslationKey.WORLDS__CONFIGURED))
+                        + ": " + configuredCount + "/" + worldCount, TextColor.color(0x888888))),
+                p -> WorldLockableSelectionDialog.show(p, backOrigin)
+            ));
+        }
 
         List<DialogButton> navButtons = new ArrayList<>();
         if (safePage > 0) {
@@ -128,13 +143,23 @@ public final class LockablesDialog {
         buttons.addAll(navButtons);
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
-        DialogButton backBtn = new DialogButton("back",
-            Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
-            backHint(exitOrigin),
-            backAction(player, exitOrigin)
+        DialogButton backBtn = DialogNavigation.backButton(
+            exitOrigin,
+            exitOrigin == DialogOrigin.ADMIN_MENU ? p -> AdminMenuDialog.show(p) : null,
+            exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__RETURN_PREVIOUS : null
         );
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 1);
+    }
+
+    private static int worldsConfigCount() {
+        WorldsConfig wc = BlockProt.getWorldsConfig();
+        if (wc == null) return 0;
+        int count = 0;
+        for (org.bukkit.World w : Bukkit.getWorlds()) {
+            if (wc.hasWorldConfig(w)) count++;
+        }
+        return count;
     }
 
     private static List<CategoryEntry> buildCategoryInfo(DefaultConfig cfg) {
@@ -146,6 +171,7 @@ public final class LockablesDialog {
         catMap.put("Signs", new ArrayList<>());
         catMap.put("Doors", new ArrayList<>());
         catMap.put("Trapdoors", new ArrayList<>());
+        catMap.put("Beds", new ArrayList<>());
         catMap.put("Gates", new ArrayList<>());
         catMap.put("Workstations", new ArrayList<>());
         catMap.put("Interactive", new ArrayList<>());
@@ -158,25 +184,32 @@ public final class LockablesDialog {
             if (n.contains("SHULKER_BOX")) dest = catMap.get("Shulkers");
             else if (n.endsWith("_DOOR") && !n.contains("TRAP") && !n.contains("BOAT")) dest = catMap.get("Doors");
             else if (n.contains("TRAPDOOR")) dest = catMap.get("Trapdoors");
+            else if (n.endsWith("_BED")) dest = catMap.get("Beds");
             else if (n.contains("FENCE_GATE")) dest = catMap.get("Gates");
             else if ((n.contains("FURNACE") || n.equals("BLAST_FURNACE") || n.equals("SMOKER")) && m.isBlock()) dest = catMap.get("Furnaces");
             else if ((n.contains("CHEST") || n.equals("ENDER_CHEST")) && m.isBlock() && !n.contains("BOAT")) dest = catMap.get("Chests");
-            else if (n.endsWith("_SIGN") || n.endsWith("_WALL_SIGN") || n.endsWith("_HANGING_SIGN")) dest = catMap.get("Signs");
-            else if ((n.equals("BARREL") || n.equals("COMPOSTER") || n.equals("DECORATED_POT") || n.equals("CHISELED_BOOKSHELF") || n.equals("BEACON")) && m.isBlock()) dest = catMap.get("Storage");
-            else if ((n.contains("CRAFTING") || n.contains("CARTOGRAPHY") || n.contains("GRINDSTONE") || n.contains("STONECUTTER") || n.contains("SMITHING") || n.contains("LOOM") || n.contains("BREWING_STAND") || n.contains("CAULDRON") || n.contains("ENCHANTING_TABLE") || n.contains("ANVIL")) && m.isBlock()) dest = catMap.get("Workstations");
-            else if ((n.contains("BUTTON") || n.contains("LEVER") || n.contains("DAYLIGHT_DETECTOR") || n.endsWith("_BED") || n.equals("JUKEBOX") || n.equals("NOTE_BLOCK") || n.equals("BELL") || n.equals("DISPENSER") || n.equals("DROPPER") || n.equals("HOPPER") || n.equals("OBSERVER") || n.equals("TARGET") || n.contains("PRESSURE_PLATE")) && m.isBlock()) dest = catMap.get("Interactive");
-            else if (cfg.isLockableEntity(m)) dest = catMap.get("Entities");
-            // Every category above is matched by material-name heuristics that don't always
-            // line up with BlockFamilyParser's real family membership (e.g. buttons, LEVER,
-            // DAYLIGHT_DETECTOR, beds, OBSERVER, TARGET, CRAFTING_TABLE match a category here
-            // but aren't part of any lockable family). Listing those produces a button that
-            // toggleLockable() silently no-ops on, since configKeyForMaterial() finds no family
-            // for it. This includes Entities: cfg.isLockableEntity() is backed by its own
-            // hand-written validator in DefaultConfig.loadBlocksFromConfig(), a separate list
-            // from BlockFamilyParser.isEntityMaterial() that must be kept in sync by hand, so
-            // it is not a structural guarantee against the same silent no-op. Gate every
-            // category, including Entities, on real family membership so every listed material
-            // is guaranteed to actually toggle regardless of whether those two lists drift.
+            else if (n.endsWith("_SIGN") || n.endsWith("_WALL_SIGN") || n.endsWith("_HANGING_SIGN") || n.endsWith("_WALL_HANGING_SIGN")) dest = catMap.get("Signs");
+            else if ((n.equals("BARREL") || n.endsWith("_SHELF") || n.equals("DECORATED_POT") || n.equals("CHISELED_BOOKSHELF")
+                || n.equals("CRAFTER") || n.equals("BREWING_STAND") || n.equals("HOPPER") || n.equals("DISPENSER")
+                || n.equals("DROPPER") || n.equals("BEEHIVE") || n.equals("BEE_NEST") || n.equals("JUKEBOX")
+                || n.equals("LECTERN") || n.equals("BEACON")) && m.isBlock()) dest = catMap.get("Storage");
+            else if ((n.equals("GRINDSTONE") || n.equals("STONECUTTER") || n.equals("LOOM") || n.equals("CARTOGRAPHY_TABLE")
+                || n.equals("SMITHING_TABLE") || n.equals("ENCHANTING_TABLE") || n.equals("FLETCHING_TABLE")
+                || n.contains("ANVIL")) && m.isBlock()) dest = catMap.get("Workstations");
+            else if ((n.contains("BUTTON") || n.contains("LEVER") || n.contains("DAYLIGHT_DETECTOR")
+                || n.contains("PRESSURE_PLATE") || n.equals("OBSERVER") || n.equals("TARGET")
+                || n.equals("NOTE_BLOCK") || n.equals("BELL") || n.equals("COMPOSTER")
+                || n.equals("DRAGON_EGG") || n.contains("CAULDRON")) && m.isBlock()) dest = catMap.get("Interactive");
+            else if (BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.ENTITIES).contains(m)) dest = catMap.get("Entities");
+            // Every remaining block family member falls back to Interactive so the dialog
+            // mirrors LockablesInventory.classify(), which sends everything unclassified to
+            // INTERACTIVE. The gate below keeps the list down to real family members: a
+            // material that matches a category here but belongs to no lockable family (e.g.
+            // buttons, LEVER, DAYLIGHT_DETECTOR when no lockable_blocks family covers them)
+            // would produce a button whose toggleLockable() silently no-ops, because
+            // configKeyForMaterial() finds no family for it. Gate every category, including
+            // Entities, on real family membership so every listed material is guaranteed to
+            // actually toggle regardless of how the hand-written heuristics drift.
             if (dest != null && !isKnownLockableMaterial(m)) dest = null;
             if (dest != null) dest.add(m);
         }
@@ -223,6 +256,7 @@ public final class LockablesDialog {
             case "Signs" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__SIGNS));
             case "Doors" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__DOORS));
             case "Trapdoors" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__TRAPDOORS));
+            case "Beds" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__BEDS));
             case "Gates" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__GATES));
             case "Workstations" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__WORKSTATIONS));
             case "Interactive" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__INTERACTIVE));
@@ -233,20 +267,6 @@ public final class LockablesDialog {
 
     private static String stripColor(String s) {
         return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
-    }
-
-    private static Component backHint(DialogOrigin origin) {
-        switch (origin) {
-            case ADMIN_MENU: return Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_ADMIN_MENU)), TextColor.color(0x888888));
-            default: return Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888));
-        }
-    }
-
-    private static DialogButton.DialogClickHandler backAction(Player player, DialogOrigin origin) {
-        switch (origin) {
-            case ADMIN_MENU: return p -> AdminMenuDialog.show(p);
-            default: return null;
-        }
     }
 
     private record CategoryEntry(String label, List<Material> materials, long activeCount, long totalCount) {}

@@ -152,7 +152,7 @@ public final class ComponentMessages {
     }
 
     /** Reads an item's lore as components. */
-    @SuppressWarnings("deprecation") // Shut up (～￣▽￣)～
+    @SuppressWarnings("deprecation") // Shut up (legacy API, replaced by components)
     @Nullable
     public static List<Component> lore(@NotNull ItemMeta meta) {
         if (COMPONENT_ITEM_META_SUPPORTED) {

@@ -24,7 +24,6 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtAPI;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
-import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.commands.AboutCommand;
 import de.sean.blockprot.bukkit.commands.DebugCommand;
 import de.sean.blockprot.bukkit.dialogs.AdminConfigDialog;
@@ -53,19 +52,25 @@ public class AdminMenuInventory extends BlockProtInventory {
 
     private static final int SLOT_LOCKABLES     = 10;
     private static final int SLOT_CONFIG        = 11;
-    private static final int SLOT_AUTO_DROP     = 12;
-    private static final int SLOT_RELOAD        = 14;
-    private static final int SLOT_UPDATE        = 15;
-    private static final int SLOT_INTEGRATIONS  = 19;
-    private static final int SLOT_STATS         = 20;
-    private static final int SLOT_DEBUG         = 21;
-    private static final int SLOT_INFO          = 22;
-    private static final int SLOT_ABOUT         = 23;
-    private static final int SLOT_WORLD_EXPIRY  = 28;
-    private static final int SLOT_PROT_DEL      = 29;
+    private static final int SLOT_WORLD_EXPIRY  = 13;
+    private static final int SLOT_PROT_DEL      = 14;
+    private static final int SLOT_STATS         = 19;
+    private static final int SLOT_INTEGRATIONS  = 20;
+    private static final int SLOT_UPDATE        = 21;
+    private static final int SLOT_RELOAD        = 22;
+    private static final int SLOT_DEBUG         = 23;
+    private static final int SLOT_INFO          = 24;
+    private static final int SLOT_ABOUT         = 25;
     private static final int SLOT_BACK          = 49;
 
-    private static final int[] SEPARATOR_SLOTS = {0,1,2,3,4,5,6,7,8, 9,13,17, 18,26, 27,35, 36,37,38,39,40,41,42,43,44, 45,46,47,48,50,51,52,53};
+    private static final int[] SEPARATOR_SLOTS = {
+        0,1,2,3,4,5,6,7,8,
+        9, 15,16,17,
+        18, 26,
+        27,28,29,30,31,32,33,34,35,
+        36,37,38,39,40,41,42,43,44,
+        45,46,47,48, 50,51,52,53
+    };
 
     public AdminMenuInventory() { super(false); }
 
@@ -87,36 +92,34 @@ public class AdminMenuInventory extends BlockProtInventory {
         inventory.setItem(SLOT_CONFIG, item(Material.REPEATER,
             "§e" + stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CONFIG)),
             stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CONFIG_LORE))));
-        inventory.setItem(SLOT_AUTO_DROP, item(Material.DROPPER,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP_LORE)));
-        inventory.setItem(SLOT_RELOAD, item(Material.COMPARATOR,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD_LORE)));
-        inventory.setItem(SLOT_UPDATE, item(Material.SPYGLASS,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE_LORE)));
-        inventory.setItem(SLOT_INTEGRATIONS, item(Material.CHAIN,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS_LORE)));
-        inventory.setItem(SLOT_STATS, item(Material.BOOK,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS_LORE)));
-        inventory.setItem(SLOT_DEBUG, item(Material.COMMAND_BLOCK,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG_LORE)));
-        inventory.setItem(SLOT_INFO, item(Material.PLAYER_HEAD,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO_LORE)));
-        inventory.setItem(SLOT_ABOUT, item(Material.NETHER_STAR,
-            "§f" + stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)),
-            stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT_LORE))));
         inventory.setItem(SLOT_WORLD_EXPIRY, item(Material.CLOCK,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY_LORE)));
         inventory.setItem(SLOT_PROT_DEL, item(Material.BARRIER,
             Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__TITLE),
             ""));
+
+        inventory.setItem(SLOT_STATS, item(Material.BOOK,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS_LORE)));
+        inventory.setItem(SLOT_INTEGRATIONS, item(Material.CHAIN,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS_LORE)));
+        inventory.setItem(SLOT_UPDATE, item(Material.SPYGLASS,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE_LORE)));
+        inventory.setItem(SLOT_RELOAD, item(Material.COMPARATOR,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD_LORE)));
+        inventory.setItem(SLOT_DEBUG, item(Material.COMMAND_BLOCK,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG_LORE)));
+        setPlayerSkullAsync(SLOT_INFO, player, player.getUniqueId(), player.getName(),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO_LORE));
+        inventory.setItem(SLOT_ABOUT, item(Material.NETHER_STAR,
+            "§f" + stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)),
+            stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT_LORE))));
 
         InventoryState state = InventoryState.get(player.getUniqueId());
         if (state != null && state.origin != InventoryState.MenuOrigin.NONE) {
@@ -147,22 +150,18 @@ public class AdminMenuInventory extends BlockProtInventory {
             player.openInventory(new LockablesInventory().fill(player, 0));
 
         } else if (slot == SLOT_CONFIG) {
-            player.closeInventory();
-            if (VersionCompat.hasDialogApi()) {
+            if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
+                player.closeInventory();
                 AdminConfigDialog.show(player, DialogOrigin.ADMIN_MENU);
             } else {
-                ComponentMessages.sendLegacyActionBar(player,
-                    Translator.get(TranslationKey.MESSAGES__ADMIN_CONFIG_NO_GUI));
+                InventoryState newState = InventoryState.builder()
+                    .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                    .build();
+                newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
+                newState.currentPageIndex = 0;
+                InventoryState.set(player.getUniqueId(), newState);
+                player.openInventory(new AdminConfigInventory().fill(player));
             }
-
-        } else if (slot == SLOT_AUTO_DROP) {
-            InventoryState newState = InventoryState.builder()
-                .origin(InventoryState.MenuOrigin.ADMIN_MENU)
-                .build();
-            newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
-            newState.currentPageIndex = 0;
-            InventoryState.set(player.getUniqueId(), newState);
-            player.openInventory(new AutoDropInventory().fill(player));
 
         } else if (slot == SLOT_RELOAD) {
             player.closeInventory();
@@ -176,9 +175,12 @@ public class AdminMenuInventory extends BlockProtInventory {
         } else if (slot == SLOT_UPDATE) {
             player.closeInventory();
             ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE_LORE));
+            List<Player> opRecipients = new ArrayList<>();
+            for (Player online : Bukkit.getOnlinePlayers()) {
+                if (online.isOp()) opRecipients.add(online);
+            }
             Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(),
-                new UpdateChecker(BlockProt.getPluginVersion(),
-                    new ArrayList<>(Bukkit.getOnlinePlayers())));
+                new UpdateChecker(BlockProt.getPluginVersion(), opRecipients));
 
         } else if (slot == SLOT_INTEGRATIONS) {
             player.closeInventory();

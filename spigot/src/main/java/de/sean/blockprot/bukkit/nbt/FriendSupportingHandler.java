@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.nbt;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.util.AsyncGuard;
 import de.tr7zw.changeme.nbtapi.NBTCompound;
 import org.jetbrains.annotations.NotNull;
 
@@ -52,6 +53,7 @@ public abstract class FriendSupportingHandler<T extends NBTCompound> extends NBT
     protected void onFriendsMutated() {}
 
     private NBTCompound compound() {
+        AsyncGuard.assertSync("FriendSupportingHandler.compound()");
         return container.getOrCreateCompound(friendNbtKey);
     }
 
@@ -119,11 +121,13 @@ public abstract class FriendSupportingHandler<T extends NBTCompound> extends NBT
     }
 
     public void addFriend(@NotNull final String friend) {
+        AsyncGuard.assertSync("FriendSupportingHandler.addFriend(String)");
         compound().addCompound(friend).setString("id", friend);
         onFriendsMutated();
     }
 
     public void addFriend(@NotNull final FriendHandler friend) {
+        AsyncGuard.assertSync("FriendSupportingHandler.addFriend(FriendHandler)");
         compound().addCompound(friend.getName()).mergeCompound(friend.container);
         onFriendsMutated();
     }

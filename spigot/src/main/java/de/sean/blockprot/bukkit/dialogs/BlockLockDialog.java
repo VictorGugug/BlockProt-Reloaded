@@ -49,6 +49,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public final class BlockLockDialog {
 
@@ -62,6 +63,7 @@ public final class BlockLockDialog {
     private BlockLockDialog() {}
 
     public static void showBlock(@NotNull Player player, @NotNull Block block) {
+        DialogState.clear(player);
         showBlock(player, block, DialogOrigin.NONE);
     }
 
@@ -76,6 +78,7 @@ public final class BlockLockDialog {
     }
 
     public static void show(@NotNull Player player, @NotNull Block block, @NotNull BlockNBTHandler handler) {
+        DialogState.clear(player);
         show(player, block, handler, DialogOrigin.NONE);
     }
 
@@ -151,15 +154,22 @@ public final class BlockLockDialog {
                 actions.add(actionBtn(
                     stripColor(Translator.get(TranslationKey.INVENTORIES__BLOCK_SETTINGS__TITLE)),
                     SOFT_BLUE,
-                    p -> BlockSettingsDialog.show(p, block, handler)
+                    p -> {
+                        DialogState.push(p, pl -> BlockLockDialog.show(pl, block, handler));
+                        BlockSettingsDialog.show(p, block, handler);
+                    }
                 ));
+
             }
 
             if (!BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {
                 actions.add(actionBtn(
                     stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE)),
                     PASTEL_PURPLE,
-                    p -> FriendManageDialog.showForBlock(p, block, handler)
+                    p -> {
+                        DialogState.push(p, pl -> BlockLockDialog.show(pl, block, handler));
+                        FriendManageDialog.showForBlock(p, block, handler);
+                    }
                 ));
             }
 
@@ -304,16 +314,20 @@ public final class BlockLockDialog {
         }
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
-        DialogButton exitBtn = new DialogButton("exit",
-            Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
-            Component.text(stripColor(Translator.get(exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__RETURN_PREVIOUS : TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            exitOrigin == DialogOrigin.NONE ? null : (backOrigin == DialogOrigin.ADMIN_MENU ? p -> AdminMenuDialog.show(p) : null)
+        DialogButton exitBtn = DialogNavigation.backButton(
+            exitOrigin,
+            exitOrigin == DialogOrigin.NONE ? null
+                : (backOrigin == DialogOrigin.ADMIN_MENU ? p -> AdminMenuDialog.show(p)
+                : backOrigin == DialogOrigin.USER_MENU ? p -> UserMenuDialog.show(p)
+                : null),
+            TranslationKey.DIALOGS__RETURN_PREVIOUS
         );
 
         bridge.showMultiAction(player, title, body, actions, exitBtn, 3);
     }
 
     public static void showForEntity(@NotNull Player player, @NotNull Entity entity, @NotNull EntityNBTHandler handler) {
+        DialogState.clear(player);
         showForEntity(player, entity, handler, DialogOrigin.NONE);
     }
 
@@ -367,7 +381,10 @@ public final class BlockLockDialog {
                 actions.add(actionBtn(
                     stripColor(Translator.get(TranslationKey.INVENTORIES__BLOCK_SETTINGS__TITLE)),
                     SOFT_BLUE,
-                    p -> EntityBlockSettingsDialog.show(p, entity, handler)
+                    p -> {
+                        DialogState.push(p, pl -> BlockLockDialog.showForEntity(pl, entity, handler));
+                        EntityBlockSettingsDialog.show(p, entity, handler);
+                    }
                 ));
             }
 
@@ -436,10 +453,10 @@ public final class BlockLockDialog {
         }
 
         DialogOrigin exitOrigin2 = DialogBridgeFactory.resolveOrigin(backOrigin);
-        DialogButton exitBtn2 = new DialogButton("exit",
-            Component.text(stripColor(Translator.get(exitOrigin2 == DialogOrigin.NONE ? TranslationKey.DIALOGS__CLOSE : TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
-            Component.text(stripColor(Translator.get(exitOrigin2 == DialogOrigin.NONE ? TranslationKey.DIALOGS__RETURN_PREVIOUS : TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
-            null
+        DialogButton exitBtn2 = DialogNavigation.backButton(
+            exitOrigin2,
+            null,
+            TranslationKey.DIALOGS__RETURN_PREVIOUS
         );
 
         bridge.showMultiAction(player, title, body, actions, exitBtn2, 3);

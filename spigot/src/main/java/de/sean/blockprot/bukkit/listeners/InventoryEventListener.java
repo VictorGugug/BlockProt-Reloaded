@@ -174,8 +174,21 @@ public class InventoryEventListener implements Listener {
         final InventoryState state = InventoryState.get(player.getUniqueId());
         if (state == null) return;
         InventoryHolder holder = event.getInventory().getHolder();
-        if (holder instanceof BlockProtInventory) {
+        if (holder instanceof BlockProtInventory bpInventory) {
             ((BlockProtInventory) holder).onClose(event, state);
+            if (!state.originStack.isEmpty()) {
+                // Player-initiated close (ESC / E / X) on a submenu: reopen the parent
+                // menu next tick. Programmatic navigation reopens another inventory
+                // before the task runs, so it never triggers this path.
+                Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                    Player online = Bukkit.getPlayer(player.getUniqueId());
+                    if (online == null || !online.isOnline()) return;
+                    if (online.getOpenInventory().getTopInventory().getHolder() instanceof BlockProtInventory) return;
+                    InventoryState st = InventoryState.get(online.getUniqueId());
+                    if (st == null || st.originStack.isEmpty()) return;
+                    bpInventory.goBack(online, st);
+                });
+            }
         }
     }
 

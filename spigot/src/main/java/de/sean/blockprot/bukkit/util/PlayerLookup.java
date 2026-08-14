@@ -24,7 +24,10 @@ import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -93,5 +96,33 @@ public final class PlayerLookup {
         }
 
         return best;
+    }
+
+    /**
+     * A candidate player identity paired with its similarity score.
+     */
+    public record ScoredMatch(@NotNull UUID uuid, @NotNull String name, double similarity) {}
+
+    /**
+     * All fuzzy-match candidates at or above {@code minSimilarity}, sorted by
+     * descending similarity and capped at {@code limit}.
+     */
+    @NotNull
+    public static List<ScoredMatch> findCandidates(
+            @NotNull String query,
+            double minSimilarity,
+            int limit,
+            @Nullable UUID exclude
+    ) {
+        var matches = new ArrayList<ScoredMatch>();
+        for (final var entry : candidates(exclude).entrySet()) {
+            double score = StringUtil.similarity(entry.getValue(), query);
+            if (score >= minSimilarity) {
+                matches.add(new ScoredMatch(entry.getKey(), entry.getValue(), score));
+            }
+        }
+        matches.sort(Comparator.comparingDouble(ScoredMatch::similarity).reversed());
+        if (matches.size() > limit) return matches.subList(0, limit);
+        return matches;
     }
 }

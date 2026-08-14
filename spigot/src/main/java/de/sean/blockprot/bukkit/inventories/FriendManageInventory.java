@@ -217,7 +217,10 @@ public final class FriendManageInventory extends BlockProtInventory {
 
                         if (!profile.getUniqueId().equals(FriendSupportingHandler.publicUuid)) {
                             final String pName = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
-                            setPlayerSkull(index, BlockProtInventory.createPlayerProfile(profile.getUniqueId(), pName));
+                            final UUID pUuid = profile.getUniqueId();
+                            final int slot = index;
+                            Bukkit.getScheduler().runTask(BlockProt.getInstance(),
+                                () -> setPlayerSkullAsync(slot, player, pUuid, pName));
                         }
                         i++;
                     }

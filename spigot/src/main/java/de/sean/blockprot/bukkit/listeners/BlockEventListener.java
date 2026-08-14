@@ -49,7 +49,11 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
+import org.bukkit.block.Container;
+import org.bukkit.block.data.Bisected;
+import org.bukkit.block.data.type.Bed;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -61,7 +65,9 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -132,45 +138,109 @@ public class BlockEventListener implements Listener {
         }
 
         if (!event.isCancelled()) {
-            String ownerUuid = handler.getOwner();
-            if (!ownerUuid.isBlank()) {
-                OfflinePlayer owner = Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid));
-                if (owner.isOnline() && owner.getPlayer() != null) {
-                    StatHandler.removeContainer(owner.getPlayer(), event.getBlock());
-                } else {
-                    PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
-                    StatHandler.getStatisticByUuid(stat, UUID.fromString(ownerUuid));
-                    stat.remove(event.getBlock().getLocation());
-                    BlockCountStatistic countStat = new BlockCountStatistic();
-                    StatHandler.getStatistic(countStat);
-                    countStat.decrement();
-                    StatHandler.markDirty();
-                }
-            }
-            HopperEventListener.invalidate(event.getBlock());
-            handler.clear();
+            cleanupBreak(event.getBlock(), handler);
         }
+    }
+
+    private void cleanupBreak(@NotNull Block block, @NotNull BlockNBTHandler handler) {
+        String ownerUuid = handler.getOwner();
+        if (!ownerUuid.isBlank()) {
+            OfflinePlayer owner = Bukkit.getOfflinePlayer(UUID.fromString(ownerUuid));
+            if (owner.isOnline() && owner.getPlayer() != null) {
+                StatHandler.removeContainer(owner.getPlayer(), block);
+            } else {
+                PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
+                StatHandler.getStatisticByUuid(stat, UUID.fromString(ownerUuid));
+                stat.remove(block.getLocation());
+                BlockCountStatistic countStat = new BlockCountStatistic();
+                StatHandler.getStatistic(countStat);
+                countStat.decrement();
+                StatHandler.markDirty();
+            }
+        }
+        HopperEventListener.invalidate(block);
+        handler.clear();
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
     public void onAutoDropBlockBreak(BlockBreakEvent event) {
-        if (!BlockProt.getDefaultConfig().isAutoDropToInventory(event.getBlock().getType())) return;
-        if (!BlockProt.getDefaultConfig().isAutoDropToInventoryEnabled(event.getBlock().getWorld())) return;
-        if (BlockProt.getDefaultConfig().isLockableShulkerBox(event.getBlock().getType(), event.getBlock().getWorld())) return;
+        Block block = event.getBlock();
+        if (!BlockProt.getDefaultConfig().isAutoDropToInventory(block.getType())) return;
+        if (!BlockProt.getDefaultConfig().isAutoDropToInventoryEnabled(block.getWorld())) return;
+        if (BlockProt.getDefaultConfig().isLockableShulkerBox(block.getType(), block.getWorld())) return;
         Player player = event.getPlayer();
-        if (player.isOp() || player.hasPermission(Permissions.USER_ADMIN.key())) return;
         if (player.getGameMode() == GameMode.CREATIVE) return;
+        // Blocked break attempts must not deliver the item before the break is cancelled.
+        BlockNBTHandler handler = null;
+        if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) {
+            try {
+                handler = new BlockNBTHandler(block);
+            } catch (RuntimeException e) {
+                return;
+            }
+            if (handler.isProtected()
+                && !handler.isOwner(player.getUniqueId().toString())
+                && !player.hasPermission(Permissions.USER_ADMIN.key())
+                && !BlockProt.getDefaultConfig().shouldAllowBreakProtectedBlocks()) {
+                return;
+            }
+        }
 
-        java.util.Collection<ItemStack> drops = event.getBlock().getDrops(player.getInventory().getItemInMainHand());
-        if (drops.isEmpty()) return;
+        ItemStack tool = player.getInventory().getItemInMainHand();
+        List<ItemStack> items = new ArrayList<>(block.getDrops(tool));
 
-        event.setDropItems(false);
-        for (ItemStack drop : drops) {
-            java.util.HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(drop);
+        BlockState state = block.getState();
+        if (state instanceof Container container) {
+            org.bukkit.inventory.Inventory snapshot = container.getSnapshotInventory();
+            if (snapshot != null) {
+                for (ItemStack content : snapshot.getContents()) {
+                    if (content != null && !content.getType().isAir()) {
+                        items.add(content);
+                    }
+                }
+            }
+        }
+
+        if (items.isEmpty()) return;
+
+        Block partner = findDoubleBlockPartner(block);
+
+        event.setCancelled(true);
+        if (handler != null) {
+            cleanupBreak(block, handler);
+        }
+        block.setType(Material.AIR);
+        if (partner != null) {
+            partner.setType(Material.AIR);
+        }
+
+        for (ItemStack item : items) {
+            java.util.HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(item);
             for (ItemStack overflow : leftover.values()) {
                 player.getWorld().dropItemNaturally(player.getLocation(), overflow);
             }
         }
+    }
+
+    private Block findDoubleBlockPartner(@NotNull Block block) {
+        org.bukkit.block.data.BlockData data = block.getBlockData();
+        if (data instanceof Bed bed) {
+            BlockFace facing = bed.getFacing();
+            Block other = block.getRelative(bed.getPart() == Bed.Part.HEAD ? facing.getOppositeFace() : facing);
+            if (other.getType() == block.getType()
+                && other.getBlockData() instanceof Bed otherBed
+                && otherBed.getPart() != bed.getPart()) {
+                return other;
+            }
+        } else if (data instanceof Bisected bisected) {
+            Block other = block.getRelative(bisected.getHalf() == Bisected.Half.TOP ? BlockFace.DOWN : BlockFace.UP);
+            if (other.getType() == block.getType()
+                && other.getBlockData() instanceof Bisected otherBisected
+                && otherBisected.getHalf() != bisected.getHalf()) {
+                return other;
+            }
+        }
+        return null;
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

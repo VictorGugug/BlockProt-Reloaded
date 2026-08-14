@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.util.SkinCache;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
@@ -47,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Admin GUI listing every player who has played on the server.
@@ -200,24 +202,20 @@ public final class PlayerListInventory extends BlockProtInventory {
 
         renderControls(state);
 
-        List<PlayerEntry> page = entries.subList(offset, offset + max);
-        Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
-            for (int i = 0; i < page.size(); i++) {
-                PlayerEntry e = page.get(i);
-                final int slot = i;
-                var profile = createPlayerProfile(e.player().getUniqueId(), e.name());
-                Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
-                    if (inventory.getViewers().isEmpty()) return;
-                    ItemStack skull = inventory.getItem(slot);
-                    if (skull == null || skull.getType() != Material.PLAYER_HEAD) return;
-                    if (!(skull.getItemMeta() instanceof SkullMeta meta)) return;
-                    if (profile != null) {
-                        try { meta.setOwnerProfile(profile); } catch (Throwable ignored) {}
-                    }
-                    skull.setItemMeta(meta);
-                });
-            }
-        });
+        for (int i = 0; i < max; i++) {
+            PlayerEntry e = entries.get(offset + i);
+            final int slot = i;
+            final UUID pUuid = e.player().getUniqueId();
+            final String pName = e.name();
+            SkinCache.getOrFetchAsync(pName, pUuid).thenAcceptAsync(freshProfile -> {
+                if (inventory.getViewers().isEmpty()) return;
+                ItemStack skull = inventory.getItem(slot);
+                if (skull == null || skull.getType() != Material.PLAYER_HEAD) return;
+                if (!(skull.getItemMeta() instanceof SkullMeta meta)) return;
+                try { meta.setOwnerProfile(freshProfile); } catch (Throwable ignored) {}
+                skull.setItemMeta(meta);
+            }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
+        }
     }
 
     private void renderPlayerSlot(int slot, @NotNull PlayerEntry e, @NotNull Player viewer) {
