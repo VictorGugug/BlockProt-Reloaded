@@ -418,7 +418,7 @@ public class BlockEventListener implements Listener {
 
     @EventHandler
     public void onSignChanged(@NotNull final SignChangeEvent event) {
-        if (BlockProt.getDefaultConfig().isLockableBlock(event.getBlock().getType(), event.getBlock().getWorld())) {
+        if (BlockProt.getDefaultConfig().isLockable(event.getBlock().getType(), event.getBlock().getWorld())) {
             final var handler = new BlockNBTHandler(event.getBlock());
             if (handler.isProtected() && !handler.isOwner(event.getPlayer().getUniqueId()))
                 event.setCancelled(true);
