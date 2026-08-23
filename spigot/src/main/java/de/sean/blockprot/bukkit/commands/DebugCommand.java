@@ -183,6 +183,7 @@ public class DebugCommand implements CommandExecutor {
         runGroup(player, passed, failed, "3.  Translations",       () -> checkTranslations(player, passed, failed));
         runGroup(player, passed, failed, "3b. Language files",     () -> checkLanguages(player, passed, failed));
         runGroup(player, passed, failed, "4.  Lockable blocks",    () -> checkLockableMaterials(player, passed, failed));
+        runGroup(player, passed, failed, "4b. AutoDrop",           () -> checkAutoDrop(player, passed, failed));
         runGroup(player, passed, failed, "5.  Lockable entities",  () -> checkLockableEntities(player, passed, failed));
         runGroup(player, passed, failed, "6.  Item frame protect", () -> checkItemFrameProtection(player, passed, failed));
         runGroup(player, passed, failed, "7.  Raid detection",     () -> checkRaidDetection(player, passed, failed));
@@ -411,6 +412,26 @@ public class DebugCommand implements CommandExecutor {
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("Lockable blocks", e.getMessage()); f.incrementAndGet();
+        }
+    }
+
+    private void checkAutoDrop(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            DefaultConfig cfg = BlockProt.getDefaultConfig();
+            boolean enabled = cfg.isAutoDropToInventoryEnabled();
+            StringBuilder sb = new StringBuilder("enabled=" + enabled + " ");
+            if (enabled) {
+                Material[] check = {
+                    Material.CHEST, Material.FURNACE, Material.OAK_DOOR, Material.RED_BED
+                };
+                for (Material m : check) {
+                    sb.append(m.name()).append("=").append(cfg.isAutoDropToInventory(m)).append(" ");
+                }
+            }
+            BlockProtLogger.pass("AutoDrop: " + sb.toString().trim());
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("AutoDrop", e.getMessage()); f.incrementAndGet();
         }
     }
 

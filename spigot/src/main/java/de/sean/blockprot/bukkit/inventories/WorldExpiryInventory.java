@@ -112,7 +112,13 @@ public final class WorldExpiryInventory extends BlockProtInventory {
 
         if (safePage > 0) setItemStack(SLOT_PREV, Material.ARROW, TranslationKey.INVENTORIES__LAST_PAGE);
         if (safePage < totalPages - 1) setItemStack(SLOT_NEXT, Material.ARROW, TranslationKey.INVENTORIES__NEXT_PAGE);
-        setBackButton(SLOT_BACK);
+        InventoryState state = InventoryState.get(player.getUniqueId());
+        boolean hasParent = state != null && (state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty());
+        if (hasParent) {
+            setBackButton(SLOT_BACK);
+        } else {
+            setItemStack(SLOT_BACK, Material.BARRIER, TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        }
 
         return inventory;
     }
@@ -124,7 +130,15 @@ public final class WorldExpiryInventory extends BlockProtInventory {
         int slot = event.getRawSlot();
         if (slot < 0 || slot >= getSize()) return;
 
-        if (slot == SLOT_BACK) { goBack(player, state); return; }
+        if (slot == SLOT_BACK) {
+            boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+            if (hasParent) {
+                goBack(player, state);
+            } else {
+                closeAndOpen(player, null);
+            }
+            return;
+        }
 
         if (slot == SLOT_PREV && cachedPage > 0) {
             state.currentPageIndex = cachedPage - 1;

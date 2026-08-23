@@ -246,7 +246,7 @@ public final class PaperDialogBridge implements DialogBridge {
             action = DialogAction.customClick(
                 (view, audience) -> {
                     if (audience instanceof Player player) {
-                        closeDialogOrInventory(player);
+                        org.bukkit.Bukkit.getScheduler().runTask(de.sean.blockprot.bukkit.BlockProt.getInstance(), () -> closeDialogOrInventory(player));
                     }
                 },
                 CLICK_OPTIONS
@@ -255,7 +255,7 @@ public final class PaperDialogBridge implements DialogBridge {
             action = DialogAction.customClick(
                 (view, audience) -> {
                     if (audience instanceof Player player) {
-                        handler.handle(player);
+                        org.bukkit.Bukkit.getScheduler().runTask(de.sean.blockprot.bukkit.BlockProt.getInstance(), () -> handler.handle(player));
                     }
                 },
                 CLICK_OPTIONS

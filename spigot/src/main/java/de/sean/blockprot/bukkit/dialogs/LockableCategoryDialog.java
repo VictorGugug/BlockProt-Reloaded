@@ -105,20 +105,20 @@ public final class LockableCategoryDialog {
             ));
         }
 
+        long activeCount = materials.stream().filter(m -> cfg.isLockable(m) || cfg.isLockableEntity(m)).count();
+        boolean noneActive = activeCount == 0;
+        TextColor familyColor = BpDialogStyles.stateColor(activeCount, materials.size());
+
         List<DialogButton> extraButtons = new ArrayList<>();
-        extraButtons.add(new DialogButton("enable_all",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__ENABLE_ALL)) + stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__ENABLE_ALL)), PASTEL_MINT),
-            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE)), TextColor.color(0x888888)),
+        extraButtons.add(new DialogButton("toggle_category",
+            Component.text()
+                .append(Component.text(stripColor(Translator.get(noneActive ? TranslationKey.ICON__TOGGLE_OFF : TranslationKey.ICON__TOGGLE_ON)), familyColor))
+                .append(Component.text(categoryName, familyColor))
+                .build(),
+            Component.text(stripColor(Translator.get(noneActive ? TranslationKey.DIALOGS__CLICK_ENABLE : TranslationKey.DIALOGS__CLICK_DISABLE)), TextColor.color(0x888888)),
             p -> {
-                BlockProt.getDefaultConfig().batchSetLockable(materials, true, p);
-                show(p, backOrigin, categoryName, materials, safePage);
-            }
-        ));
-        extraButtons.add(new DialogButton("disable_all",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__DISABLE_ALL)) + stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__DISABLE_ALL)), PASTEL_CORAL),
-            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE)), TextColor.color(0x888888)),
-            p -> {
-                BlockProt.getDefaultConfig().batchSetLockable(materials, false, p);
+                boolean targetState = noneActive; // If none are active, we want to enable all. If any are active, we disable all.
+                BlockProt.getDefaultConfig().batchSetLockable(materials, targetState, p);
                 show(p, backOrigin, categoryName, materials, safePage);
             }
         ));

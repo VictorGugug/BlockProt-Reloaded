@@ -116,10 +116,17 @@ public final class AutoDropFamilyDialog {
             ));
         }
 
+        long activeCount = materials.stream().filter(autoDropBlocks::contains).count();
+        boolean noneActive = activeCount == 0;
+        TextColor familyColor = BpDialogStyles.stateColor(activeCount, materials.size());
+
         List<DialogButton> extraButtons = new ArrayList<>();
         extraButtons.add(new DialogButton("toggle_family",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__TOGGLE_ON)) + familyLabel, PASTEL_MINT),
-            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__LEFT_CLICK_HINT)), TextColor.color(0x888888)),
+            Component.text()
+                .append(Component.text(stripColor(Translator.get(noneActive ? TranslationKey.ICON__TOGGLE_OFF : TranslationKey.ICON__TOGGLE_ON)), familyColor))
+                .append(Component.text(familyLabel, familyColor))
+                .build(),
+            Component.text(stripColor(Translator.get(noneActive ? TranslationKey.DIALOGS__CLICK_ENABLE : TranslationKey.DIALOGS__CLICK_DISABLE)), TextColor.color(0x888888)),
             p -> {
                 cfg.toggleAutoDropFamily(family, p);
                 show(p, backOrigin, family, safePage, parentBack);

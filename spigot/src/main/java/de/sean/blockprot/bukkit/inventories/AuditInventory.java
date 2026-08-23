@@ -187,11 +187,15 @@ public final class AuditInventory extends BlockProtInventory {
 
         String ownerUuid = null;
         if (block != null) {
-            BlockNBTHandler ownerHandler = new BlockNBTHandler(block);
-            if (ownerHandler.isProtected()) ownerUuid = ownerHandler.getOwner();
+            try {
+                BlockNBTHandler ownerHandler = new BlockNBTHandler(block);
+                if (ownerHandler.isProtected()) ownerUuid = ownerHandler.getOwner();
+            } catch (RuntimeException ignored) {}
         } else if (entitySource != null) {
-            EntityNBTHandler ownerHandler = new EntityNBTHandler(entitySource);
-            if (ownerHandler.isProtected()) ownerUuid = ownerHandler.getOwner();
+            try {
+                EntityNBTHandler ownerHandler = new EntityNBTHandler(entitySource);
+                if (ownerHandler.isProtected()) ownerUuid = ownerHandler.getOwner();
+            } catch (RuntimeException ignored) {}
         }
         final String ownerFilter = ownerUuid;
         if (ownerFilter != null) {

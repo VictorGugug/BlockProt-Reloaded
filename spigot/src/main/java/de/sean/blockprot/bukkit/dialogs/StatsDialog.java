@@ -96,7 +96,28 @@ public final class StatsDialog {
         if (isPlayerPage) {
             PlayerBlocksStatistic pStat = new PlayerBlocksStatistic();
             StatHandler.getStatistic(pStat, player);
-            List<LocationListEntry> entries = pStat.get();
+            List<de.sean.blockprot.nbt.stats.ListStatisticItem<?, Material>> entries = new ArrayList<>();
+            for (LocationListEntry locEntry : pStat.get()) {
+                try {
+                    Location l = locEntry.get();
+                    if (l.getWorld() == null) continue;
+                    Material live = l.getBlock().getType();
+                    if (live.isAir() || !BlockProt.getDefaultConfig().isLockable(live, l.getWorld())) continue;
+                    entries.add(locEntry);
+                } catch (Exception ignored) {}
+            }
+
+            String playerUuid = player.getUniqueId().toString();
+            for (org.bukkit.World world : org.bukkit.Bukkit.getWorlds()) {
+                for (org.bukkit.entity.Entity entity : world.getEntities()) {
+                    if (!de.sean.blockprot.bukkit.inventories.StatisticListInventory.isProtectableEntity(entity)) continue;
+                    de.sean.blockprot.bukkit.nbt.EntityNBTHandler h = new de.sean.blockprot.bukkit.nbt.EntityNBTHandler(entity);
+                    if (!h.isProtected()) continue;
+                    if (!h.isOwner(playerUuid) && !player.hasPermission(de.sean.blockprot.bukkit.Permissions.USER_ADMIN.key())) continue;
+                    entries.add(new de.sean.blockprot.bukkit.inventories.StatisticListInventory.EntityListEntry(entity));
+                }
+            }
+
             int total = entries.size();
             Integer limit = BlockProt.getDefaultConfig().getMaxLockedBlockCount();
             String countStr = String.valueOf(total);
@@ -111,14 +132,14 @@ public final class StatsDialog {
             body.add(DialogBodyEntry.text(Component.empty()));
 
             if (total > 0) {
-                Map<Material, List<LocationListEntry>> grouped = new LinkedHashMap<>();
-                for (LocationListEntry entry : entries) {
+                Map<Material, List<de.sean.blockprot.nbt.stats.ListStatisticItem<?, Material>>> grouped = new LinkedHashMap<>();
+                for (de.sean.blockprot.nbt.stats.ListStatisticItem<?, Material> entry : entries) {
                     Material mat = entry.getItemType();
                     if (mat != Material.AIR) {
                         grouped.computeIfAbsent(mat, k -> new ArrayList<>()).add(entry);
                     }
                 }
-                for (Map.Entry<Material, List<LocationListEntry>> group : grouped.entrySet()) {
+                for (Map.Entry<Material, List<de.sean.blockprot.nbt.stats.ListStatisticItem<?, Material>>> group : grouped.entrySet()) {
                     Material mat = group.getKey();
                     int count = group.getValue().size();
                     String matName = toHumanReadable(mat);
@@ -168,7 +189,7 @@ public final class StatsDialog {
     private static void showMaterialBlocks(@NotNull Player player, @NotNull DialogOrigin backOrigin,
                                              @NotNull String pageKey, boolean isUserStats,
                                              @NotNull Material mat,
-                                             @NotNull List<LocationListEntry> entries) {
+                                             @NotNull List<de.sean.blockprot.nbt.stats.ListStatisticItem<?, Material>> entries) {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
 
@@ -188,25 +209,32 @@ public final class StatsDialog {
                   : TranslationKey.INVENTORIES__STATS__LORE_NO_TP));
 
         List<DialogButton> buttons = new ArrayList<>();
-        for (LocationListEntry entry : entries) {
-            Location loc = entry.get();
-            String lockedAgo = entry.getLockedAgoText();
-            List<String> contents = entry.getContentsLore();
-
-            // A click only opens the edit dialog when the block is still lockable under
-            // the current config; otherwise it falls back to teleporting. The lore must
-            // match whichever of those two the click will actually do, not show both.
-            boolean willOpen = loc.getWorld() != null
-                && BlockProt.getDefaultConfig().isLockable(loc.getBlock().getType(), loc.getWorld());
+        for (de.sean.blockprot.nbt.stats.ListStatisticItem<?, Material> entry : entries) {
+            boolean isEntity = entry instanceof de.sean.blockprot.bukkit.inventories.StatisticListInventory.EntityListEntry;
+            String lockedAgo = "";
+            List<String> contents = List.of();
+            if (entry instanceof LocationListEntry locEntry) {
+                lockedAgo = locEntry.getLockedAgoText();
+                contents = locEntry.getContentsLore();
+            } else if (entry instanceof de.sean.blockprot.bukkit.inventories.StatisticListInventory.EntityListEntry entEntry) {
+                contents = entEntry.getContentsLore();
+            }
 
             List<Component> loreLines = new ArrayList<>();
-            if (willOpen) {
+            if (isEntity) {
                 loreLines.add(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), PASTEL_MINT));
-            } else if (canTp) {
-                loreLines.add(Component.text(tpLore, PASTEL_MINT));
             } else {
-                loreLines.add(Component.text(tpLore, SOFT_GRAY));
+                Location loc = (Location) entry.get();
+                boolean willOpen = loc.getWorld() != null && BlockProt.getDefaultConfig().isLockable(loc.getBlock().getType(), loc.getWorld());
+                if (willOpen) {
+                    loreLines.add(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), PASTEL_MINT));
+                } else if (canTp) {
+                    loreLines.add(Component.text(tpLore, PASTEL_MINT));
+                } else {
+                    loreLines.add(Component.text(tpLore, SOFT_GRAY));
+                }
             }
+
             if (!lockedAgo.isEmpty()) {
                 loreLines.add(Component.text(stripColor(lockedAgo), SOFT_GRAY));
             }
@@ -217,10 +245,20 @@ public final class StatsDialog {
                 }
             }
 
-            buttons.add(new DialogButton("block_" + loc.getBlockX() + "_" + loc.getBlockY() + "_" + loc.getBlockZ(),
+            String btnId = isEntity ? "ent_" + ((org.bukkit.entity.Entity)entry.get()).getEntityId() : "block_" + ((Location)entry.get()).getBlockX() + "_" + ((Location)entry.get()).getBlockY() + "_" + ((Location)entry.get()).getBlockZ();
+            buttons.add(new DialogButton(btnId,
                 Component.text(entry.getTitle(), NamedTextColor.WHITE),
                 Component.join(JoinConfiguration.newlines(), loreLines),
                 p -> {
+                    if (isEntity) {
+                        org.bukkit.entity.Entity e = (org.bukkit.entity.Entity) entry.get();
+                        if (e.isValid()) {
+                            de.sean.blockprot.bukkit.nbt.EntityNBTHandler h = new de.sean.blockprot.bukkit.nbt.EntityNBTHandler(e);
+                            de.sean.blockprot.bukkit.dialogs.BlockLockDialog.showForEntity(p, e, h, isUserStats ? DialogOrigin.USER_MENU : DialogOrigin.ADMIN_MENU);
+                        }
+                        return;
+                    }
+                    Location loc = (Location) entry.get();
                     if (loc.getWorld() != null) {
                         org.bukkit.block.Block b = loc.getBlock();
                         if (BlockProt.getDefaultConfig().isLockable(b.getType(), b.getWorld())) {
@@ -232,7 +270,7 @@ public final class StatsDialog {
                         p.sendMessage(stripColor(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION_TP)));
                         return;
                     }
-                    Location tpLoc = entry.get();
+                    Location tpLoc = loc;
                     if (tpLoc.getWorld() != null) {
                         p.teleport(tpLoc.clone().add(0.5, 1.0, 0.5));
                     }

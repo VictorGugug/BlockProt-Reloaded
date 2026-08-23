@@ -103,7 +103,7 @@ public final class AdminConfigLanguageInventory extends BlockProtInventory {
     public Inventory fillToggle(@NotNull Player player) {
         currentScreen = Screen.TOGGLE;
         inventory = createInventory();
-        fillSeparators(new int[]{0,1,2,3,4,5,6,7,8, 9,10, 12,13,14,15,16,17, 35, 36,37,38,39,40,41,42,43,44, 45,46,47,48, 50,51,52,53});
+        fillSeparators(new int[]{0,1,2,3,4,5,6,7,8, 9,10, 12,13,14,15,16,17, 45,46,47,48, 50,51,52,53});
         String[] allLangs = Translator.DEFAULT_TRANSLATION_FILES.toArray(new String[0]);
 
         boolean anyDisabled = false;
@@ -121,7 +121,7 @@ public final class AdminConfigLanguageInventory extends BlockProtInventory {
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_HINT)));
 
         BlockProt plugin = BlockProt.getInstance();
-        int slot = 19;
+        int slot = 18;
         for (String lang : allLangs) {
             boolean isEnabled = LangConfig.isLanguageEnabled(lang);
             String label = getLanguageLabel(plugin, lang);
@@ -149,7 +149,7 @@ public final class AdminConfigLanguageInventory extends BlockProtInventory {
                 }
                 stack.setItemMeta(meta);
             }
-            if (slot <= 34) {
+            if (slot <= 44) {
                 inventory.setItem(slot++, stack);
             }
         }
@@ -161,7 +161,7 @@ public final class AdminConfigLanguageInventory extends BlockProtInventory {
     public Inventory fillSelector(@NotNull Player player) {
         currentScreen = Screen.SELECTOR;
         inventory = createInventory();
-        fillSeparators(new int[]{0,1,2,3,4,5,6,7,8, 9, 26, 27,28,29,30,31,32,33,34,35, 36,37,38,39,40,41,42,43,44, 45,46,47,48, 50,51,52,53});
+        fillSeparators(new int[]{0,1,2,3,4,5,6,7,8, 9, 35, 36,37,38,39,40,41,42,43,44, 45,46,47,48, 50,51,52,53});
         DefaultConfig cfg = BlockProt.getDefaultConfig();
         String currentLang = cfg.getLanguageFile();
         String[] allLangs = Translator.DEFAULT_TRANSLATION_FILES.toArray(new String[0]);
@@ -210,7 +210,7 @@ public final class AdminConfigLanguageInventory extends BlockProtInventory {
                 }
                 stack.setItemMeta(meta);
             }
-            if (slot <= 25) {
+            if (slot <= 34) {
                 inventory.setItem(slot++, stack);
             }
         }
@@ -268,8 +268,8 @@ public final class AdminConfigLanguageInventory extends BlockProtInventory {
                     LangConfig.setLanguageEnabled(lang, !allEnabled);
                 }
                 player.openInventory(fillToggle(player));
-            } else if (slot >= 19 && slot - 19 < allLangs.length) {
-                String lang = allLangs[slot - 19];
+            } else if (slot >= 18 && slot - 18 < allLangs.length) {
+                String lang = allLangs[slot - 18];
                 LangConfig.setLanguageEnabled(lang, !LangConfig.isLanguageEnabled(lang));
                 player.openInventory(fillToggle(player));
             }

@@ -61,6 +61,15 @@ public final class InventoryState {
 
     public boolean remoteLockPendingConfirm = false;
 
+    /**
+     * Set right before an inventory is intentionally closed to prompt a chat
+     * input (see {@code TextInput#open}), so the close listener does not
+     * mistake the resulting {@code InventoryCloseEvent} for a player-initiated
+     * ESC/E/X close and reopen the parent menu underneath the chat prompt.
+     * Consumed (reset to false) by the listener the first time it is checked.
+     */
+    public boolean suppressCloseReopen = false;
+
     @NotNull
     public MenuOrigin origin = MenuOrigin.NONE;
 

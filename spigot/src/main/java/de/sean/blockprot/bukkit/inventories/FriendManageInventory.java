@@ -93,7 +93,7 @@ public final class FriendManageInventory extends BlockProtInventory {
         final ItemStack item = event.getCurrentItem();
         if (item == null) return;
         switch (item.getType()) {
-            case BLACK_STAINED_GLASS_PANE -> {
+            case BLACK_STAINED_GLASS_PANE, BARRIER -> {
                 state.currentPageIndex = 0;
                 exitModifyInventory(player, state);
             }
@@ -202,7 +202,13 @@ public final class FriendManageInventory extends BlockProtInventory {
             getSize() - 2,
             Material.MAP,
             TranslationKey.INVENTORIES__FRIENDS__SEARCH);
-        setBackButton();
+        boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty()
+            || state.friendSearchState != InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
+        if (hasParent) {
+            setBackButton();
+        } else {
+            setItemStack(getSize() - 1, Material.BARRIER, TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        }
 
         Bukkit.getScheduler().runTaskAsynchronously(
             BlockProt.getInstance(),

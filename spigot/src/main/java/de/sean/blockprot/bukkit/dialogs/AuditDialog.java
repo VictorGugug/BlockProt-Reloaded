@@ -85,10 +85,14 @@ public final class AuditDialog {
         List<AuditLogger.AuditEntry> allEntries = audit.getEntriesForBlock(
             location.getWorld().getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ(), 500);
 
-        BlockNBTHandler ownerHandler = new BlockNBTHandler(location.getBlock());
-        if (ownerHandler.isProtected() && ownerHandler.getOwner() != null) {
-            String ownerUuid = ownerHandler.getOwner();
-            allEntries.removeIf(e -> ownerUuid.equals(e.playerUuid()));
+        try {
+            BlockNBTHandler ownerHandler = new BlockNBTHandler(location.getBlock());
+            if (ownerHandler.isProtected() && ownerHandler.getOwner() != null) {
+                String ownerUuid = ownerHandler.getOwner();
+                allEntries.removeIf(e -> ownerUuid.equals(e.playerUuid()));
+            }
+        } catch (RuntimeException ignored) {
+            // Location might be an entity (like a boat) standing on a non-lockable block like snow.
         }
 
         allEntries.removeIf(e -> filterPlayerUuid != null && !e.playerUuid().equals(filterPlayerUuid));

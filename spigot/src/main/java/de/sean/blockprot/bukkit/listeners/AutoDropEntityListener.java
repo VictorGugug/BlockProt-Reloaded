@@ -106,7 +106,9 @@ public final class AutoDropEntityListener implements Listener {
         addToInventory(player, new ItemStack(mat));
         if (vehicle instanceof InventoryHolder holder) {
             for (ItemStack item : holder.getInventory().getContents()) {
-                addToInventory(player, item);
+                if (item != null && item.getType() != Material.AIR) {
+                    addToInventory(player, item);
+                }
             }
         }
         vehicle.remove();

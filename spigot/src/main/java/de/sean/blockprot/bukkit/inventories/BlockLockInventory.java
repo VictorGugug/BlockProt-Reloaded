@@ -222,7 +222,7 @@ public class BlockLockInventory extends BlockProtInventory {
                 }
                 case EMERALD -> {
                     // Locate the villager linked to this workstation via particles.
-                    player.closeInventory();
+                    closeAndOpen(player, null);
                     int seconds = BlockProt.getDefaultConfig().getVillagerLocateSeconds();
                     boolean found = VillagerLocateTask.startIfLinked(player, block, seconds);
                     if (!found) {

@@ -102,7 +102,7 @@ public final class AdminUnlockCommand implements CommandExecutor {
         }
 
         if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-            UnlockDialog.show(player, DialogOrigin.ADMIN_MENU, resolvedName, 0);
+            UnlockDialog.show(player, DialogOrigin.NONE, resolvedName, 0);
             return true;
         }
 

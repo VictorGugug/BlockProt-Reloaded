@@ -388,7 +388,8 @@ Protects the inventory from player access and hopper-pipeline extraction.
 | `DARK_OAK_CHEST_BOAT` | 1.19 |
 | `MANGROVE_CHEST_BOAT` | 1.19 |
 | `CHERRY_CHEST_BOAT` | 1.20 |
-| `BAMBOO_CHEST_BOAT` | 1.20 |
+| `PALE_OAK_CHEST_BOAT` | 1.21.4 |
+| `BAMBOO_CHEST_RAFT` | 1.20 |
 
 ### Sub-family: CHEST_MINECARTS
 

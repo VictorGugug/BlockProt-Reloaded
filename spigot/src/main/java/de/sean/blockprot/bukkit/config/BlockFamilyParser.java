@@ -172,7 +172,7 @@ public final class BlockFamilyParser {
             }
             if (isEntityMaterial(n)) {
                 entities.add(m);
-                if (n.contains("CHEST_BOAT"))         sfAcc.get(SubFamily.CHEST_BOATS).add(m);
+                if (n.contains("CHEST_BOAT") || n.contains("CHEST_RAFT"))         sfAcc.get(SubFamily.CHEST_BOATS).add(m);
                 else if (n.equals("CHEST_MINECART"))  sfAcc.get(SubFamily.CHEST_MINECARTS).add(m);
                 else if (n.equals("HOPPER_MINECART")) sfAcc.get(SubFamily.HOPPER_MINECARTS).add(m);
                 else if (n.equals("ITEM_FRAME") || n.equals("GLOW_ITEM_FRAME")) sfAcc.get(SubFamily.ITEM_FRAMES).add(m);
@@ -221,7 +221,7 @@ public final class BlockFamilyParser {
     }
 
     private static boolean isEntityMaterial(@NotNull String n) {
-        return n.contains("CHEST_BOAT") || n.equals("CHEST_MINECART") || n.equals("HOPPER_MINECART")
+        return n.contains("CHEST_BOAT") || n.contains("CHEST_RAFT") || n.equals("CHEST_MINECART") || n.equals("HOPPER_MINECART")
             || n.equals("ITEM_FRAME") || n.equals("GLOW_ITEM_FRAME");
     }
 

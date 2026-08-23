@@ -56,11 +56,12 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
     public @NotNull Material getItemType() {
         try {
             Location loc = this.get();
-            if (loc.getWorld() == null) return Material.CHEST;
+            if (loc.getWorld() == null) return Material.BARRIER;
             Material type = loc.getBlock().getType();
+            if (type.isAir()) return Material.AIR;
             return resolveDisplayMaterial(type);
         } catch (Exception e) {
-            return Material.CHEST;
+            return Material.AIR;
         }
     }
 
@@ -69,7 +70,7 @@ public class LocationListEntry extends ListStatisticItem<Location, Material> {
      * For wall variants and similar, falls back to the placeable item form.
      */
     private static @NotNull Material resolveDisplayMaterial(@NotNull Material type) {
-        if (type == Material.AIR) return Material.CHEST;
+        if (type.isAir()) return Material.AIR;
         String name = type.name();
         // Shulker boxes: keep their colour; all coloured variants are valid ItemStack materials.
         // The generic SHULKER_BOX (no colour prefix) may not be a real block in all MC versions;

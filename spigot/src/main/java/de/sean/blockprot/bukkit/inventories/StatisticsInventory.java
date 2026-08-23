@@ -78,8 +78,14 @@ public final class StatisticsInventory extends BlockProtInventory {
                 }
                 break;
             case BLACK_STAINED_GLASS_PANE:
+            case BARRIER:
                 if (event.getWhoClicked() instanceof Player player) {
-                    goBack(player, state);
+                    boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+                    if (hasParent) {
+                        goBack(player, state);
+                    } else {
+                        closeAndOpen(player, null);
+                    }
                 } else {
                     closeAndOpen(event.getWhoClicked(), null);
                 }
@@ -129,7 +135,7 @@ public final class StatisticsInventory extends BlockProtInventory {
             StatHandler.getStatistic(stat, player);
 
             if (stat instanceof PlayerBlocksStatistic pbs) {
-                List<String> lore = pbs.getBreakdownLore();
+                List<String> lore = pbs.getBreakdownLore(player);
                 setItemStack(i, stat.getItemType(), stat.getTitle(), lore);
             } else {
                 setItemStack(i, stat.getItemType(), stat.getTitle());
@@ -143,7 +149,12 @@ public final class StatisticsInventory extends BlockProtInventory {
                 ? TranslationKey.INVENTORIES__STATISTICS__GLOBAL_STATISTICS
                 : TranslationKey.INVENTORIES__STATISTICS__PLAYER_STATISTICS
         );
-        setBackButton();
+        boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+        if (hasParent) {
+            setBackButton();
+        } else {
+            setItemStack(getSize() - 1, Material.BARRIER, TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        }
         return inventory;
     }
 }

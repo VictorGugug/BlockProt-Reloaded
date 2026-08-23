@@ -144,6 +144,7 @@ tasks.shadowJar {
     relocate("org.enginehub.squirrelid", "de.sean.blockprot.bukkit.squirrelid")
     relocate("com.zaxxer.hikari", "de.sean.blockprot.bukkit.shaded.hikari")
     relocate("com.tcoded.folialib", "de.sean.blockprot.bukkit.shaded.folialib")
+    relocate("com.github.benmanes.caffeine", "de.sean.blockprot.bukkit.shaded.caffeine")
     // minimize()
 
     dependencies {
@@ -189,7 +190,7 @@ tasks.test {
 
 tasks.runServer {
     downloadPlugins {
-        url("https://download.luckperms.net/1561/bukkit/loader/LuckPerms-Bukkit-5.4.146.jar")
+        url("https://download.luckperms.net/1561/bukkit/loader/LuckPerms-Bukkit-5.5.71.jar")
     }
     minecraftVersion("26.2")
 }

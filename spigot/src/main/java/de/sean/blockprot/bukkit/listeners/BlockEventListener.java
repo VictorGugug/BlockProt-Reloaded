@@ -201,18 +201,21 @@ public class BlockEventListener implements Listener {
             }
         }
 
-        if (items.isEmpty()) return;
-
         Block partner = findDoubleBlockPartner(block);
+        if (items.isEmpty() && partner != null) {
+            items.addAll(partner.getDrops(tool));
+        }
+
+        if (items.isEmpty()) return;
 
         event.setCancelled(true);
         if (handler != null) {
             cleanupBreak(block, handler);
         }
-        block.setType(Material.AIR);
         if (partner != null) {
-            partner.setType(Material.AIR);
+            partner.setType(Material.AIR, false);
         }
+        block.setType(Material.AIR, true);
 
         for (ItemStack item : items) {
             java.util.HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(item);

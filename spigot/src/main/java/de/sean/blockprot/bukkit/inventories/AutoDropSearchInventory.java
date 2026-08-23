@@ -98,13 +98,19 @@ public final class AutoDropSearchInventory extends BlockProtInventory {
         if (safePage > 0) setItemStack(SLOT_PREV, Material.ARROW, Translator.get(TranslationKey.INVENTORIES__LAST_PAGE));
         if (safePage < totalPages - 1) setItemStack(SLOT_NEXT, Material.ARROW, Translator.get(TranslationKey.INVENTORIES__NEXT_PAGE));
 
-        ItemStack backStack = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        ItemMeta backMeta = backStack.getItemMeta();
-        if (backMeta != null) {
-            ComponentMessages.displayName(backMeta, Component.text(Translator.get(TranslationKey.INVENTORIES__BACK)).color(PASTEL_CORAL));
-            backStack.setItemMeta(backMeta);
+        InventoryState state = InventoryState.get(player.getUniqueId());
+        boolean hasParent = state != null && (state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty());
+        if (hasParent) {
+            ItemStack backStack = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+            ItemMeta backMeta = backStack.getItemMeta();
+            if (backMeta != null) {
+                ComponentMessages.displayName(backMeta, Component.text(Translator.get(TranslationKey.INVENTORIES__BACK)).color(PASTEL_CORAL));
+                backStack.setItemMeta(backMeta);
+            }
+            inventory.setItem(SLOT_BACK, backStack);
+        } else {
+            setItemStack(SLOT_BACK, Material.BARRIER, TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
         }
-        inventory.setItem(SLOT_BACK, backStack);
 
         return inventory;
     }
@@ -117,7 +123,12 @@ public final class AutoDropSearchInventory extends BlockProtInventory {
         if (slot < 0 || slot >= getSize()) return;
 
         if (slot == SLOT_BACK) {
-            goBack(player, state);
+            boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+            if (hasParent) {
+                goBack(player, state);
+            } else {
+                closeAndOpen(player, null);
+            }
             return;
         }
 

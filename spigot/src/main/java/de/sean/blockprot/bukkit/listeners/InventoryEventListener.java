@@ -186,6 +186,12 @@ public class InventoryEventListener implements Listener {
                     if (online.getOpenInventory().getTopInventory().getHolder() instanceof BlockProtInventory) return;
                     InventoryState st = InventoryState.get(online.getUniqueId());
                     if (st == null || st.originStack.isEmpty()) return;
+                    if (st.suppressCloseReopen) {
+                        // Closed intentionally to prompt a chat input (TextInput#open),
+                        // not a player-initiated ESC/E/X close. Do not reopen the parent.
+                        st.suppressCloseReopen = false;
+                        return;
+                    }
                     bpInventory.goBack(online, st);
                 });
             }

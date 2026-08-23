@@ -89,7 +89,8 @@ public class AboutCommand implements CommandExecutor {
         String version = BlockProt.getPluginVersion();
         String issuesUrl = "https://github.com/VictorGugug/BlockProt-Reloaded/issues";
         BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__VERSION_LABEL) + BlockProtConsole.PASTEL_GOLD + version);
-        BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__CREDIT_LINE));
+        BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__AUTHOR_LABEL));
+        BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__MAINTAINER_LABEL));
         BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__REPORT_ISSUES) + " " + BlockProtConsole.SOFT_BLUE + issuesUrl);
         BlockProtLogger.log("about | version=" + version + " | issues=" + issuesUrl);
     }
@@ -101,7 +102,8 @@ public class AboutCommand implements CommandExecutor {
             .append(Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__VERSION_LABEL), SOFT_GRAY))
             .append(Component.text(version, PASTEL_GOLD))
             .build());
-        ComponentMessages.send(player, Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__CREDIT_LINE), PASTEL_MINT));
+        ComponentMessages.send(player, Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__AUTHOR_LABEL), PASTEL_MINT));
+        ComponentMessages.send(player, Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__MAINTAINER_LABEL), PASTEL_MINT));
         ComponentMessages.send(player, Component.text()
             .append(Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__REPORT_ISSUES), SOFT_GRAY))
             .append(Component.text(" ", SOFT_GRAY))

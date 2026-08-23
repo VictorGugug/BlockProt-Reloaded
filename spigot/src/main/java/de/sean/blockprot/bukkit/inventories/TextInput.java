@@ -48,6 +48,7 @@ public final class TextInput {
             @NotNull Plugin plugin,
             @Nullable Consumer<String> onConfirm
     ) {
+        suppressCloseReopen(player);
         if (VersionCompat.isPaper()) {
             ChatInput.open(player, plugin, onConfirm);
         } else {
@@ -67,10 +68,21 @@ public final class TextInput {
             @NotNull String contextMessage,
             @Nullable Consumer<String> onConfirm
     ) {
+        suppressCloseReopen(player);
         if (VersionCompat.isPaper()) {
             ChatInput.open(player, plugin, contextMessage, onConfirm);
         } else {
             LegacyChatInput.open(player, plugin, contextMessage, onConfirm);
         }
+    }
+
+    /**
+     * Marks the player's inventory state so the pending {@code InventoryCloseEvent}
+     * (fired by this call or by a prior explicit {@code player.closeInventory()})
+     * is not mistaken for a player-initiated ESC/E/X close on a submenu.
+     */
+    private static void suppressCloseReopen(@NotNull Player player) {
+        InventoryState state = InventoryState.get(player.getUniqueId());
+        if (state != null) state.suppressCloseReopen = true;
     }
 }

@@ -99,8 +99,12 @@ public final class BpUnlockInventory extends BlockProtInventory {
                 refill(player, state);
             }
             case BARRIER -> {
-                player.closeInventory();
-                InventoryState.remove(player.getUniqueId());
+                boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+                if (hasParent) {
+                    goBack(player, state);
+                } else {
+                    closeAndOpen(player, null);
+                }
             }
             default -> handleBlockClick(event, player, state, max);
         }
@@ -232,7 +236,8 @@ public final class BpUnlockInventory extends BlockProtInventory {
             setItemStack(max + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         }
 
-        setItemStack(max + 2, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
+        boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+        setItemStack(max + 2, Material.BARRIER, hasParent ? TranslationKey.INVENTORIES__BACK : TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
         return inventory;
     }
 

@@ -106,7 +106,13 @@ public final class WorldLockableSelectionInventory extends BlockProtInventory {
             inventory.setItem(22, empty);
         }
 
-        setBackButton(SLOT_BACK);
+        InventoryState state = InventoryState.get(player.getUniqueId());
+        boolean hasParent = state != null && (state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty());
+        if (hasParent) {
+            setBackButton(SLOT_BACK);
+        } else {
+            setItemStack(SLOT_BACK, Material.BARRIER, TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        }
         return inventory;
     }
 
@@ -117,7 +123,15 @@ public final class WorldLockableSelectionInventory extends BlockProtInventory {
         int slot = event.getRawSlot();
         if (slot < 0 || slot >= getSize()) return;
 
-        if (slot == SLOT_BACK) { goBack(player, state); return; }
+        if (slot == SLOT_BACK) {
+            boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+            if (hasParent) {
+                goBack(player, state);
+            } else {
+                closeAndOpen(player, null);
+            }
+            return;
+        }
 
         if (slot >= CONTENT_START && slot < CONTENT_END) {
             int idx = slot - CONTENT_START;

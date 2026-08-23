@@ -98,7 +98,12 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
                 return;
             }
             case PAGE_SIZE + 2 -> {
-                goBack(player, state);
+                boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+                if (hasParent) {
+                    goBack(player, state);
+                } else {
+                    closeAndOpen(player, null);
+                }
                 return;
             }
         }
@@ -167,7 +172,8 @@ public final class WorldProtDeleteInventory extends BlockProtInventory {
         if (worlds.size() - offset > PAGE_SIZE) {
             setItemStack(PAGE_SIZE + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         }
-        setItemStack(PAGE_SIZE + 2, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
+        boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+        setItemStack(PAGE_SIZE + 2, Material.BARRIER, hasParent ? TranslationKey.INVENTORIES__BACK : TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
 
         return inventory;
     }

@@ -358,10 +358,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
             case LOCKABLES -> player.openInventory(new LockablesInventory().fill(player, state.currentPageIndex));
             case AUTO_DROP -> player.openInventory(new AutoDropInventory().fill(player));
             case WORLD_LOCKABLE_SELECTION -> player.openInventory(new WorldLockableSelectionInventory().fill(player));
-            case PLAYER_LIST -> {
-                state.origin = InventoryState.MenuOrigin.ADMIN_MENU;
-                new PlayerListInventory().open(player);
-            }
+            case PLAYER_LIST -> new PlayerListInventory().open(player);
             default -> closeAndOpen(player, null);
         }
     }

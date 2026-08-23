@@ -189,7 +189,13 @@ public final class LockablesInventory extends BlockProtInventory {
             }
             inventory.setItem(SLOT_WORLDS, worldItem);
         }
-        setBackButton(SLOT_BACK);
+        InventoryState state = InventoryState.get(player.getUniqueId());
+        boolean hasParent = state != null && (state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty());
+        if (hasParent) {
+            setBackButton(SLOT_BACK);
+        } else {
+            setItemStack(SLOT_BACK, Material.BARRIER, TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        }
         return inventory;
     }
 
@@ -200,7 +206,15 @@ public final class LockablesInventory extends BlockProtInventory {
         int slot = event.getRawSlot();
         if (slot < 0 || slot >= getSize()) return;
 
-        if (slot == SLOT_BACK)   { goBack(player, state); return; }
+        if (slot == SLOT_BACK) {
+            boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+            if (hasParent) {
+                goBack(player, state);
+            } else {
+                closeAndOpen(player, null);
+            }
+            return;
+        }
 
         if (slot == SLOT_WORLDS && BlockProt.getDefaultConfig().isPerWorldsConfigEnabled()) {
             state.currentPageIndex = cachedPage;

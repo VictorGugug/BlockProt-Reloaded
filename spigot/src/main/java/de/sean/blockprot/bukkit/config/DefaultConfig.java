@@ -266,7 +266,7 @@ public final class DefaultConfig extends BlockProtConfig {
         loadBlockListFromConfig("lockable_entities", lockableEntities, inactiveEntities,
             BlockFamilyParser.Family.ENTITIES, m -> {
                 String name = m.name();
-                return name.contains("CHEST_BOAT") || name.equals("CHEST_MINECART") || name.equals("HOPPER_MINECART")
+                return name.contains("CHEST_BOAT") || name.contains("CHEST_RAFT") || name.equals("CHEST_MINECART") || name.equals("HOPPER_MINECART")
                     || name.equals("ITEM_FRAME") || name.equals("GLOW_ITEM_FRAME");
             });
     }
@@ -715,7 +715,7 @@ public final class DefaultConfig extends BlockProtConfig {
         return de.sean.blockprot.bukkit.Translator.get(de.sean.blockprot.bukkit.TranslationKey.MESSAGES__ENTITY_DENIED);
     }
 
-    public boolean isLockable(Material type) { return isLockableBlock(type) || isLockableTileEntity(type); }
+    public boolean isLockable(Material type) { return isLockableBlock(type) || isLockableTileEntity(type) || isLockableDoor(type); }
 
     public boolean isLockable(@NotNull Material type, @NotNull World world) {
         WorldsConfig wc = BlockProt.getWorldsConfig();

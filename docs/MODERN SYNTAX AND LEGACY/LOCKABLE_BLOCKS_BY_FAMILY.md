@@ -347,7 +347,7 @@ reflection to support both 1.20.x (`org.bukkit.entity.ChestBoat`) and
 | `MANGROVE_CHEST_BOAT` | 1.19 |
 | `CHERRY_CHEST_BOAT` | 1.20 |
 | `PALE_OAK_CHEST_BOAT` | 1.21.4 |
-| `BAMBOO_CHEST_BOAT` | 1.20 |
+| `BAMBOO_CHEST_RAFT` | 1.20 |
 
 ### CHEST_MINECARTS
 

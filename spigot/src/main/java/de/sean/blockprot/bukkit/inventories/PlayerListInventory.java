@@ -138,6 +138,7 @@ public final class PlayerListInventory extends BlockProtInventory {
             StatHandler.getStatisticByUuid(stat, entry.player().getUniqueId());
 
             state.currentPageIndex = 0;
+            state.origin = InventoryState.MenuOrigin.PLAYER_LIST;
             state.originStack.push(InventoryState.MenuOrigin.PLAYER_LIST);
             InventoryState.set(admin.getUniqueId(), state);
             admin.openInventory(new AdminBlockListInventory().fill(admin, displayName, stat));
@@ -165,7 +166,11 @@ public final class PlayerListInventory extends BlockProtInventory {
             }
             case SLOT_BACK -> {
                 cancelLoad();
-                goBack(admin, state);
+                if (state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty()) {
+                    goBack(admin, state);
+                } else {
+                    closeAndOpen(admin, null);
+                }
             }
         }
     }
@@ -257,7 +262,8 @@ public final class PlayerListInventory extends BlockProtInventory {
         String sortLabel = Translator.get(sortModeKey());
         setItemStack(SLOT_SORT, Material.COMPARATOR, sortLabel);
 
-        setItemStack(SLOT_BACK, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
+        boolean hasParent = state != null && (state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty());
+        setItemStack(SLOT_BACK, Material.BARRIER, hasParent ? TranslationKey.INVENTORIES__BACK : TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
     }
 
     private TranslationKey sortModeKey() {

@@ -20,9 +20,11 @@
 
 package de.sean.blockprot.bukkit.nbt.stats;
 
+import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.nbt.stats.StatisticType;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 
@@ -62,15 +64,34 @@ public final class PlayerBlocksStatistic extends LocationListStatistic {
      * type. Only types actually present are included. At most 10 lines to
      * avoid an oversized tooltip.
      */
-    @NotNull
-    public List<String> getBreakdownLore() {
+    public List<String> getBreakdownLore(@NotNull org.bukkit.entity.Player player) {
         Map<Material, Integer> counts = new LinkedHashMap<>();
         for (LocationListEntry entry : get()) {
             try {
+                Location l = entry.get();
+                if (l.getWorld() == null) continue;
+                Material live = l.getBlock().getType();
+                if (live.isAir() || !BlockProt.getDefaultConfig().isLockable(live, l.getWorld())) continue;
                 Material mat = entry.getItemType();
-                counts.merge(mat, 1, Integer::sum);
+                if (mat != Material.AIR) {
+                    counts.merge(mat, 1, Integer::sum);
+                }
             } catch (Exception ignored) {}
         }
+        try {
+            // Also count locked entities
+            String playerUuid = player.getUniqueId().toString();
+            for (org.bukkit.World world : org.bukkit.Bukkit.getWorlds()) {
+                for (org.bukkit.entity.Entity entity : world.getEntities()) {
+                    if (!de.sean.blockprot.bukkit.inventories.StatisticListInventory.isProtectableEntity(entity)) continue;
+                    de.sean.blockprot.bukkit.nbt.EntityNBTHandler h = new de.sean.blockprot.bukkit.nbt.EntityNBTHandler(entity);
+                    if (!h.isProtected()) continue;
+                    if (!h.isOwner(playerUuid) && !player.hasPermission(de.sean.blockprot.bukkit.Permissions.USER_ADMIN.key())) continue;
+                    Material mat = new de.sean.blockprot.bukkit.inventories.StatisticListInventory.EntityListEntry(entity).getItemType();
+                    counts.merge(mat, 1, Integer::sum);
+                }
+            }
+        } catch (Exception ignored) {}
 
         if (counts.isEmpty()) return List.of();
 

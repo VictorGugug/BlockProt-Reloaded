@@ -80,7 +80,7 @@ public final class InfoCommand implements CommandExecutor {
                     return true;
                 }
                 InventoryState state = new InventoryState(null);
-                state.origin = InventoryState.MenuOrigin.ADMIN_MENU;
+                state.origin = InventoryState.MenuOrigin.NONE;
                 InventoryState.set(player.getUniqueId(), state);
                 new PlayerListInventory().open(player);
             } else {
@@ -138,7 +138,7 @@ public final class InfoCommand implements CommandExecutor {
                     }
                     InventoryState ns = new InventoryState(null);
                     ns.currentPageIndex = 0;
-                    ns.origin = InventoryState.MenuOrigin.ADMIN_MENU;
+                    ns.origin = InventoryState.MenuOrigin.NONE;
                     InventoryState.set(player.getUniqueId(), ns);
                     player.openInventory(new AdminBlockListInventory().fill(player, displayName, stat));
                     return;

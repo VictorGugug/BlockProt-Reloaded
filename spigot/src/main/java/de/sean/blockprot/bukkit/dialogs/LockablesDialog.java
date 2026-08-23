@@ -86,9 +86,28 @@ public final class LockablesDialog {
 
         List<DialogButton> buttons = new ArrayList<>();
 
+        DialogButton searchBtn = new DialogButton("search",
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__SEARCH))
+                + stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH)), NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_LORE)), TextColor.color(0x888888)),
+            p -> {
+                bridge.showValueInput(p,
+                    Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_TITLE)).replace("{query}", ""), PASTEL_GOLD, TextDecoration.BOLD),
+                    List.of(DialogBodyEntry.text(Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_LORE)), SOFT_GRAY))),
+                    DialogTextField.of("search_query", Component.text(""), "", stripColor(Translator.get(TranslationKey.ICON__SEARCH))),
+                    text -> {
+                        List<Material> results = de.sean.blockprot.bukkit.config.BlockFamilyParser.searchMaterials(text);
+                        LockableCategoryDialog.show(p, backOrigin, text, results);
+                    },
+                    new DialogButton("back", Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY), Component.text(""), p2 -> show(p2, backOrigin, safePage))
+                );
+            }
+        );
+        buttons.add(searchBtn);
+
         for (CategoryEntry entry : pageEntries) {
             boolean noneActive = entry.activeCount == 0;
-            TextColor c = stateColor(entry.activeCount, entry.totalCount);
+            TextColor c = BpDialogStyles.stateColor(entry.activeCount, entry.totalCount);
             String catLabel = translateCategory(entry.label);
             buttons.add(new DialogButton("cat_" + entry.label,
                 Component.text()
@@ -232,13 +251,7 @@ public final class LockablesDialog {
      * still lands inside it (percentages jump too hard at low counts for a
      * fixed 40-60% band to be meaningful).
      */
-    private static TextColor stateColor(long active, long total) {
-        if (active == 0) return PASTEL_CORAL;
-        if (active == total) return PASTEL_MINT;
-        double ratio = (double) active / total;
-        double halfBand = total <= 5 ? 0.20 : 0.10;
-        return Math.abs(ratio - 0.5) <= halfBand ? PASTEL_ORANGE : PASTEL_MINT;
-    }
+
 
     private static boolean isKnownLockableMaterial(@NotNull Material m) {
         for (BlockFamilyParser.Family family : BlockFamilyParser.Family.values()) {

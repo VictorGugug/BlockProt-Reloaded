@@ -86,7 +86,7 @@ public final class AutoDropDialog {
             long active = members.stream().filter(autoDropBlocks::contains).count();
             long total = members.size();
             boolean noneActive = active == 0;
-            TextColor c = stateColor(active, total);
+            TextColor c = BpDialogStyles.stateColor(active, total);
             String label = friendlyName(family.name());
 
             buttons.add(new DialogButton("family_" + family.name(),
@@ -105,8 +105,13 @@ public final class AutoDropDialog {
                 + stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH)), NamedTextColor.WHITE),
             Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_LORE)), TextColor.color(0x888888)),
             p -> {
-                bridge.closeDialog(p);
-                de.sean.blockprot.bukkit.inventories.AutoDropSearchInventory.startSearchFromDialog(p, backOrigin, parentBack);
+                bridge.showValueInput(p,
+                    Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_TITLE)).replace("{query}", ""), PASTEL_GOLD, TextDecoration.BOLD),
+                    List.of(DialogBodyEntry.text(Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_LORE)), SOFT_GRAY))),
+                    DialogTextField.of("search_query", Component.text(""), "", stripColor(Translator.get(TranslationKey.ICON__SEARCH))),
+                    text -> AutoDropSearchDialog.show(p, backOrigin, parentBack, text, 0),
+                    new DialogButton("back", Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY), Component.text(""), p2 -> show(p2, backOrigin, parentBack))
+                );
             }
         );
         buttons.add(searchBtn);
@@ -120,14 +125,6 @@ public final class AutoDropDialog {
         );
 
         bridge.showMultiAction(player, title, body, buttons, backBtn, 1);
-    }
-
-    private static TextColor stateColor(long active, long total) {
-        if (active == 0) return PASTEL_CORAL;
-        if (active == total) return PASTEL_MINT;
-        double ratio = (double) active / total;
-        double halfBand = total <= 5 ? 0.20 : 0.10;
-        return Math.abs(ratio - 0.5) <= halfBand ? PASTEL_ORANGE : PASTEL_MINT;
     }
 
     @NotNull

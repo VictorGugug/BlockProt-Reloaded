@@ -20,6 +20,7 @@
 
 package de.sean.blockprot.bukkit.inventories;
 
+import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
@@ -83,7 +84,13 @@ public final class AdminBlockListInventory extends BlockProtInventory {
                 state.currentPageIndex++;
                 closeAndOpen(admin, fill(admin, null, null));
             }
-            case BARRIER -> goBack(admin, state);
+            case BARRIER -> {
+                if (state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty()) {
+                    goBack(admin, state);
+                } else {
+                    closeAndOpen(admin, null);
+                }
+            }
             default -> teleportToBlock(event, admin, state);
         }
     }
@@ -158,18 +165,31 @@ public final class AdminBlockListInventory extends BlockProtInventory {
             setItemStack(max + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         }
 
-        setItemStack(max + 2, Material.BARRIER, TranslationKey.INVENTORIES__BACK);
+        boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+        setItemStack(max + 2, Material.BARRIER, hasParent ? TranslationKey.INVENTORIES__BACK : TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
         return inventory;
     }
 
     private List<LocationListEntry> filteredList() {
         if (statistic == null) return List.of();
-        return statistic.get();
+        return statistic.get().stream()
+            .filter(e -> {
+                try {
+                    Location loc = e.get();
+                    if (loc.getWorld() == null) return false;
+                    Material mat = loc.getBlock().getType();
+                    if (mat.isAir()) return false;
+                    return BlockProt.getDefaultConfig().isLockable(mat, loc.getWorld());
+                } catch (Exception ignored) {
+                    return false;
+                }
+            })
+            .toList();
     }
 
     private void renderEntry(int slot, @NotNull LocationListEntry entry, @NotNull String loreTp) {
         Material mat = entry.getItemType();
-        if (mat == Material.AIR) mat = Material.CHEST;
+        if (mat == Material.AIR) return;
 
         ItemStack stack = new ItemStack(mat, 1);
         ItemMeta  meta  = stack.getItemMeta();

@@ -43,4 +43,12 @@ public final class BpDialogStyles {
     public static String stripColor(String s) {
         return s.replaceAll("[\u00a7&][0-9a-fk-orxA-F]", "");
     }
+
+    public static TextColor stateColor(long active, long total) {
+        if (active == 0) return PASTEL_CORAL;
+        if (active == total) return PASTEL_MINT;
+        double ratio = (double) active / total;
+        double halfBand = total <= 5 ? 0.20 : 0.10;
+        return Math.abs(ratio - 0.5) <= halfBand ? TextColor.color(0xF3C27C) : PASTEL_MINT;
+    }
 }

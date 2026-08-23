@@ -20,6 +20,7 @@
 
 package de.sean.blockprot.bukkit.inventories;
 
+import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
@@ -83,8 +84,14 @@ public final class StatisticListInventory extends BlockProtInventory {
                 state.currentPageIndex++;
                 closeAndOpen(player, fill(player, null));
             }
-            case BARRIER -> goBack(player, state);
-            case BLACK_STAINED_GLASS_PANE -> goBack(player, state);
+            case BARRIER, BLACK_STAINED_GLASS_PANE -> {
+                boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+                if (hasParent) {
+                    goBack(player, state);
+                } else {
+                    closeAndOpen(player, null);
+                }
+            }
             default -> handleItemClick(event, player, state);
         }
     }
@@ -164,7 +171,12 @@ public final class StatisticListInventory extends BlockProtInventory {
             setItemStack(max,     Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
             setItemStack(max + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         }
-        setBackButton();
+        boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+        if (hasParent) {
+            setBackButton();
+        } else {
+            setItemStack(this.getSize() - 1, Material.BARRIER, TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        }
         return inventory;
     }
 
@@ -183,7 +195,7 @@ public final class StatisticListInventory extends BlockProtInventory {
         return result;
     }
 
-    private static boolean isProtectableEntity(@NotNull Entity entity) {
+    public static boolean isProtectableEntity(@NotNull Entity entity) {
         if (entity instanceof ItemFrame || entity instanceof GlowItemFrame) return true;
         if (entity instanceof StorageMinecart || entity instanceof HopperMinecart) return true;
         try {
@@ -202,8 +214,13 @@ public final class StatisticListInventory extends BlockProtInventory {
             .stream()
             .filter(e -> {
                 if (e instanceof LocationListEntry loc) {
-                    try { return loc.get().getBlock().getType() != Material.AIR; }
-                    catch (Exception ignored) { return false; }
+                    try {
+                        Location l = loc.get();
+                        if (l.getWorld() == null) return false;
+                        Material mat = l.getBlock().getType();
+                        if (mat.isAir()) return false;
+                        return BlockProt.getDefaultConfig().isLockable(mat, l.getWorld());
+                    } catch (Exception ignored) { return false; }
                 }
                 return true;
             })
@@ -211,7 +228,7 @@ public final class StatisticListInventory extends BlockProtInventory {
     }
 
     private Material resolveDisplayMaterial(Material raw) {
-        if (raw == null || raw == Material.AIR) return Material.CHEST;
+        if (raw == null || raw == Material.AIR) return Material.BARRIER;
         return raw;
     }
 
@@ -264,6 +281,11 @@ public final class StatisticListInventory extends BlockProtInventory {
                 Material m = Material.valueOf(typeName);
                 if (m != Material.AIR) return m;
             } catch (IllegalArgumentException ignored) {}
+            if (value instanceof org.bukkit.entity.ChestBoat boat) {
+                String wood = boat.getBoatType().name();
+                if (wood.equals("BAMBOO")) return Material.valueOf("BAMBOO_CHEST_RAFT");
+                try { return Material.valueOf(wood + "_CHEST_BOAT"); } catch (IllegalArgumentException ignored) {}
+            }
             return Material.OAK_CHEST_BOAT;
         }
 
@@ -271,7 +293,13 @@ public final class StatisticListInventory extends BlockProtInventory {
         public String getTitle() {
             Location loc = value.getLocation();
             String coords = "[" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + "]";
-            String type = value.getType().name().replace('_', ' ');
+            String typeName = value.getType().name();
+            if (value instanceof org.bukkit.entity.ChestBoat boat) {
+                String wood = boat.getBoatType().name();
+                if (wood.equals("BAMBOO")) typeName = "BAMBOO_CHEST_RAFT";
+                else typeName = wood + "_CHEST_BOAT";
+            }
+            String type = typeName.replace('_', ' ');
             StringBuilder sb = new StringBuilder("\u00a77");
             boolean cap = true;
             for (char c : type.toCharArray()) {

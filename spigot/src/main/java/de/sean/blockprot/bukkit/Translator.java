@@ -64,11 +64,15 @@ import java.util.regex.Pattern;
 public final class Translator {
 
     public static final LinkedHashSet<String> DEFAULT_TRANSLATION_FILES = new LinkedHashSet<>(Arrays.asList(
-        "translations_cs.yml", "translations_de.yml", "translations_en.yml",
-        "translations_es.yml", "translations_fr.yml", "translations_it.yml",
-        "translations_ja.yml", "translations_ko.yml", "translations_pl.yml",
-        "translations_pt-br.yml", "translations_ru.yml", "translations_sk.yml",
-        "translations_tr.yml", "translations_zh-CN.yml", "translations_zh-TW.yml"
+        "translations_ar.yml", "translations_cs.yml", "translations_de.yml",
+        "translations_en.yml", "translations_es.yml", "translations_fi.yml",
+        "translations_fr.yml", "translations_he.yml", "translations_hu.yml",
+        "translations_id.yml", "translations_it.yml", "translations_ja.yml",
+        "translations_ko.yml", "translations_nl.yml", "translations_pl.yml",
+        "translations_pt-br.yml", "translations_ro.yml", "translations_ru.yml",
+        "translations_sk.yml", "translations_sv.yml", "translations_th.yml",
+        "translations_tr.yml", "translations_uk.yml", "translations_zh-CN.yml",
+        "translations_zh-TW.yml"
     ));
 
     @NotNull
