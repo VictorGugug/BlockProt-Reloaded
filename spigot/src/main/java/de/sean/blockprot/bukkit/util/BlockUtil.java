@@ -44,6 +44,8 @@ import java.util.regex.Pattern;
  * @since 0.4.6
  */
 public final class BlockUtil {
+    private static final Pattern UNDERSCORE_LOWERCASE = Pattern.compile("_[a-z]");
+
     /**
      * Get the BlockState of the double chest of given {@code block}.
      *
@@ -130,7 +132,7 @@ public final class BlockUtil {
 
     public static @NotNull String capitalizeFirstLetters(@NotNull String str) {
         String n = (str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase());
-        Matcher m = Pattern.compile("_[a-z]").matcher(n);
+        Matcher m = UNDERSCORE_LOWERCASE.matcher(n);
         while (m.find()) {
             n = n.substring(0, m.end() - 2) // -2 as we also match the underscore.
                 + n.substring(m.start(), m.end()).toUpperCase()
