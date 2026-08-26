@@ -1,3 +1,5 @@
+![LOCKABLE BLOCKS BY FAMILY](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/docs/LOCKABLE%20BLOCKS%20BY%20FAMILY.png)
+
 # LOCKABLE BLOCKS BY FAMILY
 
 Complete list of every block and entity that can be locked, organized by the
