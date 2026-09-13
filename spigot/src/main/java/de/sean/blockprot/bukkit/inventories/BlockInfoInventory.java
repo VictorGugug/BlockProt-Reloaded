@@ -167,9 +167,8 @@ public class BlockInfoInventory extends BlockProtInventory {
             placeOwnerSkull(ownerUuid, initialOwnerName, friendCount);
 
             final String initialNameForAsync = initialOwnerName;
-            Bukkit.getScheduler().runTaskAsynchronously(
-                BlockProt.getInstance(),
-                () -> {
+            BlockProt.getFoliaLib().getScheduler().runAsync(
+                asyncTask -> {
                     String resolvedName = initialNameForAsync;
                     try {
                         var profile = BlockProt.getProfileService().findByUuid(ownerUuid);
@@ -184,7 +183,7 @@ public class BlockInfoInventory extends BlockProtInventory {
                             if (top == null || top.getHolder() != BlockInfoInventory.this) return;
                             updateOwnerSkull(top, finalName, friendCount, error == null ? freshProfile : null);
                         },
-                        runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable)
+                        runnable -> BlockProt.getFoliaLib().getScheduler().runAtEntity(player, tickTask -> runnable.run())
                     );
                 }
             );

@@ -44,7 +44,7 @@ public final class UserMenuCommand implements CommandExecutor {
 
     @Override
     public boolean canUseCommand(@NotNull CommandSender sender) {
-        return sender.hasPermission(Permissions.USER.key());
+        return sender instanceof Player;
     }
 
     @Override
@@ -55,11 +55,14 @@ public final class UserMenuCommand implements CommandExecutor {
             player.sendMessage(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }
+        if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.shouldUseBedrockForms(player)) {
+            de.sean.blockprot.bukkit.bedrock.forms.BedrockUserMenuForm.show(player);
+            return true;
+        }
         if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             UserMenuDialog.show(player);
             return true;
         }
-        if (BlockProt.getDefaultConfig().areExtraCommandsEnabled()) return false;
 
         InventoryState state = new InventoryState(null);
         state.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;

@@ -126,7 +126,7 @@ public final class AdminMenuDialog {
             Component.text(stripColor(Translator.get(TranslationKey.ICON__DEBUG)) + debug, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG)), PASTEL_CORAL),
             p -> {
-                BlockProt.getInstance().getLogger().info("=== /bp debug run from dialog ===");
+                BlockProt.getInstance().getLogger().info("/bp debug run from dialog");
                 p.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS)));
                 Bukkit.getScheduler().runTaskAsynchronously(

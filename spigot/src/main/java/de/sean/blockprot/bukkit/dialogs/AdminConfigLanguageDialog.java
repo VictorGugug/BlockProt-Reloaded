@@ -62,6 +62,7 @@ public final class AdminConfigLanguageDialog {
         body.add(DialogBodyEntry.text(Component.text(
             AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__STATUS_HEADER)), AdminConfigDialog.SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(new DialogButton("toggle_languages",
             Component.text(AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_CATEGORY)), NamedTextColor.WHITE),
@@ -77,6 +78,7 @@ public final class AdminConfigLanguageDialog {
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__REPLACE_TRANSLATIONS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__REPLACE_TRANSLATIONS),
             BlockProt.getDefaultConfig().shouldReplaceTranslations(),
+            colorblind,
             p -> { BlockProt.getDefaultConfig().setAndSave("replace_translations", !BlockProt.getDefaultConfig().shouldReplaceTranslations()); show(p, backOrigin); }));
 
         String fallback = BlockProt.getDefaultConfig().getTranslationFallbackString();
@@ -117,13 +119,15 @@ public final class AdminConfigLanguageDialog {
                 break;
             }
         }
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         boolean allEnabled = !anyDisabled;
         String toggleLabel = allEnabled
             ? AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_DISABLE))
             : AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_ENABLE));
+        String toggleAllIcon = BpDialogStyles.indicatorIcon(!allEnabled, colorblind);
         buttons.add(new DialogButton("toggle_all",
             Component.text()
-                .append(Component.text(AdminConfigDialog.stripColor(Translator.get(allEnabled ? TranslationKey.ICON__TOGGLE_OFF : TranslationKey.ICON__TOGGLE_ON)), allEnabled ? AdminConfigDialog.PASTEL_CORAL : AdminConfigDialog.PASTEL_MINT))
+                .append(Component.text(toggleAllIcon, allEnabled ? AdminConfigDialog.PASTEL_CORAL : AdminConfigDialog.PASTEL_MINT))
                 .append(Component.text(toggleLabel, NamedTextColor.WHITE))
                 .build(),
             Component.text(AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__TOGGLE_ALL_HINT)), TextColor.color(0x888888)),
@@ -138,6 +142,7 @@ public final class AdminConfigLanguageDialog {
         for (String lang : allLangs) {
             boolean isEnabled = LangConfig.isLanguageEnabled(lang);
             String label = getLanguageLabel(plugin, lang);
+            String icon = BpDialogStyles.indicatorIcon(isEnabled, colorblind);
 
             TextColor c = isEnabled ? NamedTextColor.WHITE : AdminConfigDialog.SOFT_GRAY;
             String langStatus = isEnabled
@@ -148,7 +153,7 @@ public final class AdminConfigLanguageDialog {
                 : AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__LANGUAGE__CLICK_ENABLE));
             buttons.add(new DialogButton("lang_" + lang,
                 Component.text()
-                    .append(Component.text(AdminConfigDialog.stripColor(Translator.get(isEnabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
+                    .append(Component.text(icon, isEnabled ? AdminConfigDialog.PASTEL_MINT : AdminConfigDialog.PASTEL_CORAL))
                     .append(Component.text(label, c))
                     .build(),
                 Component.join(JoinConfiguration.newlines(),
@@ -265,7 +270,7 @@ public final class AdminConfigLanguageDialog {
         return Translator.computeCompletionPercentage(langFile);
     }
 
-    private static String getLanguageLabel(@NotNull BlockProt plugin, @NotNull String fileName) {
+    public static String getLanguageLabel(@NotNull BlockProt plugin, @NotNull String fileName) {
         return getLanguageName(plugin, fileName) + " (" + computeCompletion(plugin, fileName) + "%)";
     }
 }

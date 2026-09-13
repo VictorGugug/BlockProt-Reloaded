@@ -157,7 +157,7 @@ public final class EntityInfoInventory extends BlockProtInventory {
                         try { sm.setOwnerProfile(freshProfile); } catch (Throwable ignored2) {}
                         existing.setItemMeta(sm);
                     }
-                }, runnable -> org.bukkit.Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
+                }, runnable -> BlockProt.getFoliaLib().getScheduler().runAtEntity(player, tickTask -> runnable.run()));
             } catch (Exception ignored) {}
         }
 
@@ -180,7 +180,7 @@ public final class EntityInfoInventory extends BlockProtInventory {
         setBackButton();
 
         final List<UUID> uuidSnapshot = new ArrayList<>(state.friendResultCache);
-        org.bukkit.Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
             try {
                 var profiles = BlockProt.getProfileService().findAllByUuid(uuidSnapshot);
                 for (var profile : profiles) {
@@ -192,8 +192,8 @@ public final class EntityInfoInventory extends BlockProtInventory {
                     EntityNBTHandler.FriendEntry entry = handler.getFriendEntry(pUuid.toString());
                     boolean isManager = entry != null && entry.manager();
                     final String lore = isManager ? Translator.get(TranslationKey.INVENTORIES__FRIENDS__PERMISSION__MANAGER) : null;
-                    org.bukkit.Bukkit.getScheduler().runTask(BlockProt.getInstance(),
-                        () -> setPlayerSkullAsync(slot, player, pUuid, pName, lore));
+                    BlockProt.getFoliaLib().getScheduler().runAtEntity(player,
+                        tickTask -> setPlayerSkullAsync(slot, player, pUuid, pName, lore));
                 }
             } catch (Exception ignored) {}
         });

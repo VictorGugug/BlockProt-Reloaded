@@ -280,7 +280,7 @@ public final class AuditInventory extends BlockProtInventory {
                     try { sm.setOwnerProfile(freshProfile); } catch (Throwable ignored2) {}
                     existing.setItemMeta(sm);
                 }
-            }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
+            }, runnable -> BlockProt.getFoliaLib().getScheduler().runAtEntity(player, tickTask -> runnable.run()));
         }
 
         setItemStack(45, Material.CYAN_STAINED_GLASS_PANE,  TranslationKey.INVENTORIES__LAST_PAGE);

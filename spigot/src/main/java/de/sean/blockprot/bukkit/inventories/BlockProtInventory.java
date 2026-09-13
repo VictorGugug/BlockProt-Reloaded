@@ -67,11 +67,6 @@ import java.util.function.Function;
 public abstract class BlockProtInventory implements InventoryHolder {
     protected Inventory inventory;
 
-    @Deprecated
-    public BlockProtInventory() {
-        inventory = createInventory();
-    }
-
     public BlockProtInventory(boolean createInventory) {
         if (createInventory)
             inventory = createInventory();
@@ -229,9 +224,8 @@ public abstract class BlockProtInventory implements InventoryHolder {
 
     public void setPlayerSkull(int index, @Nullable final PlayerProfile profile) {
         if (!Bukkit.isPrimaryThread()) {
-            // Inventory mutations must happen on the main thread. Defer.
-            Bukkit.getScheduler().runTask(BlockProt.getInstance(),
-                () -> setPlayerSkull(index, profile));
+            // Inventory mutations must happen on the main/region thread. Defer.
+            BlockProt.getFoliaLib().getScheduler().runNextTick(tickTask -> setPlayerSkull(index, profile));
             return;
         }
         final var stack = new ItemStack(Material.PLAYER_HEAD, 1);
@@ -244,10 +238,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
             if (profile != null) meta.setOwnerProfile(profile);
             if (profile != null && profile.getName() != null)
                 ComponentMessages.displayName(meta, Component.text(profile.getName()));
-        } catch (Throwable e) {
-            BlockProt.getInstance().getLogger().severe("Failed to set skull head for \"" + (profile == null ? "" : profile.getName()) + "\": " + e.getMessage());
-        }
-
+        } catch (Throwable ignored) {}
         stack.setItemMeta(meta);
         inventory.setItem(index, stack);
     }
@@ -296,7 +287,7 @@ public abstract class BlockProtInventory implements InventoryHolder {
             setPlayerSkull(index, freshProfile);
             if (customTitle != null) setDisplayName(index, customTitle);
             if (lore != null && !lore.isEmpty()) setLoreList(index, lore);
-        }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
+        }, runnable -> BlockProt.getFoliaLib().getScheduler().runAtEntity(player, tickTask -> runnable.run()));
     }
 
     private void setDisplayName(int index, @NotNull String title) {
@@ -440,6 +431,25 @@ public abstract class BlockProtInventory implements InventoryHolder {
             stack.setItemMeta(meta);
         }
         toggleOption(stack, value);
+        inventory.setItem(index, stack);
+    }
+
+    public void setEnchantedOptionItemStack(int index, Material material, String text, List<String> lore, boolean value) {
+        final ItemStack stack = new ItemStack(material, 1);
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null) {
+            meta = Bukkit.getItemFactory().getItemMeta(material);
+        }
+        if (meta != null) {
+            ComponentMessages.displayName(meta, Component.text(stripColors(text)));
+            if (!lore.isEmpty()) {
+                ComponentMessages.lore(meta, lore.stream()
+                    .map(s -> LegacyComponentSerializer.legacySection().deserialize(s))
+                    .toList());
+            }
+            stack.setItemMeta(meta);
+        }
+        toggleEnchants(stack, value);
         inventory.setItem(index, stack);
     }
 

@@ -20,9 +20,11 @@
 
 package de.sean.blockprot.bukkit.dialogs;
 
+import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.commands.TransferCommand;
+import de.sean.blockprot.bukkit.inventories.TextInput;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
@@ -33,6 +35,7 @@ import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_GRAY;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -95,25 +98,13 @@ public final class UserMenuDialog {
             Component.text(transfer, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__TRANSFER_LORE)), SOFT_BLUE),
             p -> {
-                List<DialogBodyEntry> inputBody = new ArrayList<>();
-                inputBody.add(DialogBodyEntry.text(Component.text(
-                    stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__TRANSFER_LORE)), SOFT_GRAY)));
-                DialogTextField field = DialogTextField.of(
-                    "transfer_target",
-                    Component.text(transfer, NamedTextColor.WHITE),
-                    "",
-                    stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CONFIRM_VALUE))
-                );
-                DialogButton inputBack = new DialogButton("cancel",
-                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
-                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), TextColor.color(0x888888)),
-                    back -> show(back, backOrigin)
-                );
-                bridge.showValueInput(p,
-                    Component.text(transfer, PASTEL_GOLD, TextDecoration.BOLD),
-                    inputBody, field,
-                    name -> TransferCommand.transferAll(p, name),
-                    inputBack);
+                p.closeInventory();
+                bridge.closeDialog(p);
+                Consumer<String> handleName = name -> {
+                    if (name == null || name.isBlank()) return;
+                    TransferCommand.transferAll(p, name);
+                };
+                TextInput.open(p, BlockProt.getInstance(), handleName);
             }
         );
 

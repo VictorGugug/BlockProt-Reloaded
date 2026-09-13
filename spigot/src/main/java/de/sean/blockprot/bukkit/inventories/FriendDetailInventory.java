@@ -23,6 +23,7 @@ package de.sean.blockprot.bukkit.inventories;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.FriendHandler;
 import de.sean.blockprot.bukkit.nbt.FriendSupportingHandler;
 import de.sean.blockprot.nbt.FriendModifyAction;
@@ -74,19 +75,52 @@ public final class FriendDetailInventory extends BlockProtInventory {
         final ItemStack item = event.getCurrentItem();
         if (item == null) return;
 
+        final var uuid = state.currentFriend;
+        final @Nullable FriendSupportingHandler<NBTCompound> handler =
+            getFriendSupportingHandler(state.friendSearchState, player, state.getBlock());
+
         switch (item.getType()) {
             case BLACK_STAINED_GLASS_PANE -> goBack(player, state);
             case RED_STAINED_GLASS_PANE -> {
-                final var friend = state.currentFriend;
-                assert friend != null;
-                modifyFriendsForAction(player, friend, FriendModifyAction.REMOVE_FRIEND);
-                this.playerHandler = null;
-                closeAndOpen(player, new FriendManageInventory().fill(player));
+                if (uuid != null) {
+                    modifyFriendsForAction(player, uuid, FriendModifyAction.REMOVE_FRIEND);
+                    this.playerHandler = null;
+                    closeAndOpen(player, new FriendManageInventory().fill(player));
+                }
             }
-            case CLOCK -> { /* timed access removed */ }
-            case ENDER_EYE -> { /* Feature removed */ }
-            case PLAYER_HEAD -> { /* Don't do anything */ }
-            default -> closeAndOpen(player, null);
+            case CHEST -> {
+                if (playerHandler != null && handler != null) {
+                    playerHandler.setLevel(FriendHandler.LEVEL_BASIC);
+                    handler.notifyFriendsMutated();
+                    if (handler instanceof BlockNBTHandler bh) bh.applyToOtherContainer();
+                    closeAndOpen(player, fill(player));
+                }
+            }
+            case IRON_DOOR -> {
+                if (playerHandler != null && handler != null) {
+                    playerHandler.setLevel(FriendHandler.LEVEL_OPERATOR);
+                    handler.notifyFriendsMutated();
+                    if (handler instanceof BlockNBTHandler bh) bh.applyToOtherContainer();
+                    closeAndOpen(player, fill(player));
+                }
+            }
+            case NETHER_STAR -> {
+                if (playerHandler != null && handler != null) {
+                    playerHandler.setLevel(FriendHandler.LEVEL_MANAGER);
+                    handler.notifyFriendsMutated();
+                    if (handler instanceof BlockNBTHandler bh) bh.applyToOtherContainer();
+                    closeAndOpen(player, fill(player));
+                }
+            }
+            case REPEATER -> {
+                if (playerHandler != null && handler != null) {
+                    playerHandler.setLevel(FriendHandler.LEVEL_CUSTOM);
+                    handler.notifyFriendsMutated();
+                    if (handler instanceof BlockNBTHandler bh) bh.applyToOtherContainer();
+                    closeAndOpen(player, fill(player));
+                }
+            }
+            default -> {}
         }
         event.setCancelled(true);
     }
@@ -101,6 +135,21 @@ public final class FriendDetailInventory extends BlockProtInventory {
 
         final var uuid = state.currentFriend;
         if (uuid == null) return inventory;
+
+        this.inventory.clear();
+
+        final @Nullable FriendSupportingHandler<NBTCompound> handler =
+            getFriendSupportingHandler(state.friendSearchState, player, state.getBlock());
+        if (handler == null) return null;
+
+        final Optional<FriendHandler> friendHandler = handler.getFriend(uuid.toString());
+        if (friendHandler.isEmpty()) {
+            BlockProt.getInstance().getLogger().warning(
+                "Tried to open a " + this.getClass().getSimpleName() + " with an unknown player.");
+            return null;
+        }
+        playerHandler = friendHandler.get();
+        int currentLevel = playerHandler.getLevel();
 
         if (!uuid.equals(FriendSupportingHandler.publicUuid)) {
             try {
@@ -119,19 +168,27 @@ public final class FriendDetailInventory extends BlockProtInventory {
 
         setItemStack(1, Material.RED_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__FRIENDS__REMOVE);
 
-        final @Nullable FriendSupportingHandler<NBTCompound> handler =
-            getFriendSupportingHandler(state.friendSearchState, player, state.getBlock());
-        if (handler == null) return null;
+        setEnchantedOptionItemStack(3, Material.CHEST,
+            Translator.get(TranslationKey.DIALOGS__FRIENDS__LEVEL_BASIC),
+            List.of(Translator.get(TranslationKey.DIALOGS__FRIENDS__LEVEL_BASIC_DESC)),
+            currentLevel == FriendHandler.LEVEL_BASIC);
 
-        final Optional<FriendHandler> friendHandler = handler.getFriend(uuid.toString());
-        if (friendHandler.isEmpty()) {
-            BlockProt.getInstance().getLogger().warning(
-                "Tried to open a " + this.getClass().getSimpleName() + " with an unknown player.");
-            return null;
-        }
-        playerHandler = friendHandler.get();
+        setEnchantedOptionItemStack(4, Material.IRON_DOOR,
+            Translator.get(TranslationKey.DIALOGS__FRIENDS__LEVEL_OPERATOR),
+            List.of(Translator.get(TranslationKey.DIALOGS__FRIENDS__LEVEL_OPERATOR_DESC)),
+            currentLevel == FriendHandler.LEVEL_OPERATOR);
 
-        setBackButton();
+        setEnchantedOptionItemStack(5, Material.NETHER_STAR,
+            Translator.get(TranslationKey.DIALOGS__FRIENDS__LEVEL_MANAGER),
+            List.of(Translator.get(TranslationKey.DIALOGS__FRIENDS__LEVEL_MANAGER_DESC)),
+            currentLevel == FriendHandler.LEVEL_MANAGER);
+
+        setEnchantedOptionItemStack(6, Material.REPEATER,
+            Translator.get(TranslationKey.DIALOGS__FRIENDS__LEVEL_CUSTOM),
+            List.of(Translator.get(TranslationKey.DIALOGS__FRIENDS__LEVEL_CUSTOM_DESC)),
+            currentLevel == FriendHandler.LEVEL_CUSTOM);
+
+        setBackButton(8);
         return inventory;
     }
 }

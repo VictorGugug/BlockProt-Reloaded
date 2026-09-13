@@ -82,6 +82,9 @@ public final class Translator {
     private static final HashMap<TranslationKey, TranslationValue> values = new HashMap<>();
 
     @NotNull
+    private static final HashMap<String, String> searchAliases = new HashMap<>();
+
+    @NotNull
     private static Locale locale = defaultLocale;
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
@@ -168,6 +171,35 @@ public final class Translator {
                 + " (" + missingInActive.size() + "): "
                 + String.join(", ", missingInActive));
         }
+
+        searchAliases.clear();
+        loadAliases(defaultConfig);
+        loadAliases(config);
+    }
+
+    private static void loadAliases(@NotNull YamlConfiguration cfg) {
+        var section = cfg.getConfigurationSection("search_aliases");
+        if (section == null) return;
+        for (String canonicalKey : section.getKeys(false)) {
+            String rawVal = section.getString(canonicalKey);
+            if (rawVal == null || rawVal.isBlank()) continue;
+            String target = canonicalKey.toUpperCase(Locale.ROOT);
+            for (String alias : rawVal.split(",")) {
+                String trimmed = alias.trim().toUpperCase(Locale.ROOT);
+                if (!trimmed.isEmpty()) {
+                    searchAliases.put(trimmed, target);
+                    String unaccented = java.text.Normalizer.normalize(trimmed, java.text.Normalizer.Form.NFD)
+                        .replaceAll("\\p{M}", "");
+                    searchAliases.put(unaccented, target);
+                }
+            }
+        }
+    }
+
+    @NotNull
+    public static String normalizeSearchToken(@NotNull String token) {
+        String upper = token.trim().toUpperCase(Locale.ROOT);
+        return searchAliases.getOrDefault(upper, upper);
     }
 
     private static boolean containsMiniMessage(@NotNull String text) {
@@ -218,6 +250,7 @@ public final class Translator {
 
     public static void resetTranslations() {
         values.clear();
+        searchAliases.clear();
     }
 
     public static int computeCompletionPercentage(@NotNull YamlConfiguration langFile) {

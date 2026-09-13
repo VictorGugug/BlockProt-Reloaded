@@ -44,7 +44,7 @@ import org.jetbrains.annotations.NotNull;
 
 public final class LockableCategoryDialog {
 
-    private static final int PER_PAGE = 9;
+    private static final int PER_PAGE = 6;
 
     private LockableCategoryDialog() {}
 
@@ -65,32 +65,33 @@ public final class LockableCategoryDialog {
         int to = Math.min(from + PER_PAGE, materials.size());
         List<Material> pageMats = materials.subList(from, to);
 
-        Component title = Component.text(categoryName, PASTEL_GOLD, TextDecoration.BOLD);
+        Component title = Component.text(
+            categoryName,
+            PASTEL_GOLD, TextDecoration.BOLD
+        );
 
         List<DialogBodyEntry> body = new ArrayList<>();
-        body.add(DialogBodyEntry.text(Component.text()
-            .append(Component.text(" " + categoryName + " ", NamedTextColor.WHITE))
-            .build()));
         body.add(DialogBodyEntry.text(Component.text(
-            Translator.get(TranslationKey.DIALOGS__PAGE)
+            stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CAT_PREFIX))
+            + categoryName
+            + " | "
+            + stripColor(Translator.get(TranslationKey.DIALOGS__PAGE))
                 .replace("{current}", String.valueOf(safePage + 1))
                 .replace("{total}", String.valueOf(totalPages)),
-            TextColor.color(0x888888))));
-        body.add(DialogBodyEntry.text(Component.text(
-            stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE))
-                + " / "
-                + stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE)),
-            TextColor.color(0x888888))));
+            SOFT_GRAY)));
+
         List<DialogButton> buttons = new ArrayList<>();
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
 
         for (Material mat : pageMats) {
             boolean active = cfg.isLockable(mat) || cfg.isLockableEntity(mat);
             TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
             String displayName = formatMaterialName(mat.name());
+            String icon = BpDialogStyles.indicatorIcon(active, colorblind);
 
             buttons.add(new DialogButton("mat_" + mat.name(),
                 Component.text()
-                    .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
+                    .append(Component.text(icon, c))
                     .append(Component.text(displayName, NamedTextColor.WHITE))
                     .build(),
                 Component.join(JoinConfiguration.newlines(),
@@ -108,37 +109,47 @@ public final class LockableCategoryDialog {
         long activeCount = materials.stream().filter(m -> cfg.isLockable(m) || cfg.isLockableEntity(m)).count();
         boolean noneActive = activeCount == 0;
         TextColor familyColor = BpDialogStyles.stateColor(activeCount, materials.size());
+        String toggleCatIcon = BpDialogStyles.indicatorIcon(activeCount, materials.size(), colorblind);
 
-        List<DialogButton> extraButtons = new ArrayList<>();
-        extraButtons.add(new DialogButton("toggle_category",
+        BpDialogStyles.padToGrid(buttons, 6);
+
+        // Fixed Bottom Navigation Row (3 columns): [ Prev ] [ Toggle Category ] [ Next ]
+        DialogButton prevBtn = safePage > 0
+            ? new DialogButton("prev",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
+                p -> show(p, backOrigin, categoryName, materials, safePage - 1))
+            : new DialogButton("prev_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
+
+        DialogButton toggleCatBtn = new DialogButton("toggle_category",
             Component.text()
-                .append(Component.text(stripColor(Translator.get(noneActive ? TranslationKey.ICON__TOGGLE_OFF : TranslationKey.ICON__TOGGLE_ON)), familyColor))
+                .append(Component.text(toggleCatIcon, familyColor))
                 .append(Component.text(categoryName, familyColor))
                 .build(),
             Component.text(stripColor(Translator.get(noneActive ? TranslationKey.DIALOGS__CLICK_ENABLE : TranslationKey.DIALOGS__CLICK_DISABLE)), TextColor.color(0x888888)),
             p -> {
-                boolean targetState = noneActive; // If none are active, we want to enable all. If any are active, we disable all.
+                boolean targetState = noneActive;
                 BlockProt.getDefaultConfig().batchSetLockable(materials, targetState, p);
                 show(p, backOrigin, categoryName, materials, safePage);
             }
-        ));
+        );
 
-        List<DialogButton> navButtons = new ArrayList<>();
-        if (safePage > 0) {
-            navButtons.add(new DialogButton("prev",
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, categoryName, materials, safePage - 1)));
-        }
-        if (safePage + 1 < totalPages) {
-            navButtons.add(new DialogButton("next",
+        DialogButton nextBtn = safePage + 1 < totalPages
+            ? new DialogButton("next",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, categoryName, materials, safePage + 1)));
-        }
+                p -> show(p, backOrigin, categoryName, materials, safePage + 1))
+            : new DialogButton("next_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
 
-        buttons.addAll(navButtons);
-        buttons.addAll(extraButtons);
+        buttons.add(prevBtn);
+        buttons.add(toggleCatBtn);
+        buttons.add(nextBtn);
 
         // Always returns to the parent LockablesDialog (category list): this is one level
         // of internal navigation within the same Lockables feature, not an external-origin
@@ -154,7 +165,7 @@ public final class LockableCategoryDialog {
         bridge.showMultiAction(player, title, body, buttons, backBtn, 3);
     }
 
-    static String formatMaterialName(String name) {
+    public static String formatMaterialName(String name) {
         StringBuilder sb = new StringBuilder();
         boolean nextUpper = true;
         for (int i = 0; i < name.length(); i++) {

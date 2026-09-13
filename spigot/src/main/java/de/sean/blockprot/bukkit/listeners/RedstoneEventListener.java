@@ -22,6 +22,7 @@ package de.sean.blockprot.bukkit.listeners;
 
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockRedstoneEvent;
@@ -34,6 +35,7 @@ public class RedstoneEventListener implements Listener {
     public void onRedstone(BlockRedstoneEvent event) {
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
         if (!BlockProt.getDefaultConfig().isLockable(event.getBlock().getType(), event.getBlock().getWorld())) return;
+        if (!ProtectedBlockCache.isProtected(event.getBlock())) return;
         final BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
         if (handler.isProtected() && handler.getRedstoneHandler().getCurrentProtection()) {
             event.setNewCurrent(0);

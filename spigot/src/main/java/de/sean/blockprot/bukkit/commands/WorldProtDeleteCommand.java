@@ -48,7 +48,7 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
 
     @Override
     public boolean canUseCommand(@NotNull CommandSender sender) {
-        return sender.isOp() || sender.hasPermission(Permissions.USER_ADMIN.key());
+        return de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(sender, de.sean.blockprot.bukkit.admin.AdminAction.PROTDEL);
     }
 
     @Override
@@ -59,7 +59,7 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
             return true;
         }
 
-        if (!player.isOp() && !player.hasPermission(Permissions.USER_ADMIN.key())) {
+        if (!canUseCommand(player)) {
             ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }

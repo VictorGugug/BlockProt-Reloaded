@@ -170,6 +170,8 @@ public final class BlockProt extends JavaPlugin {
         try { registerIntegration(new ClaimChunkIntegration());    } catch (NoClassDefFoundError ignored) {}
         try { registerIntegration(new ResidenceIntegration());     } catch (NoClassDefFoundError ignored) {}
         try { registerIntegration(new GriefPreventionIntegration()); } catch (NoClassDefFoundError ignored) {}
+        try { registerIntegration(new GeyserIntegration());         } catch (NoClassDefFoundError ignored) {}
+        try { registerIntegration(new FloodgateIntegration());      } catch (NoClassDefFoundError ignored) {}
         for (PluginIntegration integration : integrations) {
             try { integration.load(); } catch (NoClassDefFoundError ignored) {}
         }
@@ -215,7 +217,7 @@ public final class BlockProt extends JavaPlugin {
         BlockProtLogger.init(this.getDataFolder(), sessionLogEnabled);
         String version = BlockProt.getPluginVersion();
 
-        BlockProtLogger.log("=== Startup: BlockProt v" + version + " ===");
+        BlockProtLogger.log("Startup: BlockProt v" + version);
         BlockProtLogger.log("Server: " + Bukkit.getVersion());
         BlockProtLogger.log("Runtime: " + VersionCompat.getDiagnosticString());
         if (VersionCompat.is26Family()) {
@@ -248,6 +250,7 @@ public final class BlockProt extends JavaPlugin {
 
         hybridDatabase = new HybridDatabase(this);
         hybridDatabase.start(defaultConfig);
+        de.sean.blockprot.bukkit.admin.AdminTierManager.load();
 
         try {
             auditLogger = new AuditLogger(this.getDataFolder());
@@ -268,7 +271,7 @@ public final class BlockProt extends JavaPlugin {
 
         if (defaultConfig.isWorldExpiryEnabled()) {
             int interval = Math.max(1, defaultConfig.getWorldExpiryCheckInterval());
-            new WorldExpiryTask().runTaskTimer(this, 0L, interval * 60L * 20L);
+            foliaLib.getScheduler().runTimer(new WorldExpiryTask(), 0L, interval * 60L * 20L);
         }
 
         metrics = new Metrics(this, pluginId);
@@ -299,8 +302,15 @@ public final class BlockProt extends JavaPlugin {
             true,
             Translator.get(TranslationKey.CONSOLE__BOOT_REGISTERED));
 
-        Objects.requireNonNull(this.getCommand("blockprot"))
-            .setExecutor(new BlockProtCommand());
+        org.bukkit.command.PluginCommand bpCmd = this.getCommand("blockprot");
+        if (bpCmd != null) {
+            BlockProtCommand bpc = new BlockProtCommand();
+            bpCmd.setExecutor(bpc);
+            bpCmd.setTabCompleter(bpc);
+        } else {
+            BlockProtLogger.error("Failed to register /blockprot command: getCommand(\"blockprot\") returned null. Check plugin.yml command declaration!", null);
+        }
+
 
         BlockProtConsole.bootStatus(
             Translator.get(TranslationKey.CONSOLE__BOOT_COMMANDS),
@@ -493,6 +503,7 @@ public final class BlockProt extends JavaPlugin {
         if (fileWatcher    != null) fileWatcher.stop();
         if (auditLogger    != null) auditLogger.close();
         if (hybridDatabase != null) hybridDatabase.close();
+        de.sean.blockprot.bukkit.admin.AdminTierManager.save();
         BlockProtLogger.close();
         super.onDisable();
     }
@@ -509,6 +520,7 @@ public final class BlockProt extends JavaPlugin {
         LangConfig.reload();
         this.reloadConfig();
         defaultConfig = new DefaultConfig(this.getConfig(), this.getDataFolder());
+        de.sean.blockprot.bukkit.admin.AdminTierManager.load();
 
         Translator.resetTranslations();
 
@@ -812,7 +824,8 @@ public final class BlockProt extends JavaPlugin {
     /** Keys managed by separate files - never merged back into config.yml. */
     private static final Set<String> EXTERNAL_CONFIG_KEYS = Set.of(
         "lockable_tile_entities", "lockable_shulker_boxes", "lockable_blocks", "lockable_doors",
-        "lockable_entities", "auto_drop_to_inventory",
+        "lockable_entities", "protectable_entities", "entity_protection.protectable_entities",
+        "auto_drop_to_inventory",
         "mysql.enabled", "mysql.host", "mysql.port", "mysql.database",
         "mysql.username", "mysql.password", "mysql.jdbc_url",
         "mysql.pool.maximum_pool_size", "mysql.pool.minimum_idle", "mysql.pool.connection_timeout_ms",
@@ -856,6 +869,7 @@ public final class BlockProt extends JavaPlugin {
         boolean cleaned = false;
         String[] listKeys = {"lockable_tile_entities", "lockable_shulker_boxes",
             "lockable_blocks", "lockable_doors", "lockable_entities",
+            "protectable_entities",
             "auto_drop_to_inventory.blocks"};
         for (String key : listKeys) {
             if (!diskConfig.contains(key)) continue;

@@ -22,6 +22,7 @@ package de.sean.blockprot.bukkit.listeners;
 
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -39,6 +40,8 @@ public class PistonEventListener implements Listener {
         }
 
         for (Block block : event.getBlocks()) {
+            if (!ProtectedBlockCache.isProtected(block)) continue;
+
             if (BlockProt.getDefaultConfig().isLockableShulkerBox(block.getType(), block.getWorld())) {
                 // Shulker boxes drop right away, so they will never be pushable if locked.
                 if (new BlockNBTHandler(block).isProtected()) {
@@ -64,6 +67,8 @@ public class PistonEventListener implements Listener {
             return;
         }
         for (Block block : event.getBlocks()) {
+            if (!ProtectedBlockCache.isProtected(block)) continue;
+
             if (BlockProt.getDefaultConfig().isLockableShulkerBox(block.getType(), block.getWorld())) {
                 if (new BlockNBTHandler(block).isProtected()) {
                     event.setCancelled(true);

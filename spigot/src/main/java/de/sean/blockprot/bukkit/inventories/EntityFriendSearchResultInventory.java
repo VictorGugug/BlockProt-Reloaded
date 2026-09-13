@@ -27,7 +27,6 @@ import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
 import de.sean.blockprot.bukkit.util.PlayerLookup;
 import de.sean.blockprot.bukkit.util.StringUtil;
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -36,12 +35,12 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.scheduler.BukkitTask;
 import org.enginehub.squirrelid.Profile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Search results for adding a friend to a protected entity (pet/villager).
@@ -55,11 +54,7 @@ public final class EntityFriendSearchResultInventory extends BlockProtInventory 
     private Entity entity;
     private EntityNBTHandler handler;
 
-    private final ConcurrentLinkedQueue<Profile> resultQueue = new ConcurrentLinkedQueue<>();
     private final int maxResults = getSize() - 1;
-
-    @Nullable private BukkitTask loadTask = null;
-    @Nullable private BukkitTask updateTask = null;
 
     public EntityFriendSearchResultInventory() { super(true); }
 
@@ -85,9 +80,36 @@ public final class EntityFriendSearchResultInventory extends BlockProtInventory 
         }
         setBackButton();
 
-        updateTask = Bukkit.getScheduler().runTaskTimer(BlockProt.getInstance(), new UpdateTask(), 0L, 1L);
-        loadTask = Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(),
-            new LoadTask(player, searchQuery, BlockProt.getDefaultConfig().getFriendSearchSimilarityPercentage()));
+        BlockProt.getFoliaLib().getScheduler().runAsync(task -> {
+            double minSimilarity = BlockProt.getDefaultConfig().getFriendSearchSimilarityPercentage();
+            List<Profile> results = new ArrayList<>();
+            try {
+                results = PlayerLookup.candidates(player.getUniqueId()).entrySet().stream()
+                    .map(e -> new Profile(e.getKey(), e.getValue()))
+                    .map(p -> new ImmutablePair<>(p, StringUtil.similarity(p.getName(), searchQuery)))
+                    .filter(pair -> pair.right >= minSimilarity)
+                    .sorted((a, b) -> b.right.compareTo(a.right))
+                    .limit(maxResults)
+                    .map(pair -> pair.left)
+                    .toList();
+            } catch (Exception e) {
+                BlockProt.getInstance().getLogger().warning("EntityFriendSearchResultInventory load failed: " + e.getMessage());
+            }
+
+            final List<Profile> finalResults = results;
+            BlockProt.getFoliaLib().getScheduler().runAtEntity(player, tickTask -> {
+                for (int i = 0; i < maxResults; i++) {
+                    inventory.clear(i);
+                }
+                int idx = 0;
+                for (var profile : finalResults) {
+                    if (idx >= maxResults) break;
+                    final String name = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
+                    setPlayerSkull(idx, BlockProtInventory.createPlayerProfile(profile.getUniqueId(), name));
+                    idx++;
+                }
+            });
+        });
 
         return inventory;
     }
@@ -113,64 +135,5 @@ public final class EntityFriendSearchResultInventory extends BlockProtInventory 
 
     @Override
     public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {
-        if (loadTask != null) loadTask.cancel();
-        if (updateTask != null) updateTask.cancel();
-    }
-
-    private class UpdateTask implements Runnable {
-        private int idx = 0;
-
-        @Override
-        public void run() {
-            var scheduler = Bukkit.getScheduler();
-            if (loadTask != null
-                && !scheduler.isQueued(loadTask.getTaskId())
-                && !scheduler.isCurrentlyRunning(loadTask.getTaskId())
-                && resultQueue.isEmpty()) {
-                if (idx == 0) for (int i = 0; i < maxResults; i++) inventory.clear(i);
-                if (updateTask != null) updateTask.cancel();
-                return;
-            }
-
-            Profile profile;
-            while ((profile = resultQueue.poll()) != null && idx < maxResults) {
-                if (idx == 0) for (int i = 0; i < maxResults; i++) inventory.clear(i);
-                final String name = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
-                setPlayerSkull(idx, BlockProtInventory.createPlayerProfile(profile.getUniqueId(), name));
-                idx++;
-            }
-            if (idx == maxResults) {
-                if (loadTask != null) loadTask.cancel();
-                if (updateTask != null) updateTask.cancel();
-            }
-        }
-    }
-
-    private class LoadTask implements Runnable {
-        private final Player player;
-        private final String query;
-        private final double minSimilarity;
-
-        LoadTask(@NotNull Player player, @NotNull String query, double minSimilarity) {
-            this.player = player;
-            this.query = query;
-            this.minSimilarity = minSimilarity;
-        }
-
-        @Override
-        public void run() {
-            try {
-                PlayerLookup.candidates(player.getUniqueId()).entrySet().stream()
-                    .map(e -> new Profile(e.getKey(), e.getValue()))
-                    .map(p -> new ImmutablePair<>(p, StringUtil.similarity(p.getName(), query)))
-                    .filter(pair -> pair.right >= minSimilarity)
-                    .sorted((a, b) -> b.right.compareTo(a.right))
-                    .limit(maxResults)
-                    .map(pair -> pair.left)
-                    .forEach(resultQueue::add);
-            } catch (Exception e) {
-                BlockProt.getInstance().getLogger().warning("EntityFriendSearchResultInventory load failed: " + e.getMessage());
-            }
-        }
     }
 }

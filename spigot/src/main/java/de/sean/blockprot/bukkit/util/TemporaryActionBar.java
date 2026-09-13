@@ -24,68 +24,76 @@ import com.tcoded.folialib.FoliaLib;
 import de.sean.blockprot.bukkit.BlockProt;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Sends an action-bar message that persists for a configurable number of ticks,
- * then restores the vanilla empty action bar automatically.
- *
- * <p>Implementation note: the action bar is resent every 40 ticks (2 s) so the
- * client does not fade it out before the configured duration elapses. A scheduled
- * task per player handles this; cancelling the task triggers the restore.
+ * Sends a temporary action bar that stays visible across client fade-out intervals.
  */
 public final class TemporaryActionBar {
 
-    /** Active task handles keyed by player UUID. */
-    private static final Map<UUID, Object> activeTasks = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> activeTokens = new ConcurrentHashMap<>();
+    private static final AtomicLong tokenGenerator = new AtomicLong(0);
 
     private TemporaryActionBar() {}
 
-    /**
-     * Shows {@code message} in the player's action bar for {@code durationTicks} ticks.
-     * Replaces any previously running temporary action bar for that player.
-     *
-     * @param player       recipient
-     * @param message      legacy-colour-coded string (e.g. {@code "§aBlock protected!"})
-     * @param durationTicks how long to hold the message visible (20 ticks = 1 second)
-     */
-    public static void show(@NotNull Player player, @NotNull String message, long durationTicks) {
-        UUID uuid = player.getUniqueId();
-        cancel(uuid);
+    public static void show(@NotNull Player player, @NotNull String message) {
+        long ticks = BlockProt.getDefaultConfig() != null ? BlockProt.getDefaultConfig().getActionBarDurationTicks() : 120L;
+        show(player, message, ticks);
+    }
 
+    public static void show(@NotNull Player player, @NotNull Component component) {
+        long ticks = BlockProt.getDefaultConfig() != null ? BlockProt.getDefaultConfig().getActionBarDurationTicks() : 120L;
+        show(player, component, ticks);
+    }
+
+    public static void show(@NotNull Player player, @NotNull String message, long durationTicks) {
         if (!ComponentMessages.isActionBarSupported()) {
-            // No action bar on this server type (e.g. vanilla Spigot): send once as chat.
             ComponentMessages.sendLegacyActionBar(player, message);
             return;
         }
-
         Component component = LegacyComponentSerializer.legacySection().deserialize(message);
-        FoliaLib folia = BlockProt.getFoliaLib();
-
-        // Resend the message every 40 ticks so the client does not fade it out.
-        final long resendInterval = 40L;
-        final long[] remaining = {durationTicks};
-
-        // Schedule an immediately-run repeating task via FoliaLib.
-        // FoliaLib does not expose a direct "repeating async entity task", so we
-        // chain single delayed tasks to stay Folia-safe.
-        scheduleResend(uuid, player, component, remaining, resendInterval, folia);
+        show(player, component, durationTicks);
     }
 
-    /**
-     * Cancels any active temporary action bar for the given player and clears the bar.
-     *
-     * @param uuid player UUID
-     */
+    public static void show(@NotNull Player player, @NotNull Component component, long durationTicks) {
+        UUID uuid = player.getUniqueId();
+        long token = tokenGenerator.incrementAndGet();
+        activeTokens.put(uuid, token);
+
+        ComponentMessages.sendActionBar(player, component);
+
+        FoliaLib folia = BlockProt.getFoliaLib();
+        if (durationTicks <= 0L) {
+            return;
+        }
+
+        folia.getScheduler().runAtEntityLater(player, () -> {
+            Long current = activeTokens.get(uuid);
+            if (current != null && current == token) {
+                activeTokens.remove(uuid);
+                if (player.isOnline() && ComponentMessages.isActionBarSupported()) {
+                    ComponentMessages.sendActionBar(player, Component.empty());
+                }
+            }
+        }, durationTicks);
+
+        final long resendInterval = 40L;
+        if (durationTicks > resendInterval) {
+            final long[] remaining = {durationTicks - resendInterval};
+            folia.getScheduler().runAtEntityLater(player, () -> scheduleResend(uuid, player, component, remaining, resendInterval, token, folia), resendInterval);
+        }
+    }
+
     public static void cancel(@NotNull UUID uuid) {
-        activeTasks.remove(uuid);
-        // Clear the action bar next tick via a fire-and-forget task.
-        Player online = org.bukkit.Bukkit.getPlayer(uuid);
+        activeTokens.remove(uuid);
+        Player online = Bukkit.getPlayer(uuid);
         if (online != null && ComponentMessages.isActionBarSupported()) {
             ComponentMessages.sendActionBar(online, Component.empty());
         }
@@ -93,27 +101,19 @@ public final class TemporaryActionBar {
 
     private static void scheduleResend(@NotNull UUID uuid, @NotNull Player player,
                                        @NotNull Component component, long[] remaining,
-                                       long resendInterval, @NotNull FoliaLib folia) {
-        if (!activeTasks.containsKey(uuid)) return; // was cancelled
-        if (!player.isOnline()) { activeTasks.remove(uuid); return; }
+                                       long resendInterval, long token, @NotNull FoliaLib folia) {
+        Long currentToken = activeTokens.get(uuid);
+        if (currentToken == null || currentToken != token) return;
+        if (!player.isOnline()) {
+            activeTokens.remove(uuid);
+            return;
+        }
 
         ComponentMessages.sendActionBar(player, component);
         remaining[0] -= resendInterval;
 
         if (remaining[0] > 0) {
-            // Mark as active (value is just a sentinel).
-            activeTasks.put(uuid, Boolean.TRUE);
-            folia.getScheduler().runLater(task -> scheduleResend(uuid, player, component, remaining, resendInterval, folia),
-                resendInterval);
-        } else {
-            activeTasks.remove(uuid);
-            if (ComponentMessages.isActionBarSupported()) {
-                ComponentMessages.sendActionBar(player, Component.empty());
-            }
+            folia.getScheduler().runAtEntityLater(player, () -> scheduleResend(uuid, player, component, remaining, resendInterval, token, folia), resendInterval);
         }
-    }
-
-    private static void register(@NotNull UUID uuid) {
-        activeTasks.put(uuid, Boolean.TRUE);
     }
 }

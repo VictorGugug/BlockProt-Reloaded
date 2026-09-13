@@ -32,5 +32,9 @@ public final class InventoryConstants {
 
     public static final int tripleLine = 9 * 3;
 
+    public static final int quadrupleLine = 9 * 4;
+
+    public static final int quintupleLine = 9 * 5;
+
     public static final int sextupletLine = 9 * 6;
 }

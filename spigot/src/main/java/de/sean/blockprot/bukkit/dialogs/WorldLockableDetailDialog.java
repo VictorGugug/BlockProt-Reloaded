@@ -92,16 +92,17 @@ public final class WorldLockableDetailDialog {
                 .replace("{total}", String.valueOf(totalPages)),
             TextColor.color(0x888888))));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         for (MaterialEntry entry : pageEntries) {
             boolean active = entry.active();
             TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
             String displayName = LockableCategoryDialog.formatMaterialName(entry.material().name());
+            String icon = BpDialogStyles.indicatorIcon(active, colorblind);
 
             buttons.add(new DialogButton("mat_" + entry.material().name(),
                 Component.text()
-                    .append(Component.text(stripColor(Translator.get(active
-                        ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
+                    .append(Component.text(icon, c))
                     .append(Component.text(displayName, NamedTextColor.WHITE))
                     .build(),
                 Component.join(JoinConfiguration.newlines(),
@@ -115,21 +116,33 @@ public final class WorldLockableDetailDialog {
                 }));
         }
 
-        List<DialogButton> navButtons = new ArrayList<>();
-        if (safePage > 0) {
-            navButtons.add(new DialogButton("prev",
+        BpDialogStyles.padToGrid(buttons, PER_PAGE);
+
+        DialogButton prevBtn = safePage > 0
+            ? new DialogButton("prev",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, world, safePage - 1)));
-        }
-        if (safePage + 1 < totalPages) {
-            navButtons.add(new DialogButton("next",
+                p -> show(p, backOrigin, world, safePage - 1))
+            : new DialogButton("prev_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
+
+        DialogButton spacerBtn = new DialogButton("spacer_nav", Component.empty(), null, p -> {});
+
+        DialogButton nextBtn = safePage + 1 < totalPages
+            ? new DialogButton("next",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, world, safePage + 1)));
-        }
+                p -> show(p, backOrigin, world, safePage + 1))
+            : new DialogButton("next_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
 
-        buttons.addAll(navButtons);
+        buttons.add(prevBtn);
+        buttons.add(spacerBtn);
+        buttons.add(nextBtn);
 
         DialogButton backBtn = new DialogButton("back",
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),

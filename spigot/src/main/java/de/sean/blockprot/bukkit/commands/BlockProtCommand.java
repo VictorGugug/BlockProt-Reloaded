@@ -21,6 +21,9 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.Permissions;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
@@ -75,8 +78,9 @@ public final class BlockProtCommand implements TabExecutor {
         cli("unlock",       new AdminUnlockCommand());
         cli("protdel",      new WorldProtDeleteCommand());
 
-        admin("lockables",  new LockablesCommand());
+        admin("lockables",   new LockablesCommand());
         admin("recommended", new RecommendedCommand());
+        admin("tiers",       new TiersCommand());
     }
 
     private static void gui(String name, CommandExecutor exec) {
@@ -94,61 +98,93 @@ public final class BlockProtCommand implements TabExecutor {
         ALL_COMMANDS.put(name, exec);
     }
 
+    @NotNull
+    public static Map<String, CommandExecutor> getActiveCommands(@NotNull CommandSender sender) {
+        boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
+        boolean isAdmin = AdminTierManager.hasAnyAdminPermission(sender);
+
+        if (menusEnabled) {
+            if (sender instanceof Player) {
+                Map<String, CommandExecutor> cmds = new LinkedHashMap<>();
+                cmds.put("user", GUI_COMMANDS.get("user"));
+                if (isAdmin) {
+                    cmds.put("admin", GUI_COMMANDS.get("admin"));
+                }
+                return Collections.unmodifiableMap(cmds);
+            }
+            Map<String, CommandExecutor> consoleCmds = new LinkedHashMap<>();
+            consoleCmds.putAll(CLI_COMMANDS);
+            consoleCmds.putAll(ADMIN_COMMANDS);
+            return Collections.unmodifiableMap(consoleCmds);
+        }
+
+        Map<String, CommandExecutor> cli = new LinkedHashMap<>();
+        cli.putAll(CLI_COMMANDS);
+        if (isAdmin || !(sender instanceof Player)) {
+            cli.putAll(ADMIN_COMMANDS);
+        }
+        return Collections.unmodifiableMap(cli);
+    }
+
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
-        boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
-        boolean playerMenuMode = menusEnabled && sender instanceof Player;
+        try {
+            boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
+            boolean playerMenuMode = menusEnabled && sender instanceof Player;
 
-        if (args.length == 0) {
-            if (playerMenuMode) {
-                // `user` takes priority over `admin` on the bare command, matching
-                // convention in other plugins. Admins still reach the admin menu
-                // explicitly via `/blockprot admin`.
-                CommandExecutor exec = GUI_COMMANDS.get("user");
-                return exec != null && exec.onCommand(sender, command, label, args);
-            }
-            CommandExecutor help = CLI_COMMANDS.get("help");
-            return help != null && help.onCommand(sender, command, label, args);
-        }
-
-        String sub = args[0].toLowerCase(Locale.ROOT);
-
-        if (playerMenuMode) {
-            CommandExecutor adminExec = ADMIN_COMMANDS.get(sub);
-            if (adminExec != null) {
-                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_MENUS));
-                return true;
-            }
-            CommandExecutor exec = GUI_COMMANDS.get(sub);
-            if (exec == null) {
-                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_MENUS));
-                return true;
-            }
-            return exec.onCommand(sender, command, label, args);
-        } else {
-            CommandExecutor adminExec = ADMIN_COMMANDS.get(sub);
-            if (adminExec != null) {
-                return adminExec.onCommand(sender, command, label, args);
-            }
-            CommandExecutor exec = CLI_COMMANDS.get(sub);
-            if (exec == null) {
-                if (GUI_COMMANDS.containsKey(sub)) {
-                    ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_CLI_GUI_ONLY));
-                } else {
-                    ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_CLI));
+            if (args.length == 0) {
+                if (playerMenuMode) {
+                    CommandExecutor exec = GUI_COMMANDS.get("user");
+                    return exec != null && exec.onCommand(sender, command, label, args);
                 }
+                CommandExecutor help = CLI_COMMANDS.get("help");
+                return help != null && help.onCommand(sender, command, label, args);
+            }
+
+            String sub = args[0].toLowerCase(Locale.ROOT);
+
+            if (!menusEnabled && GUI_COMMANDS.containsKey(sub)) {
+                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_CLI_GUI_ONLY));
                 return true;
             }
-            return exec.onCommand(sender, command, label, args);
+
+            Map<String, CommandExecutor> active = getActiveCommands(sender);
+            CommandExecutor exec = active.get(sub);
+
+            if (exec != null) {
+                if (exec.canUseCommand(sender)) {
+                    return exec.onCommand(sender, command, label, args);
+                }
+                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+                return true;
+            }
+
+            if (playerMenuMode) {
+                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_MENUS));
+            } else {
+                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__CMD_USAGE_CLI));
+            }
+            return true;
+        } catch (Throwable t) {
+            String fullCmd = "/" + label + (args.length > 0 ? " " + String.join(" ", args) : "");
+            String senderInfo = (sender instanceof Player p)
+                ? p.getName() + " (" + p.getUniqueId() + ")"
+                : sender.getName() + " (Console)";
+            BlockProtLogger.error("Exception occurred while executing command '" + fullCmd + "' by " + senderInfo + ": " + t.getMessage(), t);
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ERROR_PREFIX)
+                + t.getClass().getSimpleName() + ": " + (t.getMessage() != null ? t.getMessage() : "Unknown error"));
+            return true;
         }
     }
 
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                                @NotNull String alias, @NotNull String[] args) {
+        Map<String, CommandExecutor> active = getActiveCommands(sender);
+
         if (args.length > 1) {
-            CommandExecutor exec = ALL_COMMANDS.get(args[0].toLowerCase(Locale.ROOT));
+            CommandExecutor exec = active.get(args[0].toLowerCase(Locale.ROOT));
             if (exec != null && exec.canUseCommand(sender)) {
                 List<String> sub = exec.onTabComplete(sender, command, alias, args);
                 return sub != null ? sub : Collections.emptyList();
@@ -156,16 +192,9 @@ public final class BlockProtCommand implements TabExecutor {
             return Collections.emptyList();
         }
 
-        boolean menusEnabled = !BlockProt.getDefaultConfig().areExtraCommandsEnabled();
-        boolean playerMenuMode = menusEnabled && sender instanceof Player;
-        Map<String, CommandExecutor> visible = playerMenuMode ? new LinkedHashMap<>(GUI_COMMANDS) : new LinkedHashMap<>(CLI_COMMANDS);
-        if (!playerMenuMode) {
-            visible.putAll(ADMIN_COMMANDS);
-        }
-
         String partial = args.length == 1 ? args[0].toLowerCase(Locale.ROOT) : "";
         List<String> result = new ArrayList<>();
-        for (var entry : visible.entrySet()) {
+        for (var entry : active.entrySet()) {
             if (entry.getKey().startsWith(partial) && entry.getValue().canUseCommand(sender))
                 result.add(entry.getKey());
         }

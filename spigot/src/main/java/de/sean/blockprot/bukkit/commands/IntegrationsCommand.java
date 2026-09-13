@@ -74,6 +74,6 @@ public class IntegrationsCommand implements CommandExecutor {
 
     @Override
     public boolean canUseCommand(@NotNull CommandSender sender) {
-        return sender.isOp();
+        return de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(sender, de.sean.blockprot.bukkit.admin.AdminAction.INTEGRATIONS);
     }
 }

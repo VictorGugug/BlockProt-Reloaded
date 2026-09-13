@@ -20,6 +20,8 @@
 
 package de.sean.blockprot.bukkit.util;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import de.sean.blockprot.bukkit.BlockProt;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -29,13 +31,15 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Asynchronous Mojang-API skin resolver using Bukkit's {@code PlayerProfile.update()}.
@@ -43,7 +47,10 @@ import java.util.concurrent.ConcurrentHashMap;
 @SuppressWarnings("deprecation")
 public final class SkinCache {
 
-    private static final ConcurrentHashMap<String, PlayerProfile> cache = new ConcurrentHashMap<>();
+    private static final Cache<String, PlayerProfile> cache = Caffeine.newBuilder()
+        .maximumSize(5000)
+        .expireAfterAccess(24, TimeUnit.HOURS)
+        .build();
 
     private SkinCache() {}
 
@@ -54,7 +61,7 @@ public final class SkinCache {
     @Nullable
     public static PlayerProfile getCachedOrOnlineProfile(@NotNull String name, @NotNull UUID uuid) {
         String key = name.toLowerCase();
-        PlayerProfile cached = cache.get(key);
+        PlayerProfile cached = cache.getIfPresent(key);
         if (cached != null && hasSkin(cached)) return cached;
 
         try {
@@ -74,7 +81,7 @@ public final class SkinCache {
     @NotNull
     public static CompletableFuture<PlayerProfile> getOrFetchAsync(@NotNull String name, @NotNull UUID uuid) {
         String key = name.toLowerCase();
-        PlayerProfile cached = cache.get(key);
+        PlayerProfile cached = cache.getIfPresent(key);
         if (cached != null && hasSkin(cached)) return CompletableFuture.completedFuture(cached);
 
         try {
@@ -88,6 +95,26 @@ public final class SkinCache {
                 }
             }
         } catch (Throwable ignored) {}
+
+        if (isBedrockPlayer(name, uuid)) {
+            return CompletableFuture.supplyAsync(() -> {
+                PlayerProfile bpProfile = resolveBedrockSkin(uuid, name);
+                if (bpProfile != null) {
+                    cache.put(key, bpProfile);
+                    return bpProfile;
+                }
+                PlayerProfile srProfile = resolveSkinsRestorer(uuid, name);
+                if (srProfile != null) {
+                    cache.put(key, srProfile);
+                    return srProfile;
+                }
+                try {
+                    return Bukkit.createProfile(uuid, name);
+                } catch (Throwable t) {
+                    return null;
+                }
+            });
+        }
 
         PlayerProfile profile;
         try {
@@ -131,6 +158,11 @@ public final class SkinCache {
                     if (pdProfile != null) {
                         cache.put(key, pdProfile);
                         return pdProfile;
+                    }
+                    PlayerProfile bpProfile = resolveBedrockSkin(uuid, name);
+                    if (bpProfile != null) {
+                        cache.put(key, bpProfile);
+                        return bpProfile;
                     }
                     return profile;
                 }));
@@ -263,5 +295,99 @@ public final class SkinCache {
         } catch (Throwable ignored) {
             return null;
         }
+    }
+
+    public static boolean isBedrockPlayer(@NotNull String name, @NotNull UUID uuid) {
+        if (uuid.getMostSignificantBits() == 0L && uuid.getLeastSignificantBits() != 0L) return true;
+        if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.isBedrockPlayer(uuid)) return true;
+        for (String prefix : BlockProt.getDefaultConfig().getBedrockUsernamePrefixes()) {
+            if (prefix != null && !prefix.isEmpty() && name.startsWith(prefix)) return true;
+        }
+        return false;
+    }
+
+    @Nullable
+    public static PlayerProfile resolveBedrockSkin(@NotNull UUID uuid, @NotNull String name) {
+        String xuid = resolveXuid(uuid, name);
+        if (xuid == null || xuid.isBlank()) return null;
+        String textureId = fetchGeyserSkinTextureId(xuid);
+        if (textureId == null || textureId.isBlank()) return null;
+        try {
+            PlayerProfile profile = Bukkit.createProfile(uuid, name);
+            PlayerTextures textures = profile.getTextures();
+            textures.setSkin(URI.create("http://textures.minecraft.net/texture/" + textureId).toURL());
+            profile.setTextures(textures);
+            return profile;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private static String resolveXuid(@NotNull UUID uuid, @NotNull String name) {
+        if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.isFloodgatePresent()) {
+            try {
+                var fp = org.geysermc.floodgate.api.FloodgateApi.getInstance().getPlayer(uuid);
+                if (fp != null && fp.getXuid() != null && !fp.getXuid().isBlank()) {
+                    return fp.getXuid();
+                }
+            } catch (Throwable ignored) {}
+        }
+        if (uuid.getMostSignificantBits() == 0L && uuid.getLeastSignificantBits() != 0L) {
+            return Long.toUnsignedString(uuid.getLeastSignificantBits());
+        }
+        String gamertag = name;
+        for (String prefix : BlockProt.getDefaultConfig().getBedrockUsernamePrefixes()) {
+            if (prefix != null && !prefix.isEmpty() && gamertag.startsWith(prefix)) {
+                gamertag = gamertag.substring(prefix.length());
+                break;
+            }
+        }
+        return fetchGeyserXuid(gamertag);
+    }
+
+    @Nullable
+    private static String fetchGeyserSkinTextureId(@NotNull String xuid) {
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.geysermc.org/v2/skin/" + xuid))
+                .header("User-Agent", "BlockProt-Reloaded-SkinCache")
+                .timeout(Duration.ofSeconds(5))
+                .GET()
+                .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) return null;
+            var root = com.google.gson.JsonParser.parseString(response.body()).getAsJsonObject();
+            if (root.has("texture_id") && !root.get("texture_id").isJsonNull()) {
+                return root.get("texture_id").getAsString();
+            }
+        } catch (Throwable ignored) {}
+        return null;
+    }
+
+    @Nullable
+    private static String fetchGeyserXuid(@NotNull String gamertag) {
+        try {
+            HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .build();
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create("https://api.geysermc.org/v2/xbox/xuid/"
+                    + URLEncoder.encode(gamertag, StandardCharsets.UTF_8)))
+                .header("User-Agent", "BlockProt-Reloaded-SkinCache")
+                .timeout(Duration.ofSeconds(5))
+                .GET()
+                .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) return null;
+            var root = com.google.gson.JsonParser.parseString(response.body()).getAsJsonObject();
+            if (root.has("xuid") && !root.get("xuid").isJsonNull()) {
+                return root.get("xuid").getAsString();
+            }
+        } catch (Throwable ignored) {}
+        return null;
     }
 }

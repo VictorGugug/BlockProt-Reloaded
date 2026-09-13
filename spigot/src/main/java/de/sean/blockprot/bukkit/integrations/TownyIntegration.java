@@ -95,31 +95,6 @@ public final class TownyIntegration extends PluginIntegration implements Listene
         return BlockProt.getInstance().getPlugin("Towny");
     }
 
-    @SuppressWarnings("deprecation")
-    @Override
-    protected void filterFriendsInternal(@NotNull final ArrayList<OfflinePlayer> friends,
-                                         @NotNull final Player player,
-                                         @NotNull final Block block) {
-        if (towny == null
-            || TownyAPI.getInstance().isWilderness(block)
-            || !shouldRestrictAccessToResidents()) {
-            return;
-        }
-
-        Town town = TownyAPI.getInstance().getTown(block.getLocation());
-        if (town == null) {
-            // Shouldn't happen, as we already previously check
-            // for the wilderness.
-            return;
-        }
-        friends.removeIf(friend -> {
-            // We remove all friends/players that are not part of this town.
-            Resident resident = TownyAPI.getInstance().getResident(friend.getUniqueId());
-            return resident == null || !town.hasResident(resident);
-        });
-    }
-
-
     @Override
     protected boolean filterFriendByUuid(@NotNull final UUID friend,
                                          @NotNull final Player player,

@@ -20,16 +20,20 @@
 
 package de.sean.blockprot.bukkit.util;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Resolves player names against a local candidate pool instead of any
@@ -45,22 +49,37 @@ import java.util.UUID;
  */
 public final class PlayerLookup {
 
+    private static final Cache<String, Map<UUID, String>> offlineCache = Caffeine.newBuilder()
+        .expireAfterWrite(30, TimeUnit.SECONDS)
+        .maximumSize(1)
+        .build();
+
     private PlayerLookup() {}
+
+    private static Map<UUID, String> getOfflineCandidates() {
+        Map<UUID, String> cached = offlineCache.getIfPresent("offline");
+        if (cached != null) return cached;
+
+        final var base = new LinkedHashMap<UUID, String>();
+        for (final var op : Bukkit.getOfflinePlayers()) {
+            UUID uuid = op.getUniqueId();
+            String name = op.getName();
+            if (name == null || uuid == null) continue;
+            if (uuid.version() == 3 || uuid.version() == 4 || uuid.version() == 0) {
+                base.put(uuid, name);
+            }
+        }
+        Map<UUID, String> immutable = Collections.unmodifiableMap(base);
+        offlineCache.put("offline", immutable);
+        return immutable;
+    }
 
     /** Every known player name keyed by UUID, {@code exclude} omitted. */
     @NotNull
     public static Map<UUID, String> candidates(@Nullable UUID exclude) {
-        final var candidates = new LinkedHashMap<UUID, String>();
-
-        for (final var op : Bukkit.getOfflinePlayers()) {
-            UUID uuid = op.getUniqueId();
-            String name = op.getName();
-            if (name == null || uuid == null || uuid.equals(exclude)) continue;
-            // Mojang (v4/premium) and offline-mode name-derived (v3) UUIDs;
-            // v0 covers a handful of legacy/edge-case entries seen in the wild.
-            if (uuid.version() == 3 || uuid.version() == 4 || uuid.version() == 0) {
-                candidates.put(uuid, name);
-            }
+        final var candidates = new LinkedHashMap<UUID, String>(getOfflineCandidates());
+        if (exclude != null) {
+            candidates.remove(exclude);
         }
 
         // Online players always win a name collision and are always present,

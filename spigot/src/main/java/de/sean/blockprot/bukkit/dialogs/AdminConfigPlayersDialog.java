@@ -51,16 +51,19 @@ public final class AdminConfigPlayersDialog {
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_PLAYERS), AdminConfigDialog.SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(AdminConfigDialog.toggleBtn("lock_on_place_by_default", "lock_on_place_by_default",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__LOCK_ON_PLACE_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__LOCK_ON_PLACE),
             cfg.lockOnPlaceByDefault(),
+            colorblind,
             p -> { cfg.setLockOnPlaceByDefault(!cfg.lockOnPlaceByDefault()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("public_is_friend_by_default", "public_is_friend_by_default",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__PUBLIC_IS_FRIEND_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__PUBLIC_IS_FRIEND),
             cfg.publicIsFriendByDefault(),
+            colorblind,
             p -> { cfg.setPublicIsFriendByDefault(!cfg.publicIsFriendByDefault()); show(p, backOrigin); }));
 
         int maxBlocks = cfg.getMaxLockedBlockCount() != null ? cfg.getMaxLockedBlockCount() : -1;
@@ -97,6 +100,7 @@ public final class AdminConfigPlayersDialog {
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__DISABLE_FRIENDS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__DISABLE_FRIENDS),
             cfg.isFriendFunctionalityDisabled(),
+            colorblind,
             p -> { cfg.setAndSave("disable_friend_functionality", !cfg.isFriendFunctionalityDisabled()); show(p, backOrigin); }));
 
         AdminConfigDialog.bridgeReturn(player, bridge, title, body, buttons, backOrigin);

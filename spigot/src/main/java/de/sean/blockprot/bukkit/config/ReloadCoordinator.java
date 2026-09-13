@@ -68,6 +68,7 @@ public final class ReloadCoordinator {
             }
 
             plugin.reloadConfigAndTranslations();
+            org.bukkit.Bukkit.getOnlinePlayers().forEach(org.bukkit.entity.Player::updateCommands);
 
             Map<String, Object> afterSnapshot = captureFullSnapshot(plugin, false);
             List<ReloadReport.ChangeDiff> diffs = ReloadReport.compareSnapshots(beforeSnapshot, afterSnapshot);
@@ -129,22 +130,21 @@ public final class ReloadCoordinator {
         String sourceTag = report.getSource().getTag();
 
         if (!report.isSuccess()) {
-            BlockProtLogger.log("reload", "=== Reload Failed [" + sourceTag + "] ===");
+            BlockProtLogger.log("reload", "Reload Failed [" + sourceTag + "]");
             BlockProtLogger.log("reload", "  " + report.getErrorMessage());
-            BlockProtLogger.log("reload", "=== Reload Failed [" + sourceTag + "] ===");
             BlockProtConsole.info("Reload failed.");
             PluginActivityLog.logReload(sourceTag, actor, false, 0, report.getErrorMessage());
             return;
         }
 
-        BlockProtLogger.log("reload", "=== Reload Started [" + sourceTag + "] ===");
+        BlockProtLogger.log("reload", "Reload Started [" + sourceTag + "]");
         for (ReloadReport.ChangeDiff diff : report.getDiffs()) {
             BlockProtLogger.log("reload", "  " + diff.getFile() + ": " + diff.getKey()
                 + " changed from " + diff.getOldValue() + " to " + diff.getNewValue());
         }
 
         int count = report.getDiffs().size();
-        BlockProtLogger.log("reload", "=== Reload Completed [" + sourceTag + "]: " + count + " change(s) ===");
+        BlockProtLogger.log("reload", "Reload Completed [" + sourceTag + "]: " + count + " change(s)");
         BlockProtConsole.info("Reload completed.");
 
         PluginActivityLog.logReload(sourceTag, actor, true, count, null);

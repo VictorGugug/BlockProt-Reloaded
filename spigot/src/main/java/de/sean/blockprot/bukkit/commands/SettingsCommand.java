@@ -50,6 +50,10 @@ public class SettingsCommand implements CommandExecutor {
             return true;
         }
 
+        if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.shouldUseBedrockForms(player)) {
+            de.sean.blockprot.bukkit.bedrock.forms.BedrockUserSettingsForm.show(player);
+            return true;
+        }
         if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             UserSettingsDialog.show(player);
             return true;

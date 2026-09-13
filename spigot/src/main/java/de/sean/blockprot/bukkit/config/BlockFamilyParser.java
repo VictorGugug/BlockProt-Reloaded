@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.config;
 
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.util.StringUtil;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
@@ -280,8 +281,13 @@ public final class BlockFamilyParser {
      */
     @NotNull
     public static List<Material> searchMaterials(@NotNull String query) {
-        String[] words = query.trim().toUpperCase(Locale.ROOT).split("[\\s_]+");
-        if (words.length == 0 || words[0].isEmpty()) return Collections.emptyList();
+        String[] rawWords = query.trim().toUpperCase(Locale.ROOT).split("[\\s_]+");
+        if (rawWords.length == 0 || rawWords[0].isEmpty()) return Collections.emptyList();
+
+        String[] words = new String[rawWords.length];
+        for (int i = 0; i < rawWords.length; i++) {
+            words[i] = normalizeQueryToken(rawWords[i]);
+        }
 
         List<Scored> results = new ArrayList<>();
         for (Material m : SEARCH_UNIVERSE) {
@@ -321,6 +327,10 @@ public final class BlockFamilyParser {
         int distance = StringUtil.levenshtein(word, name);
         if (distance <= 2) return 1000 - distance;
         return 0;
+    }
+
+    private static String normalizeQueryToken(@NotNull String token) {
+        return Translator.normalizeSearchToken(token);
     }
 
     private record Scored(@NotNull Material material, int score) {}

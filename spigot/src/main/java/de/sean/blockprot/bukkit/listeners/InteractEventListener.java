@@ -59,9 +59,10 @@ public class InteractEventListener implements Listener {
 
         if (event.getClickedBlock() == null) return;
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getClickedBlock().getWorld())) return;
-        if (!BlockProt.getDefaultConfig().isLockable(event.getClickedBlock().getState().getType(),
+        if (!BlockProt.getDefaultConfig().isLockable(event.getClickedBlock().getType(),
             event.getClickedBlock().getWorld())) return;
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
+        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
 
         // Dragon Egg teleports on ANY click (left or right) and bypasses cancel in some Paper versions.
         // Force-cancel both PHYSICAL and RIGHT_CLICK_BLOCK to prevent the teleport.
@@ -70,7 +71,7 @@ public class InteractEventListener implements Listener {
             if (eggHandler.isProtected()) {
                 Player eggPlayer = event.getPlayer();
                 if (!eggHandler.canAccess(eggPlayer.getUniqueId().toString())
-                        && !eggPlayer.hasPermission(Permissions.USER_ADMIN.key())) {
+                        && !de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(eggPlayer, de.sean.blockprot.bukkit.admin.AdminAction.CONTAINER_BYPASS)) {
                     event.setCancelled(true);
                     event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
                     event.setUseItemInHand(org.bukkit.event.Event.Result.DENY);
@@ -98,10 +99,10 @@ public class InteractEventListener implements Listener {
                         } catch (IllegalArgumentException ignored) {}
                     }
                     if (ownerName != null && !ownerName.isEmpty()) {
-                        de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL) + " " + ownerName, 40);
+                        de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__OWNER_LABEL) + " " + ownerName, BlockProt.getDefaultConfig().getActionBarDurationTicks());
                     }
                 }
-                if (!(handler.canAccess(player.getUniqueId().toString()) || player.hasPermission(Permissions.USER_ADMIN.key()))) {
+                if (!(handler.canAccess(player.getUniqueId().toString()) || de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.CONTAINER_BYPASS))) {
                     event.setCancelled(true);
                     sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
                     de.sean.blockprot.bukkit.audit.AuditLogger audit = BlockProt.getAuditLogger();
@@ -153,7 +154,20 @@ public class InteractEventListener implements Listener {
                 return;
             }
 
-            if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
+            BlockNBTHandler blockHandler = new BlockNBTHandler(event.getClickedBlock());
+            if (blockHandler.isProtected() && !blockHandler.isOwner(player.getUniqueId())
+                    && !de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.UNLOCK)) {
+                var friendOpt = blockHandler.getFriend(player.getUniqueId().toString());
+                if (friendOpt.isEmpty() || friendOpt.get().doesRepresentPublic() || !friendOpt.get().canOpenMenu()) {
+                    sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+                    return;
+                }
+            }
+
+            if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.shouldUseBedrockForms(player)) {
+                new PlayerSettingsHandler(player).setHasPlayerInteractedWithMenu(true);
+                de.sean.blockprot.bukkit.bedrock.forms.BedrockBlockLockForm.show(player, event.getClickedBlock(), new de.sean.blockprot.bukkit.nbt.BlockNBTHandler(event.getClickedBlock()));
+            } else if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
                 BlockLockDialog.showBlock(player, event.getClickedBlock());
             } else {
                 BlockProtAPI api = BlockProtAPI.getInstance();
@@ -170,13 +184,13 @@ public class InteractEventListener implements Listener {
     }
 
     private void sendMessage(@NotNull Player player, @NotNull String text) {
-        ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(text));
+        de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, text);
     }
 
     private void sendMessage(@NotNull Player player, @NotNull String text, boolean asChat) {
         var comp = LegacyComponentSerializer.legacySection().deserialize(text);
         if (asChat) ComponentMessages.send(player, comp);
-        else ComponentMessages.sendActionBar(player, comp);
+        else de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, comp);
     }
 
     private void sendEventsMessage(@NotNull Player player, @NotNull String text, boolean asChat, @Nullable String command, @Nullable String tooltip) {
@@ -184,7 +198,7 @@ public class InteractEventListener implements Listener {
         if (command != null) comp = comp.clickEvent(ClickEvent.runCommand(command));
         if (tooltip != null) comp = comp.hoverEvent(HoverEvent.showText(Component.text(tooltip)));
         if (asChat) ComponentMessages.send(player, comp);
-        else ComponentMessages.sendActionBar(player, comp);
+        else de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, comp);
     }
 
     private static class LockHintMessageCooldown {

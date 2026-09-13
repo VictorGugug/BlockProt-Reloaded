@@ -52,29 +52,28 @@ public class AdminMenuInventory extends BlockProtInventory {
 
     private static final int SLOT_LOCKABLES     = 10;
     private static final int SLOT_CONFIG        = 11;
-    private static final int SLOT_WORLD_EXPIRY  = 13;
-    private static final int SLOT_PROT_DEL      = 14;
-    private static final int SLOT_STATS         = 19;
-    private static final int SLOT_INTEGRATIONS  = 20;
-    private static final int SLOT_UPDATE        = 21;
-    private static final int SLOT_RELOAD        = 22;
+    private static final int SLOT_WORLD_EXPIRY  = 12;
+    private static final int SLOT_PROT_DEL      = 13;
+    private static final int SLOT_UNLOCK        = 14;
+    private static final int SLOT_INTEGRATIONS  = 15;
+    private static final int SLOT_STATS         = 16;
+    private static final int SLOT_INFO          = 20;
+    private static final int SLOT_RELOAD        = 21;
+    private static final int SLOT_UPDATE        = 22;
     private static final int SLOT_DEBUG         = 23;
-    private static final int SLOT_INFO          = 24;
-    private static final int SLOT_ABOUT         = 25;
-    private static final int SLOT_BACK          = 49;
+    private static final int SLOT_ABOUT         = 24;
+    private static final int SLOT_BACK          = 31;
 
     private static final int[] SEPARATOR_SLOTS = {
-        0,1,2,3,4,5,6,7,8,
-        9, 15,16,17,
-        18, 26,
-        27,28,29,30,31,32,33,34,35,
-        36,37,38,39,40,41,42,43,44,
-        45,46,47,48, 50,51,52,53
+        0, 1, 2, 3, 4, 5, 6, 7, 8,
+        9, 17,
+        18, 19, 25, 26,
+        27, 28, 29, 30, 32, 33, 34, 35
     };
 
     public AdminMenuInventory() { super(false); }
 
-    @Override int getSize() { return InventoryConstants.sextupletLine; }
+    @Override int getSize() { return InventoryConstants.quadrupleLine; }
 
     @Override
     String getTranslatedInventoryName() {
@@ -86,39 +85,42 @@ public class AdminMenuInventory extends BlockProtInventory {
         inventory = createInventory();
         fillSeparators();
 
+        inventory.setItem(SLOT_CONFIG, item(Material.REPEATER,
+            stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CONFIG)),
+            stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CONFIG_LORE))));
         inventory.setItem(SLOT_LOCKABLES, item(Material.CHEST,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__LOCKABLES),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__LOCKABLES_LORE)));
-        inventory.setItem(SLOT_CONFIG, item(Material.REPEATER,
-            "§e" + stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CONFIG)),
-            stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CONFIG_LORE))));
         inventory.setItem(SLOT_WORLD_EXPIRY, item(Material.CLOCK,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY_LORE)));
         inventory.setItem(SLOT_PROT_DEL, item(Material.BARRIER,
             Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__TITLE),
             ""));
-
-        inventory.setItem(SLOT_STATS, item(Material.BOOK,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS_LORE)));
+        inventory.setItem(SLOT_UNLOCK, item(Material.IRON_BARS,
+            stripColor(Translator.get(TranslationKey.INVENTORIES__BP_UNLOCK__TITLE)).replace(": {player}", ""),
+            stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__HEADER))));
         inventory.setItem(SLOT_INTEGRATIONS, item(Material.CHAIN,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS_LORE)));
-        inventory.setItem(SLOT_UPDATE, item(Material.SPYGLASS,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE_LORE)));
-        inventory.setItem(SLOT_RELOAD, item(Material.COMPARATOR,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD_LORE)));
-        inventory.setItem(SLOT_DEBUG, item(Material.COMMAND_BLOCK,
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG),
-            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG_LORE)));
+        inventory.setItem(SLOT_STATS, item(Material.BOOK,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS_LORE)));
+
         setPlayerSkullAsync(SLOT_INFO, player, player.getUniqueId(), player.getName(),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO_LORE));
+        inventory.setItem(SLOT_RELOAD, item(Material.COMPARATOR,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD_LORE)));
+        inventory.setItem(SLOT_UPDATE, item(Material.SPYGLASS,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE_LORE)));
+        inventory.setItem(SLOT_DEBUG, item(Material.COMMAND_BLOCK,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG_LORE)));
         inventory.setItem(SLOT_ABOUT, item(Material.NETHER_STAR,
-            "§f" + stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)),
+            stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)),
             stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT_LORE))));
 
         InventoryState state = InventoryState.get(player.getUniqueId());
@@ -141,13 +143,23 @@ public class AdminMenuInventory extends BlockProtInventory {
         if (slot < 0 || slot >= getSize()) return;
 
         if (slot == SLOT_LOCKABLES) {
-            InventoryState newState = InventoryState.builder()
-                .origin(InventoryState.MenuOrigin.ADMIN_MENU)
-                .build();
-            newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
-            newState.currentPageIndex = 0;
-            InventoryState.set(player.getUniqueId(), newState);
-            player.openInventory(new LockablesInventory().fill(player, 0));
+            if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.shouldUseBedrockForms(player)) {
+                player.closeInventory();
+                BlockProt.getFoliaLib().getScheduler().runAtEntityLater(player, () -> {
+                    de.sean.blockprot.bukkit.bedrock.forms.BedrockLockablesForm.show(player);
+                }, 1L);
+            } else if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
+                player.closeInventory();
+                de.sean.blockprot.bukkit.dialogs.LockablesDialog.show(player, DialogOrigin.ADMIN_MENU);
+            } else {
+                InventoryState newState = InventoryState.builder()
+                    .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                    .build();
+                newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
+                newState.currentPageIndex = 0;
+                InventoryState.set(player.getUniqueId(), newState);
+                player.openInventory(new LockablesInventory().fill(player, 0));
+            }
 
         } else if (slot == SLOT_CONFIG) {
             if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
@@ -261,6 +273,45 @@ public class AdminMenuInventory extends BlockProtInventory {
             TextInput.open(player, BlockProt.getInstance(),
                 Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO), handleName);
 
+        } else if (slot == SLOT_UNLOCK) {
+            player.closeInventory();
+            Consumer<String> handleName = inputName -> {
+                if (inputName == null || inputName.isBlank()) return;
+                Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+                    @SuppressWarnings("deprecation")
+                    OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(inputName);
+                    if (target == null) {
+                        @SuppressWarnings("deprecation")
+                        OfflinePlayer fallback = Bukkit.getOfflinePlayer(inputName);
+                        if (fallback.hasPlayedBefore()) target = fallback;
+                    }
+                    final OfflinePlayer finalTarget = target;
+                    Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                        if (finalTarget == null || finalTarget.getUniqueId() == null) {
+                            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_PLAYER_NOT_FOUND)
+                                .replace("{player}", inputName));
+                            return;
+                        }
+                        String displayName = finalTarget.getName() != null ? finalTarget.getName() : inputName;
+                        PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
+                        StatHandler.getStatisticByUuid(stat, finalTarget.getUniqueId());
+                        if (stat.get().isEmpty()) {
+                            ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_NO_BLOCKS)
+                                .replace("{player}", displayName));
+                            return;
+                        }
+                        InventoryState ns = InventoryState.builder()
+                            .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                            .build();
+                        ns.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
+                        InventoryState.set(player.getUniqueId(), ns);
+                        player.openInventory(new BpUnlockInventory().fill(player, displayName, stat));
+                    });
+                });
+            };
+            TextInput.open(player, BlockProt.getInstance(),
+                stripColor(Translator.get(TranslationKey.INVENTORIES__BP_UNLOCK__TITLE)).replace(": {player}", ""), handleName);
+
         } else if (slot == SLOT_BACK) {
             goBack(player, state);
         }
@@ -279,15 +330,6 @@ public class AdminMenuInventory extends BlockProtInventory {
         for (int s : SEPARATOR_SLOTS) {
             inventory.setItem(s, sep);
         }
-        ItemStack sectionHeader = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
-        ItemMeta hMeta = sectionHeader.getItemMeta();
-        if (hMeta != null) {
-            ComponentMessages.displayName(hMeta, net.kyori.adventure.text.Component.text(""));
-            sectionHeader.setItemMeta(hMeta);
-        }
-        inventory.setItem(9, sectionHeader);
-        inventory.setItem(18, sectionHeader);
-        inventory.setItem(27, sectionHeader);
     }
 
     private ItemStack item(Material mat, String name, String... lore) {

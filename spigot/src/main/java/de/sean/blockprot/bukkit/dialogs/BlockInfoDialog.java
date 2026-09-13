@@ -99,15 +99,19 @@ public final class BlockInfoDialog {
 
         if (!handler.isNotProtected()) {
             RedstoneSettingsHandler rs = handler.getRedstoneHandler();
-            body.add(DialogBodyEntry.text(Component.text(
-                stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__REDSTONE_PROTECTION)) + ": "
-                    + (rs.getCurrentProtection() ? "●" : "○"), SOFT_GRAY)));
-            body.add(DialogBodyEntry.text(Component.text(
-                stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__HOPPER_PROTECTION)) + ": "
-                    + (rs.getHopperProtection() ? "●" : "○"), SOFT_GRAY)));
-            body.add(DialogBodyEntry.text(Component.text(
-                stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__PISTON_PROTECTION)) + ": "
-                    + (rs.getPistonProtection() ? "●" : "○"), SOFT_GRAY)));
+            boolean cb = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
+            body.add(DialogBodyEntry.text(Component.text()
+                .append(Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__REDSTONE_PROTECTION)) + ": ", SOFT_GRAY))
+                .append(BpDialogStyles.indicator(rs.getCurrentProtection(), cb))
+                .build()));
+            body.add(DialogBodyEntry.text(Component.text()
+                .append(Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__HOPPER_PROTECTION)) + ": ", SOFT_GRAY))
+                .append(BpDialogStyles.indicator(rs.getHopperProtection(), cb))
+                .build()));
+            body.add(DialogBodyEntry.text(Component.text()
+                .append(Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__PISTON_PROTECTION)) + ": ", SOFT_GRAY))
+                .append(BpDialogStyles.indicator(rs.getPistonProtection(), cb))
+                .build()));
         }
 
         String linkedFrame = handler.getLinkedItemFrameUuid();

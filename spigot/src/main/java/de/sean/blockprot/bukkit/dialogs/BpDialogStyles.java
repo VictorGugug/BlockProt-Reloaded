@@ -47,8 +47,45 @@ public final class BpDialogStyles {
     public static TextColor stateColor(long active, long total) {
         if (active == 0) return PASTEL_CORAL;
         if (active == total) return PASTEL_MINT;
-        double ratio = (double) active / total;
-        double halfBand = total <= 5 ? 0.20 : 0.10;
-        return Math.abs(ratio - 0.5) <= halfBand ? TextColor.color(0xF3C27C) : PASTEL_MINT;
+        return TextColor.color(0xF3C27C);
+    }
+
+    public static net.kyori.adventure.text.Component indicator(boolean enabled, boolean colorblind) {
+        TextColor color = enabled ? PASTEL_MINT : PASTEL_CORAL;
+        String symbol = colorblind ? (enabled ? "✔" : "✖") : (enabled ? "●" : "○");
+        return net.kyori.adventure.text.Component.text(symbol, color);
+    }
+
+    public static net.kyori.adventure.text.Component indicator(long active, long total, boolean colorblind) {
+        TextColor color = stateColor(active, total);
+        String symbol;
+        if (active == 0) {
+            symbol = colorblind ? "✖" : "○";
+        } else if (active == total) {
+            symbol = colorblind ? "✔" : "●";
+        } else {
+            symbol = colorblind ? "/" : "●";
+        }
+        return net.kyori.adventure.text.Component.text(symbol, color);
+    }
+
+    public static String indicatorIcon(boolean enabled, boolean colorblind) {
+        return colorblind ? (enabled ? "✔ " : "✖ ") : (enabled ? "● " : "○ ");
+    }
+
+    public static String indicatorIcon(long active, long total, boolean colorblind) {
+        if (active == 0) {
+            return colorblind ? "✖ " : "○ ";
+        } else if (active == total) {
+            return colorblind ? "✔ " : "● ";
+        } else {
+            return colorblind ? "/ " : "● ";
+        }
+    }
+
+    public static void padToGrid(java.util.List<DialogButton> buttons, int targetSlots) {
+        while (buttons.size() < targetSlots) {
+            buttons.add(new DialogButton("spacer_" + buttons.size(), net.kyori.adventure.text.Component.empty(), null, p -> {}));
+        }
     }
 }

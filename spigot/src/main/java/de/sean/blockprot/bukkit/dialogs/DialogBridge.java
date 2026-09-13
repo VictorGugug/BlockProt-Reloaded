@@ -81,4 +81,19 @@ public interface DialogBridge {
         @NotNull Consumer<String> onSubmit,
         @Nullable DialogButton back
     );
+
+    /**
+     * Shows a dialog with a native text input search field at the top,
+     * combined with multi-action buttons below that can update dynamically.
+     */
+    void showSearchDialog(
+        @NotNull Player player,
+        @NotNull Component title,
+        @NotNull List<DialogBodyEntry> body,
+        @NotNull DialogTextField field,
+        @NotNull List<DialogButton> actions,
+        @Nullable DialogButton exit,
+        int columns,
+        @NotNull Consumer<String> onSearch
+    );
 }

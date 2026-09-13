@@ -48,6 +48,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -86,15 +87,29 @@ public final class BlockLockDialog {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
 
-        boolean isAdmin = player.hasPermission(Permissions.USER_ADMIN.key());
+        boolean isAdmin = de.sean.blockprot.bukkit.admin.AdminTierManager.hasAnyAdminPermission(player);
         boolean isNotProtected = handler.isNotProtected();
-        boolean isOwnerOrAdmin = handler.isOwner(player.getUniqueId()) || isAdmin;
+        boolean isOwner = handler.isOwner(player.getUniqueId());
+        boolean isOwnerOrAdmin = isOwner || isAdmin;
+        Optional<de.sean.blockprot.bukkit.nbt.FriendHandler> friendOpt = isNotProtected || isOwner ? Optional.empty() : handler.getFriend(player.getUniqueId().toString());
+        de.sean.blockprot.bukkit.nbt.FriendHandler friend = (!friendOpt.isEmpty() && !friendOpt.get().doesRepresentPublic()) ? friendOpt.get() : null;
+
+        if (!isNotProtected && !isOwnerOrAdmin && (friend == null || !friend.canOpenMenu())) {
+            ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(
+                Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
+            return;
+        }
+
         boolean isStorageBlock = isStorageType(block.getType());
         boolean isTraversalBlock = isTraversalType(block.getType());
-        boolean canManage = !isNotProtected && handler.isOwner(player.getUniqueId());
-        boolean showInspect = !isNotProtected && isStorageBlock
-            && block.getState() instanceof InventoryHolder && isOwnerOrAdmin;
-        boolean hasAudit = !isNotProtected && isOwnerOrAdmin && BlockProt.getAuditLogger() != null;
+        boolean canManage = !isNotProtected && (isOwnerOrAdmin || (friend != null && friend.canOpenMenu()));
+        boolean canEditSettings = !isNotProtected && (isOwnerOrAdmin || (friend != null && friend.canEditSettings()));
+        boolean canManageFriends = !isNotProtected && (isOwnerOrAdmin || (friend != null && friend.canManageFriends()));
+        boolean canEditName = !isNotProtected && (isOwnerOrAdmin || (friend != null && friend.canEditName()));
+        boolean canInspect = !isNotProtected && isStorageBlock
+            && block.getState() instanceof InventoryHolder && (isOwnerOrAdmin || (friend != null && friend.canInspect()));
+        boolean hasAudit = !isNotProtected && BlockProt.getAuditLogger() != null
+            && (isOwnerOrAdmin || (friend != null && friend.canViewAudit()));
         boolean hasClipboard = PlayerInventoryClipboard.contains(player.getUniqueId().toString());
 
         String materialName = formatMaterialName(block.getType().name());
@@ -129,50 +144,51 @@ public final class BlockLockDialog {
 
         List<DialogButton> actions = new ArrayList<>();
 
-        actions.add(actionBtn(
-            isNotProtected
-                ? stripColor(Translator.get(TranslationKey.INVENTORIES__LOCK))
-                : stripColor(Translator.get(TranslationKey.INVENTORIES__UNLOCK)),
-            NamedTextColor.WHITE,
-            p -> {
-                if (isNotProtected) {
-                    LockReturnValue ret = handler.lockBlock(p);
-                    if (!ret.success && ret.reason != null) {
-                        ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
-                            Translator.get(ret.reason)));
+        if (isNotProtected || isOwnerOrAdmin) {
+            actions.add(actionBtn(
+                isNotProtected
+                    ? stripColor(Translator.get(TranslationKey.INVENTORIES__LOCK))
+                    : stripColor(Translator.get(TranslationKey.INVENTORIES__UNLOCK)),
+                NamedTextColor.WHITE,
+                p -> {
+                    if (isNotProtected) {
+                        LockReturnValue ret = handler.lockBlock(p);
+                        if (!ret.success && ret.reason != null) {
+                            ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
+                                Translator.get(ret.reason)));
+                        }
+                    } else {
+                        handler.clear();
+                        handler.applyToOtherContainer();
                     }
-                } else {
-                    handler.clear();
-                    handler.applyToOtherContainer();
+                    show(p, block, handler);
                 }
-                show(p, block, handler);
-            }
-        ));
+            ));
+        }
 
-        if (canManage) {
-            if (isStorageBlock || isTraversalBlock) {
-                actions.add(actionBtn(
-                    stripColor(Translator.get(TranslationKey.INVENTORIES__BLOCK_SETTINGS__TITLE)),
-                    SOFT_BLUE,
-                    p -> {
-                        DialogState.push(p, pl -> BlockLockDialog.show(pl, block, handler));
-                        BlockSettingsDialog.show(p, block, handler);
-                    }
-                ));
+        if (canEditSettings && (isStorageBlock || isTraversalBlock)) {
+            actions.add(actionBtn(
+                stripColor(Translator.get(TranslationKey.INVENTORIES__BLOCK_SETTINGS__TITLE)),
+                SOFT_BLUE,
+                p -> {
+                    DialogState.push(p, pl -> BlockLockDialog.show(pl, block, handler));
+                    BlockSettingsDialog.show(p, block, handler);
+                }
+            ));
+        }
 
-            }
+        if (canManageFriends && !BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {
+            actions.add(actionBtn(
+                stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE)),
+                PASTEL_PURPLE,
+                p -> {
+                    DialogState.push(p, pl -> BlockLockDialog.show(pl, block, handler));
+                    FriendManageDialog.showForBlock(p, block, handler);
+                }
+            ));
+        }
 
-            if (!BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {
-                actions.add(actionBtn(
-                    stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE)),
-                    PASTEL_PURPLE,
-                    p -> {
-                        DialogState.push(p, pl -> BlockLockDialog.show(pl, block, handler));
-                        FriendManageDialog.showForBlock(p, block, handler);
-                    }
-                ));
-            }
-
+        if (canEditName) {
             actions.add(actionBtn(
                 stripColor(Translator.get(TranslationKey.INVENTORIES__SET_BLOCK_NAME)),
                 PASTEL_MINT,
@@ -206,7 +222,9 @@ public final class BlockLockDialog {
                         back);
                 }
             ));
+        }
 
+        if (isOwnerOrAdmin) {
             actions.add(actionBtn(
                 stripColor(Translator.get(TranslationKey.INVENTORIES__TRANSFER__BUTTON)),
                 PASTEL_CORAL,
@@ -215,40 +233,42 @@ public final class BlockLockDialog {
                     TransferSearchInventory.openSearch(p, block);
                 }
             ));
+        }
 
-            if (isWorkstation(block.getType())) {
-                actions.add(actionBtn(
-                    stripColor(Translator.get(TranslationKey.INVENTORIES__LOCATE_VILLAGER)),
-                    PASTEL_GOLD,
-                    p -> {
-                        bridge.closeDialog(p);
-                        int seconds = BlockProt.getDefaultConfig().getVillagerLocateSeconds();
-                        boolean found = VillagerLocateTask.startIfLinked(p, block, seconds);
-                        if (!found) {
-                            ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
-                                Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
-                        }
+        if (canEditSettings && isWorkstation(block.getType())) {
+            actions.add(actionBtn(
+                stripColor(Translator.get(TranslationKey.INVENTORIES__LOCATE_VILLAGER)),
+                PASTEL_GOLD,
+                p -> {
+                    bridge.closeDialog(p);
+                    int seconds = BlockProt.getDefaultConfig().getVillagerLocateSeconds();
+                    boolean found = VillagerLocateTask.startIfLinked(p, block, seconds);
+                    if (!found) {
+                        ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
                     }
-                ));
-            }
+                }
+            ));
+        }
 
-            if (hasClipboard) {
-                actions.add(actionBtn(
-                    stripColor(Translator.get(TranslationKey.INVENTORIES__PASTE_CONFIGURATION)),
-                    NamedTextColor.WHITE,
-                    p -> {
-                        var container = PlayerInventoryClipboard.get(p.getUniqueId().toString());
-                        if (handler != null && container != null) {
-                            handler.pasteNbt(container);
-                            PlayerInventoryClipboard.remove(p.getUniqueId().toString());
-                            ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
-                                Translator.get(TranslationKey.MESSAGES__PASTE_DONE)));
-                        }
-                        show(p, block, handler);
+        if (canEditSettings && hasClipboard) {
+            actions.add(actionBtn(
+                stripColor(Translator.get(TranslationKey.INVENTORIES__PASTE_CONFIGURATION)),
+                NamedTextColor.WHITE,
+                p -> {
+                    var container = PlayerInventoryClipboard.get(p.getUniqueId().toString());
+                    if (handler != null && container != null) {
+                        handler.pasteNbt(container);
+                        PlayerInventoryClipboard.remove(p.getUniqueId().toString());
+                        ComponentMessages.sendActionBar(p, LegacyComponentSerializer.legacySection().deserialize(
+                            Translator.get(TranslationKey.MESSAGES__PASTE_DONE)));
                     }
-                ));
-            }
+                    show(p, block, handler);
+                }
+            ));
+        }
 
+        if (canEditSettings) {
             actions.add(actionBtn(
                 stripColor(Translator.get(TranslationKey.INVENTORIES__COPY_CONFIGURATION)),
                 NamedTextColor.WHITE,
@@ -261,7 +281,7 @@ public final class BlockLockDialog {
             ));
         }
 
-        if (showInspect) {
+        if (canInspect) {
             actions.add(actionBtn(
                 stripColor(Translator.get(TranslationKey.INVENTORIES__INSPECT_CONTENTS)),
                 SOFT_BLUE,

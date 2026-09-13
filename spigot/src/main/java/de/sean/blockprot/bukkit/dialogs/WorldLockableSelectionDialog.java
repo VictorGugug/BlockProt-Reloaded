@@ -111,10 +111,12 @@ public final class WorldLockableSelectionDialog {
                     TextColor.color(0x888888)));
             }
 
+            boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
+            String icon = BpDialogStyles.indicatorIcon(enabled, colorblind);
+
             buttons.add(new DialogButton("world_" + wName,
                 Component.text()
-                    .append(Component.text(stripColor(Translator.get(enabled
-                        ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
+                    .append(Component.text(icon, c))
                     .append(Component.text(wName, NamedTextColor.WHITE))
                     .build(),
                 Component.join(JoinConfiguration.newlines(), lore),

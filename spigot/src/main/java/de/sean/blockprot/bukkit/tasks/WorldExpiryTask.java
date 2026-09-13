@@ -36,7 +36,6 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.TileState;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -45,9 +44,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-public class WorldExpiryTask extends BukkitRunnable {
+public class WorldExpiryTask implements Runnable {
 
     private static final int BATCH_PER_TICK = 20;
 
@@ -88,10 +86,13 @@ public class WorldExpiryTask extends BukkitRunnable {
         for (Chunk chunk : chunks) {
             for (BlockState state : chunk.getTileEntities()) {
                 Location loc = state.getLocation();
-                BlockNBTHandler handler = new BlockNBTHandler(loc.getBlock());
-                if (handler.isProtected() && handler.getLockedAt() > 0 && handler.getLockedAt() < cutoff) {
-                    expired.add(loc.clone());
-                }
+                if (!ProtectedBlockCache.isProtected(loc.getBlock())) continue;
+                try {
+                    BlockNBTHandler handler = new BlockNBTHandler(loc.getBlock());
+                    if (handler.isProtected() && handler.getLockedAt() > 0 && handler.getLockedAt() < cutoff) {
+                        expired.add(loc.clone());
+                    }
+                } catch (RuntimeException ignored) {}
             }
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
@@ -99,10 +100,13 @@ public class WorldExpiryTask extends BukkitRunnable {
                         Block block = chunk.getBlock(x, y, z);
                         if (block.getState() instanceof TileState) continue;
                         if (nonTileTypes.contains(block.getType())) {
-                            BlockNBTHandler handler = new BlockNBTHandler(block);
-                            if (handler.isProtected() && handler.getLockedAt() > 0 && handler.getLockedAt() < cutoff) {
-                                expired.add(block.getLocation().clone());
-                            }
+                            if (!ProtectedBlockCache.isProtected(block)) continue;
+                            try {
+                                BlockNBTHandler handler = new BlockNBTHandler(block);
+                                if (handler.isProtected() && handler.getLockedAt() > 0 && handler.getLockedAt() < cutoff) {
+                                    expired.add(block.getLocation().clone());
+                                }
+                            } catch (RuntimeException ignored) {}
                         }
                     }
                 }

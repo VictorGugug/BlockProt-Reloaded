@@ -61,10 +61,12 @@ public final class AdminConfigMaintenanceDialog {
                 AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__INACTIVITY_CLEANUP_HINT)), inactivityDays,
                 v -> { cfg.setAndSave("inactivity_cleanup_days", v); show(p, backOrigin); },
                 () -> show(p, backOrigin))));
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         buttons.add(AdminConfigDialog.toggleBtn("auto_reload_configs", "auto_reload_configs",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__AUTO_RELOAD_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__AUTO_RELOAD),
             cfg.isAutoReloadEnabled(),
+            colorblind,
             p -> { cfg.setAutoReloadConfigs(!cfg.isAutoReloadEnabled()); show(p, backOrigin); }));
         int delay = cfg.getAutoReloadDelaySeconds();
         buttons.add(AdminConfigDialog.valueBtn("auto_reload_delay_seconds", "auto_reload_delay_seconds",
@@ -83,11 +85,13 @@ public final class AdminConfigMaintenanceDialog {
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__SESSION_LOG_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__SESSION_LOG),
             cfg.isSessionLogEnabled(),
+            colorblind,
             p -> { cfg.setSessionLogEnabled(!cfg.isSessionLogEnabled()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("enable_backups", "enable_backups",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__BACKUPS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__BACKUPS),
             cfg.isBackupsEnabled(),
+            colorblind,
             p -> { cfg.setBackupsEnabled(!cfg.isBackupsEnabled()); show(p, backOrigin); }));
 
         AdminConfigDialog.bridgeReturn(player, bridge, title, body, buttons, backOrigin);

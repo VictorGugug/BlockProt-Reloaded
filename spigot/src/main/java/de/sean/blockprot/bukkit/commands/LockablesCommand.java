@@ -44,7 +44,7 @@ public final class LockablesCommand implements CommandExecutor {
 
     @Override
     public boolean canUseCommand(@NotNull CommandSender sender) {
-        return sender.isOp() || sender.hasPermission(Permissions.USER_ADMIN.key());
+        return de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(sender, de.sean.blockprot.bukkit.admin.AdminAction.LOCKABLES);
     }
 
     @Override
@@ -53,6 +53,10 @@ public final class LockablesCommand implements CommandExecutor {
         if (!(sender instanceof Player player)) return false;
         if (!canUseCommand(sender)) {
             player.sendMessage(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            return true;
+        }
+        if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.shouldUseBedrockForms(player)) {
+            de.sean.blockprot.bukkit.bedrock.forms.BedrockLockablesForm.show(player);
             return true;
         }
         if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {

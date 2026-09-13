@@ -180,9 +180,18 @@ public final class EntityProtectionHandler {
         pdc.set(key, PersistentDataType.BYTE, v ? (byte) 1 : (byte) 0);
     }
 
-    /** Returns true when the entity type can be protected (any tamed animal). */
+    /** Returns true when the entity type can be protected (tamed animals or configured types). */
     public static boolean isSupportedEntity(@NotNull Entity entity) {
-        return entity instanceof Tameable;
+        if (!BlockProt.getDefaultConfig().isEntityProtectionEnabled()) return false;
+        if (entity instanceof Tameable) return true;
+        java.util.List<String> configured = BlockProt.getDefaultConfig().getProtectableEntities();
+        if (!configured.isEmpty()) {
+            String name = entity.getType().name();
+            for (String type : configured) {
+                if (name.equalsIgnoreCase(type)) return true;
+            }
+        }
+        return false;
     }
 
     /** Returns a new handler only if the entity is a tamed animal, otherwise null. */

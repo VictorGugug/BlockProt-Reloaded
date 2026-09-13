@@ -53,11 +53,13 @@ public final class AdminConfigWorldsDialog {
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_WORLDS), AdminConfigDialog.SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(AdminConfigDialog.toggleBtn("per_worlds_config", "per_worlds_config",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__WORLDS__PER_WORLDS_CONFIG_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__WORLDS__PER_WORLDS_CONFIG),
             cfg.isPerWorldsConfigEnabled(),
+            colorblind,
             p -> { cfg.setAndSave("per_worlds_config", !cfg.isPerWorldsConfigEnabled()); show(p, backOrigin); }));
 
         List<String> excludedList = cfg.getBukkitConfig().getStringList("excluded_worlds");

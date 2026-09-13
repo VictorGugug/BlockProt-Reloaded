@@ -35,148 +35,143 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * A simple handler to get a player's BlockProt settings.
- *
- * @since 0.2.3
+ * Manages player settings, default friends, history, and administrative roles.
  */
 public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTCompound> {
-    static final String LOCK_ON_PLACE_ATTRIBUTE = "splugin_lock_on_place";
+    private static final String ROOT_KEY = "blockprot";
+    private static final String PREFERENCES_KEY = "preferences";
+    private static final String FRIENDS_KEY = "friends";
+    private static final String HISTORY_KEY = "history";
+    private static final String ADMIN_KEY = "admin";
+    private static final String MIGRATION_DONE_FLAG = "v3_migrated";
 
-    static final String DEFAULT_FRIENDS_ATTRIBUTE = "blockprot_default_friends";
-
-    static final String PLAYER_SEARCH_HISTORY = "blockprot_player_search_history";
-
-    static final String PLAYER_HAS_INTERACTED_WITH_MENU = "blockprot_player_has_interacted_with_menu";
-
-    /** Per-player preference for native dialogs vs inventory GUIs. */
-    static final String PREFER_DIALOGS_ATTRIBUTE = "blockprot_prefer_dialogs";
-
-    /** Per-player toggle: receive access notifications. Defaults to server config value. */
-    static final String NOTIFICATIONS_ENABLED_ATTRIBUTE = "blockprot_notifications_enabled";
+    private static final String LEGACY_LOCK_ON_PLACE = "splugin_lock_on_place";
+    private static final String LEGACY_DEFAULT_FRIENDS = "blockprot_default_friends";
+    private static final String LEGACY_SEARCH_HISTORY = "blockprot_player_search_history";
+    private static final String LEGACY_MENU_INTERACTED = "blockprot_player_has_interacted_with_menu";
+    private static final String LEGACY_PREFER_DIALOGS = "blockprot_prefer_dialogs";
+    private static final String LEGACY_PREFER_BEDROCK_FORMS = "blockprot_prefer_bedrock_forms";
+    private static final String LEGACY_NOTIFICATIONS_ENABLED = "blockprot_notifications_enabled";
+    private static final String LEGACY_COLORBLIND_MODE = "blockprot_colorblind_mode";
+    private static final String LEGACY_V2_MIGRATED = "blockprot_v2_migrated";
 
     private static final int MAX_HISTORY_SIZE = InventoryConstants.tripleLine - 2;
 
-    /**
-     * The player that this settings handler is getting values
-     * for.
-     *
-     * @since 0.2.3
-     */
     public final Player player;
+    public final NBTCompound rootContainer;
 
-    /**
-     * Create a new settings handler.
-     *
-     * @param player The player to get the settings for.
-     * @since 0.2.3
-     */
     @SuppressWarnings("deprecation")
     public PlayerSettingsHandler(@NotNull final Player player) {
-        super(DEFAULT_FRIENDS_ATTRIBUTE);
+        super(FRIENDS_KEY);
         this.player = player;
-
-        this.container = new NBTEntity((org.bukkit.entity.Entity) player).getPersistentDataContainer();
+        this.rootContainer = new NBTEntity((org.bukkit.entity.Entity) player).getPersistentDataContainer();
+        this.container = this.rootContainer.getOrCreateCompound(ROOT_KEY);
+        migrateIfNeeded();
     }
 
-    /**
-     * Check if the player wants their blocks to be locked when
-     * placed.
-     *
-     * @return Will return the default setting from the config, or the
-     * value the player has set it to.
-     * @since 0.2.3
-     */
+    private void migrateIfNeeded() {
+        if (this.container.hasTag(MIGRATION_DONE_FLAG)) return;
+
+        NBTCompound prefs = this.container.getOrCreateCompound(PREFERENCES_KEY);
+        if (rootContainer.hasTag(LEGACY_LOCK_ON_PLACE)) {
+            prefs.setBoolean("lock_on_place", rootContainer.getBoolean(LEGACY_LOCK_ON_PLACE));
+            rootContainer.removeKey(LEGACY_LOCK_ON_PLACE);
+        }
+        if (rootContainer.hasTag(LEGACY_PREFER_DIALOGS)) {
+            prefs.setBoolean("prefer_dialogs", rootContainer.getBoolean(LEGACY_PREFER_DIALOGS));
+            rootContainer.removeKey(LEGACY_PREFER_DIALOGS);
+        }
+        if (rootContainer.hasTag(LEGACY_PREFER_BEDROCK_FORMS)) {
+            prefs.setBoolean("prefer_bedrock_forms", rootContainer.getBoolean(LEGACY_PREFER_BEDROCK_FORMS));
+            rootContainer.removeKey(LEGACY_PREFER_BEDROCK_FORMS);
+        }
+        if (rootContainer.hasTag(LEGACY_NOTIFICATIONS_ENABLED)) {
+            prefs.setBoolean("notifications_enabled", rootContainer.getBoolean(LEGACY_NOTIFICATIONS_ENABLED));
+            rootContainer.removeKey(LEGACY_NOTIFICATIONS_ENABLED);
+        }
+        if (rootContainer.hasTag(LEGACY_COLORBLIND_MODE)) {
+            prefs.setBoolean("colorblind_mode", rootContainer.getBoolean(LEGACY_COLORBLIND_MODE));
+            rootContainer.removeKey(LEGACY_COLORBLIND_MODE);
+        }
+        if (rootContainer.hasTag(LEGACY_MENU_INTERACTED)) {
+            prefs.setBoolean("menu_interacted", rootContainer.getBoolean(LEGACY_MENU_INTERACTED));
+            rootContainer.removeKey(LEGACY_MENU_INTERACTED);
+        }
+
+        if (rootContainer.hasTag(LEGACY_SEARCH_HISTORY)) {
+            NBTCompound history = this.container.getOrCreateCompound(HISTORY_KEY);
+            history.setString("search", rootContainer.getString(LEGACY_SEARCH_HISTORY));
+            rootContainer.removeKey(LEGACY_SEARCH_HISTORY);
+        }
+
+        if (rootContainer.hasTag(LEGACY_DEFAULT_FRIENDS)) {
+            NBTCompound friendsComp = this.container.getOrCreateCompound(FRIENDS_KEY);
+            if (rootContainer.getType(LEGACY_DEFAULT_FRIENDS) == NBTType.NBTTagString) {
+                final List<String> originalList = BlockProtUtil.parseStringList(rootContainer.getString(LEGACY_DEFAULT_FRIENDS));
+                originalList.forEach(this::addFriend);
+            } else if (rootContainer.getType(LEGACY_DEFAULT_FRIENDS) == NBTType.NBTTagCompound) {
+                NBTCompound oldFriends = rootContainer.getCompound(LEGACY_DEFAULT_FRIENDS);
+                if (oldFriends != null) {
+                    friendsComp.mergeCompound(oldFriends);
+                }
+            }
+            rootContainer.removeKey(LEGACY_DEFAULT_FRIENDS);
+        }
+
+        if (rootContainer.hasTag(LEGACY_V2_MIGRATED)) {
+            rootContainer.removeKey(LEGACY_V2_MIGRATED);
+        }
+
+        this.container.setBoolean(MIGRATION_DONE_FLAG, true);
+    }
+
     public boolean getLockOnPlace() {
-        // Default to 'true'. The default value for NBTCompound#getBoolean would be 'false',
-        if (!container.hasTag(LOCK_ON_PLACE_ATTRIBUTE))
+        NBTCompound prefs = this.container.getOrCreateCompound(PREFERENCES_KEY);
+        if (!prefs.hasTag("lock_on_place"))
             return BlockProt.getDefaultConfig().lockOnPlaceByDefault();
-        return container.getBoolean(LOCK_ON_PLACE_ATTRIBUTE);
+        return prefs.getBoolean("lock_on_place");
     }
 
     public void setLockOnPlace(final boolean lockOnPlace) {
-        container.setBoolean(LOCK_ON_PLACE_ATTRIBUTE, lockOnPlace);
+        this.container.getOrCreateCompound(PREFERENCES_KEY).setBoolean("lock_on_place", lockOnPlace);
     }
-
-    /**
-     * Migrates from the legacy friend-list storage format to the current compound format.
-     * Reads the old string-format list, remaps entries to the new structure, and writes a
-     * migration flag so subsequent reads skip the check entirely.
-     * 
-     * <p>A migration flag is written to NBT after the first successful migration so that
-     * subsequent reads skip the compound-format check entirely. This avoids an unnecessary
-     * {@code hasTag + getType} call on every block interaction for already-migrated players.
-     *
-     * @since 1.0.0
-     */
-    private static final String MIGRATION_DONE_FLAG = "blockprot_v2_migrated";
 
     @Override
     protected void preFriendReadCallback() {
-        // Fast-path: migration already done for this player: skip all checks.
-        if (container.hasTag(MIGRATION_DONE_FLAG)) return;
-
-        if (container.hasTag(DEFAULT_FRIENDS_ATTRIBUTE)
-            && container.getType(DEFAULT_FRIENDS_ATTRIBUTE) == NBTType.NBTTagString) {
-            final List<String> originalList = BlockProtUtil
-                .parseStringList(container.getString(DEFAULT_FRIENDS_ATTRIBUTE));
-            
-            container.removeKey(DEFAULT_FRIENDS_ATTRIBUTE); // Remove the old string before adding the compound.
-            container.addCompound(DEFAULT_FRIENDS_ATTRIBUTE);
-            originalList.forEach(this::addFriend);
-        }
-
-        // Mark this player as migrated so future reads skip the check entirely.
-        container.setBoolean(MIGRATION_DONE_FLAG, true);
+        migrateIfNeeded();
     }
 
-    /**
-     * Get the current search history for this player.
-     * 
-     * @return A list of UUIDs for each player this player has
-     * searched for.
-     */
     public List<String> getSearchHistory() {
-        if (!container.hasTag(PLAYER_SEARCH_HISTORY)) return new ArrayList<>();
-        else {
-            return BlockProtUtil
-                .parseStringList(container.getString(PLAYER_SEARCH_HISTORY));
-        }
+        NBTCompound history = this.container.getOrCreateCompound(HISTORY_KEY);
+        if (!history.hasTag("search")) return new ArrayList<>();
+        return BlockProtUtil.parseStringList(history.getString("search"));
     }
 
     public void clearSearchHistory() {
-        if (container.hasTag(PLAYER_SEARCH_HISTORY)) {
-            container.removeKey(PLAYER_SEARCH_HISTORY);
+        NBTCompound history = this.container.getOrCreateCompound(HISTORY_KEY);
+        if (history.hasTag("search")) {
+            history.removeKey("search");
         }
     }
 
-    /**
-     * Add a player to the search history.
-     *
-     * @param player The player to add.
-     * @since 1.1.16
-     */
     public void addPlayerToSearchHistory(@NotNull final UUID player) {
         List<String> history = getSearchHistory();
         if (!history.contains(player.toString())) {
-            // Trim to MAX_HISTORY_SIZE by removing the oldest entry.
             if (history.size() == MAX_HISTORY_SIZE) {
                 history.remove(0);
             }
             history.add(player.toString());
-            container.setString(PLAYER_SEARCH_HISTORY, history.toString());
+            this.container.getOrCreateCompound(HISTORY_KEY).setString("search", history.toString());
         }
     }
 
     public boolean hasPlayerInteractedWithMenu() {
-        if (!container.hasTag(PLAYER_HAS_INTERACTED_WITH_MENU)) {
-            return false;
-        } else {
-            return container.getBoolean(PLAYER_HAS_INTERACTED_WITH_MENU);
-        }
+        NBTCompound prefs = this.container.getOrCreateCompound(PREFERENCES_KEY);
+        return prefs.hasTag("menu_interacted") && prefs.getBoolean("menu_interacted");
     }
 
     public void setHasPlayerInteractedWithMenu(boolean bool) {
-        container.setBoolean(PLAYER_HAS_INTERACTED_WITH_MENU, bool);
+        this.container.getOrCreateCompound(PREFERENCES_KEY).setBoolean("menu_interacted", bool);
     }
 
     @Override
@@ -187,7 +182,7 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
             if (hybridDatabase != null) {
                 hybridDatabase.addGlobalTrust(player.getUniqueId(), UUID.fromString(friend));
             }
-        } catch (IllegalArgumentException ignored) { }
+        } catch (IllegalArgumentException ignored) {}
     }
 
     @Override
@@ -198,43 +193,77 @@ public final class PlayerSettingsHandler extends FriendSupportingHandler<NBTComp
             if (hybridDatabase != null) {
                 hybridDatabase.removeGlobalTrust(player.getUniqueId(), UUID.fromString(friend));
             }
-        } catch (IllegalArgumentException ignored) { }
+        } catch (IllegalArgumentException ignored) {}
     }
 
-    /**
-     * Whether this player wants to receive access notifications when someone
-     * opens or interacts with their protected blocks.
-     * Defaults to the server-wide config value when the player has no preference stored.
-     */
     public boolean getNotificationsEnabled() {
-        if (!container.hasTag(NOTIFICATIONS_ENABLED_ATTRIBUTE))
+        NBTCompound prefs = this.container.getOrCreateCompound(PREFERENCES_KEY);
+        if (!prefs.hasTag("notifications_enabled"))
             return BlockProt.getDefaultConfig().isOwnerNotificationsEnabled();
-        return container.getBoolean(NOTIFICATIONS_ENABLED_ATTRIBUTE);
+        return prefs.getBoolean("notifications_enabled");
     }
 
-    /** Persists the player's notification preference. */
     public void setNotificationsEnabled(boolean enabled) {
-        container.setBoolean(NOTIFICATIONS_ENABLED_ATTRIBUTE, enabled);
+        this.container.getOrCreateCompound(PREFERENCES_KEY).setBoolean("notifications_enabled", enabled);
     }
 
-    /**
-     * Whether this player prefers Paper dialogs over inventory GUIs.
-     * Defaults to true when dialogs are enabled on the server.
-     */
     public boolean getPreferDialogs() {
-        if (!container.hasTag(PREFER_DIALOGS_ATTRIBUTE))
+        NBTCompound prefs = this.container.getOrCreateCompound(PREFERENCES_KEY);
+        if (!prefs.hasTag("prefer_dialogs"))
             return BlockProt.getDefaultConfig().isDialogsEnabled();
-        return container.getBoolean(PREFER_DIALOGS_ATTRIBUTE);
+        return prefs.getBoolean("prefer_dialogs");
     }
 
-    /** Persists the player's dialog preference. */
     public void setPreferDialogs(boolean preferDialogs) {
-        container.setBoolean(PREFER_DIALOGS_ATTRIBUTE, preferDialogs);
+        this.container.getOrCreateCompound(PREFERENCES_KEY).setBoolean("prefer_dialogs", preferDialogs);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    public boolean getPreferBedrockForms() {
+        NBTCompound prefs = this.container.getOrCreateCompound(PREFERENCES_KEY);
+        if (!prefs.hasTag("prefer_bedrock_forms"))
+            return true;
+        return prefs.getBoolean("prefer_bedrock_forms");
+    }
+
+    public void setPreferBedrockForms(boolean preferBedrockForms) {
+        this.container.getOrCreateCompound(PREFERENCES_KEY).setBoolean("prefer_bedrock_forms", preferBedrockForms);
+    }
+
+    public boolean getColorblindMode() {
+        NBTCompound prefs = this.container.getOrCreateCompound(PREFERENCES_KEY);
+        return prefs.hasTag("colorblind_mode") && prefs.getBoolean("colorblind_mode");
+    }
+
+    public void setColorblindMode(boolean colorblindMode) {
+        this.container.getOrCreateCompound(PREFERENCES_KEY).setBoolean("colorblind_mode", colorblindMode);
+    }
+
+    @NotNull
+    public String getAdminTier() {
+        NBTCompound admin = this.container.getOrCreateCompound(ADMIN_KEY);
+        return admin.hasTag("tier") ? admin.getString("tier") : "";
+    }
+
+    public void setAdminTier(@NotNull String tier) {
+        this.container.getOrCreateCompound(ADMIN_KEY).setString("tier", tier);
+    }
+
+    public void clearAdminTier() {
+        NBTCompound admin = this.container.getOrCreateCompound(ADMIN_KEY);
+        admin.removeKey("tier");
+        admin.removeKey("custom_flags");
+    }
+
+    @NotNull
+    public String getAdminCustomFlags() {
+        NBTCompound admin = this.container.getOrCreateCompound(ADMIN_KEY);
+        return admin.hasTag("custom_flags") ? admin.getString("custom_flags") : "";
+    }
+
+    public void setAdminCustomFlags(@NotNull String flags) {
+        this.container.getOrCreateCompound(ADMIN_KEY).setString("custom_flags", flags);
+    }
+
     @Override
     public void mergeHandler(@NotNull NBTHandler<?> handler) {
         if (!(handler instanceof final PlayerSettingsHandler playerSettingsHandler)) return;

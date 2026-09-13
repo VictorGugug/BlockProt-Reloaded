@@ -50,27 +50,32 @@ public final class AdminConfigBlocksEffectsDialog {
             AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__EFFECTS_TITLE)),
             AdminConfigDialog.SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(AdminConfigDialog.toggleBtn("block_lock_effects", "block_lock_effects",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__LOCK_EFFECTS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__LOCK_EFFECTS),
             cfg.isLockEffectEnabled(),
+            colorblind,
             p -> { cfg.setLockEffects(!cfg.isLockEffectEnabled()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("block_lock_sounds", "block_lock_sounds",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__LOCK_SOUNDS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__LOCK_SOUNDS),
             cfg.isLockSoundEnabled(),
+            colorblind,
             p -> { cfg.setLockSounds(!cfg.isLockSoundEnabled()); show(p, backOrigin); }));
         boolean useMenus = cfg.getBukkitConfig().getBoolean("use_menus", false);
         buttons.add(AdminConfigDialog.dialogToggleBtn("use_menus", "use_menus [Dialog]",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__USE_MENUS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__USE_MENUS_DE),
             useMenus,
+            colorblind,
             p -> { cfg.setAndSave("use_menus", !useMenus); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.dialogToggleBtn("use_dialogs", "use_dialogs [Dialog]",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__USE_DIALOGS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__USE_DIALOGS_DE),
             cfg.isDialogsEnabled(),
+            colorblind,
             p -> { cfg.setAndSave("use_dialogs", !cfg.isDialogsEnabled()); show(p, backOrigin); }));
         int timedAccessDays = cfg.getBukkitConfig().getInt("timed_access_max_duration_days", 90);
         buttons.add(AdminConfigDialog.valueBtn("timed_access_max_duration_days", "timed_access_max_duration_days",

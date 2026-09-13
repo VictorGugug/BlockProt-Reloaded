@@ -119,8 +119,8 @@ public final class BlockProtLogger {
             lastKnownLength = 0;
             rotationCount++;
             String startMsg = rotationCount == 1
-                ? "=== BlockProt Session Start ==="
-                : "=== BlockProt Session Start (rotated) ===";
+                ? "BlockProt Session Start"
+                : "BlockProt Session Start (rotated)";
             log(startMsg);
         } catch (IOException e) {
             writer = null;
@@ -150,7 +150,7 @@ public final class BlockProtLogger {
             mirrorHandler = null;
         }
         if (writer != null) {
-            log("=== BlockProt Session End ===");
+            log("BlockProt Session End");
             writer.flush();
             writer.close();
             writer = null;
@@ -199,8 +199,23 @@ public final class BlockProtLogger {
         }
     }
 
+    public static void error(@NotNull String message, @Nullable Throwable throwable) {
+        log("ERROR: " + message);
+        BlockProt plugin = BlockProt.getInstance();
+        if (plugin == null) return;
+        isReentrancyGuard = true;
+        try {
+            if (throwable != null) {
+                plugin.getLogger().log(java.util.logging.Level.SEVERE, COLOR_STRIP.matcher(message).replaceAll(""), throwable);
+            } else {
+                plugin.getLogger().severe(COLOR_STRIP.matcher(message).replaceAll(""));
+            }
+        } finally {
+            isReentrancyGuard = false;
+        }
+    }
+
     public static void separator() {
-        log("----------------------------------------");
     }
 
     @Nullable
@@ -216,7 +231,7 @@ public final class BlockProtLogger {
         try {
             reportWriter = new PrintWriter(new OutputStreamWriter(
                 new FileOutputStream(reportLogFile), StandardCharsets.UTF_8));
-            reportWriter.println("=== BlockProt Reloaded debug report " + ts + " ===");
+            reportWriter.println("BlockProt Reloaded debug report " + ts);
         } catch (IOException e) {
             reportWriter = null;
             reportLogFile = null;
@@ -225,7 +240,7 @@ public final class BlockProtLogger {
 
     public static void endDebugReport() {
         if (reportWriter != null) {
-            reportWriter.println("=== End of debug report ===");
+            reportWriter.println("End of debug report");
             reportWriter.flush();
             reportWriter.close();
         }

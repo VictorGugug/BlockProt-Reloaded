@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
@@ -59,13 +60,13 @@ public class RecommendedCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof ConsoleCommandSender)) {
-            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_CONSOLE_ONLY));
+        if (!canUseCommand(sender)) {
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_CONSOLE_ONLY));
             return true;
         }
 
         if (args.length < 2) {
-            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE));
+            sendUsage(sender);
             return true;
         }
 
@@ -73,154 +74,92 @@ public class RecommendedCommand implements CommandExecutor {
 
         if (first.equals("undo")) {
             if (args.length != 3) {
-                sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE));
+                sendUsage(sender);
                 return true;
             }
             String undoTarget = args[2].toLowerCase(Locale.ROOT);
             if (!undoTarget.equals("blocks") && !undoTarget.equals("config") && !undoTarget.equals("all")) {
-                sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE));
+                sendUsage(sender);
                 return true;
             }
-            if (undoTarget.equals("blocks")) return undoBlocks(sender);
-            if (undoTarget.equals("config")) return undoConfig(sender);
-            undoBlocks(sender);
-            return undoConfig(sender);
+            if (undoTarget.equals("blocks")) return undoBlocks(sender, true);
+            if (undoTarget.equals("config")) return undoConfig(sender, true);
+            return undoAll(sender);
         }
 
         String target = first;
         if (!target.equals("blocks") && !target.equals("config") && !target.equals("all")) {
-            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE));
+            sendUsage(sender);
             return true;
         }
 
         boolean force = args.length >= 3 && args[2].equalsIgnoreCase("force");
         if (args.length > 3 || (args.length == 3 && !force)) {
-            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE));
+            sendUsage(sender);
             return true;
         }
 
         if (target.equals("blocks")) {
-            return applyBlocks(sender, force);
+            return applyBlocks(sender, force, true);
         }
         if (target.equals("config")) {
-            return applyConfig(sender, force);
+            return applyConfig(sender, force, true);
         }
-        applyBlocks(sender, force);
-        return applyConfig(sender, force);
+        return applyAll(sender, force);
     }
 
-    /**
-     * Reverts {@code /bp recommended blocks} back to an empty blocks.yml (all lockable
-     * lists and auto-drop cleared) and clears the {@code recommended_blocks_applied} flag
-     * so the preset can be re-applied fresh. No-ops (with a message) if the preset was
-     * never applied.
-     */
-    private boolean undoBlocks(@NotNull CommandSender sender) {
-        BlockProt plugin = BlockProt.getInstance();
-        File blocksFile = new File(plugin.getDataFolder(), "blocks.yml");
-
-        if (!blocksFile.exists()) {
-            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_BLOCKS_MISSING));
-            return true;
-        }
-
-        try {
-            YamlConfiguration cfg = YamlConfiguration.loadConfiguration(blocksFile);
-
-            if (!cfg.getBoolean("recommended_blocks_applied", false)) {
-                String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_NOTHING)
-                    .replace("{target}", "blocks");
-                sender.sendMessage(message);
-                BlockProtLogger.log("recommended", message);
-                return true;
-            }
-
-            cfg.set("lockable_tile_entities", List.of());
-            cfg.set("lockable_shulker_boxes", List.of());
-            cfg.set("lockable_blocks", List.of());
-            cfg.set("lockable_doors", List.of());
-            cfg.set("lockable_entities", List.of());
-            cfg.set("auto_drop_to_inventory.enabled", true);
-            cfg.set("auto_drop_to_inventory.blocks", List.of());
-            cfg.set("recommended_blocks_applied", false);
-
-            if (plugin.getFileWatcher() != null) {
-                plugin.getFileWatcher().suppressPath("blocks.yml");
-            }
-            DefaultConfig.sanitizeBlocksListsForSave(cfg, false);
-            cfg = DefaultConfig.reorderBlocksKeys(cfg);
-            cfg.save(blocksFile);
-            DefaultConfig.prependBlocksHeader(blocksFile);
-
-            String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_DONE)
-                .replace("{target}", "blocks");
+    private void sendOutput(@NotNull CommandSender sender, @NotNull String message) {
+        ComponentMessages.sendLegacy(sender, message);
+        if (!(sender instanceof ConsoleCommandSender)) {
             BlockProtConsole.info(message);
-            BlockProtLogger.log("recommended", message);
-            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
-
-            if (plugin.getFileWatcher() != null) {
-                plugin.getFileWatcher().requestProgrammaticReload();
-            }
-        } catch (IOException e) {
-            BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)
-                .replace("{file}", "blocks.yml"));
-            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)
-                .replace("{file}", "blocks.yml")
-                .replace("{error}", e.getMessage()));
         }
-
-        return true;
-    }
-
-    /**
-     * Reverts {@code /bp recommended config} back to config.yml's shipped defaults for
-     * {@code modern_family_blocks}, {@code use_menus} and {@code use_dialogs} (all false),
-     * and clears the {@code recommended_config_applied} flag. No-ops (with a message) if
-     * the preset was never applied.
-     */
-    private boolean undoConfig(@NotNull CommandSender sender) {
-        DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
-
-        if (!defaultConfig.getBukkitConfig().getBoolean("recommended_config_applied", false)) {
-            String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_NOTHING)
-                .replace("{target}", "config");
-            sender.sendMessage(message);
-            BlockProtLogger.log("recommended", message);
-            return true;
-        }
-
-        defaultConfig.setAndSave("modern_family_blocks", false);
-        defaultConfig.setAndSave("use_menus", false);
-        defaultConfig.setAndSave("use_dialogs", false);
-        defaultConfig.setAndSave("recommended_config_applied", false);
-
-        String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_DONE)
-            .replace("{target}", "config");
-        BlockProtConsole.info(message);
         BlockProtLogger.log("recommended", message);
-        BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+    }
 
+    private void sendUsage(@NotNull CommandSender sender) {
+        sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE_HEADER));
+        sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE_APPLY));
+        sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_USAGE_UNDO));
+    }
+
+    private boolean applyAll(@NotNull CommandSender sender, boolean force) {
+        sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_HEADER));
+        boolean b = applyBlocks(sender, force, false);
+        boolean c = applyConfig(sender, force, false);
+        if (b || c) {
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+        }
         return true;
     }
 
-    private boolean applyBlocks(@NotNull CommandSender sender, boolean force) {
+    private boolean applyBlocks(@NotNull CommandSender sender, boolean force, boolean standalone) {
         BlockProt plugin = BlockProt.getInstance();
         File blocksFile = new File(plugin.getDataFolder(), "blocks.yml");
 
         if (!blocksFile.exists()) {
-            sender.sendMessage(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_BLOCKS_MISSING));
-            return true;
+            if (standalone) {
+                sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_HEADER));
+            }
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_BLOCKS_MISSING));
+            return false;
         }
 
         try {
             YamlConfiguration cfg = YamlConfiguration.loadConfiguration(blocksFile);
+            boolean alreadyApplied = isStateApplied("blocks_applied") || cfg.getBoolean("recommended_blocks_applied", false);
 
-            if (cfg.getBoolean("recommended_blocks_applied", false) && !force) {
+            if (alreadyApplied && !force) {
+                if (standalone) {
+                    sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_HEADER));
+                }
                 String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_ALREADY_APPLIED)
                     .replace("{target}", "blocks");
-                sender.sendMessage(message);
-                BlockProtLogger.log("recommended", message);
-                return true;
+                sendOutput(sender, message);
+                return false;
+            }
+
+            if (standalone) {
+                sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_HEADER));
             }
 
             cfg.set("lockable_tile_entities", List.of("[*-CHEST *-FURNACE *-TRANSPORT *-MISC *-SHELF *-SIGN]"));
@@ -235,58 +174,208 @@ public class RecommendedCommand implements CommandExecutor {
             } else {
                 cfg.set("auto_drop_to_inventory.blocks", List.of());
             }
-            cfg.set("recommended_blocks_applied", true);
+            cfg.set("recommended_blocks_applied", null);
+            setInternalState("blocks_applied", true);
 
             if (plugin.getFileWatcher() != null) {
                 plugin.getFileWatcher().suppressPath("blocks.yml");
             }
+            DefaultConfig.sanitizeBlocksListsForSave(cfg, false);
+            cfg = DefaultConfig.reorderBlocksKeys(cfg);
             cfg.save(blocksFile);
             DefaultConfig.prependBlocksHeader(blocksFile);
 
-            BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_BLOCKS_DONE));
-            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_BLOCKS_DONE));
-            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_BLOCKS_DONE));
+            if (standalone) {
+                sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+            }
 
             if (plugin.getFileWatcher() != null) {
                 plugin.getFileWatcher().requestProgrammaticReload();
             }
+            return true;
         } catch (IOException e) {
-            BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)
-                .replace("{file}", "blocks.yml"));
-            BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)
+            if (standalone) {
+                sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_HEADER));
+            }
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)
                 .replace("{file}", "blocks.yml")
                 .replace("{error}", e.getMessage()));
+            return false;
         }
-
-        return true;
     }
 
-    private boolean applyConfig(@NotNull CommandSender sender, boolean force) {
+    private boolean applyConfig(@NotNull CommandSender sender, boolean force, boolean standalone) {
         DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
+        boolean alreadyApplied = isStateApplied("config_applied") || defaultConfig.getBukkitConfig().getBoolean("recommended_config_applied", false);
 
-        if (defaultConfig.getBukkitConfig().getBoolean("recommended_config_applied", false) && !force) {
+        if (alreadyApplied && !force) {
+            if (standalone) {
+                sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_HEADER));
+            }
             String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_ALREADY_APPLIED)
                 .replace("{target}", "config");
-            sender.sendMessage(message);
-            BlockProtLogger.log("recommended", message);
-            return true;
+            sendOutput(sender, message);
+            return false;
+        }
+
+        if (standalone) {
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_HEADER));
         }
 
         defaultConfig.setAndSave("modern_family_blocks", true);
         defaultConfig.setAndSave("use_menus", true);
         defaultConfig.setAndSave("use_dialogs", true);
-        defaultConfig.setAndSave("recommended_config_applied", true);
+        defaultConfig.getBukkitConfig().set("recommended_config_applied", null);
+        BlockProt.getInstance().saveConfig();
+        setInternalState("config_applied", true);
 
-        BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__RECOMMENDED_CONFIG_DONE));
-        BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_CONFIG_DONE));
-        BlockProtLogger.log("recommended", Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+        sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_CONFIG_DONE));
+        if (standalone) {
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+        }
 
         return true;
     }
 
+    private boolean undoAll(@NotNull CommandSender sender) {
+        sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_HEADER));
+        boolean b = undoBlocks(sender, false);
+        boolean c = undoConfig(sender, false);
+        if (b || c) {
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+        }
+        return true;
+    }
+
+    private boolean undoBlocks(@NotNull CommandSender sender, boolean standalone) {
+        BlockProt plugin = BlockProt.getInstance();
+        File blocksFile = new File(plugin.getDataFolder(), "blocks.yml");
+
+        if (!blocksFile.exists()) {
+            if (standalone) {
+                sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_HEADER));
+            }
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_BLOCKS_MISSING));
+            return false;
+        }
+
+        try {
+            YamlConfiguration cfg = YamlConfiguration.loadConfiguration(blocksFile);
+            boolean applied = isStateApplied("blocks_applied") || cfg.getBoolean("recommended_blocks_applied", false);
+
+            if (!applied) {
+                if (standalone) {
+                    sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_HEADER));
+                }
+                String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_NOTHING)
+                    .replace("{target}", "blocks");
+                sendOutput(sender, message);
+                return false;
+            }
+
+            if (standalone) {
+                sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_HEADER));
+            }
+
+            cfg.set("lockable_tile_entities", List.of());
+            cfg.set("lockable_shulker_boxes", List.of());
+            cfg.set("lockable_blocks", List.of());
+            cfg.set("lockable_doors", List.of());
+            cfg.set("lockable_entities", List.of());
+            cfg.set("auto_drop_to_inventory.enabled", true);
+            cfg.set("auto_drop_to_inventory.blocks", List.of());
+            cfg.set("recommended_blocks_applied", null);
+            setInternalState("blocks_applied", false);
+
+            if (plugin.getFileWatcher() != null) {
+                plugin.getFileWatcher().suppressPath("blocks.yml");
+            }
+            DefaultConfig.sanitizeBlocksListsForSave(cfg, false);
+            cfg = DefaultConfig.reorderBlocksKeys(cfg);
+            cfg.save(blocksFile);
+            DefaultConfig.prependBlocksHeader(blocksFile);
+
+            String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_DONE)
+                .replace("{target}", "blocks");
+            sendOutput(sender, message);
+            if (standalone) {
+                sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+            }
+
+            if (plugin.getFileWatcher() != null) {
+                plugin.getFileWatcher().requestProgrammaticReload();
+            }
+            return true;
+        } catch (IOException e) {
+            if (standalone) {
+                sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_HEADER));
+            }
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_FAILED)
+                .replace("{file}", "blocks.yml")
+                .replace("{error}", e.getMessage()));
+            return false;
+        }
+    }
+
+    private boolean undoConfig(@NotNull CommandSender sender, boolean standalone) {
+        DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
+        boolean applied = isStateApplied("config_applied") || defaultConfig.getBukkitConfig().getBoolean("recommended_config_applied", false);
+
+        if (!applied) {
+            if (standalone) {
+                sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_HEADER));
+            }
+            String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_NOTHING)
+                .replace("{target}", "config");
+            sendOutput(sender, message);
+            return false;
+        }
+
+        if (standalone) {
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_HEADER));
+        }
+
+        defaultConfig.setAndSave("modern_family_blocks", false);
+        defaultConfig.setAndSave("use_menus", false);
+        defaultConfig.setAndSave("use_dialogs", false);
+        defaultConfig.getBukkitConfig().set("recommended_config_applied", null);
+        BlockProt.getInstance().saveConfig();
+        setInternalState("config_applied", false);
+
+        String message = Translator.get(TranslationKey.CONSOLE__RECOMMENDED_UNDO_DONE)
+            .replace("{target}", "config");
+        sendOutput(sender, message);
+        if (standalone) {
+            sendOutput(sender, Translator.get(TranslationKey.CONSOLE__RECOMMENDED_RELOAD));
+        }
+
+        return true;
+    }
+
+    private static File getInternalStateFile() {
+        return new File(BlockProt.getInstance().getDataFolder(), ".recommended_state.yml");
+    }
+
+    private static boolean isStateApplied(String key) {
+        File f = getInternalStateFile();
+        if (!f.exists()) return false;
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(f);
+        return cfg.getBoolean(key, false);
+    }
+
+    private static void setInternalState(String key, boolean value) {
+        File f = getInternalStateFile();
+        YamlConfiguration cfg = f.exists() ? YamlConfiguration.loadConfiguration(f) : new YamlConfiguration();
+        cfg.set(key, value);
+        try {
+            cfg.save(f);
+        } catch (IOException ignored) {}
+    }
+
     @Override
     public boolean canUseCommand(@NotNull CommandSender sender) {
-        return sender instanceof ConsoleCommandSender;
+        return de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(sender, de.sean.blockprot.bukkit.admin.AdminAction.RECOMMENDED);
     }
 
     @Nullable

@@ -46,7 +46,7 @@ public final class AutoDropFamilyDialog {
     private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
     private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
 
-    private static final int PER_PAGE = 9;
+    private static final int PER_PAGE = 6;
 
     private AutoDropFamilyDialog() {}
 
@@ -88,20 +88,25 @@ public final class AutoDropFamilyDialog {
 
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(
-            stripColor(Translator.get(TranslationKey.DIALOGS__PAGE))
+            familyLabel
+            + " | "
+            + stripColor(Translator.get(TranslationKey.DIALOGS__PAGE))
                 .replace("{current}", String.valueOf(safePage + 1))
                 .replace("{total}", String.valueOf(totalPages)),
-            TextColor.color(0x888888))));
+            SOFT_GRAY)));
 
         List<DialogButton> buttons = new ArrayList<>();
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
+
         for (Material mat : pageMats) {
             boolean active = autoDropBlocks.contains(mat);
             TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
             String displayName = LockableCategoryDialog.formatMaterialName(mat.name());
+            String icon = BpDialogStyles.indicatorIcon(active, colorblind);
 
             buttons.add(new DialogButton("mat_" + mat.name(),
                 Component.text()
-                    .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
+                    .append(Component.text(icon, c))
                     .append(Component.text(displayName, NamedTextColor.WHITE))
                     .build(),
                 Component.join(JoinConfiguration.newlines(),
@@ -119,11 +124,24 @@ public final class AutoDropFamilyDialog {
         long activeCount = materials.stream().filter(autoDropBlocks::contains).count();
         boolean noneActive = activeCount == 0;
         TextColor familyColor = BpDialogStyles.stateColor(activeCount, materials.size());
+        String toggleCatIcon = BpDialogStyles.indicatorIcon(activeCount, materials.size(), colorblind);
 
-        List<DialogButton> extraButtons = new ArrayList<>();
-        extraButtons.add(new DialogButton("toggle_family",
+        BpDialogStyles.padToGrid(buttons, 6);
+
+        // Fixed Bottom Navigation Row (3 columns): [ Prev ] [ Toggle Family ] [ Next ]
+        DialogButton prevBtn = safePage > 0
+            ? new DialogButton("prev",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
+                p -> show(p, backOrigin, family, safePage - 1, parentBack))
+            : new DialogButton("prev_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
+
+        DialogButton toggleCatBtn = new DialogButton("toggle_family",
             Component.text()
-                .append(Component.text(stripColor(Translator.get(noneActive ? TranslationKey.ICON__TOGGLE_OFF : TranslationKey.ICON__TOGGLE_ON)), familyColor))
+                .append(Component.text(toggleCatIcon, familyColor))
                 .append(Component.text(familyLabel, familyColor))
                 .build(),
             Component.text(stripColor(Translator.get(noneActive ? TranslationKey.DIALOGS__CLICK_ENABLE : TranslationKey.DIALOGS__CLICK_DISABLE)), TextColor.color(0x888888)),
@@ -131,24 +149,21 @@ public final class AutoDropFamilyDialog {
                 cfg.toggleAutoDropFamily(family, p);
                 show(p, backOrigin, family, safePage, parentBack);
             }
-        ));
+        );
 
-        List<DialogButton> navButtons = new ArrayList<>();
-        if (safePage > 0) {
-            navButtons.add(new DialogButton("prev",
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, family, safePage - 1, parentBack)));
-        }
-        if (safePage + 1 < totalPages) {
-            navButtons.add(new DialogButton("next",
+        DialogButton nextBtn = safePage + 1 < totalPages
+            ? new DialogButton("next",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, family, safePage + 1, parentBack)));
-        }
+                p -> show(p, backOrigin, family, safePage + 1, parentBack))
+            : new DialogButton("next_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
 
-        buttons.addAll(navButtons);
-        buttons.addAll(extraButtons);
+        buttons.add(prevBtn);
+        buttons.add(toggleCatBtn);
+        buttons.add(nextBtn);
 
         DialogButton backBtn = new DialogButton("back",
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),

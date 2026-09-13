@@ -403,12 +403,12 @@ public final class ItemFrameListener implements Listener {
         if (player.isSneaking()) return;
 
         frameHandler.setOwner(player.getUniqueId().toString());
-        ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(
-            Translator.get(TranslationKey.MESSAGES__LOCK_ON_PLACE_SUCCESS)));
+        de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player,
+            Translator.get(TranslationKey.MESSAGES__LOCK_ON_PLACE_SUCCESS));
         // No session log for auto-lock: would spam on every frame placement.
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String text) {
-        ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(text));
+        de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, text);
     }
 }

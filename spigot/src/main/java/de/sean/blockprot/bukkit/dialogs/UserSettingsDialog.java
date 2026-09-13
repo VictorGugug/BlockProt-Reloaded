@@ -62,9 +62,12 @@ public final class UserSettingsDialog {
 
         boolean hintsEnabled = !settings.hasPlayerInteractedWithMenu();
 
+        boolean colorblind = settings.getColorblindMode();
+
         String rawLock = stripColor(Translator.get(TranslationKey.INVENTORIES__LOCK_ON_PLACE));
         String rawHints = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_MENU__HINTS));
         String rawNotif = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_SETTINGS_NOTIFICATIONS));
+        String rawCb = stripColor(Translator.get(TranslationKey.INVENTORIES__USER_SETTINGS_COLORBLIND));
 
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(
@@ -74,9 +77,10 @@ public final class UserSettingsDialog {
         String autoLockDesc = stripColor(Translator.get(TranslationKey.DIALOGS__SETTINGS__AUTO_LOCK_DESC));
         String hintsDesc = stripColor(Translator.get(TranslationKey.DIALOGS__SETTINGS__HINTS_DESC));
         String notifDesc = stripColor(Translator.get(TranslationKey.DIALOGS__SETTINGS__NOTIFICATIONS_DESC));
+        String cbDesc = stripColor(Translator.get(TranslationKey.DIALOGS__SETTINGS__COLORBLIND_DESC));
 
         DialogButton lockBtn = new DialogButton("lock",
-            toggleLabel(rawLock, settings.getLockOnPlace(), PASTEL_MINT, PASTEL_CORAL),
+            toggleLabel(rawLock, settings.getLockOnPlace(), colorblind, PASTEL_MINT, PASTEL_CORAL),
             tooltip(rawLock, settings.getLockOnPlace(), autoLockDesc),
             p -> {
                 PlayerSettingsHandler h = new PlayerSettingsHandler(p);
@@ -87,7 +91,7 @@ public final class UserSettingsDialog {
         );
 
         DialogButton hintsBtn = new DialogButton("hints",
-            toggleLabel(rawHints, hintsEnabled, PASTEL_MINT, PASTEL_CORAL),
+            toggleLabel(rawHints, hintsEnabled, colorblind, PASTEL_MINT, PASTEL_CORAL),
             tooltip(rawHints, hintsEnabled, hintsDesc),
             p -> {
                 PlayerSettingsHandler h = new PlayerSettingsHandler(p);
@@ -97,11 +101,21 @@ public final class UserSettingsDialog {
         );
 
         DialogButton notifBtn = new DialogButton("notifications",
-            toggleLabel(rawNotif, settings.getNotificationsEnabled(), PASTEL_MINT, PASTEL_CORAL),
+            toggleLabel(rawNotif, settings.getNotificationsEnabled(), colorblind, PASTEL_MINT, PASTEL_CORAL),
             tooltip(rawNotif, settings.getNotificationsEnabled(), notifDesc),
             p -> {
                 PlayerSettingsHandler h = new PlayerSettingsHandler(p);
                 h.setNotificationsEnabled(!h.getNotificationsEnabled());
+                show(p, backOrigin);
+            }
+        );
+
+        DialogButton cbBtn = new DialogButton("colorblind",
+            toggleLabel(rawCb, colorblind, colorblind, PASTEL_MINT, PASTEL_CORAL),
+            tooltip(rawCb, colorblind, cbDesc),
+            p -> {
+                PlayerSettingsHandler h = new PlayerSettingsHandler(p);
+                h.setColorblindMode(!h.getColorblindMode());
                 show(p, backOrigin);
             }
         );
@@ -117,13 +131,35 @@ public final class UserSettingsDialog {
         actions.add(lockBtn);
         actions.add(hintsBtn);
         actions.add(notifBtn);
+        actions.add(cbBtn);
 
-        if (de.sean.blockprot.bukkit.BlockProt.getDefaultConfig().isDialogsEnabled()) {
+        if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.isBedrockPlayer(player)) {
+            String rawForms = stripColor(Translator.get(TranslationKey.DIALOGS__SETTINGS__PREFER_BEDROCK_FORMS));
+            String formsDesc = stripColor(Translator.get(TranslationKey.DIALOGS__SETTINGS__PREFER_BEDROCK_FORMS_DESC));
+            boolean preferForms = settings.getPreferBedrockForms();
+            DialogButton formsBtn = new DialogButton("prefer_bedrock_forms",
+                toggleLabel(rawForms, preferForms, colorblind, PASTEL_MINT, PASTEL_CORAL),
+                tooltip(rawForms, preferForms, formsDesc),
+                p -> {
+                    PlayerSettingsHandler h = new PlayerSettingsHandler(p);
+                    boolean nextState = !h.getPreferBedrockForms();
+                    h.setPreferBedrockForms(nextState);
+                    if (nextState) {
+                        de.sean.blockprot.bukkit.BlockProt.getFoliaLib().getScheduler().runAtEntityLater(p, () -> {
+                            de.sean.blockprot.bukkit.bedrock.forms.BedrockUserSettingsForm.show(p);
+                        }, 1L);
+                    } else {
+                        show(p, backOrigin);
+                    }
+                }
+            );
+            actions.add(formsBtn);
+        } else if (de.sean.blockprot.bukkit.BlockProt.getDefaultConfig().isDialogsEnabled()) {
             String rawDialogs = stripColor(Translator.get(TranslationKey.DIALOGS__SETTINGS__PREFER_DIALOGS));
             String dialogsDesc = stripColor(Translator.get(TranslationKey.DIALOGS__SETTINGS__PREFER_DIALOGS_DESC));
             boolean preferDialogs = settings.getPreferDialogs();
             DialogButton dialogsBtn = new DialogButton("prefer_dialogs",
-                toggleLabel(rawDialogs, preferDialogs, PASTEL_MINT, PASTEL_CORAL),
+                toggleLabel(rawDialogs, preferDialogs, colorblind, PASTEL_MINT, PASTEL_CORAL),
                 tooltip(rawDialogs, preferDialogs, dialogsDesc),
                 p -> {
                     PlayerSettingsHandler h = new PlayerSettingsHandler(p);
@@ -156,11 +192,14 @@ public final class UserSettingsDialog {
         }
     }
 
-    private static Component toggleLabel(String name, boolean enabled,
+    private static Component toggleLabel(String name, boolean enabled, boolean colorblind,
                                          TextColor onColor, TextColor offColor) {
         TextColor color = enabled ? onColor : offColor;
+        String icon = colorblind
+            ? (enabled ? "✔ " : "✖ ")
+            : stripColor(Translator.get(enabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF));
         return Component.text()
-            .append(Component.text(stripColor(Translator.get(enabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), color))
+            .append(Component.text(icon, color))
             .append(Component.text(name, NamedTextColor.WHITE))
             .build();
     }

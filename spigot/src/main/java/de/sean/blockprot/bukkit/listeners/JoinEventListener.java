@@ -48,6 +48,7 @@ public class JoinEventListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        player.updateCommands();
 
         // Pre-fetch the player's own skin so their head is ready on first GUI open.
         Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () ->

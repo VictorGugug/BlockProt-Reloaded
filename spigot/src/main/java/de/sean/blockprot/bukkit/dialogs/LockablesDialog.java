@@ -55,111 +55,198 @@ public final class LockablesDialog {
     private LockablesDialog() {}
 
     public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin) {
-        show(player, backOrigin, 0);
+        show(player, backOrigin, "", 0);
     }
 
     public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin, int page) {
+        show(player, backOrigin, "", page);
+    }
+
+    public static void showSearchPrompt(@NotNull Player player, @NotNull DialogOrigin backOrigin) {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
 
+        Component title = Component.text(
+            stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH)),
+            PASTEL_GOLD, TextDecoration.BOLD
+        );
+        List<DialogBodyEntry> body = List.of(
+            DialogBodyEntry.text(Component.text(
+                stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_TITLE)).replace("{query}", "..."),
+                SOFT_GRAY))
+        );
+        DialogTextField field = DialogTextField.of(
+            "search_query",
+            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH))),
+            "",
+            stripColor(Translator.get(TranslationKey.ICON__SEARCH))
+                + stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH))
+        );
+        DialogButton backBtn = new DialogButton("back",
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
+            p -> show(p, backOrigin)
+        );
+        bridge.showValueInput(player, title, body, field, query -> {
+            show(player, backOrigin, query != null ? query.trim() : "", 0);
+        }, backBtn);
+    }
+
+    public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
+                            @NotNull String searchQuery, int page) {
+        DialogBridge bridge = DialogBridgeFactory.getBridge();
+        if (bridge == null) return;
         DefaultConfig cfg = BlockProt.getDefaultConfig();
-        List<CategoryEntry> categories = buildCategoryInfo(cfg);
-        int totalPages = Math.max(1, (int) Math.ceil(categories.size() / (double) PER_PAGE));
-        int safePage = Math.max(0, Math.min(page, totalPages - 1));
-        int from = safePage * PER_PAGE;
-        int to = Math.min(from + PER_PAGE, categories.size());
-        List<CategoryEntry> pageEntries = categories.subList(from, to);
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
 
         Component title = Component.text(
-            stripColor(Translator.get(TranslationKey.INVENTORIES__LOCKABLES__TITLE)),
+            stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__HEADER)),
             PASTEL_GOLD, TextDecoration.BOLD
         );
 
         List<DialogBodyEntry> body = new ArrayList<>();
-        body.add(DialogBodyEntry.text(Component.text(
-            stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__HEADER)), SOFT_GRAY)));
-        body.add(DialogBodyEntry.text(Component.text(
-            stripColor(Translator.get(TranslationKey.DIALOGS__PAGE))
-                .replace("{current}", String.valueOf(safePage + 1))
-                .replace("{total}", String.valueOf(totalPages)),
-            TextColor.color(0x888888))));
-
         List<DialogButton> buttons = new ArrayList<>();
 
-        DialogButton searchBtn = new DialogButton("search",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__SEARCH))
-                + stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH)), NamedTextColor.WHITE),
-            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_LORE)), TextColor.color(0x888888)),
-            p -> {
-                bridge.showValueInput(p,
-                    Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_TITLE)).replace("{query}", ""), PASTEL_GOLD, TextDecoration.BOLD),
-                    List.of(DialogBodyEntry.text(Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_LORE)), SOFT_GRAY))),
-                    DialogTextField.of("search_query", Component.text(""), "", stripColor(Translator.get(TranslationKey.ICON__SEARCH))),
-                    text -> {
-                        List<Material> results = de.sean.blockprot.bukkit.config.BlockFamilyParser.searchMaterials(text);
-                        LockableCategoryDialog.show(p, backOrigin, text, results);
-                    },
-                    new DialogButton("back", Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY), Component.text(""), p2 -> show(p2, backOrigin, safePage))
-                );
+        if (!searchQuery.isBlank()) {
+            List<Material> matches = BlockFamilyParser.searchMaterials(searchQuery);
+            int totalPages = Math.max(1, (int) Math.ceil(matches.size() / (double) PER_PAGE));
+            int safePage = Math.max(0, Math.min(page, totalPages - 1));
+            int from = safePage * PER_PAGE;
+            int to = Math.min(from + PER_PAGE, matches.size());
+            List<Material> pageMats = matches.subList(from, to);
+
+            body.add(DialogBodyEntry.text(Component.text(
+                stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_TITLE)).replace("{query}", searchQuery)
+                + " | " + stripColor(Translator.get(TranslationKey.DIALOGS__PAGE))
+                    .replace("{current}", String.valueOf(safePage + 1))
+                    .replace("{total}", String.valueOf(totalPages)),
+                SOFT_GRAY)));
+
+            for (Material mat : pageMats) {
+                boolean active = cfg.isLockable(mat) || cfg.isLockableEntity(mat);
+                TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
+                String displayName = LockableCategoryDialog.formatMaterialName(mat.name());
+                String icon = BpDialogStyles.indicatorIcon(active, colorblind);
+
+                buttons.add(new DialogButton("mat_" + mat.name(),
+                    Component.text()
+                        .append(Component.text(icon, c))
+                        .append(Component.text(displayName, NamedTextColor.WHITE))
+                        .build(),
+                    Component.join(JoinConfiguration.newlines(),
+                        Component.text(mat.name(), SOFT_GRAY),
+                        Component.text(active
+                            ? stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE_SINGLE))
+                            : stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE_SINGLE)), c)),
+                    p -> {
+                        cfg.toggleLockable(mat, p);
+                        show(p, backOrigin, searchQuery, safePage);
+                    }
+                ));
             }
-        );
-        buttons.add(searchBtn);
 
-        for (CategoryEntry entry : pageEntries) {
-            boolean noneActive = entry.activeCount == 0;
-            TextColor c = BpDialogStyles.stateColor(entry.activeCount, entry.totalCount);
-            String catLabel = translateCategory(entry.label);
-            buttons.add(new DialogButton("cat_" + entry.label,
-                Component.text()
-                    .append(Component.text(stripColor(Translator.get(noneActive ? TranslationKey.ICON__TOGGLE_OFF : TranslationKey.ICON__TOGGLE_ON)), c))
-                    .append(Component.text(catLabel, NamedTextColor.WHITE))
-                    .append(Component.text(" (" + entry.activeCount + "/" + entry.totalCount + ")", TextColor.color(0x888888)))
-                    .build(),
-                Component.join(JoinConfiguration.newlines(),
-                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CAT_PREFIX)), SOFT_GRAY)
-                        .append(Component.text(catLabel, NamedTextColor.WHITE)),
-                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE))
-                        + " / " + stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE)), TextColor.color(0x888888))),
-                p -> LockableCategoryDialog.show(p, backOrigin, entry.label, entry.materials)
-            ));
+            BpDialogStyles.padToGrid(buttons, 6);
+
+            // Fixed Bottom Navigation Row (3 columns): [ Prev ] [ Clear / Volver ] [ Next ]
+            DialogButton prevBtn = safePage > 0
+                ? new DialogButton("prev",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
+                    p -> show(p, backOrigin, searchQuery, safePage - 1))
+                : new DialogButton("prev_disabled",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), TextColor.color(0x555555)),
+                    Component.text(""),
+                    p -> {});
+
+            DialogButton clearBtn = new DialogButton("clear_search",
+                Component.text(stripColor(Translator.get(TranslationKey.ICON__UNDO))
+                    + stripColor(Translator.get(TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
+                Component.text(""),
+                p -> show(p, backOrigin, "", 0)
+            );
+
+            DialogButton nextBtn = safePage + 1 < totalPages
+                ? new DialogButton("next",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
+                    p -> show(p, backOrigin, searchQuery, safePage + 1))
+                : new DialogButton("next_disabled",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), TextColor.color(0x555555)),
+                    Component.text(""),
+                    p -> {});
+
+            buttons.add(prevBtn);
+            buttons.add(clearBtn);
+            buttons.add(nextBtn);
+        } else {
+            List<CategoryEntry> categories = buildCategoryInfo(cfg);
+            int totalPages = Math.max(1, (int) Math.ceil(categories.size() / (double) PER_PAGE));
+            int safePage = Math.max(0, Math.min(page, totalPages - 1));
+            int from = safePage * PER_PAGE;
+            int to = Math.min(from + PER_PAGE, categories.size());
+            List<CategoryEntry> pageEntries = categories.subList(from, to);
+
+            body.add(DialogBodyEntry.text(Component.text(
+                stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__HEADER))
+                + " | " + stripColor(Translator.get(TranslationKey.DIALOGS__PAGE))
+                    .replace("{current}", String.valueOf(safePage + 1))
+                    .replace("{total}", String.valueOf(totalPages)),
+                SOFT_GRAY)));
+
+            for (CategoryEntry entry : pageEntries) {
+                boolean noneActive = entry.activeCount == 0;
+                TextColor c = BpDialogStyles.stateColor(entry.activeCount, entry.totalCount);
+                String catLabel = translateCategory(entry.label);
+                String icon = BpDialogStyles.indicatorIcon(entry.activeCount, entry.totalCount, colorblind);
+
+                buttons.add(new DialogButton("cat_" + entry.label,
+                    Component.text()
+                        .append(Component.text(icon, c))
+                        .append(Component.text(catLabel, NamedTextColor.WHITE))
+                        .append(Component.text(" (" + entry.activeCount + "/" + entry.totalCount + ")", TextColor.color(0x888888)))
+                        .build(),
+                    Component.join(JoinConfiguration.newlines(),
+                        Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CAT_PREFIX)), SOFT_GRAY)
+                            .append(Component.text(catLabel, NamedTextColor.WHITE)),
+                        Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE))
+                            + " / " + stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE)), TextColor.color(0x888888))),
+                    p -> LockableCategoryDialog.show(p, backOrigin, entry.label, entry.materials)
+                ));
+            }
+
+            BpDialogStyles.padToGrid(buttons, 6);
+
+            // Fixed Bottom Navigation Row (3 columns): [ Prev ] [ Auto-Drop ] [ Next ]
+            DialogButton prevBtn = safePage > 0
+                ? new DialogButton("prev",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
+                    p -> show(p, backOrigin, "", safePage - 1))
+                : new DialogButton("prev_disabled",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), TextColor.color(0x555555)),
+                    Component.text(""),
+                    p -> {});
+
+            DialogButton autoDropBtn = new DialogButton("auto_drop",
+                Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP)), SOFT_BLUE),
+                Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP_LORE)), TextColor.color(0x888888)),
+                p -> AutoDropDialog.show(p, backOrigin, q -> LockablesDialog.show(q, backOrigin))
+            );
+
+            DialogButton nextBtn = safePage + 1 < totalPages
+                ? new DialogButton("next",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
+                    p -> show(p, backOrigin, "", safePage + 1))
+                : new DialogButton("next_disabled",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), TextColor.color(0x555555)),
+                    Component.text(""),
+                    p -> {});
+
+            buttons.add(prevBtn);
+            buttons.add(autoDropBtn);
+            buttons.add(nextBtn);
         }
-
-        buttons.add(new DialogButton("auto_drop",
-            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP)), SOFT_BLUE),
-            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP_LORE)), TextColor.color(0x888888)),
-            p -> AutoDropDialog.show(p, backOrigin, q -> LockablesDialog.show(q, backOrigin))
-        ));
-
-        if (cfg.isPerWorldsConfigEnabled()) {
-            int worldCount = Bukkit.getWorlds().size();
-            int configuredCount = worldsConfigCount();
-            buttons.add(new DialogButton("world_lockables",
-                Component.text(stripColor(Translator.get(TranslationKey.WORLDS__PER_WORLD_CONFIG)), PASTEL_PURPLE),
-                Component.join(JoinConfiguration.newlines(),
-                    Component.text(worldCount + " " + stripColor(Translator.get(TranslationKey.WORLDS__WORLDS)), TextColor.color(0x888888)),
-                    Component.text(stripColor(Translator.get(TranslationKey.WORLDS__CONFIGURED))
-                        + ": " + configuredCount + "/" + worldCount, TextColor.color(0x888888))),
-                p -> WorldLockableSelectionDialog.show(p, backOrigin)
-            ));
-        }
-
-        List<DialogButton> navButtons = new ArrayList<>();
-        if (safePage > 0) {
-            int prevPage = safePage - 1;
-            navButtons.add(new DialogButton("prev",
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, prevPage)));
-        }
-        if (safePage + 1 < totalPages) {
-            int nextPage = safePage + 1;
-            navButtons.add(new DialogButton("next",
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
-                p -> show(p, backOrigin, nextPage)));
-        }
-
-        buttons.addAll(navButtons);
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
         DialogButton backBtn = DialogNavigation.backButton(
@@ -168,7 +255,7 @@ public final class LockablesDialog {
             exitOrigin == DialogOrigin.NONE ? TranslationKey.DIALOGS__RETURN_PREVIOUS : null
         );
 
-        bridge.showMultiAction(player, title, body, buttons, backBtn, 1);
+        bridge.showMultiAction(player, title, body, buttons, backBtn, 3);
     }
 
     private static int worldsConfigCount() {
@@ -181,7 +268,7 @@ public final class LockablesDialog {
         return count;
     }
 
-    private static List<CategoryEntry> buildCategoryInfo(DefaultConfig cfg) {
+    static List<CategoryEntry> buildCategoryInfo(DefaultConfig cfg) {
         Map<String, List<Material>> catMap = new LinkedHashMap<>();
         catMap.put("Chests", new ArrayList<>());
         catMap.put("Shulkers", new ArrayList<>());
@@ -220,15 +307,6 @@ public final class LockablesDialog {
                 || n.equals("NOTE_BLOCK") || n.equals("BELL") || n.equals("COMPOSTER")
                 || n.equals("DRAGON_EGG") || n.contains("CAULDRON")) && m.isBlock()) dest = catMap.get("Interactive");
             else if (BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.ENTITIES).contains(m)) dest = catMap.get("Entities");
-            // Every remaining block family member falls back to Interactive so the dialog
-            // mirrors LockablesInventory.classify(), which sends everything unclassified to
-            // INTERACTIVE. The gate below keeps the list down to real family members: a
-            // material that matches a category here but belongs to no lockable family (e.g.
-            // buttons, LEVER, DAYLIGHT_DETECTOR when no lockable_blocks family covers them)
-            // would produce a button whose toggleLockable() silently no-ops, because
-            // configKeyForMaterial() finds no family for it. Gate every category, including
-            // Entities, on real family membership so every listed material is guaranteed to
-            // actually toggle regardless of how the hand-written heuristics drift.
             if (dest != null && !isKnownLockableMaterial(m)) dest = null;
             if (dest != null) dest.add(m);
         }
@@ -243,16 +321,6 @@ public final class LockablesDialog {
         return result;
     }
 
-    /**
-     * Picks the state color for an active/total pair. Orange is reserved for
-     * counts sitting near the midpoint (a "close call" signal); everything
-     * else falls back to coral (none active) or mint (some/all active). The
-     * near-half band widens for small totals so a swing of a single item
-     * still lands inside it (percentages jump too hard at low counts for a
-     * fixed 40-60% band to be meaningful).
-     */
-
-
     private static boolean isKnownLockableMaterial(@NotNull Material m) {
         for (BlockFamilyParser.Family family : BlockFamilyParser.Family.values()) {
             if (BlockFamilyParser.getFamilyMembers(family).contains(m)) return true;
@@ -260,7 +328,7 @@ public final class LockablesDialog {
         return false;
     }
 
-    private static String translateCategory(String label) {
+    static String translateCategory(String label) {
         return switch (label) {
             case "Chests" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__CHESTS));
             case "Shulkers" -> stripColor(Translator.get(TranslationKey.DIALOGS__LOCKABLES__CATEGORIES__SHULKERS));
@@ -282,5 +350,5 @@ public final class LockablesDialog {
         return s.replaceAll("[§&][0-9a-fk-orxA-F]", "");
     }
 
-    private record CategoryEntry(String label, List<Material> materials, long activeCount, long totalCount) {}
+    record CategoryEntry(String label, List<Material> materials, long activeCount, long totalCount) {}
 }

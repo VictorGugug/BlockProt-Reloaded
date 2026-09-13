@@ -121,8 +121,13 @@ public final class BlockProtAPI {
                     BlockAccessMenuEvent.MenuPermission.MANAGER);
         } else if (handler.isNotProtected()) {
             event.addPermission(BlockAccessMenuEvent.MenuPermission.LOCK);
-        } else if ((friend = handler.getFriend(playerUuid)).isPresent() && friend.get().isManager()) {
-            event.addPermission(BlockAccessMenuEvent.MenuPermission.MANAGER);
+        } else if ((friend = handler.getFriend(playerUuid)).isPresent() && !friend.get().doesRepresentPublic()) {
+            if (friend.get().canOpenMenu()) {
+                event.addPermission(BlockAccessMenuEvent.MenuPermission.INFO);
+            }
+            if (friend.get().isManager()) {
+                event.addPermission(BlockAccessMenuEvent.MenuPermission.MANAGER);
+            }
         }
 
         Bukkit.getPluginManager().callEvent(event);

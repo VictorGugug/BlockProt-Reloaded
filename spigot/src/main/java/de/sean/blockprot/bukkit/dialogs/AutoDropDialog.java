@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -48,6 +49,7 @@ public final class AutoDropDialog {
     private static final TextColor PASTEL_CORAL = TextColor.color(0xF0A0A0);
     private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
     private static final TextColor PASTEL_ORANGE = TextColor.color(0xDFB98E);
+    private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
 
     private static final List<BlockFamilyParser.Family> FAMILIES = List.of(
         BlockFamilyParser.Family.TILE_ENTITIES,
@@ -60,16 +62,54 @@ public final class AutoDropDialog {
     private AutoDropDialog() {}
 
     public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin) {
-        show(player, backOrigin, null);
+        show(player, backOrigin, null, "", 0);
     }
 
     public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
                             @Nullable DialogButton.DialogClickHandler parentBack) {
+        show(player, backOrigin, parentBack, "", 0);
+    }
+
+    public static void showSearchPrompt(@NotNull Player player, @NotNull DialogOrigin backOrigin,
+                                        @Nullable DialogButton.DialogClickHandler parentBack) {
+        DialogBridge bridge = DialogBridgeFactory.getBridge();
+        if (bridge == null) return;
+
+        Component title = Component.text(
+            stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH)),
+            PASTEL_GOLD, TextDecoration.BOLD
+        );
+        List<DialogBodyEntry> body = List.of(
+            DialogBodyEntry.text(Component.text(
+                stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_TITLE)).replace("{query}", "..."),
+                SOFT_GRAY))
+        );
+        DialogTextField field = DialogTextField.of(
+            "search_query",
+            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH))),
+            "",
+            stripColor(Translator.get(TranslationKey.ICON__SEARCH))
+                + stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH))
+        );
+        DialogButton backBtn = new DialogButton("back",
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
+            p -> show(p, backOrigin, parentBack)
+        );
+        bridge.showValueInput(player, title, body, field, query -> {
+            show(player, backOrigin, parentBack, query != null ? query.trim() : "", 0);
+        }, backBtn);
+    }
+
+    public static void show(@NotNull Player player, @NotNull DialogOrigin backOrigin,
+                            @Nullable DialogButton.DialogClickHandler parentBack,
+                            @NotNull String searchQuery, int page) {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
 
         DefaultConfig cfg = BlockProt.getDefaultConfig();
         Set<Material> autoDropBlocks = cfg.getAutoDropToInventoryBlocks();
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
 
         Component title = Component.text(
             stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__TITLE)),
@@ -77,44 +117,128 @@ public final class AutoDropDialog {
         );
 
         List<DialogBodyEntry> body = new ArrayList<>();
-        body.add(DialogBodyEntry.text(Component.text(
-            stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP_LORE)), SOFT_GRAY)));
-
         List<DialogButton> buttons = new ArrayList<>();
-        for (BlockFamilyParser.Family family : FAMILIES) {
-            Set<Material> members = BlockFamilyParser.getFamilyMembers(family);
-            long active = members.stream().filter(autoDropBlocks::contains).count();
-            long total = members.size();
-            boolean noneActive = active == 0;
-            TextColor c = BpDialogStyles.stateColor(active, total);
-            String label = friendlyName(family.name());
 
-            buttons.add(new DialogButton("family_" + family.name(),
-                Component.text()
-                    .append(Component.text(stripColor(Translator.get(noneActive ? TranslationKey.ICON__TOGGLE_OFF : TranslationKey.ICON__TOGGLE_ON)), c))
-                    .append(Component.text(label, NamedTextColor.WHITE))
-                    .append(Component.text(" (" + active + "/" + total + ")", TextColor.color(0x888888)))
-                    .build(),
-                Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__LEFT_CLICK_HINT)), TextColor.color(0x888888)),
-                p -> AutoDropFamilyDialog.show(p, backOrigin, family, parentBack)
-            ));
-        }
+        if (!searchQuery.isBlank()) {
+            final int perPage = 6;
+            List<Material> matches = BlockFamilyParser.searchMaterials(searchQuery);
+            int totalPages = Math.max(1, (int) Math.ceil(matches.size() / (double) perPage));
+            int safePage = Math.max(0, Math.min(page, totalPages - 1));
+            int from = safePage * perPage;
+            int to = Math.min(from + perPage, matches.size());
+            List<Material> pageMats = matches.subList(from, to);
 
-        DialogButton searchBtn = new DialogButton("search",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__SEARCH))
-                + stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH)), NamedTextColor.WHITE),
-            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_LORE)), TextColor.color(0x888888)),
-            p -> {
-                bridge.showValueInput(p,
-                    Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_TITLE)).replace("{query}", ""), PASTEL_GOLD, TextDecoration.BOLD),
-                    List.of(DialogBodyEntry.text(Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_LORE)), SOFT_GRAY))),
-                    DialogTextField.of("search_query", Component.text(""), "", stripColor(Translator.get(TranslationKey.ICON__SEARCH))),
-                    text -> AutoDropSearchDialog.show(p, backOrigin, parentBack, text, 0),
-                    new DialogButton("back", Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY), Component.text(""), p2 -> show(p2, backOrigin, parentBack))
-                );
+            body.add(DialogBodyEntry.text(Component.text(
+                stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH_TITLE)).replace("{query}", searchQuery)
+                + " | " + stripColor(Translator.get(TranslationKey.DIALOGS__PAGE))
+                    .replace("{current}", String.valueOf(safePage + 1))
+                    .replace("{total}", String.valueOf(totalPages)),
+                SOFT_GRAY)));
+
+            for (Material mat : pageMats) {
+                boolean active = autoDropBlocks.contains(mat);
+                TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
+                String displayName = LockableCategoryDialog.formatMaterialName(mat.name());
+                String icon = BpDialogStyles.indicatorIcon(active, colorblind);
+
+                buttons.add(new DialogButton("mat_" + mat.name(),
+                    Component.text()
+                        .append(Component.text(icon, c))
+                        .append(Component.text(displayName, NamedTextColor.WHITE))
+                        .build(),
+                    Component.join(JoinConfiguration.newlines(),
+                        Component.text(mat.name(), SOFT_GRAY),
+                        Component.text(active
+                            ? stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_DISABLE_SINGLE))
+                            : stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_ENABLE_SINGLE)), c)),
+                    p -> {
+                        cfg.toggleAutoDropMaterial(mat, p);
+                        show(p, backOrigin, parentBack, searchQuery, safePage);
+                    }
+                ));
             }
-        );
-        buttons.add(searchBtn);
+
+            BpDialogStyles.padToGrid(buttons, 6);
+
+            // Fixed Bottom Navigation Row (3 columns): [ Prev ] [ Clear / Volver ] [ Next ]
+            DialogButton prevBtn = safePage > 0
+                ? new DialogButton("prev",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
+                    p -> show(p, backOrigin, parentBack, searchQuery, safePage - 1))
+                : new DialogButton("prev_disabled",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), TextColor.color(0x555555)),
+                    Component.text(""),
+                    p -> {});
+
+            DialogButton clearBtn = new DialogButton("clear_search",
+                Component.text(stripColor(Translator.get(TranslationKey.ICON__UNDO))
+                    + stripColor(Translator.get(TranslationKey.DIALOGS__CLOSE)), SOFT_GRAY),
+                Component.text(""),
+                p -> show(p, backOrigin, parentBack, "", 0)
+            );
+
+            DialogButton nextBtn = safePage + 1 < totalPages
+                ? new DialogButton("next",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
+                    p -> show(p, backOrigin, parentBack, searchQuery, safePage + 1))
+                : new DialogButton("next_disabled",
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), TextColor.color(0x555555)),
+                    Component.text(""),
+                    p -> {});
+
+            buttons.add(prevBtn);
+            buttons.add(clearBtn);
+            buttons.add(nextBtn);
+        } else {
+            body.add(DialogBodyEntry.text(Component.text(
+                stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__AUTO_DROP_LORE)), SOFT_GRAY)));
+
+            for (BlockFamilyParser.Family family : FAMILIES) {
+                Set<Material> members = BlockFamilyParser.getFamilyMembers(family);
+                long active = members.stream().filter(autoDropBlocks::contains).count();
+                long total = members.size();
+                boolean noneActive = active == 0;
+                TextColor c = BpDialogStyles.stateColor(active, total);
+                String label = friendlyName(family.name());
+                String icon = BpDialogStyles.indicatorIcon(active, total, colorblind);
+
+                buttons.add(new DialogButton("family_" + family.name(),
+                    Component.text()
+                        .append(Component.text(icon, c))
+                        .append(Component.text(label, NamedTextColor.WHITE))
+                        .append(Component.text(" (" + active + "/" + total + ")", TextColor.color(0x888888)))
+                        .build(),
+                    Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__LEFT_CLICK_HINT)), TextColor.color(0x888888)),
+                    p -> AutoDropFamilyDialog.show(p, backOrigin, family, parentBack)
+                ));
+            }
+
+            BpDialogStyles.padToGrid(buttons, 6);
+
+            // Fixed Bottom Navigation Row (3 columns): [ Prev ] [ Search Blocks ] [ Next ]
+            DialogButton prevBtn = new DialogButton("prev_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
+
+            DialogButton searchBtn = new DialogButton("search_prompt",
+                Component.text(stripColor(Translator.get(TranslationKey.ICON__SEARCH))
+                    + stripColor(Translator.get(TranslationKey.INVENTORIES__AUTO_DROP__SEARCH)), PASTEL_GOLD),
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), TextColor.color(0x888888)),
+                p -> showSearchPrompt(p, backOrigin, parentBack)
+            );
+
+            DialogButton nextBtn = new DialogButton("next_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
+
+            buttons.add(prevBtn);
+            buttons.add(searchBtn);
+            buttons.add(nextBtn);
+        }
 
         DialogButton backBtn = new DialogButton("back",
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
@@ -124,7 +248,7 @@ public final class AutoDropDialog {
                 : backOrigin == DialogOrigin.ADMIN_MENU ? p -> AdminMenuDialog.show(p) : null
         );
 
-        bridge.showMultiAction(player, title, body, buttons, backBtn, 1);
+        bridge.showMultiAction(player, title, body, buttons, backBtn, 3);
     }
 
     @NotNull

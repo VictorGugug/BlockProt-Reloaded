@@ -92,14 +92,17 @@ public final class UnlockDialog {
         int to = Math.min(from + PER_PAGE, allBlocks.size());
         List<LocationListEntry> pageBlocks = allBlocks.subList(from, to);
 
-        Component title = Component.text(
-            stripColor(Translator.get(TranslationKey.INVENTORIES__BP_UNLOCK__TITLE)),
-            SOFT_BLUE, TextDecoration.BOLD
-        );
+        String titleText = (backOrigin == DialogOrigin.INFO)
+            ? stripColor(Translator.get(TranslationKey.DIALOGS__INFO__BLOCK_LIST_TITLE)).replace("{player}", targetName)
+            : stripColor(Translator.get(TranslationKey.INVENTORIES__BP_UNLOCK__TITLE)).replace("{player}", targetName);
+
+        Component title = Component.text(titleText, SOFT_BLUE, TextDecoration.BOLD);
 
         List<DialogBodyEntry> body = new ArrayList<>();
-        body.add(DialogBodyEntry.text(Component.text(
-            stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__HEADER)), SOFT_GRAY)));
+        String headerText = (backOrigin == DialogOrigin.INFO)
+            ? stripColor(Translator.get(TranslationKey.DIALOGS__INFO__PROTECTED_BLOCKS)) + " " + targetName
+            : stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__HEADER));
+        body.add(DialogBodyEntry.text(Component.text(headerText, SOFT_GRAY)));
         body.add(DialogBodyEntry.text(Component.text(
             targetName + " - "
             + stripColor(Translator.get(TranslationKey.DIALOGS__PAGE))
@@ -110,6 +113,10 @@ public final class UnlockDialog {
         List<DialogButton> buttons = new ArrayList<>();
 
         UUID targetUuid = target.getUniqueId();
+        String clickHintText = (backOrigin == DialogOrigin.INFO)
+            ? stripColor(Translator.get(TranslationKey.INVENTORIES__INSPECT_CONTENTS))
+            : stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__CLICK_HINT));
+
         for (LocationListEntry locEntry : pageBlocks) {
             Location loc = locEntry.get();
             String desc = (loc.getWorld() != null ? loc.getWorld().getName() : "?") + " @ "
@@ -118,8 +125,7 @@ public final class UnlockDialog {
             buttons.add(new DialogButton("block_" + safePage + "_" + buttons.size(),
                 Component.text(stripColor(Translator.get(backOrigin == DialogOrigin.INFO ? TranslationKey.ICON__SEARCH : TranslationKey.ICON__UNLOCK)) + desc, NamedTextColor.WHITE),
                 Component.join(JoinConfiguration.newlines(),
-                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__CLICK_HINT)),
-                        TextColor.color(0x888888)),
+                    Component.text(clickHintText, TextColor.color(0x888888)),
                     Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UNLOCK__LOCATION)), SOFT_GRAY)
                         .append(Component.text(desc, NamedTextColor.WHITE))),
                 p -> {

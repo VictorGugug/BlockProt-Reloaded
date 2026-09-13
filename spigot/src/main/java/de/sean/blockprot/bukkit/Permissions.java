@@ -60,6 +60,21 @@ public enum Permissions {
      */
     USER_ADMIN("blockprot.user.admin"),
 
+    /** Tier 1 Moderator: Inspection commands, statistics teleport, and viewing audit logs. */
+    ADMIN_T1("blockprot.user.admin.t1"),
+
+    /** Tier 2 Helper: Intervention commands, unlocking blocks, breaking protected blocks. */
+    ADMIN_T2("blockprot.user.admin.t2"),
+
+    /** Tier 3 Admin: Maintenance commands, mass protection deletion, and admin config dialogs. */
+    ADMIN_T3("blockprot.user.admin.t3"),
+
+    /** Tier 4 Owner: Full system control, plugin reload, update checker, and recommended command. */
+    ADMIN_OWNER("blockprot.user.admin.owner"),
+
+    /** Custom Admin: Uses granular action permissions configured via player settings or admins.yml. */
+    ADMIN_CUSTOM("blockprot.user.admin.custom"),
+
     /**
      * Exempts the holder from the {@code player_max_locked_block_count} limit
      * (unlimited locked blocks). The dynamic {@code blockprot.locklimit.<N>} node

@@ -274,6 +274,6 @@ public final class VehicleProtectionListener implements Listener {
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String text) {
-        ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(text));
+        de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, text);
     }
 }

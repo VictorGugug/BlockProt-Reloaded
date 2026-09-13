@@ -50,6 +50,7 @@ public final class AdminConfigRaidDialog {
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_RAID), AdminConfigDialog.SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         DefaultConfig cfg = BlockProt.getDefaultConfig();
         boolean raidEnabled = BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", false);
@@ -57,6 +58,7 @@ public final class AdminConfigRaidDialog {
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__RAID__ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__RAID__ENABLED),
             raidEnabled,
+            colorblind,
             p -> { cfg.setAndSave("raid_detection.enabled", !raidEnabled); show(p, backOrigin); }));
 
         AdminConfigDialog.bridgeReturn(player, bridge, title, body, buttons, backOrigin);

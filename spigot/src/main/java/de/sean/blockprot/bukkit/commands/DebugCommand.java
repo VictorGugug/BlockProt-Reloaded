@@ -133,8 +133,7 @@ public class DebugCommand implements CommandExecutor {
      */
     public static void run(@NotNull Player player) {
         ab(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS));
-        Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(),
-            () -> new DebugCommand().runDiagnostics(player));
+        BlockProt.getFoliaLib().getScheduler().runAsync(task -> new DebugCommand().runDiagnostics(player));
     }
 
     private static void ab(@NotNull Player p, @NotNull String msg) {
@@ -159,86 +158,134 @@ public class DebugCommand implements CommandExecutor {
         coveredClasses.add(pkg + "." + displayedName.split(" ")[0]);
     }
 
+    private void runDomain(String index, String title) {
+        BlockProtLogger.separator();
+        BlockProtLogger.log("[" + index + "] " + title);
+    }
+
+    private static void logEnvironmentInfo(@NotNull Player player) {
+        BlockProtLogger.log("debug", "Session: " + java.time.LocalDateTime.now()
+            + " | Plugin: BlockProt Reloaded " + BlockProt.getPluginVersion()
+            + " | Player: " + player.getName() + " (" + player.getUniqueId() + ")");
+        BlockProtLogger.log("debug", "Server: " + org.bukkit.Bukkit.getVersion()
+            + " | API: " + org.bukkit.Bukkit.getBukkitVersion()
+            + " | Java: " + System.getProperty("java.version"));
+        BlockProtLogger.log("debug", "Compat: " + de.sean.blockprot.bukkit.VersionCompat.getDiagnosticString()
+            + " | BukkitCompat: " + de.sean.blockprot.bukkit.BukkitCompat.getDiagnosticString()
+            + " | FoliaLib: [isFolia=" + BlockProt.getFoliaLib().isFolia()
+            + ", isPaper=" + BlockProt.getFoliaLib().isPaper()
+            + ", isSpigot=" + BlockProt.getFoliaLib().isSpigot() + "]");
+    }
+
     private void runDiagnostics(@NotNull Player player) {
         AtomicInteger passed = new AtomicInteger(0);
         AtomicInteger failed = new AtomicInteger(0);
         coveredClasses.clear();
         BlockProtLogger.startDebugReport();
 
-        BlockProtLogger.separator();
-        BlockProtLogger.log("=== /blockprot debug run: " + java.time.LocalDateTime.now() + " ===");
-        BlockProtLogger.log("Plugin  : BlockProt Reloaded " + BlockProt.getPluginVersion());
-        BlockProtLogger.log("Player  : " + player.getName() + " (" + player.getUniqueId() + ")");
-        BlockProtLogger.log("Server : " + Bukkit.getVersion());
-        BlockProtLogger.log("API    : " + Bukkit.getBukkitVersion());
-        BlockProtLogger.log("Java   : " + System.getProperty("java.version"));
-        BlockProtLogger.log("Compat : " + VersionCompat.getDiagnosticString());
-        BlockProtLogger.log("BukkitCompat: " + BukkitCompat.getDiagnosticString());
+        logEnvironmentInfo(player);
 
         chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS));
         chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RESULTS_GO_TO_LOG));
 
-        runGroup(player, passed, failed, "1.  Config",              () -> checkConfig(player, passed, failed));
-        runGroup(player, passed, failed, "2.  BukkitCompat",       () -> checkBukkitCompat(player, passed, failed));
-        runGroup(player, passed, failed, "3.  Translations",       () -> checkTranslations(player, passed, failed));
-        runGroup(player, passed, failed, "3b. Language files",     () -> checkLanguages(player, passed, failed));
-        runGroup(player, passed, failed, "4.  Lockable blocks",    () -> checkLockableMaterials(player, passed, failed));
-        runGroup(player, passed, failed, "4b. AutoDrop",           () -> checkAutoDrop(player, passed, failed));
-        runGroup(player, passed, failed, "5.  Lockable entities",  () -> checkLockableEntities(player, passed, failed));
-        runGroup(player, passed, failed, "6.  Item frame protect", () -> checkItemFrameProtection(player, passed, failed));
-        runGroup(player, passed, failed, "7.  Raid detection",     () -> checkRaidDetection(player, passed, failed));
-        runGroup(player, passed, failed, "7b. Villager workstation", () -> checkVillagerWorkstationProtection(player, passed, failed));
-        runGroup(player, passed, failed, "8.  Integrations",       () -> checkIntegrations(player, passed, failed));
-        runGroup(player, passed, failed, "9.  ProfileService",     () -> checkProfileService(player, passed, failed));
-        runGroup(player, passed, failed, "10. SkinsRestorer",      () -> checkSkinsRestorer(player, passed, failed));
-        runGroup(player, passed, failed, "11. AuditLogger",        () -> checkAuditLogger(player, passed, failed));
-        runGroup(player, passed, failed, "12. OnlinePlayers",      () -> checkOnlinePlayers(player, passed, failed));
+        // Domain 1: Environment & Compatibility
+        runDomain("1/9", "ENVIRONMENT & COMPATIBILITY");
+        runGroup(player, passed, failed, "1a. Config",               () -> checkConfig(player, passed, failed));
+        runGroup(player, passed, failed, "1b. BukkitCompat",         () -> checkBukkitCompat(player, passed, failed));
+        runGroup(player, passed, failed, "1c. FoliaLib Schedulers",  () -> checkFoliaLib(player, passed, failed));
 
-        Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
-            runGroup(player, passed, failed, "13. NBT block write/read",  () -> checkNbt(player, passed, failed));
-            runGroup(player, passed, failed, "14. NBT entity write/read", () -> checkEntityNbt(player, passed, failed));
-            runGroup(player, passed, failed, "15. PlayerSettings",        () -> checkPlayerSettings(player, passed, failed));
-            runGroup(player, passed, failed, "16. Inventory creation",    () -> checkInventoryCreation(player, passed, failed));
-            runGroup(player, passed, failed, "17. All inventories",       () -> checkAllInventories(player, passed, failed));
-            runGroup(player, passed, failed, "18. Messages",              () -> checkMessages(player, passed, failed));
-            runGroup(player, passed, failed, "19. blocks.yml integrity",  () -> checkBlocksYmlIntegrity(player, passed, failed));
-            runGroup(player, passed, failed, "20. worlds.yml integrity",  () -> checkWorldsYmlIntegrity(player, passed, failed));
-            runGroup(player, passed, failed, "21. All dialogs",           () -> checkAllDialogs(player, passed, failed));
-            runGroup(player, passed, failed, "22. Commands registered",   () -> checkCommandsRegistered(player, passed, failed));
-            runGroup(player, passed, failed, "23. Listeners registered",  () -> checkListenersRegistered(player, passed, failed));
-            runGroup(player, passed, failed, "24. SkinCache tiers",       () -> checkSkinCache(player, passed, failed));
-            runGroup(player, passed, failed, "25. Utility helpers",       () -> checkUtilityHelpers(player, passed, failed));
-            runGroup(player, passed, failed, "26. NBT sub-handlers",      () -> checkNbtSubHandlers(player, passed, failed));
-            runGroup(player, passed, failed, "27. Structural classes",    () -> checkStructuralClasses(player, passed, failed));
-            runGroup(player, passed, failed, "28. Class coverage",        () -> checkEnumeratedCoverage(player, passed, failed));
+        // Domain 2: Configuration & Block Families
+        runDomain("2/9", "CONFIGURATION & BLOCK FAMILIES");
+        runGroup(player, passed, failed, "2a. Lockable blocks",      () -> checkLockableMaterials(player, passed, failed));
+        runGroup(player, passed, failed, "2b. AutoDrop",             () -> checkAutoDrop(player, passed, failed));
+        runGroup(player, passed, failed, "2c. Lockable entities",    () -> checkLockableEntities(player, passed, failed));
+        runGroup(player, passed, failed, "2d. Item frame protect",   () -> checkItemFrameProtection(player, passed, failed));
+        runGroup(player, passed, failed, "2e. Raid detection",       () -> checkRaidDetection(player, passed, failed));
+        runGroup(player, passed, failed, "2f. Villager workstation", () -> checkVillagerWorkstationProtection(player, passed, failed));
 
-            int p2 = passed.get(), f2 = failed.get(), total = p2 + f2;
-            BlockProtLogger.separator();
-            BlockProtLogger.log("=== SUMMARY: " + p2 + " passed, " + f2 + " failed / " + total + " total ===");
+        // Domain 3: Localization & Translation Coverage
+        runDomain("3/9", "LOCALIZATION & TRANSLATIONS");
+        runGroup(player, passed, failed, "3a. Translations",         () -> checkTranslations(player, passed, failed));
+        runGroup(player, passed, failed, "3b. Language files",       () -> checkLanguages(player, passed, failed));
 
-            boolean ok = f2 == 0;
-            ab(player, ok
-                ? Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_PASSED_ACTIONBAR)
-                    .replace("{passed}", String.valueOf(p2))
-                : Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_FAILED_ACTIONBAR)
-                    .replace("{failed}", String.valueOf(f2))
-                    .replace("{total}", String.valueOf(total)));
-            chat(player, ok
-                ? Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_PASSED_CHAT)
-                    .replace("{passed}", String.valueOf(p2))
-                : Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_FAILED_CHAT)
-                    .replace("{failed}", String.valueOf(f2)));
+        // Domain 4: Storage, Database & Caching
+        runDomain("4/9", "STORAGE, DATABASE & CACHING");
+        runGroup(player, passed, failed, "4a. HybridDatabase",       () -> checkHybridDatabase(player, passed, failed));
+        runGroup(player, passed, failed, "4b. ProfileService",       () -> checkProfileService(player, passed, failed));
+        runGroup(player, passed, failed, "4c. SkinsRestorer",        () -> checkSkinsRestorer(player, passed, failed));
+        runGroup(player, passed, failed, "4d. AuditLogger",          () -> checkAuditLogger(player, passed, failed));
+        runGroup(player, passed, failed, "4e. OnlinePlayers",        () -> checkOnlinePlayers(player, passed, failed));
 
-            var logFile = BlockProtLogger.getCurrentLogFile();
-            if (logFile != null)
-                chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__LOG_PATH)
-                    .replace("{path}", logFile.getPath()));
+        // Domain 6 (Async part): Integrations
+        runDomain("6/9", "COMMANDS, PERMISSIONS & INTEGRATIONS");
+        runGroup(player, passed, failed, "6a. Integrations",         () -> checkIntegrations(player, passed, failed));
 
-            var reportFile = BlockProtLogger.getDebugReportFile();
-            BlockProtLogger.endDebugReport();
-            if (reportFile != null)
-                chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__LOG_PATH)
-                    .replace("{path}", reportFile.getPath()));
+        BlockProt.getFoliaLib().getScheduler().runAtEntity(player, tickTask -> {
+            DefaultConfig cfg = BlockProt.getDefaultConfig();
+            boolean tempChestAdded = false;
+            if (!cfg.isLockableTileEntity(Material.CHEST, player.getWorld()) && !cfg.isLockableBlock(Material.CHEST, player.getWorld())) {
+                cfg.addTestLockable(Material.CHEST);
+                tempChestAdded = true;
+            }
+
+            try {
+                // Domain 5: NBT & Data Persistence Engine
+                runDomain("5/9", "NBT & DATA PERSISTENCE ENGINE");
+                runGroup(player, passed, failed, "5a. NBT block write/read",  () -> checkNbt(player, passed, failed));
+                runGroup(player, passed, failed, "5b. NBT entity write/read", () -> checkEntityNbt(player, passed, failed));
+                runGroup(player, passed, failed, "5c. PlayerSettings",        () -> checkPlayerSettings(player, passed, failed));
+                runGroup(player, passed, failed, "5d. NBT sub-handlers",      () -> checkNbtSubHandlers(player, passed, failed));
+
+                // Domain 6 (Sync part): Commands & Permissions
+                runGroup(player, passed, failed, "6b. Commands registered",   () -> checkCommandsRegistered(player, passed, failed));
+
+                // Domain 7: Event Listeners & Engine
+                runDomain("7/9", "EVENT LISTENERS & ENGINE");
+                runGroup(player, passed, failed, "7a. Listeners registered",  () -> checkListenersRegistered(player, passed, failed));
+
+                // Domain 8: User Interface & Screens
+                runDomain("8/9", "USER INTERFACE & SCREENS");
+                runGroup(player, passed, failed, "8a. Inventory creation",    () -> checkInventoryCreation(player, passed, failed));
+                runGroup(player, passed, failed, "8b. All inventories",       () -> checkAllInventories(player, passed, failed));
+                runGroup(player, passed, failed, "8c. All dialogs",           () -> checkAllDialogs(player, passed, failed));
+
+                // Domain 9: Utility Helpers & Benchmarks
+                runDomain("9/9", "UTILITY HELPERS & BENCHMARKS");
+                runGroup(player, passed, failed, "9a. Messages",              () -> checkMessages(player, passed, failed));
+                runGroup(player, passed, failed, "9b. blocks.yml integrity",  () -> checkBlocksYmlIntegrity(player, passed, failed));
+                runGroup(player, passed, failed, "9c. worlds.yml integrity",  () -> checkWorldsYmlIntegrity(player, passed, failed));
+                runGroup(player, passed, failed, "9d. SkinCache tiers",       () -> checkSkinCache(player, passed, failed));
+                runGroup(player, passed, failed, "9e. Utility helpers",       () -> checkUtilityHelpers(player, passed, failed));
+                runGroup(player, passed, failed, "9f. Structural classes",    () -> checkStructuralClasses(player, passed, failed));
+                runGroup(player, passed, failed, "9g. Class coverage",        () -> checkEnumeratedCoverage(player, passed, failed));
+
+                int p2 = passed.get(), f2 = failed.get(), total = p2 + f2;
+                BlockProtLogger.separator();
+                BlockProtLogger.log("SUMMARY: " + p2 + " passed, " + f2 + " failed / " + total + " total");
+
+                boolean ok = f2 == 0;
+                ab(player, ok
+                    ? Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_PASSED_ACTIONBAR)
+                        .replace("{passed}", String.valueOf(p2))
+                    : Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_FAILED_ACTIONBAR)
+                        .replace("{failed}", String.valueOf(f2))
+                        .replace("{total}", String.valueOf(total)));
+                chat(player, ok
+                    ? Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_PASSED_CHAT)
+                        .replace("{passed}", String.valueOf(p2))
+                    : Translator.get(TranslationKey.MESSAGES__DEBUG__CHECKS_FAILED_CHAT)
+                        .replace("{failed}", String.valueOf(f2)));
+
+                var reportFile = BlockProtLogger.getDebugReportFile();
+                BlockProtLogger.endDebugReport();
+                if (reportFile != null)
+                    chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__LOG_PATH)
+                        .replace("{path}", reportFile.getPath()));
+            } finally {
+                if (tempChestAdded) {
+                    cfg.removeTestLockable(Material.CHEST);
+                }
+            }
         });
     }
 
@@ -246,7 +293,7 @@ public class DebugCommand implements CommandExecutor {
                           @NotNull AtomicInteger failed, @NotNull String name,
                           @NotNull Runnable body) {
         BlockProtLogger.separator();
-        BlockProtLogger.log("--- " + name + " ---");
+        BlockProtLogger.log("[" + name + "]");
         try {
             body.run();
         } catch (Exception e) {
@@ -298,6 +345,17 @@ public class DebugCommand implements CommandExecutor {
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("BukkitCompat", e.getMessage()); f.incrementAndGet();
+        }
+    }
+
+    private void checkFoliaLib(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            var folia = BlockProt.getFoliaLib();
+            BlockProtLogger.pass("FoliaLib: active (isFolia=" + folia.isFolia()
+                + " isPaper=" + folia.isPaper() + " isSpigot=" + folia.isSpigot() + ")");
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("FoliaLib", e.getMessage()); f.incrementAndGet();
         }
     }
 
@@ -570,6 +628,21 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
+    private void checkHybridDatabase(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            var db = BlockProt.getHybridDatabase();
+            if (db != null) {
+                BlockProtLogger.pass("HybridDatabase: active, backend=" + (BlockProt.getDefaultConfig().isMysqlEnabled() ? "MySQL" : "SQLite"));
+                p.incrementAndGet();
+            } else {
+                BlockProtLogger.fail("HybridDatabase", "Database instance is null");
+                f.incrementAndGet();
+            }
+        } catch (Exception e) {
+            BlockProtLogger.fail("HybridDatabase", e.getMessage()); f.incrementAndGet();
+        }
+    }
+
     private void checkProfileService(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var profile = BlockProt.getProfileService().findByUuid(player.getUniqueId());
@@ -677,14 +750,11 @@ public class DebugCommand implements CommandExecutor {
 
     private void checkInventoryCreation(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
-            Inventory inv = Bukkit.createInventory(null, 9,
+            Inventory inv = ComponentMessages.createInventory(player, 9,
                 net.kyori.adventure.text.Component.text(Translator.get(TranslationKey.MESSAGES__DEBUG__INVENTORY_TITLE)));
-            BlockProtLogger.pass("Bukkit.createInventory OK size=" + inv.getSize());
+            BlockProtLogger.pass("ComponentMessages.createInventory OK (size=" + inv.getSize() + ")");
             p.incrementAndGet();
         } catch (Throwable e) {
-            // Catches NoSuchMethodError too (e.g. the Component-title overload missing
-            // on Spigot/CraftBukkit), not just Exception, so this self-test reports a
-            // clean fail instead of crashing the whole diagnostics task.
             BlockProtLogger.fail("createInventory", e.getMessage()); f.incrementAndGet();
         }
     }
@@ -937,7 +1007,7 @@ public class DebugCommand implements CommandExecutor {
         InventoryState.set(player.getUniqueId(), base);
 
         BlockProtLogger.separator();
-        BlockProtLogger.log("--- Inventory title translation coverage ---");
+        BlockProtLogger.log("[Inventory title translation coverage]");
         TranslationKey[] titleKeys = {
             TranslationKey.INVENTORIES__BLOCK_LOCK,
             TranslationKey.INVENTORIES__BLOCK_INFO__TITLE,
@@ -1187,6 +1257,10 @@ public class DebugCommand implements CommandExecutor {
         @Override public void showValueInput(org.bukkit.entity.Player player,
             net.kyori.adventure.text.Component title, java.util.List<DialogBodyEntry> body,
             DialogTextField field, java.util.function.Consumer<String> onSubmit, DialogButton back) {}
+        @Override public void showSearchDialog(org.bukkit.entity.Player player,
+            net.kyori.adventure.text.Component title, java.util.List<DialogBodyEntry> body,
+            DialogTextField field, java.util.List<DialogButton> actions, DialogButton exit,
+            int columns, java.util.function.Consumer<String> onSearch) {}
     }
 
     private void checkAllDialogs(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
@@ -1639,14 +1713,15 @@ public class DebugCommand implements CommandExecutor {
             //   hotfix  -> RANK_HOTFIX (ranked above the clean release)
             //   release -> legacy tag suffix normalized to a clean release
             //   exp     -> experimental, never an update
-            SemanticVersion stable   = new SemanticVersion("1.3.4");
-            SemanticVersion bedev    = new SemanticVersion("1.3.4-BEDev");
-            SemanticVersion bdev     = new SemanticVersion("1.3.4-bdev");
-            SemanticVersion snap     = new SemanticVersion("1.3.4-SNAPSHOT-3");
-            SemanticVersion hotfix   = new SemanticVersion("1.3.4-hotfix");
-            SemanticVersion fixN     = new SemanticVersion("1.3.4-fix.1");
-            SemanticVersion release  = new SemanticVersion("1.3.4-RELEASE");
-            SemanticVersion exp      = new SemanticVersion("1.3.4-exp");
+            String curVer = BlockProt.getPluginVersion();
+            SemanticVersion stable   = new SemanticVersion(curVer);
+            SemanticVersion bedev    = new SemanticVersion(curVer + "-BEDev");
+            SemanticVersion bdev     = new SemanticVersion(curVer + "-bdev");
+            SemanticVersion snap     = new SemanticVersion(curVer + "-SNAPSHOT-3");
+            SemanticVersion hotfix   = new SemanticVersion(curVer + "-hotfix");
+            SemanticVersion fixN     = new SemanticVersion(curVer + "-fix.1");
+            SemanticVersion release  = new SemanticVersion(curVer + "-RELEASE");
+            SemanticVersion exp      = new SemanticVersion(curVer + "-exp");
             boolean ranksOk = !stable.isPreRelease() && !stable.isHotfix()
                 && bedev.isPreRelease() && bdev.isPreRelease() && snap.isPreRelease()
                 && hotfix.isHotfix() && fixN.isHotfix()
@@ -1655,19 +1730,18 @@ public class DebugCommand implements CommandExecutor {
             boolean orderOk = bedev.compareTo(stable) < 0
                 && stable.compareTo(hotfix) < 0
                 && bedev.compareTo(bdev) == 0
-                && new SemanticVersion("1.3.4-BEDev.2").compareTo(new SemanticVersion("1.3.4-BEDev.1")) > 0
-                && stable.compareTo(new SemanticVersion("1.3.5")) < 0
+                && new SemanticVersion(curVer + "-BEDev.2").compareTo(new SemanticVersion(curVer + "-BEDev.1")) > 0
+                && stable.compareTo(new SemanticVersion("99.0.0")) < 0
                 && stable.compareTo(stable) == 0;
-            boolean baseOk = hotfix.baseVersion().equals("1.3.4")
-                && bedev.baseVersion().equals("1.3.4");
+            boolean baseOk = hotfix.baseVersion().equals(curVer)
+                && bedev.baseVersion().equals(curVer);
             if (!ranksOk || !orderOk || !baseOk) {
                 BlockProtLogger.fail("SemanticVersion",
                     "ranks=" + ranksOk + " order=" + orderOk + " base=" + baseOk);
                 f.incrementAndGet();
                 return;
             }
-            BlockProtLogger.pass("SemanticVersion: ranks/order/baseVersion OK"
-                + " (stable=" + stable + " bedev=" + bedev + " hotfix=" + hotfix + " exp=" + exp + ")");
+            BlockProtLogger.pass("SemanticVersion: ranks, order, and baseVersion verified (" + curVer + ")");
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("SemanticVersion", e.getMessage()); f.incrementAndGet();

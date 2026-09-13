@@ -20,6 +20,7 @@
 
 package de.sean.blockprot.bukkit.commands;
 
+import com.tcoded.folialib.wrapper.task.WrappedTask;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
@@ -40,7 +41,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -108,15 +108,14 @@ public final class FriendsAddAllCommand implements CommandExecutor {
         sendAction(player, Translator.get(TranslationKey.MESSAGES__FRIENDS_SEARCHING)
             .replace("{player}", targetName));
 
-        final BukkitTask[] clearTask = {null};
-        clearTask[0] = Bukkit.getScheduler().runTaskLater(BlockProt.getInstance(),
-            () -> {
-                if (ComponentMessages.isActionBarSupported()) {
-                    ComponentMessages.sendActionBar(player, Component.empty());
-                }
-            }, SEARCH_MSG_TIMEOUT_TICKS);
+        final WrappedTask[] clearTask = {null};
+        clearTask[0] = BlockProt.getFoliaLib().getScheduler().runLater(() -> {
+            if (ComponentMessages.isActionBarSupported()) {
+                ComponentMessages.sendActionBar(player, Component.empty());
+            }
+        }, SEARCH_MSG_TIMEOUT_TICKS);
 
-        Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
             OfflinePlayer target = resolveOfflinePlayer(targetName);
 
             if (clearTask[0] != null) {
@@ -125,14 +124,13 @@ public final class FriendsAddAllCommand implements CommandExecutor {
             }
 
             if (target == null || target.getUniqueId() == null) {
-                Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                BlockProt.getFoliaLib().getScheduler().runAtEntity(player, tickTask -> {
                     sendAction(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
-                    Bukkit.getScheduler().runTaskLater(BlockProt.getInstance(),
-                        () -> {
-                            if (ComponentMessages.isActionBarSupported()) {
-                                ComponentMessages.sendActionBar(player, Component.empty());
-                            }
-                        }, SEARCH_MSG_TIMEOUT_TICKS);
+                    BlockProt.getFoliaLib().getScheduler().runLater(() -> {
+                        if (ComponentMessages.isActionBarSupported()) {
+                            ComponentMessages.sendActionBar(player, Component.empty());
+                        }
+                    }, SEARCH_MSG_TIMEOUT_TICKS);
                 });
                 return;
             }
@@ -140,7 +138,7 @@ public final class FriendsAddAllCommand implements CommandExecutor {
             final OfflinePlayer finalTarget = target;
             final String targetUuid = target.getUniqueId().toString();
 
-            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+            BlockProt.getFoliaLib().getScheduler().runAtEntity(player, tickTask -> {
                 if (finalTarget.getUniqueId().equals(player.getUniqueId())) {
                     player.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                         Translator.get(TranslationKey.MESSAGES__TRANSFER_SELF)));

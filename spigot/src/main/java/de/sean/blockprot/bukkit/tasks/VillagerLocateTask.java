@@ -20,6 +20,7 @@
 
 package de.sean.blockprot.bukkit.tasks;
 
+import com.tcoded.folialib.wrapper.task.WrappedTask;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BukkitCompat;
 import de.sean.blockprot.bukkit.listeners.VillagerWorkstationProtectionListener;
@@ -29,8 +30,9 @@ import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.function.Consumer;
 
 /**
  * Emits particle beacons on a linked villager for a configurable duration so the
@@ -40,7 +42,7 @@ import org.jetbrains.annotations.NotNull;
  * Particle type: DUST in magenta. Falls back to REDSTONE on older servers where
  * {@link BukkitCompat#PARTICLE_DUST} resolves to the legacy name.</p>
  */
-public final class VillagerLocateTask extends BukkitRunnable {
+public final class VillagerLocateTask implements Consumer<WrappedTask> {
 
     private final Player   viewer;
     private final Villager villager;
@@ -59,16 +61,16 @@ public final class VillagerLocateTask extends BukkitRunnable {
     }
 
     @Override
-    public void run() {
+    public void accept(WrappedTask task) {
         if (!viewer.isOnline() || !villager.isValid()) {
-            cancel();
+            task.cancel();
             return;
         }
 
         elapsed++;
         if (elapsed >= maxTicks) {
             spawnParticles(villager.getLocation().add(0, 0.1, 0));
-            cancel();
+            task.cancel();
             return;
         }
 
@@ -107,8 +109,8 @@ public final class VillagerLocateTask extends BukkitRunnable {
         if (villager == null) return false;
 
         int capped = Math.max(1, Math.min(10, durationSeconds));
-        new VillagerLocateTask(viewer, villager, workstation, capped)
-            .runTaskTimer(BlockProt.getInstance(), 0L, TICKS_PER_PULSE);
+        BlockProt.getFoliaLib().getScheduler().runTimer(
+            new VillagerLocateTask(viewer, villager, workstation, capped), 0L, TICKS_PER_PULSE);
         return true;
     }
 }

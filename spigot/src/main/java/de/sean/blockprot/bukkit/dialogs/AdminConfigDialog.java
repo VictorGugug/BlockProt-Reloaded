@@ -105,8 +105,6 @@ public final class AdminConfigDialog {
         bridge.showMultiAction(player, title, body, buttons, backBtn, 3);
     }
 
-    // -- shared button builders --
-
     static DialogButton catBtn(String label, DialogButton.DialogClickHandler handler) {
         return new DialogButton(label.toLowerCase().replace(' ', '_'),
             Component.text(label, NamedTextColor.WHITE),
@@ -131,11 +129,12 @@ public final class AdminConfigDialog {
     }
 
     static DialogButton toggleBtn(String id, String configKey, String title, String description,
-                                   boolean active, DialogButton.DialogClickHandler handler) {
+                                   boolean active, boolean colorblind, DialogButton.DialogClickHandler handler) {
         TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
+        String icon = BpDialogStyles.indicatorIcon(active, colorblind);
         return new DialogButton(id,
             Component.text()
-                .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
+                .append(Component.text(icon, c))
                 .append(Component.text(title, NamedTextColor.WHITE))
                 .build(),
             Component.join(JoinConfiguration.newlines(),
@@ -146,13 +145,19 @@ public final class AdminConfigDialog {
             handler);
     }
 
+    static DialogButton toggleBtn(String id, String configKey, String title, String description,
+                                   boolean active, DialogButton.DialogClickHandler handler) {
+        return toggleBtn(id, configKey, title, description, active, false, handler);
+    }
+
     static DialogButton dialogToggleBtn(String id, String configKey, String title, String description,
-                                           boolean active, DialogButton.DialogClickHandler handler) {
+                                           boolean active, boolean colorblind, DialogButton.DialogClickHandler handler) {
         TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
         String marker = stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__DIALOG_MARKER));
+        String icon = BpDialogStyles.indicatorIcon(active, colorblind);
         return new DialogButton(id,
             Component.text()
-                .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
+                .append(Component.text(icon, c))
                 .append(Component.text(title, NamedTextColor.WHITE))
                 .build(),
             Component.join(JoinConfiguration.newlines(),
@@ -162,6 +167,11 @@ public final class AdminConfigDialog {
                 Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TRUE : TranslationKey.ICON__FALSE)), c),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__VALUE_BOOL)), TextColor.color(0x888888))),
             handler);
+    }
+
+    static DialogButton dialogToggleBtn(String id, String configKey, String title, String description,
+                                           boolean active, DialogButton.DialogClickHandler handler) {
+        return dialogToggleBtn(id, configKey, title, description, active, false, handler);
     }
 
     /**

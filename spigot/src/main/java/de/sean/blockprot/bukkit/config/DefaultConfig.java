@@ -106,6 +106,13 @@ public final class DefaultConfig extends BlockProtConfig {
         this.excludedWorlds = config.getStringList("excluded_worlds");
         this.removeBlockDefaults();
 
+        if (config.contains("recommended_config_applied")) {
+            config.set("recommended_config_applied", null);
+            if (BlockProt.getInstance() != null) {
+                BlockProt.getInstance().saveConfig();
+            }
+        }
+
         if (dataFolder != null) {
             String blocksFilePath = config.getString("blocks_file", "blocks.yml");
             File blocksFile = new File(dataFolder, blocksFilePath);
@@ -318,6 +325,18 @@ public final class DefaultConfig extends BlockProtConfig {
         return val;
     }
 
+    public boolean isAdminTiersEnabled() {
+        return config.getBoolean("admin_tiers.enabled", false);
+    }
+
+    public int getActionBarDurationSeconds() {
+        return Math.max(1, config.getInt("action_bar.duration_seconds", 6));
+    }
+
+    public long getActionBarDurationTicks() {
+        return (long) getActionBarDurationSeconds() * 20L;
+    }
+
     public boolean isWorldExcluded(InventoryHolder holder) {
         try {
             if (holder instanceof DoubleChest) {
@@ -363,7 +382,11 @@ public final class DefaultConfig extends BlockProtConfig {
     }
 
     public boolean areExtraCommandsEnabled() {
-        return !config.getBoolean("use_menus", false);
+        return !isUseMenusEnabled();
+    }
+
+    public boolean isUseMenusEnabled() {
+        return config.getBoolean("use_menus", false);
     }
 
     public boolean isDialogsEnabled() {
@@ -480,6 +503,9 @@ public final class DefaultConfig extends BlockProtConfig {
         plugin.saveConfig();
         if (!java.util.Objects.equals(oldValue, value)) {
             BlockProtLogger.log("config", key + " changed from " + oldValue + " to " + value);
+        }
+        if ("use_menus".equals(key)) {
+            org.bukkit.Bukkit.getOnlinePlayers().forEach(org.bukkit.entity.Player::updateCommands);
         }
         if (plugin.getFileWatcher() != null) {
             plugin.getFileWatcher().requestProgrammaticReload();
@@ -671,6 +697,24 @@ public final class DefaultConfig extends BlockProtConfig {
         return m == null ? Material.STICK : m;
     }
 
+    @NotNull
+    public List<String> getProtectableEntities() {
+        List<String> raw = null;
+        if (blocksConfig != null && blocksConfig.contains("protectable_entities")) {
+            raw = blocksConfig.getStringList("protectable_entities");
+        } else if (config.contains("entity_protection.protectable_entities")) {
+            raw = config.getStringList("entity_protection.protectable_entities");
+        }
+        if (raw == null || raw.isEmpty()) return List.of();
+        List<String> filtered = new ArrayList<>();
+        for (String s : raw) {
+            if (s != null && !isPlaceholderEntry(s)) {
+                filtered.add(s.trim());
+            }
+        }
+        return filtered;
+    }
+
     public int getVillagerLocateSeconds() {
         return Math.max(1, Math.min(10, config.getInt("entity_protection.villager_locate_seconds",
             config.getInt("pet_protection.villager_locate_seconds", 6))));
@@ -753,6 +797,16 @@ public final class DefaultConfig extends BlockProtConfig {
     public boolean isLockableShulkerBox(Material type)  { return shulkerBoxes.contains(type); }
     public boolean isLockableInventory(InventoryType t) { return lockableInventories.contains(t); }
 
+    public void addTestLockable(@NotNull Material material) {
+        if (!lockableTileEntities.contains(material)) {
+            lockableTileEntities.add(material);
+        }
+    }
+
+    public void removeTestLockable(@NotNull Material material) {
+        lockableTileEntities.remove(material);
+    }
+
     public boolean isLockableEntity(@NotNull Material type) {
         return lockableEntities.contains(type);
     }
@@ -820,6 +874,7 @@ public final class DefaultConfig extends BlockProtConfig {
     public static final List<String> BLOCKS_YML_KEY_ORDER = List.of(
         "lockable_tile_entities", "lockable_shulker_boxes",
         "lockable_blocks", "lockable_doors", "lockable_entities",
+        "protectable_entities",
         "auto_drop_to_inventory"
     );
 
@@ -854,6 +909,7 @@ public final class DefaultConfig extends BlockProtConfig {
     public static void sanitizeListsForSave(@NotNull YamlConfiguration cfg, @NotNull String prefix, boolean modernFormat) {
         List<String> keys = new ArrayList<>(LOCKABLE_LIST_KEYS);
         if (prefix.isEmpty()) {
+            keys.add("protectable_entities");
             keys.add(AUTO_DROP_BLOCKS_KEY);
         }
         for (String k : keys) {
@@ -880,7 +936,7 @@ public final class DefaultConfig extends BlockProtConfig {
      * referenced doc path never drift apart from each other or from the shipped resource.
      */
     private static final List<String> BLOCKS_HEADER = List.of(
-        "# BlockProt Reloaded -- blocks.yml",
+        "# BlockProt Reloaded - blocks.yml",
         "# Add block or material names below each list, one per line, replacing the blank lines.",
         "# Run /bp recommended blocks for a ready-made starting selection instead of editing by hand.",
         "# Format: flat names (CHEST) or family expressions ([*-CHEST]).",
@@ -1481,6 +1537,17 @@ public final class DefaultConfig extends BlockProtConfig {
             dirty = true;
         }
 
+        if (!bc.contains("protectable_entities")) {
+            bc.set("protectable_entities", Arrays.asList(null, null));
+            BlockProtLogger.log("blocks-patch", "blocks.yml: added missing key 'protectable_entities' (empty list).");
+            dirty = true;
+        }
+
+        if (bc.contains("recommended_blocks_applied")) {
+            bc.set("recommended_blocks_applied", null);
+            dirty = true;
+        }
+
         if (dirty) {
             try {
                 bc.save(blocksFile);
@@ -1503,6 +1570,10 @@ public final class DefaultConfig extends BlockProtConfig {
             lines.add("-");
             lines.add("-");
         }
+        lines.add("");
+        lines.add("protectable_entities:");
+        lines.add("-");
+        lines.add("-");
         lines.add("");
         lines.add("auto_drop_to_inventory:");
         lines.add("  enabled: true");

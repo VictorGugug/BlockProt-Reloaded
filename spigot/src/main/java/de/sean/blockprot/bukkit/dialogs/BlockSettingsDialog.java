@@ -63,10 +63,12 @@ public final class BlockSettingsDialog {
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(materialName, SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> actions = new ArrayList<>();
         actions.add(toggleBtn("redstone",
             TranslationKey.INVENTORIES__REDSTONE__REDSTONE_PROTECTION,
             rs.getCurrentProtection(),
+            colorblind,
             p -> {
                 rs.setCurrentProtection(!rs.getCurrentProtection());
                 handler.applyToOtherContainer();
@@ -75,6 +77,7 @@ public final class BlockSettingsDialog {
         actions.add(toggleBtn("hopper",
             TranslationKey.INVENTORIES__REDSTONE__HOPPER_PROTECTION,
             rs.getHopperProtection(),
+            colorblind,
             p -> {
                 rs.setHopperProtection(!rs.getHopperProtection());
                 handler.applyToOtherContainer();
@@ -83,6 +86,7 @@ public final class BlockSettingsDialog {
         actions.add(toggleBtn("piston",
             TranslationKey.INVENTORIES__REDSTONE__PISTON_PROTECTION,
             rs.getPistonProtection(),
+            colorblind,
             p -> {
                 rs.setPistonProtection(!rs.getPistonProtection());
                 handler.applyToOtherContainer();
@@ -117,13 +121,14 @@ public final class BlockSettingsDialog {
         bridge.showMultiAction(player, title, body, actions, exitBtn, 2);
     }
 
-    private static DialogButton toggleBtn(String id, TranslationKey labelKey, boolean active,
+    private static DialogButton toggleBtn(String id, TranslationKey labelKey, boolean active, boolean colorblind,
                                            DialogButton.DialogClickHandler handler) {
         TextColor c = active ? PASTEL_MINT : PASTEL_CORAL;
         String label = stripColor(Translator.get(labelKey));
+        String icon = BpDialogStyles.indicatorIcon(active, colorblind);
         return new DialogButton(id,
             Component.text()
-                .append(Component.text(stripColor(Translator.get(active ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
+                .append(Component.text(icon, c))
                 .append(Component.text(label, NamedTextColor.WHITE))
                 .build(),
             Component.join(JoinConfiguration.newlines(),

@@ -68,13 +68,14 @@ public final class FriendManageDialog {
         if (bridge == null) return;
 
         List<FriendHandler> allFriends = handler.getFriends();
-        int totalPages = Math.max(1, (int) Math.ceil(allFriends.size() / 8.0));
-        int safePage = Math.max(0, Math.min(page, totalPages - 1));
-        int from = safePage * 8;
-        int to = Math.min(from + 8, allFriends.size());
-        List<FriendHandler> pageFriends = allFriends.subList(from, to);
-
+        List<FriendHandler> realFriends = allFriends.stream().filter(f -> !f.doesRepresentPublic()).toList();
         boolean isPublic = allFriends.stream().anyMatch(FriendHandler::doesRepresentPublic);
+
+        int totalPages = Math.max(1, (int) Math.ceil(realFriends.size() / 3.0));
+        int safePage = Math.max(0, Math.min(page, totalPages - 1));
+        int from = safePage * 3;
+        int to = Math.min(from + 3, realFriends.size());
+        List<FriendHandler> pageFriends = realFriends.subList(from, to);
 
         Component title = Component.text(
             stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__MANAGE)),
@@ -85,7 +86,7 @@ public final class FriendManageDialog {
         body.add(DialogBodyEntry.text(Component.text(
             stripColor(Translator.get(TranslationKey.DIALOGS__FRIENDS__HEADER)), SOFT_GRAY)));
 
-        if (pageFriends.isEmpty()) {
+        if (realFriends.isEmpty()) {
             body.add(DialogBodyEntry.text(Component.text(
                 stripColor(Translator.get(TranslationKey.DIALOGS__FRIENDS__NO_HISTORY)),
                 TextColor.color(0x888888))));
@@ -95,33 +96,50 @@ public final class FriendManageDialog {
                     .replace("{current}", String.valueOf(safePage + 1))
                     .replace("{total}", String.valueOf(totalPages)),
                 TextColor.color(0x888888))));
-            for (FriendHandler fh : pageFriends) {
-                String uuidStr = fh.getName();
-                String name = getPlayerName(uuidStr);
-                body.add(DialogBodyEntry.text(Component.text()
-                    .append(Component.text("  ", SOFT_GRAY))
-                    .append(Component.text(name != null ? name : uuidStr, NamedTextColor.WHITE))
-                    .build()));
-            }
         }
 
+        boolean colorblind = new PlayerSettingsHandler(player).getColorblindMode();
         body.add(DialogBodyEntry.text(Component.empty()));
         String statusStr = stripColor(Translator.get(isPublic
             ? TranslationKey.DIALOGS__STATUS_PUBLIC
             : TranslationKey.DIALOGS__STATUS_PRIVATE));
         TextColor statusColor = isPublic ? PASTEL_MINT : PASTEL_CORAL;
+        String statusIcon = BpDialogStyles.indicatorIcon(isPublic, colorblind);
         body.add(DialogBodyEntry.text(Component.text()
             .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__STATUS_LABEL)), SOFT_GRAY))
-            .append(Component.text(stripColor(Translator.get(TranslationKey.ICON__TOGGLE_ON)) + statusStr, statusColor))
+            .append(Component.text(statusIcon + statusStr, statusColor))
             .build()));
 
         List<DialogButton> buttons = new ArrayList<>();
 
-        buttons.add(new DialogButton("add",
-            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH)),
-                NamedTextColor.WHITE),
-            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__FRIENDS__MANAGE_HINT)),
-                TextColor.color(0x888888)),
+        for (FriendHandler fh : pageFriends) {
+            String uuidStr = fh.getName();
+            String name = getPlayerName(uuidStr);
+            String displayName = name != null ? name : uuidStr;
+            String levelDesc = FriendDetailDialog.getLevelName(fh.getLevel());
+
+            buttons.add(new DialogButton("friend_" + uuidStr,
+                Component.text(displayName, NamedTextColor.WHITE),
+                Component.join(JoinConfiguration.newlines(),
+                    Component.text(levelDesc, PASTEL_GOLD),
+                    Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__CLICK_TO_OPEN)), TextColor.color(0x888888))),
+                p -> FriendDetailDialog.showForBlock(p, block, handler, uuidStr, safePage)
+            ));
+        }
+
+        DialogButton prevBtn = safePage > 0
+            ? new DialogButton("prev",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
+                p -> showForBlock(p, block, handler, safePage - 1))
+            : new DialogButton("prev_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
+
+        DialogButton addBtn = new DialogButton("add",
+            Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH)), NamedTextColor.WHITE),
+            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__FRIENDS__MANAGE_HINT)), TextColor.color(0x888888)),
             p -> {
                 Consumer<String> handleName = text -> {
                     Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
@@ -131,7 +149,7 @@ public final class FriendManageDialog {
                             Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
                                 handler.addFriend(match.getKey().toString());
                                 handler.applyToOtherContainer();
-                                showForBlock(p, block, handler);
+                                showForBlock(p, block, handler, safePage);
                             });
                         } else {
                             ComponentMessages.sendActionBar(p, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(
@@ -142,11 +160,25 @@ public final class FriendManageDialog {
                 bridge.closeDialog(p);
                 openFriendNameInput(p, handleName);
             }
-        ));
+        );
+
+        DialogButton nextBtn = safePage + 1 < totalPages
+            ? new DialogButton("next",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
+                p -> showForBlock(p, block, handler, safePage + 1))
+            : new DialogButton("next_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
+
+        buttons.add(prevBtn);
+        buttons.add(addBtn);
+        buttons.add(nextBtn);
 
         buttons.add(new DialogButton("make_public",
-            toggleLabel(stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__MAKE_PUBLIC)), isPublic, PASTEL_MINT, PASTEL_CORAL),
-            Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__FRIENDS__MANAGE_HINT)), TextColor.color(0x888888)),
+            toggleLabel(stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__MAKE_PUBLIC)), isPublic, colorblind, PASTEL_MINT, PASTEL_CORAL),
+            publicTooltip(isPublic),
             p -> {
                 boolean wasPublic = handler.getFriends().stream().anyMatch(FriendHandler::doesRepresentPublic);
                 if (wasPublic) {
@@ -155,35 +187,17 @@ public final class FriendManageDialog {
                     handler.addFriend(FriendSupportingHandler.publicUuid.toString());
                 }
                 handler.applyToOtherContainer();
-                showForBlock(p, block, handler);
+                showForBlock(p, block, handler, safePage);
             }
         ));
 
-        if (safePage > 0) {
-            int prev = safePage - 1;
-            buttons.add(new DialogButton("prev",
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
-                p -> showForBlock(p, block, handler, prev)));
-        }
-        if (safePage + 1 < totalPages) {
-            int next = safePage + 1;
-            buttons.add(new DialogButton("next",
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
-                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
-                p -> showForBlock(p, block, handler, next)));
-        }
-
-        // Always returns to the parent BlockLockDialog: this is one level of internal
-        // navigation within the same block menu, not an external-origin exit, so it must
-        // not be gated by DialogBridgeFactory.resolveOrigin()/areExtraCommandsEnabled().
         DialogButton exitBtn = new DialogButton("exit",
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__BACK)), SOFT_GRAY),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
             p -> BlockLockDialog.show(p, block, handler)
         );
 
-        bridge.showMultiAction(player, title, body, buttons, exitBtn, 2);
+        bridge.showMultiAction(player, title, body, buttons, exitBtn, 3);
     }
 
     public static void show(@NotNull Player player) {
@@ -206,6 +220,7 @@ public final class FriendManageDialog {
         String history = stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH_HISTORY));
         String makePublic = stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__MAKE_PUBLIC));
 
+        boolean colorblind = new PlayerSettingsHandler(player).getColorblindMode();
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(
             stripColor(Translator.get(TranslationKey.DIALOGS__FRIENDS__HEADER)), SOFT_GRAY)));
@@ -216,9 +231,10 @@ public final class FriendManageDialog {
             ? TranslationKey.DIALOGS__STATUS_PUBLIC
             : TranslationKey.DIALOGS__STATUS_PRIVATE));
         TextColor statusColor = isPublic ? PASTEL_MINT : PASTEL_CORAL;
+        String statusIcon = BpDialogStyles.indicatorIcon(isPublic, colorblind);
         body.add(DialogBodyEntry.text(Component.text()
             .append(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__STATUS_LABEL)), SOFT_GRAY))
-            .append(Component.text(stripColor(Translator.get(TranslationKey.ICON__TOGGLE_ON)) + statusStr, statusColor))
+            .append(Component.text(statusIcon + statusStr, statusColor))
             .build()));
 
         DialogButton searchBtn = new DialogButton("search",
@@ -249,7 +265,7 @@ public final class FriendManageDialog {
         );
 
         DialogButton publicBtn = new DialogButton("make_public",
-            toggleLabel(makePublic, isPublic, PASTEL_MINT, PASTEL_CORAL),
+            toggleLabel(makePublic, isPublic, colorblind, PASTEL_MINT, PASTEL_CORAL),
             publicTooltip(isPublic),
             p -> {
                 PlayerSettingsHandler h = new PlayerSettingsHandler(p);
@@ -305,11 +321,12 @@ public final class FriendManageDialog {
         }
     }
 
-    private static Component toggleLabel(String name, boolean enabled,
+    private static Component toggleLabel(String name, boolean enabled, boolean colorblind,
                                          TextColor onColor, TextColor offColor) {
         TextColor color = enabled ? onColor : offColor;
+        String icon = BpDialogStyles.indicatorIcon(enabled, colorblind);
         return Component.text()
-            .append(Component.text(stripColor(Translator.get(enabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), color))
+            .append(Component.text(icon, color))
             .append(Component.text(name, NamedTextColor.WHITE))
             .build();
     }

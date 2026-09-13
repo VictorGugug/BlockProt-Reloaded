@@ -69,13 +69,15 @@ public final class IntegrationsDialog {
             TextColor.color(0x888888))));
         body.add(DialogBodyEntry.text(Component.empty()));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         for (PluginIntegration integration : allIntegrations) {
             boolean enabled = integration.isEnabled();
             TextColor c = enabled ? PASTEL_MINT : PASTEL_CORAL;
+            String icon = BpDialogStyles.indicatorIcon(enabled, colorblind);
             buttons.add(new DialogButton("int_" + integration.name,
                 Component.text()
-                    .append(Component.text(stripColor(Translator.get(enabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), c))
+                    .append(Component.text(icon, c))
                     .append(Component.text(integration.name, NamedTextColor.WHITE))
                     .build(),
                 Component.join(JoinConfiguration.newlines(),

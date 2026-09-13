@@ -27,7 +27,9 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.util.TemporaryActionBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -48,44 +50,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Detects possible raid attempts by monitoring explosions near protected blocks.
- *
- * <p>When an explosion affects any lockable block (protected or not), the event
- * is classified as a possible raid attempt. A WARNING entry is written to the
- * session log, and:
- * <ul>
- *   <li>If the block owner is online: they receive an in-game action-bar alert
- *       immediately and a chat notification with coordinates and optionally a
- *       teleport link if they have {@code blockprot.blocks.tp}.</li>
- *   <li>If the block owner is offline: the alert is queued and delivered as a
- *       chat message the next time they join. The TP link is included only if
- *       the player has {@code blockprot.blocks.tp} at join time.</li>
- * </ul>
- *
- * <p>This listener does NOT cancel or modify the explosion: that is handled
- * by {@link ExplodeEventListener}. This listener only performs detection and
- * notification.
- *
- * <p>The source entity (the entity that caused the explosion) is resolved from
- * the event. For {@link BlockExplodeEvent} the source is recorded as {@code null}
- * (no player actor). For {@link EntityExplodeEvent} the source entity is included
- * in the log when it is a {@link Player}; otherwise only the entity type is shown.
+ * Detects explosion attempts near protected blocks and alerts owners.
  */
 public final class RaidDetectionListener implements Listener {
 
-    /**
-     * Pending raid alerts queued for offline players.
-     * Key: owner UUID. Value: list of alert strings to send on next join.
-     * Persists across reloads in memory only: not written to disk.
-     */
-    private static final Map<UUID, java.util.List<String>> pendingAlerts = new HashMap<>();
+    private static final Map<UUID, List<String>> pendingAlerts = new HashMap<>();
+    private static final Map<UUID, Long> lastAlertTimes = new ConcurrentHashMap<>();
     private static final UUID ENVIRONMENT_UUID = new UUID(0L, 0L);
+    private static final long ALERT_COOLDOWN_MS = 5000L;
 
-    /** Returns and clears all pending alerts for the given player UUID. */
     @Nullable
-    public static java.util.List<String> popPendingAlerts(@NotNull UUID uuid) {
+    public static List<String> popPendingAlerts(@NotNull UUID uuid) {
         return pendingAlerts.remove(uuid);
     }
 
@@ -105,6 +83,7 @@ public final class RaidDetectionListener implements Listener {
         if (!BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", false)) return;
         for (Block block : blocks) {
             if (!BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) continue;
+            if (!ProtectedBlockCache.isProtected(block)) continue;
 
             BlockNBTHandler handler;
             try {
@@ -113,27 +92,26 @@ public final class RaidDetectionListener implements Listener {
                 continue;
             }
 
-            Location loc  = block.getLocation();
-            String world  = loc.getWorld() != null ? loc.getWorld().getName() : "unknown";
+            if (!handler.isProtected()) continue;
+
+            Location loc = block.getLocation();
+            String world = loc.getWorld() != null ? loc.getWorld().getName() : "unknown";
             int x = loc.getBlockX(), y = loc.getBlockY(), z = loc.getBlockZ();
             String material = block.getType().name();
-
             String actorDisplay = resolveActor(source);
-
-            String logLine = String.format(
-                "WARN: [raid-detection] Possible raid: %s at %s [%d, %d, %d] near explosion. Actor: %s",
-                material, world, x, y, z, actorDisplay);
-            BlockProtLogger.log(logLine);
-
-            if (!handler.isProtected()) continue;
 
             AuditLogger audit = BlockProt.getAuditLogger();
             if (audit != null) {
                 UUID actorUuid = source instanceof Player p ? p.getUniqueId() : ENVIRONMENT_UUID;
                 audit.log(actorUuid, actorDisplay, loc, AuditLogger.Action.RAID_EXPLOSION);
             }
-            BlockProtLogger.log("raid-detection", "RAID_EXPLOSION audit queued for protected "
-                + material + " at " + world + " [" + x + "," + y + "," + z + "] actor=" + actorDisplay);
+            BlockProtLogger.log("raid-detection", Translator.get(TranslationKey.CONSOLE__RAID_LOG)
+                .replace("{block}", material)
+                .replace("{world}", world)
+                .replace("{x}", String.valueOf(x))
+                .replace("{y}", String.valueOf(y))
+                .replace("{z}", String.valueOf(z))
+                .replace("{actor}", actorDisplay));
 
             String ownerUuid = handler.getOwner();
             if (ownerUuid == null || ownerUuid.isBlank()) continue;
@@ -144,6 +122,13 @@ public final class RaidDetectionListener implements Listener {
             } catch (IllegalArgumentException ignored) {
                 continue;
             }
+
+            long now = System.currentTimeMillis();
+            Long lastAlert = lastAlertTimes.get(ownerId);
+            if (lastAlert != null && (now - lastAlert) < ALERT_COOLDOWN_MS) {
+                continue;
+            }
+            lastAlertTimes.put(ownerId, now);
 
             String alertMsg = Translator.get(TranslationKey.MESSAGES__RAID_ALERT)
                 .replace("{block}", material)
@@ -175,8 +160,7 @@ public final class RaidDetectionListener implements Listener {
 
     private void sendAlertToOnline(@NotNull Player player, @NotNull String alertMsg,
                                    @NotNull String coordsMsg, @NotNull Location loc) {
-        ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(alertMsg));
-
+        TemporaryActionBar.show(player, alertMsg, BlockProt.getDefaultConfig().getActionBarDurationTicks());
 
         boolean hasTp = player.hasPermission(Permissions.BLOCKS_TP.key());
         Component chat = buildChatComponent(coordsMsg, hasTp, loc);
@@ -199,7 +183,7 @@ public final class RaidDetectionListener implements Listener {
 
     @NotNull
     private String resolveActor(@Nullable Entity source) {
-        if (source == null) return "environment";
+        if (source == null) return Translator.get(TranslationKey.MESSAGES__RAID_ACTOR_ENVIRONMENT);
         if (source instanceof Player p) return p.getName();
         return source.getType().name();
     }

@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.tasks;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.listeners.HopperEventListener;
@@ -127,7 +128,7 @@ public final class InactivityCleanupTask implements Runnable {
                 // Strip color codes before printing to the console logger.
                 BlockProt.getInstance().getLogger().info(COLOR_STRIP.matcher(msg).replaceAll(""));
                 Bukkit.getOnlinePlayers().stream()
-                    .filter(p -> p.hasPermission("blockprot.admin"))
+                    .filter(p -> p.hasPermission(Permissions.USER_ADMIN.key()))
                     .forEach(p -> p.sendMessage(LegacyComponentSerializer.legacySection().deserialize(msg)));
             }
         });

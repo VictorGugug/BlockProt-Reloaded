@@ -35,7 +35,9 @@ repositories {
     maven("https://repo.tcoded.com/releases") {
         name = "TCoded"
     }
-
+    maven("https://repo.opencollab.dev/main/") {
+        name = "OpenCollab"
+    }
 }
 
 // --- dialogs source set: compiles against Paper 1.21.7+ for the dialog API ---
@@ -63,7 +65,7 @@ dependencies {
     // reflection at runtime, never directly imported.
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
     testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-    compileOnly("org.apache.commons:commons-lang3:3.13.0")
+    compileOnly("org.apache.commons:commons-lang3:3.17.0")
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.14.4")
@@ -101,6 +103,8 @@ dependencies {
     compileOnly("com.cjburkey.claimchunk:claimchunk:0.0.25-FIX3")
     compileOnly("com.github.Zrips:Residence:6.0.0.1") { isTransitive = false }
     compileOnly("com.github.GriefPrevention:GriefPrevention:16.18.2") { isTransitive = false }
+    compileOnly("org.geysermc.floodgate:api:2.2.3-SNAPSHOT")
+    compileOnly("org.geysermc.cumulus:cumulus:1.1.2")
 
     add("dialogsCompileOnly", "io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
 }

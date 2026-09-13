@@ -37,13 +37,12 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.scheduler.BukkitTask;
 import org.enginehub.squirrelid.Profile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Objects;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * GUI for searching a player to transfer block ownership to.
@@ -54,11 +53,7 @@ public final class TransferSearchInventory extends BlockProtInventory {
 
     public TransferSearchInventory() { super(true); }
 
-    private final ConcurrentLinkedQueue<Profile> resultQueue = new ConcurrentLinkedQueue<>();
     private final int maxResults = getSize() - 1;
-
-    @Nullable private BukkitTask loadTask = null;
-    @Nullable private BukkitTask updateTask = null;
 
     @Override
     int getSize() { return InventoryConstants.tripleLine; }
@@ -112,8 +107,6 @@ public final class TransferSearchInventory extends BlockProtInventory {
 
     @Override
     public void onClose(@NotNull InventoryCloseEvent event, @NotNull InventoryState state) {
-        if (loadTask != null) loadTask.cancel();
-        if (updateTask != null) updateTask.cancel();
     }
 
     @Nullable
@@ -126,11 +119,36 @@ public final class TransferSearchInventory extends BlockProtInventory {
         }
         setBackButton();
 
-        updateTask = Bukkit.getScheduler().runTaskTimer(BlockProt.getInstance(),
-            new UpdateTask(state), 0L, 1L);
-        loadTask = Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(),
-            new LoadTask(player, searchQuery,
-                BlockProt.getDefaultConfig().getFriendSearchSimilarityPercentage()));
+        BlockProt.getFoliaLib().getScheduler().runAsync(task -> {
+            double minSimilarity = BlockProt.getDefaultConfig().getFriendSearchSimilarityPercentage();
+            List<Profile> results = new ArrayList<>();
+            try {
+                results = de.sean.blockprot.bukkit.util.PlayerLookup.candidates(player.getUniqueId()).entrySet().stream()
+                    .map(e -> new Profile(e.getKey(), e.getValue()))
+                    .map(p -> new org.apache.commons.lang3.tuple.ImmutablePair<>(p, StringUtil.similarity(p.getName(), searchQuery)))
+                    .filter(pair -> pair.right >= minSimilarity)
+                    .sorted((a, b) -> b.right.compareTo(a.right))
+                    .limit(maxResults)
+                    .map(pair -> pair.left)
+                    .toList();
+            } catch (Exception e) {
+                BlockProt.getInstance().getLogger().warning("TransferSearchInventory load failed: " + e.getMessage());
+            }
+
+            final List<Profile> finalResults = results;
+            BlockProt.getFoliaLib().getScheduler().runAtEntity(player, tickTask -> {
+                for (int i = 0; i < maxResults; i++) {
+                    inventory.clear(i);
+                }
+                int idx = 0;
+                for (var profile : finalResults) {
+                    if (idx >= maxResults) break;
+                    final String name = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
+                    setPlayerSkull(idx, BlockProtInventory.createPlayerProfile(profile.getUniqueId(), name));
+                    idx++;
+                }
+            });
+        });
 
         return inventory;
     }
@@ -171,70 +189,6 @@ public final class TransferSearchInventory extends BlockProtInventory {
         } else {
             ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_FAILED));
             closeAndOpen(player, new BlockLockInventory().fill(player, block.getType(), new BlockNBTHandler(block)));
-        }
-    }
-
-    private class UpdateTask implements Runnable {
-        private final InventoryState state;
-        private int idx = 0;
-
-        UpdateTask(@NotNull InventoryState state) { this.state = state; }
-
-        @Override
-        public void run() {
-            var scheduler = Bukkit.getScheduler();
-            if (loadTask != null
-                && !scheduler.isQueued(loadTask.getTaskId())
-                && !scheduler.isCurrentlyRunning(loadTask.getTaskId())
-                && resultQueue.isEmpty()) {
-                if (idx == 0) for (int i = 0; i < maxResults; i++) inventory.clear(i);
-                if (updateTask != null) updateTask.cancel();
-                return;
-            }
-
-            Profile profile;
-            while ((profile = resultQueue.poll()) != null && idx < maxResults) {
-                if (idx == 0) for (int i = 0; i < maxResults; i++) inventory.clear(i);
-                final String name = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
-                setPlayerSkull(idx, BlockProtInventory.createPlayerProfile(profile.getUniqueId(), name));
-                idx++;
-            }
-            if (idx == maxResults) {
-                if (loadTask != null) loadTask.cancel();
-                if (updateTask != null) updateTask.cancel();
-            }
-        }
-    }
-
-    private class LoadTask implements Runnable {
-        private final Player player;
-        private final String query;
-        private final double minSimilarity;
-
-        LoadTask(@NotNull Player player, @NotNull String query, double minSimilarity) {
-            this.player = player;
-            this.query = query;
-            this.minSimilarity = minSimilarity;
-        }
-
-        @Override
-        public void run() {
-            try {
-                de.sean.blockprot.bukkit.util.PlayerLookup.candidates(player.getUniqueId()).entrySet().stream()
-                    .map(e -> new org.enginehub.squirrelid.Profile(e.getKey(), e.getValue()))
-                    .map(p -> new org.apache.commons.lang3.tuple.ImmutablePair<>(p, similarity(p.getName(), query)))
-                    .filter(pair -> pair.right >= minSimilarity)
-                    .sorted((a, b) -> b.right.compareTo(a.right))
-                    .limit(maxResults)
-                    .map(pair -> pair.left)
-                    .forEach(resultQueue::add);
-            } catch (Exception e) {
-                BlockProt.getInstance().getLogger().warning("TransferSearchInventory load failed: " + e.getMessage());
-            }
-        }
-
-        private double similarity(String a, String b) {
-            return StringUtil.similarity(a, b);
         }
     }
 }

@@ -51,11 +51,13 @@ public final class AdminConfigExpiryDialog {
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_EXPIRY), AdminConfigDialog.SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(AdminConfigDialog.toggleBtn("world_expiry.enabled", "world_expiry.enabled",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__ENABLED),
             cfg.isWorldExpiryEnabled(),
+            colorblind,
             p -> { cfg.setWorldExpiryEnabled(!cfg.isWorldExpiryEnabled()); show(p, backOrigin); }));
 
         int interval = cfg.getWorldExpiryCheckInterval();

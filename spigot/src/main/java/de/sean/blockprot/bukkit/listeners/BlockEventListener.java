@@ -36,6 +36,7 @@ import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.BlockCountStatistic;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
+import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
 import de.sean.blockprot.bukkit.util.BlockUtil;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.nbt.LockReturnValue;
@@ -111,6 +112,7 @@ public class BlockEventListener implements Listener {
     public void onBlockBurn(BlockBurnEvent event) {
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
         if (!BlockProt.getDefaultConfig().isLockable(event.getBlock().getType(), event.getBlock().getWorld())) return;
+        if (!ProtectedBlockCache.isProtected(event.getBlock())) return;
         BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
         if (handler.isProtected()) {
             event.setCancelled(true);
@@ -122,9 +124,14 @@ public class BlockEventListener implements Listener {
         if (BlockProt.getDefaultConfig().isWorldExcluded(event.getBlock().getWorld())) return;
         if (!BlockProt.getDefaultConfig().isLockable(event.getBlock().getType(), event.getBlock().getWorld())) return;
 
+        if (!ProtectedBlockCache.isProtected(event.getBlock())) {
+            HopperEventListener.invalidate(event.getBlock());
+            return;
+        }
+
         BlockNBTHandler handler = new BlockNBTHandler(event.getBlock());
         final Player breaker = event.getPlayer();
-        final boolean isAdmin = breaker.hasPermission(Permissions.USER_ADMIN.key());
+        final boolean isAdmin = de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(breaker, de.sean.blockprot.bukkit.admin.AdminAction.BREAK);
         final boolean isOwner = handler.isOwner(breaker.getUniqueId().toString());
 
         if (!isOwner && handler.isProtected()) {
@@ -172,7 +179,7 @@ public class BlockEventListener implements Listener {
         if (player.getGameMode() == GameMode.CREATIVE) return;
         // Blocked break attempts must not deliver the item before the break is cancelled.
         BlockNBTHandler handler = null;
-        if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) {
+        if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld()) && ProtectedBlockCache.isProtected(block)) {
             try {
                 handler = new BlockNBTHandler(block);
             } catch (RuntimeException e) {
@@ -180,7 +187,7 @@ public class BlockEventListener implements Listener {
             }
             if (handler.isProtected()
                 && !handler.isOwner(player.getUniqueId().toString())
-                && !player.hasPermission(Permissions.USER_ADMIN.key())
+                && !de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.BREAK)
                 && !BlockProt.getDefaultConfig().shouldAllowBreakProtectedBlocks()) {
                 return;
             }
@@ -261,7 +268,7 @@ public class BlockEventListener implements Listener {
         }
 
         final Player shulkerBreaker = event.getPlayer();
-        final boolean isShulkerAdmin = shulkerBreaker.hasPermission(Permissions.USER_ADMIN.key());
+        final boolean isShulkerAdmin = de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(shulkerBreaker, de.sean.blockprot.bukkit.admin.AdminAction.BREAK);
         final boolean isShulkerOwner = handler.isOwner(shulkerBreaker.getUniqueId().toString());
 
         if ((isShulkerOwner || isShulkerAdmin) && (!event.isCancelled() && event.isDropItems() && shulkerBreaker.getGameMode() != GameMode.CREATIVE)) {

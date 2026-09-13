@@ -144,6 +144,15 @@ public final class VersionCompat {
         }
     }
 
+    public static boolean hasLifecycleCommands() {
+        try {
+            Class.forName("io.papermc.paper.command.brigadier.Commands");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
     @NotNull
     public static String getVersionString() {
         try {

@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.dialogs.DialogBodyEntry;
 import de.sean.blockprot.bukkit.dialogs.DialogBridge;
 import de.sean.blockprot.bukkit.dialogs.DialogButton;
 import de.sean.blockprot.bukkit.dialogs.DialogTextField;
+import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
@@ -237,6 +238,94 @@ public final class PaperDialogBridge implements DialogBridge {
                 1))
         );
         player.showDialog(dialog);
+    }
+
+    @Override
+    public void showSearchDialog(
+        @NotNull Player player,
+        @NotNull Component title,
+        @NotNull List<DialogBodyEntry> body,
+        @NotNull DialogTextField field,
+        @NotNull List<DialogButton> actions,
+        @Nullable DialogButton exit,
+        int columns,
+        @NotNull Consumer<String> onSearch
+    ) {
+        List<io.papermc.paper.registry.data.dialog.body.DialogBody> dialogBody
+            = new ArrayList<>(body.size());
+        for (DialogBodyEntry entry : body) {
+            if (entry.text() != null) {
+                dialogBody.add(DialogBody.plainMessage(entry.text()));
+            } else if (entry.item() != null) {
+                dialogBody.add(DialogBody.item(entry.item()).build());
+            }
+        }
+
+        TextDialogInput textInput = DialogInput.text(
+            field.key(),
+            field.width() > 0 ? field.width() : DialogTextField.DEFAULT_WIDTH,
+            field.label(),
+            true,
+            field.initialValue(),
+            field.maxLength() > 0 ? field.maxLength() : 32,
+            null
+        );
+
+        List<ActionButton> actionButtons = new ArrayList<>(actions.size());
+        for (DialogButton btn : actions) {
+            actionButtons.add(toSearchDialogActionButton(btn, field.key(), onSearch));
+        }
+
+        ActionButton exitAction = exit != null ? toActionButton(exit) : null;
+
+        Dialog dialog = Dialog.create(builder -> builder.empty()
+            .base(DialogBase.builder(title)
+                .body(dialogBody)
+                .inputs(List.of(textInput))
+                .pause(false)
+                .afterAction(DialogBase.DialogAfterAction.NONE)
+                .build()
+            )
+            .type(DialogType.multiAction(actionButtons, exitAction, columns))
+        );
+        player.showDialog(dialog);
+    }
+
+    private @NotNull ActionButton toSearchDialogActionButton(
+        @NotNull DialogButton btn,
+        @NotNull String fieldKey,
+        @NotNull Consumer<String> onSearch
+    ) {
+        var handler = btn.onClick();
+        DialogAction action = DialogAction.customClick(
+            (view, audience) -> {
+                if (!(audience instanceof Player player)) return;
+                if ("search".equals(btn.id())) {
+                    String currentText = view.getText(fieldKey);
+                    final String query = currentText != null ? currentText : "";
+                    org.bukkit.Bukkit.getScheduler().runTask(
+                        de.sean.blockprot.bukkit.BlockProt.getInstance(),
+                        () -> onSearch.accept(query)
+                    );
+                } else if (handler != null) {
+                    org.bukkit.Bukkit.getScheduler().runTask(
+                        de.sean.blockprot.bukkit.BlockProt.getInstance(),
+                        () -> handler.handle(player)
+                    );
+                } else {
+                    org.bukkit.Bukkit.getScheduler().runTask(
+                        de.sean.blockprot.bukkit.BlockProt.getInstance(),
+                        () -> closeDialogOrInventory(player)
+                    );
+                }
+            },
+            CLICK_OPTIONS
+        );
+        var builder = ActionButton.builder(btn.label()).action(action);
+        if (btn.tooltip() != null) {
+            builder.tooltip(btn.tooltip());
+        }
+        return builder.build();
     }
 
     private @NotNull ActionButton toActionButton(@NotNull DialogButton btn) {

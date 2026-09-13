@@ -385,7 +385,7 @@ public class BlockLockInventory extends BlockProtInventory {
     }
 
     private void sendActionBar(@NotNull Player player, @NotNull String text) {
-        ComponentMessages.sendLegacyActionBar(player, text);
+        de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, text);
     }
 
     private static boolean isStorageType(@NotNull Material m) {

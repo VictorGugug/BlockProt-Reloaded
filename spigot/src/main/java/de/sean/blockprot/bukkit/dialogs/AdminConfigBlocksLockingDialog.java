@@ -50,31 +50,37 @@ public final class AdminConfigBlocksLockingDialog {
             AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__LOCKING_TITLE)),
             AdminConfigDialog.SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(AdminConfigDialog.toggleBtn("protect_locked_blocks_from_explosions", "protect_locked_blocks_from_explosions",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__PROTECT_EXPLOSIONS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__PROTECT_EXPLOSIONS),
             cfg.shouldProtectLockedBlocksFromExplosions(),
+            colorblind,
             p -> { cfg.setProtectFromExplosions(!cfg.shouldProtectLockedBlocksFromExplosions()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("block_protected_block_piston_movement", "block_protected_block_piston_movement",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__PISTON_MOVEMENT_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__PISTON_MOVEMENT),
             cfg.shouldBlockProtectedBlockPistonMovement(),
+            colorblind,
             p -> { cfg.setBlockPistonMovement(!cfg.shouldBlockProtectedBlockPistonMovement()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("clear_protection_on_shulker_break", "clear_protection_on_shulker_break",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SHULKER_BREAK_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SHULKER_BREAK),
             cfg.shouldClearProtectionOnShulkerBreak(),
+            colorblind,
             p -> { cfg.setClearProtectionOnShulkerBreak(!cfg.shouldClearProtectionOnShulkerBreak()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("allow_break_protected_blocks", "allow_break_protected_blocks",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__ALLOW_BREAK_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__ALLOW_BREAK),
             cfg.shouldAllowBreakProtectedBlocks(),
+            colorblind,
             p -> { cfg.setAllowBreakProtectedBlocks(!cfg.shouldAllowBreakProtectedBlocks()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("respect_spawn_protection", "respect_spawn_protection",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SPAWN_PROTECTION_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SPAWN_PROTECTION),
             cfg.shouldRespectSpawnProtection(),
+            colorblind,
             p -> { cfg.setRespectSpawnProtection(!cfg.shouldRespectSpawnProtection()); show(p, backOrigin); }));
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);

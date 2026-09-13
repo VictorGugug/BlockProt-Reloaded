@@ -85,12 +85,12 @@ public class InventoryEventListener implements Listener {
         if (state != null) {
             InventoryHolder holder = event.getInventory().getHolder();
             if (holder instanceof BlockProtInventory) {
+                event.setCancelled(true);
                 final var clickedInventory = event.getClickedInventory();
                 if (clickedInventory != null && clickedInventory.getHolder() instanceof BlockProtInventory bpInventory) {
                     bpInventory.onClick(event, state);
-                } else {
-                    event.setCancelled(true);
                 }
+                player.updateInventory();
             }
         } else {
             try {

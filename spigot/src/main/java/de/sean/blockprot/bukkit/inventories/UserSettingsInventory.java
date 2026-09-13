@@ -53,7 +53,8 @@ public class UserSettingsInventory extends BlockProtInventory {
     private static final int SLOT_HINTS           = 1;
     private static final int SLOT_PREFER_DIALOGS  = 2;
     private static final int SLOT_NOTIFICATIONS   = 3;
-    private static final int SLOT_FRIENDS         = 4;
+    private static final int SLOT_COLORBLIND      = 4;
+    private static final int SLOT_FRIENDS         = 5;
 
     @Override
     int getSize() { return InventoryConstants.lineLength; }
@@ -73,18 +74,39 @@ public class UserSettingsInventory extends BlockProtInventory {
         switch (item.getType()) {
             case BARRIER -> {
                 PlayerSettingsHandler h = new PlayerSettingsHandler(player);
-                h.setLockOnPlace(!h.getLockOnPlace());
+                boolean next = !h.getLockOnPlace();
+                h.setLockOnPlace(next);
                 BlockEventListener.invalidateSettings(player.getUniqueId());
-                inventory.setItem(SLOT_LOCK_ON_PLACE, toggleOption(item, null));
+                setEnchantedOptionItemStack(
+                    SLOT_LOCK_ON_PLACE,
+                    Material.BARRIER,
+                    TranslationKey.INVENTORIES__LOCK_ON_PLACE,
+                    next
+                );
+                player.updateInventory();
             }
             case KNOWLEDGE_BOOK -> {
                 PlayerSettingsHandler h = new PlayerSettingsHandler(player);
                 boolean hintsCurrentlyEnabled = !h.hasPlayerInteractedWithMenu();
                 h.setHasPlayerInteractedWithMenu(hintsCurrentlyEnabled);
                 fill(player);
+                player.updateInventory();
             }
             case PAPER -> {
-                if (BlockProt.getDefaultConfig().isDialogsEnabled()) {
+                if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.isBedrockPlayer(player)) {
+                    PlayerSettingsHandler h = new PlayerSettingsHandler(player);
+                    boolean nextState = !h.getPreferBedrockForms();
+                    h.setPreferBedrockForms(nextState);
+                    if (nextState) {
+                        player.closeInventory();
+                        BlockProt.getFoliaLib().getScheduler().runAtEntityLater(player, () -> {
+                            de.sean.blockprot.bukkit.bedrock.forms.BedrockUserSettingsForm.show(player);
+                        }, 1L);
+                    } else {
+                        fill(player);
+                        player.updateInventory();
+                    }
+                } else if (BlockProt.getDefaultConfig().isDialogsEnabled()) {
                     PlayerSettingsHandler h = new PlayerSettingsHandler(player);
                     boolean nextState = !h.getPreferDialogs();
                     h.setPreferDialogs(nextState);
@@ -92,13 +114,33 @@ public class UserSettingsInventory extends BlockProtInventory {
                         de.sean.blockprot.bukkit.dialogs.UserSettingsDialog.show(player);
                     } else {
                         fill(player);
+                        player.updateInventory();
                     }
                 }
             }
             case BELL -> {
                 PlayerSettingsHandler h = new PlayerSettingsHandler(player);
-                h.setNotificationsEnabled(!h.getNotificationsEnabled());
-                inventory.setItem(SLOT_NOTIFICATIONS, toggleOption(item, null));
+                boolean next = !h.getNotificationsEnabled();
+                h.setNotificationsEnabled(next);
+                setEnchantedOptionItemStack(
+                    SLOT_NOTIFICATIONS,
+                    Material.BELL,
+                    TranslationKey.INVENTORIES__USER_SETTINGS_NOTIFICATIONS,
+                    next
+                );
+                player.updateInventory();
+            }
+            case SPYGLASS -> {
+                PlayerSettingsHandler h = new PlayerSettingsHandler(player);
+                boolean next = !h.getColorblindMode();
+                h.setColorblindMode(next);
+                setEnchantedOptionItemStack(
+                    SLOT_COLORBLIND,
+                    Material.SPYGLASS,
+                    TranslationKey.INVENTORIES__USER_SETTINGS_COLORBLIND,
+                    next
+                );
+                player.updateInventory();
             }
             case PLAYER_HEAD -> {
                 state.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
@@ -133,7 +175,14 @@ public class UserSettingsInventory extends BlockProtInventory {
             hintsEnabled
         );
 
-        if (BlockProt.getDefaultConfig().isDialogsEnabled()) {
+        if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.isBedrockPlayer(player)) {
+            setEnchantedOptionItemStack(
+                SLOT_PREFER_DIALOGS,
+                Material.PAPER,
+                TranslationKey.DIALOGS__SETTINGS__PREFER_BEDROCK_FORMS,
+                settings.getPreferBedrockForms()
+            );
+        } else if (BlockProt.getDefaultConfig().isDialogsEnabled()) {
             setEnchantedOptionItemStack(
                 SLOT_PREFER_DIALOGS,
                 Material.PAPER,
@@ -147,6 +196,13 @@ public class UserSettingsInventory extends BlockProtInventory {
             Material.BELL,
             TranslationKey.INVENTORIES__USER_SETTINGS_NOTIFICATIONS,
             settings.getNotificationsEnabled()
+        );
+
+        setEnchantedOptionItemStack(
+            SLOT_COLORBLIND,
+            Material.SPYGLASS,
+            TranslationKey.INVENTORIES__USER_SETTINGS_COLORBLIND,
+            settings.getColorblindMode()
         );
 
         if (!BlockProt.getDefaultConfig().isFriendFunctionalityDisabled()) {

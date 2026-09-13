@@ -59,13 +59,15 @@ public final class EntityBlockSettingsDialog {
         body.add(DialogBodyEntry.text(Component.text(
             formatMaterialName(entity.getType().name()), SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         boolean hopperEnabled = handler.isHopperProtectionEnabled();
         String label = stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__HOPPER_PROTECTION));
+        String icon = BpDialogStyles.indicatorIcon(hopperEnabled, colorblind);
 
         List<DialogButton> actions = new ArrayList<>();
         actions.add(new DialogButton("hopper",
             Component.text()
-                .append(Component.text(stripColor(Translator.get(hopperEnabled ? TranslationKey.ICON__TOGGLE_ON : TranslationKey.ICON__TOGGLE_OFF)), hopperEnabled ? PASTEL_MINT : PASTEL_CORAL))
+                .append(Component.text(icon, hopperEnabled ? PASTEL_MINT : PASTEL_CORAL))
                 .append(Component.text(label, NamedTextColor.WHITE))
                 .build(),
             Component.join(JoinConfiguration.newlines(),

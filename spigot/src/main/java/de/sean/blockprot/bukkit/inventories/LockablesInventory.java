@@ -418,16 +418,6 @@ public final class LockablesInventory extends BlockProtInventory {
         };
     }
 
-    /**
-     * True when active/total sits near the midpoint. Band widens for small
-     * totals so a single-item swing still lands inside it.
-     */
-    private static boolean isNearHalf(long active, long total) {
-        double ratio = (double) active / total;
-        double halfBand = total <= 5 ? 0.20 : 0.10;
-        return Math.abs(ratio - 0.5) <= halfBand;
-    }
-
     @NotNull
     private static ItemStack selectAllItem(@NotNull String token,
                                            long activeCount, long totalCount,
@@ -446,7 +436,7 @@ public final class LockablesInventory extends BlockProtInventory {
                 statusColor = PASTEL_MINT;
                 statusLabel = Translator.get(TranslationKey.INVENTORIES__LOCKABLES__STATUS_ACTIVE);
             } else {
-                statusColor = isNearHalf(activeCount, totalCount) ? PASTEL_ORANGE : PASTEL_MINT;
+                statusColor = PASTEL_ORANGE;
                 statusLabel = activeCount + "/" + totalCount;
             }
             ComponentMessages.lore(meta, List.of(

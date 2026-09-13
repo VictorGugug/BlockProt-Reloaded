@@ -21,12 +21,17 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTier;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.dialogs.AdminMenuDialog;
 import de.sean.blockprot.bukkit.inventories.AdminMenuInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -35,31 +40,37 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 /**
- * Opens the admin GUI. Usage: {@code /bp admin}.
- * Requires {@code blockprot.user.admin} or OP.
+ * Handles the admin menu and staff role configuration.
  */
 public final class AdminMenuCommand implements CommandExecutor {
 
     @Override
     public boolean canUseCommand(@NotNull CommandSender sender) {
-        return sender.isOp() || sender.hasPermission(Permissions.USER_ADMIN.key());
+        return AdminTierManager.hasAnyAdminPermission(sender);
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof Player player)) return false;
+        if (!(sender instanceof Player player)) {
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
+            return true;
+        }
         if (!canUseCommand(sender)) {
             player.sendMessage(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+            return true;
+        }
+        if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.shouldUseBedrockForms(player)) {
+            de.sean.blockprot.bukkit.bedrock.forms.BedrockAdminMenuForm.show(player);
             return true;
         }
         if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
             AdminMenuDialog.show(player);
             return true;
         }
-        if (BlockProt.getDefaultConfig().areExtraCommandsEnabled()) return false;
 
         InventoryState state = new InventoryState(null);
         state.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;

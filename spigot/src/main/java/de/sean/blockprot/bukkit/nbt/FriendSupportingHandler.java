@@ -52,6 +52,10 @@ public abstract class FriendSupportingHandler<T extends NBTCompound> extends NBT
      */
     protected void onFriendsMutated() {}
 
+    public void notifyFriendsMutated() {
+        onFriendsMutated();
+    }
+
     private NBTCompound compound() {
         AsyncGuard.assertSync("FriendSupportingHandler.compound()");
         return container.getOrCreateCompound(friendNbtKey);

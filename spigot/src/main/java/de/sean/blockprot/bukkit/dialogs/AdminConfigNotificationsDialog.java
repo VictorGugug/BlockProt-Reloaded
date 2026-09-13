@@ -51,16 +51,19 @@ public final class AdminConfigNotificationsDialog {
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_NOTIFICATIONS), AdminConfigDialog.SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(AdminConfigDialog.toggleBtn("notify_op_of_updates", "notify_op_of_updates",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__NOTIFY_OPS_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__NOTIFY_OPS),
             cfg.shouldNotifyOpOfUpdates(),
+            colorblind,
             p -> { cfg.setNotifyOpOfUpdates(!cfg.shouldNotifyOpOfUpdates()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("owner_notifications.enabled", "owner_notifications.enabled",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_ENABLED),
             cfg.isOwnerNotificationsEnabled(),
+            colorblind,
             p -> { cfg.setAndSave("owner_notifications.enabled", !cfg.isOwnerNotificationsEnabled()); show(p, backOrigin); }));
 
         AdminConfigDialog.bridgeReturn(player, bridge, title, body, buttons, backOrigin);

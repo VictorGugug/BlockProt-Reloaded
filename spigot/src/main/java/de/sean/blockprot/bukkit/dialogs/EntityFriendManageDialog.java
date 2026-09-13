@@ -83,11 +83,13 @@ public final class EntityFriendManageDialog {
                     .replace("{current}", String.valueOf(safePage + 1))
                     .replace("{total}", String.valueOf(totalPages)),
                 TextColor.color(0x888888))));
+            boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
             for (String friendUuid : pageFriends) {
                 String name = getPlayerName(friendUuid);
                 boolean isManager = handler.isManager(friendUuid);
+                String icon = BpDialogStyles.indicatorIcon(isManager, colorblind);
                 body.add(DialogBodyEntry.text(Component.text()
-                    .append(Component.text(stripColor(Translator.get(isManager ? TranslationKey.ICON__TOGGLE_ON_ACTIVE : TranslationKey.ICON__TOGGLE_OFF_INACTIVE)), isManager ? PASTEL_MINT : PASTEL_CORAL))
+                    .append(Component.text(icon, isManager ? PASTEL_MINT : PASTEL_CORAL))
                     .append(Component.text(name != null ? name : friendUuid, NamedTextColor.WHITE))
                     .append(Component.text(isManager ? stripColor(Translator.get(TranslationKey.INVENTORIES__ENTITY__MANAGER_SUFFIX)) : "", SOFT_GRAY))
                     .build()));

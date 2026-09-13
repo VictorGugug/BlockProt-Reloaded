@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -69,6 +70,11 @@ public class ExplodeEventListener implements Listener {
         while (it.hasNext()) {
             Block b = it.next();
             if (!BlockProt.getDefaultConfig().isLockable(b.getType(), b.getWorld())) continue;
+
+            if (!ProtectedBlockCache.isProtected(b)) {
+                HopperEventListener.invalidate(b);
+                continue;
+            }
 
             BlockNBTHandler handler;
             try {

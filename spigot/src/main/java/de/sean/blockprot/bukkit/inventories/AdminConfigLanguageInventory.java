@@ -313,36 +313,7 @@ public final class AdminConfigLanguageInventory extends BlockProtInventory {
         return stack;
     }
 
-    private static @Nullable YamlConfiguration loadLanguageFile(@NotNull BlockProt plugin, @NotNull String fileName) {
-        File diskFile = new File(plugin.getDataFolder(), "lang/" + fileName);
-        try {
-            if (diskFile.exists()) {
-                return YamlConfiguration.loadConfiguration(diskFile);
-            }
-            InputStream jarStream = plugin.getResource("lang/" + fileName);
-            if (jarStream == null) return null;
-            return YamlConfiguration.loadConfiguration(
-                new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private static String getLanguageName(@NotNull BlockProt plugin, @NotNull String fileName) {
-        YamlConfiguration langFile = loadLanguageFile(plugin, fileName);
-        if (langFile == null) return fileName;
-        String name = langFile.getString("language_name");
-        if (name != null && !name.isEmpty()) return name;
-        return langFile.getString("locale", fileName);
-    }
-
-    private static int computeCompletion(@NotNull BlockProt plugin, @NotNull String fileName) {
-        YamlConfiguration langFile = loadLanguageFile(plugin, fileName);
-        if (langFile == null) return 0;
-        return Translator.computeCompletionPercentage(langFile);
-    }
-
     private static String getLanguageLabel(@NotNull BlockProt plugin, @NotNull String fileName) {
-        return getLanguageName(plugin, fileName) + " (" + computeCompletion(plugin, fileName) + "%)";
+        return de.sean.blockprot.bukkit.dialogs.AdminConfigLanguageDialog.getLanguageLabel(plugin, fileName);
     }
 }

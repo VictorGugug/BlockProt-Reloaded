@@ -53,21 +53,25 @@ public final class AdminConfigEntityDialog {
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__CAT_ENTITY), AdminConfigDialog.SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(AdminConfigDialog.toggleBtn("entity_protection.enabled", "entity_protection.enabled",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__PROTECTION_ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__PROTECTION_ENABLED),
             cfg.isEntityProtectionEnabled(),
+            colorblind,
             p -> { cfg.setEntityProtectionEnabled(!cfg.isEntityProtectionEnabled()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("entity_protection.auto_protect_on_tame", "entity_protection.auto_protect_on_tame",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__AUTO_PROTECT_TAME_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__AUTO_PROTECT_TAME),
             cfg.isEntityProtectionAutoProtectOnTame(),
+            colorblind,
             p -> { cfg.setAndSave("entity_protection.auto_protect_on_tame", !cfg.isEntityProtectionAutoProtectOnTame()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("villager_workstation_protection.enabled", "villager_workstation_protection.enabled",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__WORKSTATION_ENABLED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__ENTITY__WORKSTATION_ENABLED),
             cfg.isVillagerWorkstationProtectionEnabled(),
+            colorblind,
             p -> { cfg.setAndSave("villager_workstation_protection.enabled", !cfg.isVillagerWorkstationProtectionEnabled()); show(p, backOrigin); }));
 
         int workstationRadius = cfg.getBukkitConfig().getInt("villager_workstation_protection.radius", 2);

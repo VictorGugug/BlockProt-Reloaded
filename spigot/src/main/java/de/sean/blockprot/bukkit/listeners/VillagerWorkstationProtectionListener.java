@@ -57,15 +57,14 @@ public final class VillagerWorkstationProtectionListener implements Listener {
         if (!BlockProt.getDefaultConfig().isVillagerWorkstationProtectionEnabled()) return;
         if (!(event.getEntity() instanceof Villager villager)) return;
         Player attacker = resolvePlayer(event.getDamager());
-        if (attacker == null || attacker.hasPermission(Permissions.USER_ADMIN.key())) return;
+        if (attacker == null || de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(attacker, de.sean.blockprot.bukkit.admin.AdminAction.CONTAINER_BYPASS)) return;
 
         Block workstation = getProtectedLinkedWorkstation(villager);
         if (workstation == null) return;
         if (canAccess(attacker, workstation)) return;
 
         event.setCancelled(true);
-        ComponentMessages.sendActionBar(attacker, LegacyComponentSerializer.legacySection()
-            .deserialize(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
+        de.sean.blockprot.bukkit.util.TemporaryActionBar.show(attacker, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION), BlockProt.getDefaultConfig().getActionBarDurationTicks());
         BlockProtLogger.log("entity-protection", "ACCESS_DENIED villager damage: villager="
             + villager.getUniqueId() + " workstation=" + locString(workstation.getLocation())
             + " player=" + attacker.getName());
@@ -76,15 +75,14 @@ public final class VillagerWorkstationProtectionListener implements Listener {
         if (!BlockProt.getDefaultConfig().isVillagerWorkstationProtectionEnabled()) return;
         if (!(event.getRightClicked() instanceof Villager villager)) return;
         Player player = event.getPlayer();
-        if (player.hasPermission(Permissions.USER_ADMIN.key())) return;
+        if (de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.CONTAINER_BYPASS)) return;
 
         Block workstation = getProtectedLinkedWorkstation(villager);
         if (workstation == null) return;
         if (canAccess(player, workstation)) return;
 
         event.setCancelled(true);
-        ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection()
-            .deserialize(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
+        de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION), BlockProt.getDefaultConfig().getActionBarDurationTicks());
         BlockProtLogger.log("entity-protection", "ACCESS_DENIED villager interact: villager="
             + villager.getUniqueId() + " workstation=" + locString(workstation.getLocation())
             + " player=" + player.getName());
@@ -94,15 +92,14 @@ public final class VillagerWorkstationProtectionListener implements Listener {
     public void onBlockBreakNearWorkstation(@NotNull BlockBreakEvent event) {
         if (!BlockProt.getDefaultConfig().isVillagerWorkstationProtectionEnabled()) return;
         Player player = event.getPlayer();
-        if (player.hasPermission(Permissions.USER_ADMIN.key())) return;
+        if (de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.BREAK)) return;
 
         Block workstation = findNearbyProtectedWorkstation(event.getBlock());
         if (workstation == null) return;
 
         if (!canAccess(player, workstation)) {
             event.setCancelled(true);
-            ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection()
-                .deserialize(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
+            de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION), BlockProt.getDefaultConfig().getActionBarDurationTicks());
             BlockProtLogger.log("entity-protection", "ACCESS_DENIED block break near workstation: block="
                 + event.getBlock().getType().name() + " location=" + locString(event.getBlock().getLocation())
                 + " workstation=" + locString(workstation.getLocation()) + " player=" + player.getName());
@@ -114,7 +111,7 @@ public final class VillagerWorkstationProtectionListener implements Listener {
         if (!BlockProt.getDefaultConfig().isVillagerWorkstationProtectionEnabled()) return;
         if (event.getClickedBlock() == null) return;
         Player player = event.getPlayer();
-        if (player.hasPermission(Permissions.USER_ADMIN.key())) return;
+        if (de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.CONTAINER_BYPASS)) return;
 
         Block workstation = findNearbyProtectedWorkstation(event.getClickedBlock());
         if (workstation == null) return;
@@ -123,8 +120,7 @@ public final class VillagerWorkstationProtectionListener implements Listener {
 
         if (!canAccess(player, workstation)) {
             event.setCancelled(true);
-            ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection()
-                .deserialize(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
+            de.sean.blockprot.bukkit.util.TemporaryActionBar.show(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION), BlockProt.getDefaultConfig().getActionBarDurationTicks());
             BlockProtLogger.log("entity-protection", "ACCESS_DENIED block interact near workstation: block="
                 + event.getClickedBlock().getType().name() + " location=" + locString(event.getClickedBlock().getLocation())
                 + " workstation=" + locString(workstation.getLocation()) + " player=" + player.getName());

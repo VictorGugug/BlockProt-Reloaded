@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.listeners;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.entities.EntityProtectionHandler;
 import de.sean.blockprot.bukkit.inventories.EntitySettingsInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
@@ -66,7 +67,7 @@ public final class EntityMenuOpenListener implements Listener {
         boolean isOwner = handler.isOwner(player.getUniqueId())
             || (((Tameable) clicked).getOwnerUniqueId() != null
                 && ((Tameable) clicked).getOwnerUniqueId().equals(player.getUniqueId()));
-        boolean isAdmin = player.hasPermission("blockprot.admin");
+        boolean isAdmin = player.hasPermission(Permissions.USER_ADMIN.key());
         if (!isOwner && !isAdmin) {
             player.sendMessage(BlockProt.getDefaultConfig().getEntityProtectionDeniedMessage());
             event.setCancelled(true);

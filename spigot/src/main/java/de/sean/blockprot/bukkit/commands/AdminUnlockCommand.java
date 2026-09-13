@@ -55,7 +55,7 @@ public final class AdminUnlockCommand implements CommandExecutor {
 
     @Override
     public boolean canUseCommand(@NotNull CommandSender sender) {
-        return sender.isOp() || sender.hasPermission(Permissions.USER_ADMIN.key());
+        return de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(sender, de.sean.blockprot.bukkit.admin.AdminAction.UNLOCK);
     }
 
     @Override
@@ -66,7 +66,7 @@ public final class AdminUnlockCommand implements CommandExecutor {
             return true;
         }
 
-        if (!player.hasPermission(Permissions.USER_ADMIN.key()) && !player.isOp()) {
+        if (!canUseCommand(player)) {
             ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }

@@ -50,11 +50,13 @@ public final class AdminConfigBlocksBehaviorDialog {
             AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__BEHAVIOR_TITLE)),
             AdminConfigDialog.SOFT_GRAY)));
 
+        boolean colorblind = new de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler(player).getColorblindMode();
         List<DialogButton> buttons = new ArrayList<>();
         buttons.add(AdminConfigDialog.toggleBtn("modern_family_blocks", "modern_family_blocks",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__MODERN_FAMILY_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__MODERN_FAMILY),
             cfg.isModernFamilyBlocks(),
+            colorblind,
             p -> {
                 boolean toModern = !cfg.isModernFamilyBlocks();
                 cfg.setAndSave("modern_family_blocks", toModern);
@@ -65,11 +67,13 @@ public final class AdminConfigBlocksBehaviorDialog {
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__REDSTONE_DISALLOWED_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__REDSTONE_DISALLOWED),
             cfg.disallowRedstoneOnPlace(),
+            colorblind,
             p -> { cfg.setRedstoneDisallowedByDefault(!cfg.disallowRedstoneOnPlace()); show(p, backOrigin); }));
         buttons.add(AdminConfigDialog.toggleBtn("simplified_hopper_logic", "simplified_hopper_logic",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SIMPLIFIED_HOPPER_TITLE),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__SIMPLIFIED_HOPPER),
             cfg.isSimplifiedHopperLogic(),
+            colorblind,
             p -> { cfg.setSimplifiedHopperLogic(!cfg.isSimplifiedHopperLogic()); show(p, backOrigin); }));
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
