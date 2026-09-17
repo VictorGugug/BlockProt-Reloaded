@@ -34,11 +34,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.data.type.Lectern;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
@@ -143,7 +145,19 @@ public class InteractEventListener implements Listener {
                 event.setCancelled(false);
             }
         } else {
-            if (event.hasItem()) return;
+            if (event.hasItem()) {
+                // Since Minecraft 26.3 a sneak-click with an empty main hand also fires an
+                // OFF_HAND interact for whatever the off-hand holds (shield, torch, food...).
+                // The main-hand event already opened the lock menu; if this second event is
+                // left alone, the container opens on top of it and the menu is gone.
+                // Deny only the block use: raising a shield etc. still works.
+                if (event.getHand() == EquipmentSlot.OFF_HAND
+                        && player.getInventory().getItemInMainHand().getType().isAir()
+                        && !event.getItem().getType().isBlock()) {
+                    event.setUseInteractedBlock(Event.Result.DENY);
+                }
+                return;
+            }
             // Skip if the off-hand holds a placeable block: the player is placing, not menu-opening.
             var offHandItem = player.getInventory().getItemInOffHand();
             if (!offHandItem.getType().isAir() && offHandItem.getType().isBlock()) return;
