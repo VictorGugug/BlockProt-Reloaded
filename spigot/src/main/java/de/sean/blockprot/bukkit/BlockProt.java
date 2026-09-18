@@ -108,6 +108,10 @@ public final class BlockProt extends JavaPlugin {
         return firstStartThisSession;
     }
 
+    public static boolean hasFoliaLib() {
+        return foliaLib != null;
+    }
+
     @NotNull
     public static FoliaLib getFoliaLib() {
         assert foliaLib != null;
@@ -117,6 +121,11 @@ public final class BlockProt extends JavaPlugin {
     @NotNull
     public static BlockProt getInstance() {
         assert instance != null;
+        return instance;
+    }
+
+    @Nullable
+    public static BlockProt getInstanceOrNull() {
         return instance;
     }
 

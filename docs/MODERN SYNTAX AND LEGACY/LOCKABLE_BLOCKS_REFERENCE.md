@@ -459,11 +459,11 @@ entity_protection:
 
 # blocks.yml
 protectable_entities:
-  -
+  - VILLAGER
   -
 ```
 
-`protectable_entities` in `blocks.yml` ships with two blank template lines (`-` / `-`) by default, ready for entity type names (e.g. `ALLAY`, `ARMADILLO`, `IRON_GOLEM`, `VILLAGER`). In modern syntax mode, empty lists are represented as `- '[]'`.
+`protectable_entities` in `blocks.yml` configures entity types that can be protected via the entity protection menu item. Currently, only `VILLAGER` is compatible and supported. In modern syntax mode, empty lists are represented as `- '[]'`.
 
 ### Tamed animals
 

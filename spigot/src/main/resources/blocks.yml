@@ -21,6 +21,10 @@ lockable_entities:
 -
 -
 
+protectable_entities:
+- VILLAGER
+-
+
 auto_drop_to_inventory:
   enabled: true
   blocks:

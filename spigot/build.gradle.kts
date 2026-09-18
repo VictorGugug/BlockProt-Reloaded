@@ -68,10 +68,11 @@ dependencies {
     compileOnly("org.apache.commons:commons-lang3:3.17.0")
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.14.4")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.14.4")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.14.4")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.14.4")
+    testImplementation(platform("org.junit:junit-bom:6.0.3"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.110.0")
 
     // bStats: 3.2.1

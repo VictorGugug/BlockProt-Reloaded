@@ -48,7 +48,7 @@ All five lockable list keys ship with two blank template lines (`-` / `-`) by de
 | `lockable_blocks` | BLOCKS | Anvils, cauldrons, workstations (grindstone, stonecutter, loom, cartography table, smithing table, enchanting table, fletching table), dragon egg, composter, bell, note block |
 | `lockable_doors` | DOORS | All wood types + iron |
 | `lockable_entities` | ENTITIES | ITEM_FRAME + GLOW_ITEM_FRAME only |
-| `protectable_entities` | None | Shipped with two blank template lines (`-` / `-`), ready for entity type names (e.g. `ALLAY`, `ARMADILLO`, `VILLAGER`) to be protected via the entity protection menu item |
+| `protectable_entities` | None | Configured with `VILLAGER` by default; currently `VILLAGER` is the only compatible and supported entity type for stick-protection |
 | `auto_drop_to_inventory` | None | Shipped with two blank template lines under `blocks:` like every other list, so it starts empty but is ready to type into. Stays empty even after `/bp recommended blocks` in flat mode; only the modern-mode (`modern_family_blocks: true`) branch of `/bp recommended blocks` populates it, with `[*-SHULKERS]` |
 
 Fence gates, trapdoors, and copper doors belong to the BLOCKS and DOORS families respectively and can be added with family expressions (e.g. `"[*-TRAPDOOR]"`, `"[*-FENCE_GATE]"`), but `/bp recommended blocks` does not include them in its flat-mode defaults.

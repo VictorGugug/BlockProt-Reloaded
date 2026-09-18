@@ -1572,7 +1572,7 @@ public final class DefaultConfig extends BlockProtConfig {
         }
         lines.add("");
         lines.add("protectable_entities:");
-        lines.add("-");
+        lines.add("- VILLAGER");
         lines.add("-");
         lines.add("");
         lines.add("auto_drop_to_inventory:");

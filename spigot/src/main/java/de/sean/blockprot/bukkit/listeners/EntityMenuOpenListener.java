@@ -37,6 +37,8 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.UUID;
+
 /**
  * Opens the {@link EntitySettingsInventory} when a player right-clicks their own
  * tamed entity while holding a <strong>stick</strong> (or the item configured via
@@ -57,17 +59,25 @@ public final class EntityMenuOpenListener implements Listener {
         if (event.getHand() != EquipmentSlot.HAND) return;
 
         Entity clicked = event.getRightClicked();
-        if (!(clicked instanceof Tameable)) return;
+        if (!EntityProtectionHandler.isSupportedEntity(clicked)) return;
 
         Player player = event.getPlayer();
         Material menuItem = BlockProt.getDefaultConfig().getEntityProtectionMenuItem();
         if (player.getInventory().getItemInMainHand().getType() != menuItem) return;
 
         EntityProtectionHandler handler = new EntityProtectionHandler(clicked);
-        boolean isOwner = handler.isOwner(player.getUniqueId())
-            || (((Tameable) clicked).getOwnerUniqueId() != null
-                && ((Tameable) clicked).getOwnerUniqueId().equals(player.getUniqueId()));
-        boolean isAdmin = player.hasPermission(Permissions.USER_ADMIN.key());
+        UUID owner = handler.getOwner();
+        boolean isOwner;
+        if (owner != null) {
+            isOwner = owner.equals(player.getUniqueId());
+        } else if (clicked instanceof Tameable t) {
+            isOwner = t.getOwnerUniqueId() != null && t.getOwnerUniqueId().equals(player.getUniqueId());
+        } else {
+            isOwner = true;
+        }
+
+        boolean isAdmin = player.hasPermission(Permissions.USER_ADMIN.key())
+            || de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.CONTAINER_BYPASS);
         if (!isOwner && !isAdmin) {
             player.sendMessage(BlockProt.getDefaultConfig().getEntityProtectionDeniedMessage());
             event.setCancelled(true);

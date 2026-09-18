@@ -68,18 +68,22 @@ public final class EntityProtectionHandler {
     public EntityProtectionHandler(@NotNull Entity entity) {
         this.entity = entity;
         this.pdc    = entity.getPersistentDataContainer();
-        BlockProt p = BlockProt.getInstance();
-        this.keyOwner      = new NamespacedKey(p, "entity_owner");
-        this.keyProtected  = new NamespacedKey(p, "entity_protected");
-        this.keyNoDamage   = new NamespacedKey(p, "no_damage");
-        this.keyNoInteract = new NamespacedKey(p, "no_interact");
-        this.keyNoLeash    = new NamespacedKey(p, "no_leash");
-        this.keyNoPickup   = new NamespacedKey(p, "no_pickup");
+        this.keyOwner      = createKey("entity_owner");
+        this.keyProtected  = createKey("entity_protected");
+        this.keyNoDamage   = createKey("no_damage");
+        this.keyNoInteract = createKey("no_interact");
+        this.keyNoLeash    = createKey("no_leash");
+        this.keyNoPickup   = createKey("no_pickup");
 
-        this.legacyKeyOwner     = new NamespacedKey(p, "pet_owner");
-        this.legacyKeyProtected = new NamespacedKey(p, "pet_protected");
+        this.legacyKeyOwner     = createKey("pet_owner");
+        this.legacyKeyProtected = createKey("pet_protected");
 
         migrateLegacyKeysIfNeeded();
+    }
+
+    private static NamespacedKey createKey(@NotNull String name) {
+        BlockProt p = BlockProt.getInstanceOrNull();
+        return p != null ? new NamespacedKey(p, name) : new NamespacedKey("blockprot", name);
     }
 
     /**
@@ -184,6 +188,7 @@ public final class EntityProtectionHandler {
     public static boolean isSupportedEntity(@NotNull Entity entity) {
         if (!BlockProt.getDefaultConfig().isEntityProtectionEnabled()) return false;
         if (entity instanceof Tameable) return true;
+        if (!(entity instanceof org.bukkit.entity.Villager)) return false;
         java.util.List<String> configured = BlockProt.getDefaultConfig().getProtectableEntities();
         if (!configured.isEmpty()) {
             String name = entity.getType().name();
@@ -194,7 +199,7 @@ public final class EntityProtectionHandler {
         return false;
     }
 
-    /** Returns a new handler only if the entity is a tamed animal, otherwise null. */
+    /** Returns a new handler only if the entity is supported, otherwise null. */
     @Nullable
     public static EntityProtectionHandler forEntityOrNull(@NotNull Entity entity) {
         return isSupportedEntity(entity) ? new EntityProtectionHandler(entity) : null;

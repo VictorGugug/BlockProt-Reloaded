@@ -1,12 +1,10 @@
-# BlockProt Reloaded -- config.yml
+# BlockProt Reloaded - config.yml
 # MySQL / Storage -> mysql/mysql.yml   |   Block definitions -> blocks.yml
 # All lockable lists default to empty. Configure via in-game /bp lockables GUI
 # or edit blocks.yml directly. See docs/BLOCK_FAMILY_SYNTAX.md for syntax.
 # Docs: https://github.com/VictorGugug/BlockProt-Reloaded/tree/main/docs
 
-# -------------------------------------------------------------------
-# -- Language --
-# -------------------------------------------------------------------
+# [Language]
 
 # The language file to use. (Available e.g., translations_en.yml, translations_es.yml)
 language_file: translations_en.yml
@@ -17,9 +15,7 @@ fallback_string: "Unknown translation"
 # Whether the plugin should automatically update translations with missing keys.
 replace_translations: true
 
-# -------------------------------------------------------------------
-# -- Worlds --
-# -------------------------------------------------------------------
+# [Worlds]
 
 # List of worlds where the plugin will be entirely disabled.
 excluded_worlds: []
@@ -27,9 +23,7 @@ excluded_worlds: []
 # Enable reading separate config/blocks configuration per world.
 per_worlds_config: false
 
-# -------------------------------------------------------------------
-# -- Players and friends --
-# -------------------------------------------------------------------
+# [Players and friends]
 
 # Prefixes for Bedrock players (using Geyser/Floodgate).
 bedrock_username_prefixes:
@@ -55,9 +49,7 @@ friend_search_similarity: 0.5
 # Globally disable the friends system if not needed.
 disable_friend_functionality: false
 
-# -------------------------------------------------------------------
-# -- Blocks and locking behavior --
-# -------------------------------------------------------------------
+# [Blocks and locking behavior]
 
 # Controls the output format of blocks.yml when modified via /bp lockables.
 # false (default) -> flat material names (CHEST, FURNACE, ...).
@@ -108,9 +100,7 @@ use_dialogs: false
 # Maximum duration (in days) when granting timed access to a player.
 timed_access_max_duration_days: 90
 
-# -------------------------------------------------------------------
-# -- Entity protection --
-# -------------------------------------------------------------------
+# [Entity protection]
 
 entity_protection:
   # Enable entity protection feature (for animals, villagers, etc.).
@@ -130,9 +120,7 @@ villager_workstation_protection:
   # Vertical radius.
   vertical_radius: 1
 
-# -------------------------------------------------------------------
-# -- Expiry --
-# -------------------------------------------------------------------
+# [Expiry]
 # Per-block manual expiry (an enable_protection_expiry option letting an
 # owner set an expiration time on one specific block) is planned for a
 # future release and is not available yet. World-level default expiry is
@@ -146,17 +134,13 @@ world_expiry:
   # World-specific expiry times.
   worlds: {}
 
-# -------------------------------------------------------------------
-# -- Raid detection --
-# -------------------------------------------------------------------
+# [Raid detection]
 
 raid_detection:
   # Protect locked blocks or entities from raids.
   enabled: false
 
-# -------------------------------------------------------------------
-# -- Notifications --
-# -------------------------------------------------------------------
+# [Notifications]
 
 # Send a notification to server operators when an update is available.
 notify_op_of_updates: false
@@ -171,9 +155,7 @@ owner_notifications:
   # Notify when someone places items in their block.
   notify_on_place: true
 
-# -------------------------------------------------------------------
-# -- Maintenance --
-# -------------------------------------------------------------------
+# [Maintenance]
 
 # Days of inactivity before a player's protections are automatically removed. (-1 to disable)
 inactivity_cleanup_days: -1
@@ -192,4 +174,15 @@ enable_session_log: true
 
 # Create database backups automatically.
 enable_backups: true
+
+# Administrative tiers and granular security.
+# When false (default), blockprot.user.admin grants all admin capabilities.
+# When true, permissions are segmented into t1, t2, t3, owner, and custom tiers.
+admin_tiers:
+  enabled: false
+
+# Duration in seconds to display temporary action bar alerts.
+action_bar:
+  duration_seconds: 6
+
 

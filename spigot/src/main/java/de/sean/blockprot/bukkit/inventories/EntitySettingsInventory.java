@@ -90,13 +90,22 @@ public final class EntitySettingsInventory extends BlockProtInventory {
 
     @Nullable
     public Inventory fill(@NotNull Player player, @NotNull Entity entity) {
-        if (!(entity instanceof Tameable)) return null;
+        if (!EntityProtectionHandler.isSupportedEntity(entity)) return null;
 
         EntityProtectionHandler handler = new EntityProtectionHandler(entity);
         UUID ownerUuid = handler.getOwner();
 
-        boolean isOwner = ownerUuid != null && ownerUuid.equals(player.getUniqueId());
-        boolean isAdmin = player.isOp() || player.hasPermission(de.sean.blockprot.bukkit.Permissions.USER_ADMIN.key());
+        boolean isOwner;
+        if (ownerUuid != null) {
+            isOwner = ownerUuid.equals(player.getUniqueId());
+        } else if (entity instanceof Tameable t) {
+            isOwner = t.getOwnerUniqueId() != null && t.getOwnerUniqueId().equals(player.getUniqueId());
+        } else {
+            isOwner = true;
+        }
+
+        boolean isAdmin = player.isOp() || player.hasPermission(de.sean.blockprot.bukkit.Permissions.USER_ADMIN.key())
+            || de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.CONTAINER_BYPASS);
         if (!isOwner && !isAdmin) return null;
 
         protect    = handler.isProtected();
@@ -190,9 +199,11 @@ public final class EntitySettingsInventory extends BlockProtInventory {
         UUID entityId = state.getEntityProtectionId();
         if (entityId == null) return;
 
-        Entity target = null;
-        for (Entity e : player.getWorld().getEntities()) {
-            if (e.getUniqueId().equals(entityId)) { target = e; break; }
+        Entity target = org.bukkit.Bukkit.getEntity(entityId);
+        if (target == null) {
+            for (Entity e : player.getWorld().getEntities()) {
+                if (e.getUniqueId().equals(entityId)) { target = e; break; }
+            }
         }
         if (target == null) return;
 
@@ -201,11 +212,13 @@ public final class EntitySettingsInventory extends BlockProtInventory {
 
         if (protect) {
             if (handler.getOwner() == null) handler.setOwner(player.getUniqueId());
+            handler.setProtected(true);
+            handler.setNoDamage(noDamage);
+            handler.setNoInteract(noInteract);
+            handler.setNoLeash(noLeash);
+            handler.setNoPickup(noPickup);
+        } else {
+            handler.clear();
         }
-        handler.setProtected(protect);
-        handler.setNoDamage(noDamage);
-        handler.setNoInteract(noInteract);
-        handler.setNoLeash(noLeash);
-        handler.setNoPickup(noPickup);
     }
 }

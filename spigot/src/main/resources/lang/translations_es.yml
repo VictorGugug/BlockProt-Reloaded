@@ -1,4 +1,3 @@
----
 locale: es
 language_name: Español
 enabled: "§aActivado"
@@ -30,11 +29,39 @@ icon:
   toggle_on_active: "● "
   toggle_off_inactive: "○ "
 
+search_aliases:
+  chest: "cofre, cofres"
+  copper: "cobre"
+  furnace: "horno, hornos"
+  door: "puerta, puertas"
+  trapdoor: "trampilla, trampillas"
+  fence: "valla, vallas"
+  bed: "cama, camas"
+  hopper: "tolva, tolvas"
+  barrel: "barril, barriles"
+  lectern: "atril, atriles"
+  sign: "cartel, carteles, letrero, letreros"
+  bell: "campana, campanas"
+  cauldron: "caldero, calderos"
+  smoker: "ahumador, ahumadores"
+  stonecutter: "cortapiedras"
+  anvil: "yunque, yunques"
+  frame: "marco, marcos"
+  boat: "bote, botes, barca, barcas"
+  minecart: "vagoneta, vagonetas"
+  stand: "soporte, soportes"
+  brewing: "alambique, alambiques"
+  bookshelf: "libreria, librerias, estante, estantes"
+
 about:
   title: "§x§a§3§c§6§e§bBlockProt {version} - Spigot Plugin"
   fork_maintainers: "§7Mantenedor: §fVickey §8(VictorGugug)"
   report_fork: "§x§6§6§c§6§6§6Reportar problemas / Sugerencias"
   report_fork_hover: "Haz clic para abrir el rastreador de problemas en GitHub"
+
+commands:
+  description: "Acceso a los comandos de BlockProt."
+
 inventories:
   back: Atrás
   last_page: Última página
@@ -44,6 +71,7 @@ inventories:
   block_lock: Proteger
   user_settings: Configuración de Usuario
   user_settings_notifications: Notificaciones de acceso
+  user_settings_colorblind: "Modo daltonismo"
   block_info:
     title: Información del Bloque
     owner_label: "§6Propietario"
@@ -182,6 +210,8 @@ inventories:
     debug_lore: "Ejecuta pruebas internas y escribe en el log."
     info: "Info de bloque"
     info_lore: "Cierra y usa /bp info <jugador> para ver sus bloques."
+    unlock: "Desbloquear bloques"
+    unlock_lore: "Eliminar las protecciones de un jugador especifico."
     close: "Cerrar"
     close_lore: "Cerrar este menú."
     world_expiry: "§5Expiración por mundo"
@@ -218,7 +248,7 @@ inventories:
     undo_lore: "§7Restaura las protecciones eliminadas en la última operación."
     environment: "§7Entorno: "
     no_undo_available: "§7No hay deshacer disponible"
-  # -- /bp unlock <jugador> GUI --
+  # [bp unlock GUI]
   bp_unlock:
     title: "Desproteger: {player}"
     left_click_hint: "§7[✓] Clic izquierdo: ver contenido (solo lectura)"
@@ -321,6 +351,9 @@ messages:
   admin_info_usage: "§cUso: /bp info <jugador>"
   admin_info_player_not_found: "§cJugador no encontrado: {player}"
   admin_info_no_blocks: "§7{player} no tiene bloques bloqueados."
+  admin_setrole_usage: "§cUso: /bp tiers setrole <jugador> <t1|t2|t3|owner|none>"
+  admin_setrole_success: "§aRol de administrador para §f{player}§a establecido a §f{role}§a."
+  admin_tiers_disabled: "§cLos tiers de administración están desactivados en config.yml."
   no_permission_tp: "§c[✗] Sin permiso: blockprot.blocks.tp"
   remote_unlock_warning: "§e! Desproteger remotamente.\n§7Haz clic de nuevo para confirmar."
   admin_reload_done: "§aConfig y traducciones recargadas."
@@ -335,6 +368,7 @@ messages:
   raid_coords: "§c§l[BlockProt] §r§cPosible asalto en tu §e{block}§c en §f{world} [{x}, {y}, {z}]§c. Autor: §e{actor}"
   raid_tp_label: "§a[Teletransportar]"
   raid_pending: "§c§l[BlockProt] §r§cMientras estabas desconectado, se detectó un posible asalto en tu bloque §e{block}§c en §f{world} [{x}, {y}, {z}]§c. Autor: §e{actor}"
+  raid_actor_environment: "entorno"
   copy_done: "§aConfiguración copiada."
   paste_done: "§aConfiguración pegada."
   hints_disabled: "§aSugerencias de protección desactivadas."
@@ -345,7 +379,7 @@ messages:
   timed_access_granted: "§aAcceso temporal concedido por §f{duration}§a."
   timed_access_over_max: "§cLa duración supera el máximo configurado ({duration})."
   timed_access_invalid_state: "§cEl acceso temporal solo está disponible para amigos en un bloque específico."
-  # -- Admin unlock / /bp unlock GUI --
+  # [Admin unlock / /bp unlock GUI]
   admin_unlock_success: "§aBloque en {x} {y} {z} ({world}) desprotegido."
   admin_unlock_failed: "§cNo se pudo desproteger ese bloque."
   admin_unlock_usage: "§cUso: /bp unlock <jugador>  (requiere blockprot.admin)"
@@ -451,7 +485,7 @@ console:
   mysql_operation_failed: "Falló una operación MySQL: {error}"
   translations_incomplete: "Traducciones: {total} clave(s) incompleta(s) en {file}; {fallback} usando respaldo en inglés, {missing} ausente(s) en ambos archivos. Los detalles están en el log de sesión."
   java_too_old: "Versión de Java demasiado antigua: {version} (BlockProt Reloaded requiere Java 25+)"
-  not_paper: "El servidor no está ejecutando Paper. Los prompts de texto (búsqueda de jugadores, nombre de bloque, etc.) usarán chat en modo legado en vez de la API de chat de Paper. El autocompletado con Tab no está disponible en este software de servidor. Se recomienda Paper."
+  not_paper: "El servidor no esta ejecutando Paper. El soporte para Spigot independiente esta deprecado y concluye en 1.3.6. Los prompts de texto usaran chat en modo legado. Se recomienda encarecidamente Paper o un fork de Paper (Purpur, Folia)."
   software_unsupported: "Software de servidor no compatible detectado: {software}. BlockProt Reloaded es compatible con Paper y sus forks (Paper, Purpur, Folia, Pufferfish, Leaf, ...). Spigot, CraftBukkit y otros softwares no basados en Paper no se recomiendan y su soporte está planificado a terminar en 1.3.6."
   typed_views_fallback: "Servidor Paper/Spigot 1.21.0-1.21.3 detectado, sin vistas de inventario tipadas. Se usarán alternativas de inventario heredadas."
   dialogs_unavailable: "use_dialogs está activado pero este servidor no expone la API de diálogos de Paper (requiere Paper 1.21.7+). Se usarán los menús de inventario/chat como alternativa."
@@ -459,19 +493,14 @@ console:
   saving_statistics: "Guardando estadísticas en disco..."
   craftbukkit_unsupported: "Este plugin no es compatible con CraftBukkit. Usa Paper o un fork de Paper (Purpur, Folia, Pufferfish, Leaf)."
   integration_enabled: "Integración activada: {name}"
+  floodgate_prefix_detected: "Prefijo de nombre de usuario de Floodgate detectado automáticamente: '{prefix}'"
+  floodgate_prefix_failed: "Error al detectar automáticamente el prefijo de Floodgate: {error}"
+  brigadier_register_failed: "No se pudieron registrar los comandos de Brigadier: {error}"
+  bedrock_form_send_failed: "Error al enviar el formulario Bedrock ({platform}): {error}"
+  raid_log: "Posible raid: {block} en {world} [{x},{y},{z}] actor={actor}"
   startup_complete: "BlockProt v{version} activado."
   viaversion_detected: "ViaVersion {version} detectado - soporte multi-versión activo."
   viaversion_api_missing: "Plugin ViaVersion presente pero no se encontró la clase API - omitiendo."
-  recommended_console_only: "§cEste comando solo puede ejecutarse desde la consola."
-  recommended_blocks_missing: "§cblocks.yml no encontrado. Inicia el servidor una vez para generarlo."
-  recommended_usage: "§7Uso: §e/bp recommended <blocks|config|all> [force]§7 o §e/bp recommended undo <blocks|config|all>§7. blocks: escribe las listas de bloques recomendadas en blocks.yml. config: activa los ajustes recomendados de config.yml (modern_family_blocks, use_menus, use_dialogs). all: aplica ambos. undo: revierte el objetivo indicado a su estado vacío/por defecto."
-  recommended_blocks_done: "§aListas de bloques recomendadas escritas en blocks.yml."
-  recommended_config_done: "§aAjustes recomendados escritos en config.yml (modern_family_blocks, use_menus, use_dialogs)."
-  recommended_reload: "§7Recarga con '/bp reload' o espera la recarga automática."
-  recommended_failed: "§cFalló al escribir {file}: {error}"
-  recommended_already_applied: "§7La configuración recomendada de {target} ya se aplicó una vez. Re-ejecuta con §e/bp recommended {target} force §7para volver a aplicarla."
-  recommended_undo_done: "§aSe revirtió la configuración recomendada de {target} a su estado vacío/por defecto."
-  recommended_undo_nothing: "§7La configuración recomendada de {target} no estaba aplicada; nada que deshacer."
   update:
     available: "Hay una nueva versión ESTABLE de BlockProt Reloaded disponible: {version}"
     available_hotfix: "IMPORTANTE: hay un parche de errores (hotfix) de BlockProt Reloaded disponible: {version}! Arregla bugs de la versión actual ({base_version})."
@@ -501,6 +530,23 @@ console:
   migration_start: "Migrando datos de {source} a {target}..."
   migration_done: "Migración desde {source} completada. Se conservó la configuración y las listas de bloques anteriores. La carpeta antigua no fue modificada."
   migration_failed: "La migración desde {source} falló: {error}"
+
+  recommended_console_only: "§x§f§0§a§0§a§0✖ §7Este comando requiere permisos administrativos."
+  recommended_blocks_missing: "  §x§f§0§a§0§a§0✖ §7Archivo §fblocks.yml §7no encontrado. Inicia el servidor una vez para generarlo."
+  recommended_header: "§x§d§2§b§4§8§c[BlockProt] §fConfiguración Recomendada:"
+  recommended_usage_header: "§x§d§2§b§4§8§c[BlockProt] §fUso de Configuración Recomendada:"
+  recommended_usage_apply: "  §x§8§f§e§3§b§0● §f/bp recommended <blocks|config|all> [force] §8- §7Aplica los ajustes recomendados."
+  recommended_usage_undo: "  §x§a§0§c§4§e§8● §f/bp recommended undo <blocks|config|all> §8- §7Revierte los ajustes al estado inicial."
+  recommended_usage: "§7Uso: §e/bp recommended <blocks|config|all> [force]§7 o §e/bp recommended undo <blocks|config|all>§7."
+  recommended_blocks_done: "  §x§8§f§e§3§b§0● §7Listas de bloques: §x§8§f§e§3§b§0Guardadas en §fblocks.yml§7."
+  recommended_config_done: "  §x§8§f§e§3§b§0● §7Ajustes: §x§8§f§e§3§b§0Activados en §fconfig.yml §8(modern_family_blocks, use_menus, use_dialogs)§7."
+  recommended_reload: "  §x§a§0§c§4§e§8⏱ §7Recarga con §f/bp reload §7o espera a la auto-recarga."
+  recommended_failed: "  §x§f§0§a§0§a§0✖ §7Error al escribir §f{file}§7: §c{error}"
+  recommended_already_applied: "  §x§f§3§c§2§7§c● §7La configuración recomendada §f{target} §7ya estaba aplicada. Usa §f/bp recommended {target} force§7."
+  recommended_undo_header: "§x§d§2§b§4§8§c[BlockProt] §fReversión de Configuración Recomendada:"
+  recommended_undo_done: "  §x§8§f§e§3§b§0● §7Configuración recomendada §f{target} §7revertida al estado inicial."
+  recommended_undo_nothing: "  §x§f§3§c§2§7§c● §7La configuración recomendada §f{target} §7no estaba aplicada; nada que revertir."
+
   first_start:
     header: "§x§D§2§B§4§8§C  ------------------------------------------"
     title: "§x§D§2§B§4§8§C   BlockProt Reloaded - Guía de Primer Inicio"
@@ -542,6 +588,9 @@ dialogs:
     notifications_desc: "Recibir notificaciones cuando accedan a tus bloques."
     prefer_dialogs: "Usar Diálogos de Paper"
     prefer_dialogs_desc: "Elegir ventanas emergentes nativas de Paper en lugar de GUIs de inventario."
+    prefer_bedrock_forms: "Usar Formularios de Bedrock"
+    prefer_bedrock_forms_desc: "Elegir formularios nativos de Bedrock en lugar de GUIs de inventario."
+    colorblind_desc: "Usar símbolos de alto contraste para indicadores accesibles."
   friends:
     header: "Amigos"
     manage_hint: "Administra tu lista de amigos predeterminados:"
@@ -554,6 +603,21 @@ dialogs:
     private_click: "Haz clic para hacer tus bloques privados."
     no_history: "No hay historial de busqueda."
     recent_searches: "Busquedas recientes:"
+    level_label: "Nivel de Permisos: {level}"
+    level_basic: "Nivel 1: Basico (Sacar y Depositar)"
+    level_basic_desc: "Puede sacar y meter objetos, pero no puede abrir el menu del bloque."
+    level_operator: "Nivel 2: Operador"
+    level_operator_desc: "Puede acceder al cofre y configurar ajustes (redstone, tolvas, nombre, auditoria, inspeccionar, info)."
+    level_manager: "Nivel 3: Administrador Total"
+    level_manager_desc: "Acceso total a ajustes y gestion de amigos. No puede desbloquear ni transferir la propiedad."
+    level_custom: "Nivel 4: Personalizado"
+    level_custom_desc: "Configura permisos especificos detallados para este jugador."
+    flag_open_menu: "Abrir Menu de Ajustes"
+    flag_edit_settings: "Configurar Ajustes de Bloque"
+    flag_edit_name: "Cambiar Nombre del Bloque"
+    flag_view_audit: "Ver Registro de Auditoria"
+    flag_inspect: "Inspeccionar Contenido"
+    flag_manage_friends: "Gestionar Amigos"
   stats:
     header: "Estadisticas"
     your_blocks: "Tus Bloques Protegidos: "
@@ -582,6 +646,7 @@ dialogs:
   info:
     header: "Jugadores con Bloques"
     protected_blocks: "Bloques protegidos de"
+    block_list_title: "Lista de Bloques: {player}"
   unlock:
     header: "Desbloquear Bloques"
     click_hint: "Haz clic para desbloquear este bloque."

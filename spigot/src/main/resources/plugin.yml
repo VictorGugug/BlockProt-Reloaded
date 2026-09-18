@@ -1,7 +1,7 @@
 name: BlockProtReloaded
 version: ${version}
 main: de.sean.blockprot.bukkit.BlockProt
-api-version: '1.21.1'
+api-version: '1.20'
 authors: [ Zar ]
 description: Block protection plugin, BlockProt Reloaded
 prefix: BlockProt Reloaded
@@ -20,6 +20,36 @@ permissions:
       /bp info, /bp unlock, /bp protdel, and the /bp admin menu.
       Also allows breaking any protected block or shulker owned by another player,
       with protection data automatically cleared on break.
+    children:
+      blockprot.user: true
+  blockprot.user.admin.t1:
+    default: false
+    description: >
+      Tier 1 Moderator: Inspection commands, statistics teleport, and viewing audit logs.
+    children:
+      blockprot.user: true
+  blockprot.user.admin.t2:
+    default: false
+    description: >
+      Tier 2 Helper: Intervention commands, unlocking blocks, breaking protected blocks, and lockables configuration.
+    children:
+      blockprot.user.admin.t1: true
+  blockprot.user.admin.t3:
+    default: false
+    description: >
+      Tier 3 Admin: Maintenance commands, mass protection deletion, and admin configuration dialogs.
+    children:
+      blockprot.user.admin.t2: true
+  blockprot.user.admin.owner:
+    default: op
+    description: >
+      Tier 4 Owner: Full system control, plugin reload, update checker, and in-game execution of recommended configuration.
+    children:
+      blockprot.user.admin.t3: true
+  blockprot.user.admin.custom:
+    default: false
+    description: >
+      Custom Admin: Uses granular action permissions configured via player settings or admins.yml.
     children:
       blockprot.user: true
   blockprot.lockmax:
@@ -46,7 +76,7 @@ permissions:
 commands:
   blockprot:
     description: The main blockprot command
-    usage: "/blockprot <user|admin>"
+    usage: "/bp [command]"
     aliases: ["bp"]
 softdepend:
   - Towny
@@ -56,3 +86,5 @@ softdepend:
   - ClaimChunk
   - ViaVersion
   - ViaBackwards
+  - Floodgate
+  - Geyser-Spigot

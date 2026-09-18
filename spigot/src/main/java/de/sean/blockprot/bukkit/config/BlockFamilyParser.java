@@ -138,7 +138,7 @@ public final class BlockFamilyParser {
         for (SubFamily sf : SubFamily.values()) sfAcc.put(sf, new LinkedHashSet<>());
 
         for (Material m : Material.values()) {
-            if (m.isAir() || m.isLegacy()) continue;
+            if (m.isLegacy() || m.isAir()) continue;
             String n = m.name();
 
             if (n.contains("SHULKER_BOX")) {

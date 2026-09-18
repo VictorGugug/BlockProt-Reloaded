@@ -17,11 +17,21 @@ languages:
   # K: 0%
 
   # Community translations (may have missing keys)
+  ar: false
+  # K: 0%
   cs: false
   # K: 0%
   de: false
   # K: 0%
+  fi: false
+  # K: 0%
   fr: false
+  # K: 0%
+  he: false
+  # K: 0%
+  hu: false
+  # K: 0%
+  id: false
   # K: 0%
   it: false
   # K: 0%
@@ -29,15 +39,25 @@ languages:
   # K: 0%
   ko: false
   # K: 0%
+  nl: false
+  # K: 0%
   pl: false
   # K: 0%
   pt-br: false
+  # K: 0%
+  ro: false
   # K: 0%
   ru: false
   # K: 0%
   sk: false
   # K: 0%
+  sv: false
+  # K: 0%
+  th: false
+  # K: 0%
   tr: false
+  # K: 0%
+  uk: false
   # K: 0%
   zh-CN: false
   # K: 0%

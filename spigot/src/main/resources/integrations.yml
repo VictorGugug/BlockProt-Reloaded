@@ -77,3 +77,16 @@ griefprevention:
   enabled: true
   # When enabled, block access is fully restricted to the claim owner.
   restrict_access_to_claim_owner: false
+
+geyser:
+  enabled: true
+  # Master toggle for Geyser integration. When enabled, Bedrock players
+  # are detected and custom Bedrock forms and behavior can be served.
+
+floodgate:
+  enabled: true
+  # Auto-detect Bedrock username prefix from Floodgate configuration.
+  # When true, the Floodgate prefix is detected automatically
+  # without needing to duplicate it in config.yml.
+  auto_detect_prefix: true
+

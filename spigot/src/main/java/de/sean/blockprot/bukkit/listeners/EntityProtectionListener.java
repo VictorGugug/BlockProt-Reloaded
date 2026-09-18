@@ -24,6 +24,8 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.entities.EntityProtectionHandler;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -188,6 +190,7 @@ public final class EntityProtectionListener implements Listener {
 
     private boolean isBypassing(@NotNull Player player, @NotNull EntityProtectionHandler handler) {
         return handler.isOwner(player.getUniqueId())
-            || player.hasPermission(Permissions.USER_ADMIN.key());
+            || player.hasPermission(Permissions.USER_ADMIN.key())
+            || AdminTierManager.hasPermission(player, AdminAction.CONTAINER_BYPASS);
     }
 }

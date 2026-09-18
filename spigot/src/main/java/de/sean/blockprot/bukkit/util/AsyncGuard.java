@@ -33,14 +33,14 @@ public final class AsyncGuard {
     private AsyncGuard() {}
 
     public static void assertSync(@NotNull String operation) {
-        if (BlockProt.getFoliaLib().isFolia()) return;
+        if (BlockProt.hasFoliaLib() && BlockProt.getFoliaLib().isFolia()) return;
         if (!Bukkit.isPrimaryThread()) {
             throw new IllegalStateException(operation + " must run on the primary thread");
         }
     }
 
     public static void assertBlockAccess(@NotNull Block block, @NotNull String operation) {
-        if (BlockProt.getFoliaLib().isFolia()) {
+        if (BlockProt.hasFoliaLib() && BlockProt.getFoliaLib().isFolia()) {
             if (!BlockProt.getFoliaLib().getScheduler().isOwnedByCurrentRegion(block)) {
                 throw new IllegalStateException(operation + " must run in the block's owning region");
             }
