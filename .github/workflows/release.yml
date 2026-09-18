@@ -25,13 +25,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate changelog
-        uses: FabricMC/fabric-action-scripts@v2
+      - name: Generate version changelog
         id: changelog
-        with:
-          context: changelog
-          workflow_id: release.yml
-          commit_regex: (Bump|Codechange|[a-zA-Z].* \[GH\]:|Build\(deps\))(.*)
+        run: |
+          python3 .github/scripts/generate_version_commits.py --version "${{ github.event.inputs.version }}" --release-body --output-file build/reports/release-notes.md
 
       - name: Set up JDK 25
         uses: actions/setup-java@v4
@@ -64,7 +61,7 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.version }}
           name: "BlockProt Reloaded ${{ github.event.inputs.version }}"
-          body: ${{ steps.changelog.outputs.changelog }}
+          body_path: build/reports/release-notes.md
           files: ${{ steps.jar.outputs.path }}
           draft: false
           prerelease: ${{ contains(github.event.inputs.version, 'SNAPSHOT') || contains(github.event.inputs.version, 'BEDev') || contains(github.event.inputs.version, 'dev') || contains(github.event.inputs.version, 'alpha') || contains(github.event.inputs.version, 'beta') || contains(github.event.inputs.version, 'rc') }}

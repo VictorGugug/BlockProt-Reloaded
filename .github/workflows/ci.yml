@@ -104,6 +104,18 @@ jobs:
           - Paper runtime and MockBukkit test suites executed without errors.
           EOF
 
+      - name: Generate version commit summary
+        id: version_commits
+        run: |
+          python3 .github/scripts/generate_version_commits.py
+
+      - name: Upload version commit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: version-commits-${{ steps.meta.outputs.plugin_version }}
+          path: build/reports/version-commits.md
+          retention-days: 7
+
       - name: Upload compiled shadow JAR artifact
         if: success()
         uses: actions/upload-artifact@v4
