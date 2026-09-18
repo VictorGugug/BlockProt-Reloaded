@@ -447,15 +447,23 @@ lockable_entities:
 
 ## Entity protection
 
-Entity protection covers tamed animals and villagers linked to protected workstations.
-Configured under `entity_protection` in `config.yml` (legacy key: `pet_protection`).
+Entity protection covers tamed animals, protectable entities, and villagers linked to protected workstations.
+Configured under `entity_protection` in `config.yml` (legacy key: `pet_protection`) and `protectable_entities` in `blocks.yml`.
 
 ```yaml
+# config.yml
 entity_protection:
   enabled: false              # master switch
   auto_protect_on_tame: true  # auto-protect newly tamed animals
   villager_locate_seconds: 6  # duration (1-10 s) of the particle locate effect
+
+# blocks.yml
+protectable_entities:
+  -
+  -
 ```
+
+`protectable_entities` in `blocks.yml` ships with two blank template lines (`-` / `-`) by default, ready for entity type names (e.g. `ALLAY`, `ARMADILLO`, `IRON_GOLEM`, `VILLAGER`). In modern syntax mode, empty lists are represented as `- '[]'`.
 
 ### Tamed animals
 

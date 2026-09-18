@@ -334,10 +334,10 @@ friends system but backed by `EntityNBTHandler` instead of block NBT.
   gets a chat message naming the entity (its custom name if set, otherwise its
   type).
 - **Protectable non-tameable entities:** starting in 1.3.6, entity protection expands
-  beyond tameable mobs. In `config.yml`, `entity_protection.protectable_entities`
-  accepts a list of entity types (such as `ALLAY`, `ARMADILLO`, `IRON_GOLEM`, and
-  `VILLAGER`). Players can right-click any configured entity type with the menu
-  item to protect and manage it.
+  beyond tameable mobs. In `blocks.yml`, `protectable_entities` accepts a list of
+  entity types (such as `ALLAY`, `ARMADILLO`, `IRON_GOLEM`, and `VILLAGER`). Shipped
+  with blank template placeholders by default. Players can right-click any configured
+  entity type with the menu item to protect and manage it.
 - **Bypass:** the entity's owner and any player with `blockprot.admin` always
   bypass every protection toggle on that entity.
 - **Villager workstations** (`villager_workstation_protection`, enabled by
@@ -442,7 +442,6 @@ layer on top.
 | `entity_protection.auto_protect_on_tame` | `true` | Auto-protect newly tamed animals. |
 | `entity_protection.menu_item` | `STICK` | Item used to open the entity protection menu. |
 | `entity_protection.villager_locate_seconds` | `6` | Seconds to locate a villager via particles. |
-| `entity_protection.protectable_entities` | `[]` | List of entity types that can be protected with the menu item (such as `ALLAY`, `ARMADILLO`, `IRON_GOLEM`, `VILLAGER`) in addition to tameable mobs. |
 | `villager_workstation_protection.enabled` | `true` | Auto-protect workstations of protected villagers. |
 | `villager_workstation_protection.radius` | `2` | Horizontal radius. |
 | `villager_workstation_protection.vertical_radius` | `1` | Vertical radius. |
@@ -598,7 +597,7 @@ Run `/bp integrations` to list which are active on your server.
 | Command | Access | What it does |
 |---|---|---|
 | `/bp admin` | OP or `blockprot.user.admin` | Admin menu hub: lockables, config editor, reload, update, integrations, stats, debug, info, about, world expiry, world protection deletion. Auto-Drop lives under `/bp lockables` -> Auto Drop, not the admin hub. |
-| `/bp admin setrole <player> <tier>` | OP or `blockprot.user.admin.owner` | Assign an admin tier (`t1`, `t2`, `t3`, `owner`, `none`) to a player, saved to player NBT and mirrored to `admins.yml`. |
+| `/bp tiers [setrole] <player> <tier>` | OP or `blockprot.user.admin.owner` | Assign an admin tier (`t1`, `t2`, `t3`, `owner`, `none`) to a player when `admin_tiers.enabled: true`, saved to player NBT and mirrored to `admins.yml`. |
 | `/bp lockables` | OP or `blockprot.user.admin` | Browse and toggle which blocks are lockable (the GUI writes `blocks.yml`). This is the only in-game way to add lockable blocks; regular players cannot use it. |
 | `/bp info <player>` | OP or `blockprot.user.admin` | Opens a player's block list. |
 | `/bp unlock <player>` | OP or `blockprot.user.admin` | Opens a GUI to unlock/remove protections for a player. |
@@ -640,14 +639,14 @@ Starting in 1.3.6, setting `admin_tiers.enabled: true` in `config.yml` activates
 | `blockprot.user.admin.t1` | Low (Moderator) | Inspection only: view player block lists (`/bp info`), statistics teleport (`blockprot.blocks.tp`), and view audit logs. |
 | `blockprot.user.admin.t2` | Medium (Helper) | All T1 actions plus breaking/unlocking protected blocks (`/bp unlock`), bypassing container protection on open, and configuring lockables (`/bp lockables`). |
 | `blockprot.user.admin.t3` | High (Admin) | All T2 actions plus mass world deletion (`/bp protdel`), full `/bp admin` config modification dialogs, and debugging (`/bp debug`). |
-| `blockprot.user.admin.owner` | Owner | Full control: all T3 actions plus system reload (`/bp reload`), update checking (`/bp update`), integrations (`/bp integrations`), assigning staff roles (`/bp admin setrole`), and running `/bp recommended` in-game. |
+| `blockprot.user.admin.owner` | Owner | Full control: all T3 actions plus system reload (`/bp reload`), update checking (`/bp update`), integrations (`/bp integrations`), assigning staff roles (`/bp tiers setrole`), and running `/bp recommended` in-game. |
 | `blockprot.user.admin.custom` | Custom | Evaluates granular action flags configured in player NBT or `admins.yml`. |
 
 ### Managing staff without a permissions plugin (`admins.yml`)
 
 If your server runs without LuckPerms or another permissions plugin, you can manage admin tiers directly in-game:
 
-- Use `/bp admin setrole <player> <tier>` (requires OP or `owner` tier) to assign a staff member's tier (`t1`, `t2`, `t3`, `owner`, or `none`).
+- Use `/bp tiers setrole <player> <tier>` (or `/bp tiers <player> <tier>`, requires OP or `owner` tier) to assign a staff member's tier (`t1`, `t2`, `t3`, `owner`, or `none`).
 - Roles assigned this way are stored in the player's persistent NBT (`admin/tier`) and mirrored to `admins.yml` in the plugin folder.
 - When `admin_tiers.enabled: true`, the plugin checks LuckPerms / Bukkit permissions first, then falls back to `admins.yml` and player NBT, ensuring offline staff remain recognized.
 

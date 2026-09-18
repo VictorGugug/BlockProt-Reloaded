@@ -20,7 +20,7 @@ Block protection plugin for Paper and Spigot servers. Players lock chests, furna
 
 ## Philosophy
 
-BlockProt Reloaded exists because the best ideas come from the community that uses the plugin. If you have a feature request, a bug report, or want to discuss improvements, open an issue on GitHub or join the [Discord](https://discord.gg/RRcjuMr9Jd). If you are a developer, open a pull request. Fragmentation into multiple forks helps nobody; every improvement belongs in one place, shared with everyone.
+BlockProt Reloaded exists because the best ideas come from the community that uses the plugin. If you have a feature request, a bug report, or want to discuss improvements, open an issue on GitHub or join the [Discord](https://discord.gg/RRcjuMr9Jd). If you are planning to contribute code or documentation, read [CONTRIBUTING.md](CONTRIBUTING.md), [SCOPE.md](SCOPE.md), and [AGENTS.md](AGENTS.md) before submitting an issue or pull request. Fragmentation into multiple forks helps nobody; every improvement belongs in one place, shared with everyone.
 
 ## Translating
 
@@ -34,7 +34,7 @@ The English file `translations_en.yml` is the reference. Missing keys fall back 
 
 These languages are available on [GitLocalize](https://gitlocalize.com/repo/10833) and accepting contributions:
 
-cs, de, es, fi, fr, hu, id, it, ja, ko, nl, pl, pt-br, ru, sk, th, tr, zh-CN, zh-TW
+ar, cs, de, es, fi, fr, he, hu, id, it, ja, ko, nl, pl, pt-br, ro, ru, sk, sv, th, tr, uk, zh-CN, zh-TW
 
 The editor shows the English source on the left and your translations on the right. Both legacy color codes (`&a`, `&6`) and MiniMessage format (`<gold>`, `<gradient:...>`) are accepted.
 
@@ -109,10 +109,10 @@ The version suffix is controlled by the `versionSuffix` property in `gradle.prop
 
 | Value | Output |
 |---|---|
-| *(blank)* | `BlockProtReloaded-1.3.3.jar` - stable release |
-| `SNAPSHOT` | `BlockProtReloaded-1.3.3-SNAPSHOT.jar` |
-| `beta.1` | `BlockProtReloaded-1.3.3-beta.1.jar` |
-| `rc.1` | `BlockProtReloaded-1.3.3-rc.1.jar` |
+| *(blank)* | `BlockProtReloaded-1.3.6.jar` - stable release |
+| `SNAPSHOT` | `BlockProtReloaded-1.3.6-SNAPSHOT.jar` |
+| `beta.1` | `BlockProtReloaded-1.3.6-beta.1.jar` |
+| `rc.1` | `BlockProtReloaded-1.3.6-rc.1.jar` |
 
 
 ## File Layout
@@ -122,12 +122,14 @@ plugins/BlockProtReloaded/
 ├── config.yml                    Main configuration
 ├── blocks.yml                    Lockable block definitions
 ├── worlds.yml                    Per-world overrides (optional)
+├── admins.yml                    Admin tiers and staff permissions (optional)
+├── integrations.yml              Third-party plugin integration settings
 ├── blockprot_usercache.sqlite    Player UUID cache
 ├── mysql/
 │   ├── mysql.yml                 MySQL / storage configuration
 │   └── blockprot_audit.sqlite    SQLite access audit log
 ├── lang/
-│   └── translations_*.yml        20 bundled language files
+│   └── translations_*.yml        25 bundled language files
 ├── logs/
 │   ├── blockprot-current.log     Active session log
 │   └── blockprot-YYYY-MM-DD--YYYY-MM-DD.log   Rotated archives
@@ -243,11 +245,13 @@ Command visibility is controlled by `use_menus` in `config.yml`. With `use_menus
 | `/bp info <player>` | `blockprot.user.admin` | View all blocks owned by a player, including offline players |
 | `/bp unlock <player>` | `blockprot.user.admin` | GUI to inspect or remove protections from any player's blocks |
 | `/bp lockables` | `blockprot.user.admin` | Browse all blocks the system knows about with active/inactive status |
-| `/bp protdel` | op | Delete all protections in the current world with undo support |
-| `/bp reload` | op | Backup then reload all config files and translations |
-| `/bp update` | op | Check for plugin updates |
-| `/bp integrations` | op | List active plugin integrations |
+| `/bp tiers [setrole] <player> <role>` | op or `blockprot.user.admin.owner` | Manage staff admin tiers (t1, t2, t3, owner, none) and admins.yml |
+| `/bp protdel` | op or `blockprot.user.admin` | Delete all protections in the current world with undo support |
+| `/bp reload` | op or `blockprot.user.admin.owner` | Backup then reload all config files and translations |
+| `/bp update` | op or `blockprot.user.admin.owner` | Check for plugin updates |
+| `/bp integrations` | op or `blockprot.user.admin.owner` | List active plugin integrations |
 | `/bp debug <subcommand>` | `blockprot.debug` | Run diagnostics |
+| `/bp recommended <blocks\|config\|all>` | op or console | Apply recommended production configuration or lockable lists |
 
 
 ## Permissions
@@ -255,8 +259,14 @@ Command visibility is controlled by `use_menus` in `config.yml`. With `use_menus
 | Permission | Default | Description |
 |---|---|---|
 | `blockprot.user` | true | All standard player features: lock, friends, settings, stats, transfer |
-| `blockprot.user.admin` | op | Admin features: player block-lists, unlock GUI, admin commands |
-| `blockprot.max_blocks` | false | Exempt from the `player_max_locked_block_count` limit |
+| `blockprot.user.admin` | op | Full admin features: player block-lists, unlock GUI, admin commands |
+| `blockprot.user.admin.t1` | op | Tier 1 (Moderator): read-only inspection, info list, teleport, audit logs |
+| `blockprot.user.admin.t2` | op | Tier 2 (Helper): T1 plus block unlock, break protected, lockables GUI |
+| `blockprot.user.admin.t3` | op | Tier 3 (Admin): T2 plus world protection deletion, full config dialogs |
+| `blockprot.user.admin.owner` | op | Tier 4 (Owner): Full control, reload, update, staff management, recommended |
+| `blockprot.user.admin.custom` | false | Custom staff role evaluating granular action flags |
+| `blockprot.lockmax` | false | Exempt from the `player_max_locked_block_count` limit |
+| `blockprot.locklimit.<N>` | false | Override the per-player cap with a specific limit |
 | `blockprot.blocks.tp` | op | Teleport to blocks from the statistics or admin block-list GUI |
 | `blockprot.debug` | op | Access to `/bp debug` diagnostics |
 
@@ -364,9 +374,13 @@ Set `inactivity_cleanup_days` to a positive number to remove protections owned b
 
 Automatically locks unprotected blocks near a WorldEdit paste origin. Disabled by default. Configurable radius and block limit per paste.
 
-### Entity Protection (Tamed Animals)
+### Entity Protection
 
-Protects tamed animals including wolves, cats, parrots, horses, and llamas. Right-click your pet while holding the configured menu item (default: Stick) to open the settings GUI. Disabled by default. This feature was renamed from `pet_protection` to `entity_protection` in `config.yml`; the old key name is still read automatically for servers upgrading from an earlier version, so no manual edit is required.
+Protects tamed animals including wolves, cats, parrots, horses, and llamas. Right-click your pet while holding the configured menu item (default: Stick) to open the settings GUI. Disabled by default. In `blocks.yml`, the `protectable_entities` list allows server owners to extend protection to non-tameable entities such as Allays, Armadillos, Iron Golems, and Villagers.
+
+### Native Bedrock Forms Integration (Geyser and Floodgate)
+
+Bedrock Edition players connecting via Geyser and Floodgate automatically receive native touch-friendly Bedrock Forms (Cumulus API) for menus, block locking, settings, friend management, and admin dialogs. Bedrock players can toggle between native forms and Java inventory menus at any time in `/bp settings`. In addition, Bedrock player skins are resolved on player heads using the Geyser Global Skin API.
 
 ### Colored Particle Effects and Sounds
 
@@ -440,6 +454,14 @@ clear_protection_on_shulker_break: false
 allow_break_protected_blocks: false
 respect_spawn_protection: true
 
+# Action bar
+action_bar:
+  duration_seconds: 6              # duration in seconds alerts persist (refreshed every 40 ticks)
+
+# Admin tiers
+admin_tiers:
+  enabled: false                   # enable 4-tier admin hierarchy and admins.yml support
+
 # Owner notifications (server-wide defaults, overridable per player via /bp settings)
 owner_notifications:
   enabled: true
@@ -502,7 +524,7 @@ MySQL is configured separately in `mysql/mysql.yml`.
 | PlaceholderAPI | Exposes stats and protection status as placeholders |
 | SkinsRestorer | Correct player head icons on offline-mode servers |
 | WorldEdit / FAWE | Optional paste auto-lock |
-| Floodgate / Geyser | Bedrock player name resolution |
+| Floodgate / Geyser | Bedrock player name resolution, Geyser Global Skin API skin cache, and native Bedrock forms (Cumulus) |
 | ImageFrame | Item frame creator tag is read for automatic ownership |
 | ViaVersion | Client version shown in `/bp lockables` info book |
 | Folia | Asynchronous chunk handling support |
