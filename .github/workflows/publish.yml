@@ -1,18 +1,19 @@
 name: Publish Release
 
-# Fires automatically when the release workflow publishes a GitHub Release,
-# OR manually from Actions -> Publish Release -> Run workflow.
 on:
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to publish (e.g. 1.3.1)"
+        description: "Release tag to publish (e.g. 1.3.6)"
         required: true
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  # ── Build JAR ──────────────────────────────────────────────────────────────
   build:
     name: Build JAR
     runs-on: ubuntu-latest
@@ -22,7 +23,8 @@ jobs:
       channel:  ${{ steps.jar.outputs.channel }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -32,7 +34,8 @@ jobs:
           java-version: '25'
           distribution: 'temurin'
 
-      - uses: gradle/wrapper-validation-action@v2
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
 
       - name: Make gradlew executable
         run: chmod +x gradlew
@@ -47,7 +50,7 @@ jobs:
                 ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
           VERSION=$(basename "$JAR" .jar | sed 's/^BlockProtReloaded-//')
 
-          if echo "$VERSION" | grep -qiE 'snapshot|alpha|dev|nightly|wip'; then
+          if echo "$VERSION" | grep -qiE 'snapshot|alpha|dev|nightly|wip|bedev'; then
             CHANNEL="alpha"
           elif echo "$VERSION" | grep -qiE 'beta|rc'; then
             CHANNEL="beta"
@@ -55,7 +58,24 @@ jobs:
             CHANNEL="release"
           fi
 
+          FILE_SIZE=$(ls -lh "$JAR" | awk '{print $5}')
+
           echo "path=$JAR"       >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
-          echo "Built: $JAR  (version=$VERSION, channel=$CHANNEL)"
+          echo "size=$FILE_SIZE"  >> "$GITHUB_OUTPUT"
+          echo "Built: $JAR (version=$VERSION, channel=$CHANNEL, size=$FILE_SIZE)"
+
+      - name: Publish step summary
+        run: |
+          cat << EOF >> "$GITHUB_STEP_SUMMARY"
+          ## BlockProt Reloaded Release Published
+
+          | Metric | Details |
+          | :--- | :--- |
+          | **Version** | \`${{ steps.jar.outputs.version }}\` |
+          | **Channel** | \`${{ steps.jar.outputs.channel }}\` |
+          | **Artifact Path** | \`${{ steps.jar.outputs.path }}\` |
+          | **Artifact Size** | \`${{ steps.jar.outputs.size }}\` |
+          | **Event** | \`${{ github.event_name }}\` |
+          EOF
