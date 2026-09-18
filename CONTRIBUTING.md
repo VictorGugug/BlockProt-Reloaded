@@ -108,9 +108,21 @@ Using AI tools to assist in writing contributions is permitted, provided that ev
 ## Pull Request Lifecycle
 
 1. **Submission**: Open a pull request with the required factual description. If the work is still in progress or awaits an upcoming plugin release cycle, mark it as a draft.
-2. **Review**: The pull request will be reviewed for scope alignment, code cleanliness, test evidence, and adherence to project invariants.
-3. **Revisions**: If changes or tests are requested, push additional commits to the same branch or rebase as appropriate.
-4. **Merge**: Once approved and aligned with the plugin release cycle, the pull request will be merged into `main`.
+2. **Automated Verification**: Every pull request automatically triggers the GitHub Actions CI and Governance workflows, verifying compilation, automated test passage, commit formatting, and license standards.
+3. **Review**: The pull request will be reviewed for scope alignment, code cleanliness, test evidence, and adherence to project invariants.
+4. **Revisions**: If changes or tests are requested, push additional commits to the same branch or rebase as appropriate.
+5. **Merge**: Once approved and aligned with the plugin release cycle, the pull request will be merged into `main`.
+
+## Automated Continuous Integration and Governance
+
+Every pull request and push to `main` triggers automated GitHub Actions workflows:
+
+- **Continuous Integration (`BlockProt Reloaded CI`)**: Compiles the project with JDK 25 and executes the full automated test suite (`./gradlew build`). Pull requests with failing tests or compilation errors cannot be merged.
+- **Governance and Standards (`Governance & Contribution Standards`)**: Automatically validates compliance with repository standards, verifying:
+  - Standardized commit format (`BPR:<branch>(<type>): <description>`).
+  - Version field immutability (ensures `blockProtVersion` and `versionSuffix` in `gradle.properties` are unmodified).
+  - License header preservation on all `.java` files (GNU GPL v3).
+  - Prohibition of stand-in placeholder comments (`// TODO`, `FIXME`).
 
 ## Communication
 

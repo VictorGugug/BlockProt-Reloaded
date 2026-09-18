@@ -334,10 +334,10 @@ friends system but backed by `EntityNBTHandler` instead of block NBT.
   gets a chat message naming the entity (its custom name if set, otherwise its
   type).
 - **Protectable non-tameable entities:** starting in 1.3.6, entity protection expands
-  beyond tameable mobs. In `blocks.yml`, `protectable_entities` accepts a list of
-  entity types (such as `ALLAY`, `ARMADILLO`, `IRON_GOLEM`, and `VILLAGER`). Shipped
-  with blank template placeholders by default. Players can right-click any configured
-  entity type with the menu item to protect and manage it.
+  beyond tameable mobs. In `blocks.yml`, `protectable_entities` configures entity
+  types, with `VILLAGER` configured as the currently supported and compatible type.
+  Players can right-click an unowned villager with the menu item (stick) to claim,
+  protect, and manage it, preventing unauthorized trades and interactions from others.
 - **Bypass:** the entity's owner and any player with `blockprot.admin` always
   bypass every protection toggle on that entity.
 - **Villager workstations** (`villager_workstation_protection`, enabled by
