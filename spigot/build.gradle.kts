@@ -7,7 +7,7 @@ buildscript {
 plugins {
     id("maven-publish")
     // Updated to com.gradleup.shadow which supports Java 25+ (ASM updated)
-    id("com.gradleup.shadow") version "9.4.2"
+    id("com.gradleup.shadow") version "9.6.1"
     id("xyz.jpenilla.run-paper") version "3.0.2"
 }
 
@@ -68,12 +68,12 @@ dependencies {
     compileOnly("org.apache.commons:commons-lang3:3.17.0")
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
 
-    testImplementation(platform("org.junit:junit-bom:6.0.3"))
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.110.0")
+    testImplementation("org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.116.3")
 
     // bStats: 3.2.1
     api("org.bstats:bstats-bukkit:3.2.1")
@@ -86,7 +86,7 @@ dependencies {
 
     implementation("org.enginehub:squirrelid:0.3.2")
     implementation("com.zaxxer:HikariCP:7.1.0")
-    implementation("com.mysql:mysql-connector-j:9.7.0")
+    implementation("com.mysql:mysql-connector-j:26.7.0")
 
     // Adventure: bundled for servers that do not expose Adventure to the plugin
     // classpath (vanilla Spigot/Bukkit). Paper-based servers resolve net.kyori.*
@@ -102,8 +102,8 @@ dependencies {
     compileOnly("com.sk89q.worldguard:worldguard-bukkit:$worldGuardVersion")
     compileOnly("com.github.angeschossen:LandsAPI:6.28.11")
     compileOnly("com.cjburkey.claimchunk:claimchunk:0.0.25-FIX3")
-    compileOnly("com.github.Zrips:Residence:6.0.0.1") { isTransitive = false }
-    compileOnly("com.github.GriefPrevention:GriefPrevention:16.18.2") { isTransitive = false }
+    compileOnly("com.github.Zrips:Residence:6.0.2.3") { isTransitive = false }
+    compileOnly("com.github.GriefPrevention:GriefPrevention:16.18.7") { isTransitive = false }
     compileOnly("org.geysermc.floodgate:api:2.2.3-SNAPSHOT")
     compileOnly("org.geysermc.cumulus:cumulus:1.1.2")
 

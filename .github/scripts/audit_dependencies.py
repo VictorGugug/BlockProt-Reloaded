@@ -2,6 +2,7 @@
 import concurrent.futures
 import json
 import os
+import re
 import sys
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -99,6 +100,79 @@ def fetch_github_release_or_tag(repo):
     return "Unknown"
 
 
+def parse_gradle_build_files(repo_root):
+    """Dynamically extract declared dependency versions from build.gradle.kts files."""
+    versions = {}
+    spigot_path = os.path.join(repo_root, "spigot", "build.gradle.kts")
+    if os.path.exists(spigot_path):
+        with open(spigot_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            m = re.search(r'id\("com\.gradleup\.shadow"\)\s*version\s*"([^"]+)"', content)
+            if m:
+                versions["shadow"] = m.group(1).strip()
+            m = re.search(r'id\("xyz\.jpenilla\.run-paper"\)\s*version\s*"([^"]+)"', content)
+            if m:
+                versions["run_paper"] = m.group(1).strip()
+            m = re.search(r'platform\("org\.junit:junit-bom:([^"]+)"\)', content)
+            if m:
+                versions["junit_bom"] = m.group(1).strip()
+            m = re.search(r'mockbukkit-v1\.21:([^"]+)', content)
+            if m:
+                versions["mockbukkit"] = m.group(1).strip()
+            m = re.search(r'mysql-connector-j:([^"]+)', content)
+            if m:
+                versions["mysql"] = m.group(1).strip()
+            m = re.search(r'Residence:([^"]+)', content)
+            if m:
+                versions["residence"] = m.group(1).strip()
+            m = re.search(r'GriefPrevention:GriefPrevention:([^"]+)', content)
+            if m:
+                versions["griefprevention"] = m.group(1).strip()
+            m = re.search(r'LandsAPI:([^"]+)', content)
+            if m:
+                versions["lands"] = m.group(1).strip()
+            m = re.search(r'claimchunk:claimchunk:([^"]+)', content)
+            if m:
+                versions["claimchunk"] = m.group(1).strip()
+            m = re.search(r'floodgate:api:([^"]+)', content)
+            if m:
+                versions["floodgate"] = m.group(1).strip()
+            m = re.search(r'cumulus:cumulus:([^"]+)', content)
+            if m:
+                versions["cumulus"] = m.group(1).strip()
+            m = re.search(r'caffeine:caffeine:([^"]+)', content)
+            if m:
+                versions["caffeine"] = m.group(1).strip()
+            m = re.search(r'commons-lang3:([^"]+)', content)
+            if m:
+                versions["commons_lang"] = m.group(1).strip()
+            m = re.search(r'bstats-bukkit:([^"]+)', content)
+            if m:
+                versions["bstats"] = m.group(1).strip()
+            m = re.search(r'FoliaLib:([^\s"]+)', content)
+            if m:
+                versions["folialib"] = m.group(1).strip()
+            m = re.search(r'squirrelid:([^"]+)', content)
+            if m:
+                versions["squirrelid"] = m.group(1).strip()
+            m = re.search(r'HikariCP:([^"]+)', content)
+            if m:
+                versions["hikari"] = m.group(1).strip()
+            m = re.search(r'adventure-api:([^"]+)', content)
+            if m:
+                versions["adventure"] = m.group(1).strip()
+
+    common_path = os.path.join(repo_root, "common", "build.gradle.kts")
+    if os.path.exists(common_path):
+        with open(common_path, "r", encoding="utf-8") as f:
+            content = f.read()
+            m = re.search(r'org\.jetbrains:annotations:([^"]+)', content)
+            if m:
+                versions["annotations"] = m.group(1).strip()
+
+    return versions
+
+
 def is_version_match(current, latest):
     c = current.strip().lstrip("v").lower()
     l = latest.strip().lstrip("v").lower()
@@ -108,6 +182,18 @@ def is_version_match(current, latest):
 
     if c.startswith(l) or l.startswith(c):
         return True
+
+    try:
+        def to_ints(v_str):
+            clean = re.sub(r"[-+].*$", "", v_str)
+            return [int(x) for x in re.findall(r"\d+", clean)]
+        c_parts = to_ints(c)
+        l_parts = to_ints(l)
+        if c_parts and l_parts:
+            if c_parts >= l_parts or (len(c_parts) >= 3 and len(l_parts) >= 3 and c_parts[:3] == l_parts[:3]):
+                return True
+    except Exception:
+        pass
 
     return False
 
@@ -140,9 +226,10 @@ def run_target_check(item):
 def main():
     props, supported_mc = parse_gradle_properties(REPO_ROOT)
     version_info = get_plugin_version_info(props, supported_mc)
+    gv = parse_gradle_build_files(REPO_ROOT)
 
-    nbt_ver = props.get("nbtApiVersion", "2.16.0")
-    towny_ver = props.get("townyVersion", "0.100.4.0")
+    nbt_ver = props.get("nbtApiVersion", "2.16.1")
+    towny_ver = props.get("townyVersion", "0.103.2.7")
     papi_ver = props.get("papiVersion", "2.12.3")
     wg_ver = props.get("worldGuardVersion", "7.0.17")
 
@@ -150,29 +237,29 @@ def main():
         ("Plugin Integration", "Towny", towny_ver, "github", "TownyAdvanced/Towny"),
         ("Plugin Integration", "PlaceholderAPI", papi_ver, "maven", "https://repo.extendedclip.com/content/repositories/placeholderapi/me/clip/placeholderapi/maven-metadata.xml"),
         ("Plugin Integration", "WorldGuard", wg_ver, "maven", "https://maven.enginehub.org/repo/com/sk89q/worldguard/worldguard-bukkit/maven-metadata.xml"),
-        ("Plugin Integration", "LandsAPI", "6.28.11", "github", "angeschossen/LandsAPI"),
-        ("Plugin Integration", "ClaimChunk", "0.0.25-FIX3", "github", "cjburkey01/ClaimChunk"),
-        ("Plugin Integration", "Residence", "6.0.0.1", "github", "Zrips/Residence"),
-        ("Plugin Integration", "GriefPrevention", "16.18.2", "github", "GriefPrevention/GriefPrevention"),
-        ("Plugin Integration", "Floodgate API", "2.2.3-SNAPSHOT", "maven", "https://repo.opencollab.dev/main/org/geysermc/floodgate/api/maven-metadata.xml"),
-        ("Plugin Integration", "Cumulus (Geyser)", "1.1.2", "maven", "https://repo.opencollab.dev/main/org/geysermc/cumulus/cumulus/maven-metadata.xml"),
+        ("Plugin Integration", "LandsAPI", gv.get("lands", "6.28.11"), "github", "angeschossen/LandsAPI"),
+        ("Plugin Integration", "ClaimChunk", gv.get("claimchunk", "0.0.25-FIX3"), "github", "cjburkey01/ClaimChunk"),
+        ("Plugin Integration", "Residence", gv.get("residence", "6.0.2.3"), "github", "Zrips/Residence"),
+        ("Plugin Integration", "GriefPrevention", gv.get("griefprevention", "16.18.7"), "github", "GriefPrevention/GriefPrevention"),
+        ("Plugin Integration", "Floodgate API", gv.get("floodgate", "2.2.3-SNAPSHOT"), "maven", "https://repo.opencollab.dev/main/org/geysermc/floodgate/api/maven-metadata.xml"),
+        ("Plugin Integration", "Cumulus (Geyser)", gv.get("cumulus", "1.1.2"), "maven", "https://repo.opencollab.dev/main/org/geysermc/cumulus/cumulus/maven-metadata.xml"),
         ("Plugin Integration", "ViaVersion", "5.12.0", "github", "ViaVersion/ViaVersion"),
 
         ("Core Dependency", "item-nbt-api", nbt_ver, "maven", "https://repo.codemc.org/repository/maven-public/de/tr7zw/item-nbt-api/maven-metadata.xml"),
-        ("Core Dependency", "FoliaLib", "0.5.1", "maven", "https://repo.tcoded.com/releases/com/tcoded/FoliaLib/maven-metadata.xml"),
-        ("Core Dependency", "HikariCP", "7.1.0", "maven", "https://repo1.maven.org/maven2/com/zaxxer/HikariCP/maven-metadata.xml"),
-        ("Core Dependency", "mysql-connector-j", "9.7.0", "maven", "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/maven-metadata.xml"),
-        ("Core Dependency", "Caffeine", "3.2.4", "maven", "https://repo1.maven.org/maven2/com/github/ben-manes/caffeine/caffeine/maven-metadata.xml"),
-        ("Core Dependency", "Commons Lang3", "3.17.0", "maven", "https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/maven-metadata.xml"),
-        ("Core Dependency", "bStats Bukkit", "3.2.1", "maven", "https://repo1.maven.org/maven2/org/bstats/bstats-bukkit/maven-metadata.xml"),
-        ("Core Dependency", "Adventure API", "4.17.0", "maven", "https://repo1.maven.org/maven2/net/kyori/adventure-api/maven-metadata.xml"),
-        ("Core Dependency", "JetBrains Annotations", "24.1.0", "maven", "https://repo1.maven.org/maven2/org/jetbrains/annotations/maven-metadata.xml"),
-        ("Core Dependency", "SquirrelID", "0.3.2", "maven", "https://maven.enginehub.org/repo/org/enginehub/squirrelid/maven-metadata.xml"),
+        ("Core Dependency", "FoliaLib", gv.get("folialib", "0.5.1"), "maven", "https://repo.tcoded.com/releases/com/tcoded/FoliaLib/maven-metadata.xml"),
+        ("Core Dependency", "HikariCP", gv.get("hikari", "7.1.0"), "maven", "https://repo1.maven.org/maven2/com/zaxxer/HikariCP/maven-metadata.xml"),
+        ("Core Dependency", "mysql-connector-j", gv.get("mysql", "26.7.0"), "maven", "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/maven-metadata.xml"),
+        ("Core Dependency", "Caffeine", gv.get("caffeine", "3.2.4"), "maven", "https://repo1.maven.org/maven2/com/github/ben-manes/caffeine/caffeine/maven-metadata.xml"),
+        ("Core Dependency", "Commons Lang3", gv.get("commons_lang", "3.17.0"), "maven", "https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/maven-metadata.xml"),
+        ("Core Dependency", "bStats Bukkit", gv.get("bstats", "3.2.1"), "maven", "https://repo1.maven.org/maven2/org/bstats/bstats-bukkit/maven-metadata.xml"),
+        ("Core Dependency", "Adventure API", gv.get("adventure", "4.17.0"), "maven", "https://repo1.maven.org/maven2/net/kyori/adventure-api/maven-metadata.xml"),
+        ("Core Dependency", "JetBrains Annotations", gv.get("annotations", "26.1.0"), "maven", "https://repo1.maven.org/maven2/org/jetbrains/annotations/maven-metadata.xml"),
+        ("Core Dependency", "SquirrelID", gv.get("squirrelid", "0.3.2"), "maven", "https://maven.enginehub.org/repo/org/enginehub/squirrelid/maven-metadata.xml"),
 
-        ("Build & Test", "JUnit BOM", "6.0.3", "maven", "https://repo1.maven.org/maven2/org/junit/junit-bom/maven-metadata.xml"),
-        ("Build & Test", "MockBukkit v1.21", "4.110.0", "maven", "https://repo1.maven.org/maven2/org/mockbukkit/mockbukkit/mockbukkit-v1.21/maven-metadata.xml"),
-        ("Build & Test", "Shadow Plugin", "9.4.2", "maven", "https://plugins.gradle.org/m2/com/gradleup/shadow/com.gradleup.shadow.gradle.plugin/maven-metadata.xml"),
-        ("Build & Test", "Run-Paper Plugin", "3.0.2", "maven", "https://plugins.gradle.org/m2/xyz/jpenilla/run-paper/xyz.jpenilla.run-paper.gradle.plugin/maven-metadata.xml"),
+        ("Build & Test", "JUnit BOM", gv.get("junit_bom", "6.1.3"), "maven", "https://repo1.maven.org/maven2/org/junit/junit-bom/maven-metadata.xml"),
+        ("Build & Test", "MockBukkit v1.21", gv.get("mockbukkit", "4.116.3"), "maven", "https://repo1.maven.org/maven2/org/mockbukkit/mockbukkit/mockbukkit-v1.21/maven-metadata.xml"),
+        ("Build & Test", "Shadow Plugin", gv.get("shadow", "9.6.1"), "maven", "https://plugins.gradle.org/m2/com/gradleup/shadow/com.gradleup.shadow.gradle.plugin/maven-metadata.xml"),
+        ("Build & Test", "Run-Paper Plugin", gv.get("run_paper", "3.0.2"), "maven", "https://plugins.gradle.org/m2/xyz/jpenilla/run-paper/xyz.jpenilla.run-paper.gradle.plugin/maven-metadata.xml"),
     ]
 
     print("BlockProt Reloaded Dependency and Integration Version Audit")
