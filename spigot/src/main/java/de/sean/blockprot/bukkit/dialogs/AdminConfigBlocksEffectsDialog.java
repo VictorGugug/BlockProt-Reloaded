@@ -87,6 +87,16 @@ public final class AdminConfigBlocksEffectsDialog {
                 v -> { cfg.setAndSave("timed_access_max_duration_days", v); show(p, backOrigin); },
                 () -> show(p, backOrigin))));
 
+        int actionBarSec = cfg.getActionBarDurationSeconds();
+        buttons.add(AdminConfigDialog.valueBtn("action_bar.duration_seconds", "action_bar.duration_seconds",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__ACTION_BAR_DURATION_TITLE),
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__ACTION_BAR_DURATION),
+            String.valueOf(actionBarSec),
+            p -> AdminConfigValueDialog.openInt(p, "action_bar.duration_seconds",
+                AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__ACTION_BAR_DURATION_HINT)), actionBarSec,
+                v -> { cfg.setAndSave("action_bar.duration_seconds", Math.max(1, v)); show(p, backOrigin); },
+                () -> show(p, backOrigin))));
+
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);
         DialogButton backBtn = new DialogButton("back",
             Component.text(AdminConfigDialog.stripColor(Translator.get(

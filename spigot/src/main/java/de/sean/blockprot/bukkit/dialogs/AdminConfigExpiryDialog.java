@@ -70,6 +70,11 @@ public final class AdminConfigExpiryDialog {
                 v -> { cfg.setAndSave("world_expiry.check_interval_minutes", v); show(p, backOrigin); },
                 () -> show(p, backOrigin))));
 
+        buttons.add(new DialogButton("world_expiry.worlds",
+            Component.text(AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__PER_WORLD_TITLE)), AdminConfigDialog.SOFT_BLUE),
+            Component.text(AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__PER_WORLD)), AdminConfigDialog.SOFT_GRAY),
+            p -> WorldExpiryDialog.show(p, DialogOrigin.ADMIN_CONFIG_EXPIRY)));
+
         AdminConfigDialog.bridgeReturn(player, bridge, title, body, buttons, backOrigin);
     }
 }

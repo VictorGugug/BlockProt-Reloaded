@@ -34,6 +34,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import java.util.List;
 
 /**
  * Players and friends category of the inventory-based admin config editor.
@@ -46,12 +47,13 @@ public final class AdminConfigPlayersInventory extends BlockProtInventory {
     private static final int SLOT_HINT_COOLDOWN = 14;
     private static final int SLOT_FRIEND_SEARCH = 15;
     private static final int SLOT_DISABLE_FRIENDS = 16;
+    private static final int SLOT_BEDROCK_PREFIXES = 22;
     private static final int SLOT_BACK = 49;
 
     private static final int[] SEPARATOR_SLOTS = {
         0,1,2,3,4,5,6,7,8,
         9, 13, 17,
-        18,19,20,21,22,23,24,25,26,
+        18,19,20,21, 23,24,25,26,
         27,28,29,30,31,32,33,34,35,
         36,37,38,39,40,41,42,43,44,
         45,46,47,48, 50,51,52,53
@@ -109,6 +111,13 @@ public final class AdminConfigPlayersInventory extends BlockProtInventory {
             "disable_friend_functionality",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__DISABLE_FRIENDS),
             cfg.isFriendFunctionalityDisabled()));
+
+        List<String> prefixes = cfg.getBedrockUsernamePrefixes();
+        inventory.setItem(SLOT_BEDROCK_PREFIXES, AdminConfigInventory.valueItem(
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__BEDROCK_PREFIXES_TITLE),
+            String.join(", ", prefixes),
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__BEDROCK_PREFIXES),
+            "bedrock_username_prefixes"));
 
         setBackButton(SLOT_BACK);
         return inventory;
@@ -169,6 +178,17 @@ public final class AdminConfigPlayersInventory extends BlockProtInventory {
         } else if (slot == SLOT_DISABLE_FRIENDS) {
             cfg.setAndSave("disable_friend_functionality", !cfg.isFriendFunctionalityDisabled());
             player.openInventory(fill(player));
+        } else if (slot == SLOT_BEDROCK_PREFIXES) {
+            TextInput.open(player, BlockProt.getInstance(),
+                Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__BEDROCK_PREFIXES_HINT), input -> {
+                    if (input == null || input.isBlank()) return;
+                    List<String> updated = java.util.Arrays.stream(input.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
+                    cfg.setAndSave("bedrock_username_prefixes", updated);
+                    player.openInventory(fill(player));
+                });
         }
     }
 

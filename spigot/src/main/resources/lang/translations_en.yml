@@ -681,6 +681,11 @@ dialogs:
     restore_hint: "Click to restore these {count} protections."
     cant_undo: "This action cannot be undone!"
     deleting: "Deleting protections in {world}..."
+  world_expiry:
+    header: "World Expiry"
+    active_label: "Active: {duration}"
+    disabled_label: "Disabled"
+    click_hint: "Click to configure expiry duration."
   update:
     title: "Update Checker"
     current: "Current:"
@@ -798,6 +803,9 @@ dialogs:
       friend_search_hint: "Similarity (0.0 - 1.0)"
       disable_friends: "Globally disable the friends system."
       disable_friends_title: "Disable Friends System"
+      bedrock_prefixes: "Username prefixes treated as Bedrock (Geyser/Floodgate) players."
+      bedrock_prefixes_title: "Bedrock Prefixes"
+      bedrock_prefixes_hint: "Comma-separated prefixes (e.g. ., *, _)"
     blocks:
       modern_family: "Use compact family expressions in blocks.yml."
       modern_family_title: "Modern Family Syntax"
@@ -826,6 +834,9 @@ dialogs:
       timed_access: "Max timed access duration (days)."
       timed_access_title: "Max Timed Access Duration"
       timed_access_hint: "Max days"
+      action_bar_duration: "Duration in seconds to display action bar messages."
+      action_bar_duration_title: "Action Bar Duration"
+      action_bar_duration_hint: "Seconds (minimum 1)"
       locking_title: "Locking"
       behavior_title: "Behavior"
       effects_title: "Effects"
@@ -855,6 +866,8 @@ dialogs:
       check_interval: "Check interval (minutes)."
       check_interval_title: "Expiry Check Interval"
       check_interval_hint: "Minutes between checks"
+      per_world: "Configure expiry duration per world."
+      per_world_title: "Per-World Expiry"
     raid:
       enabled: "Protect blocks from raids."
       enabled_title: "Raid Protection"
@@ -864,8 +877,11 @@ dialogs:
       owner_enabled: "Allow owner notifications."
       owner_enabled_title: "Owner Access Notifications"
       owner_open: "Notify when someone opens your block."
+      owner_open_title: "Notify On Open"
       owner_take: "Notify when someone takes items."
+      owner_take_title: "Notify On Take"
       owner_place: "Notify when someone places items."
+      owner_place_title: "Notify On Place"
     maintenance:
       inactivity_cleanup: "Days before removing inactive protections (-1 = off)."
       inactivity_cleanup_title: "Inactivity Cleanup"
@@ -879,6 +895,8 @@ dialogs:
       session_log_title: "Session Logging"
       backups: "Create automatic backups."
       backups_title: "Automatic Backups"
+      admin_tiers: "Enable tier limits configuration for admins."
+      admin_tiers_title: "Admin Tiers"
     deprecated:
       we_paste_enabled: "WorldEdit paste auto-lock."
 

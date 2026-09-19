@@ -66,6 +66,30 @@ public final class AdminConfigNotificationsDialog {
             colorblind,
             p -> { cfg.setAndSave("owner_notifications.enabled", !cfg.isOwnerNotificationsEnabled()); show(p, backOrigin); }));
 
+        boolean notifyOpen = cfg.getBukkitConfig().getBoolean("owner_notifications.notify_on_open", true);
+        buttons.add(AdminConfigDialog.toggleBtn("owner_notifications.notify_on_open", "owner_notifications.notify_on_open",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_OPEN_TITLE),
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_OPEN),
+            notifyOpen,
+            colorblind,
+            p -> { cfg.setAndSave("owner_notifications.notify_on_open", !notifyOpen); show(p, backOrigin); }));
+
+        boolean notifyTake = cfg.getBukkitConfig().getBoolean("owner_notifications.notify_on_take", true);
+        buttons.add(AdminConfigDialog.toggleBtn("owner_notifications.notify_on_take", "owner_notifications.notify_on_take",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_TAKE_TITLE),
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_TAKE),
+            notifyTake,
+            colorblind,
+            p -> { cfg.setAndSave("owner_notifications.notify_on_take", !notifyTake); show(p, backOrigin); }));
+
+        boolean notifyPlace = cfg.getBukkitConfig().getBoolean("owner_notifications.notify_on_place", true);
+        buttons.add(AdminConfigDialog.toggleBtn("owner_notifications.notify_on_place", "owner_notifications.notify_on_place",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_PLACE_TITLE),
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_PLACE),
+            notifyPlace,
+            colorblind,
+            p -> { cfg.setAndSave("owner_notifications.notify_on_place", !notifyPlace); show(p, backOrigin); }));
+
         AdminConfigDialog.bridgeReturn(player, bridge, title, body, buttons, backOrigin);
     }
 }

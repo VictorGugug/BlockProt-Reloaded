@@ -7,46 +7,58 @@
 # [Language]
 
 # The language file to use. (Available e.g., translations_en.yml, translations_es.yml)
+# Route: Dialog: /bp admin -> Config -> Language | Menu: /bp admin -> Config -> Language (slot 11)
 language_file: translations_en.yml
 
 # String to display when a translation key is missing.
+# Route: Dialog: /bp admin -> Config -> Language | Menu: /bp admin -> Config -> Language (slot 13)
 fallback_string: "Unknown translation"
 
 # Whether the plugin should automatically update translations with missing keys.
+# Route: Dialog: /bp admin -> Config -> Language | Menu: /bp admin -> Config -> Language (slot 15)
 replace_translations: true
 
 # [Worlds]
 
 # List of worlds where the plugin will be entirely disabled.
+# Route: Dialog: /bp admin -> Config -> Worlds | Menu: /bp admin -> Config -> Worlds (slot 11)
 excluded_worlds: []
 
 # Enable reading separate config/blocks configuration per world.
+# Route: Dialog: /bp admin -> Config -> Worlds | Menu: /bp admin -> Config -> Worlds (slot 13)
 per_worlds_config: false
 
 # [Players and friends]
 
 # Prefixes for Bedrock players (using Geyser/Floodgate).
+# Route: Dialog: /bp admin -> Config -> Players | Menu: /bp admin -> Config -> Players (slot 22)
 bedrock_username_prefixes:
-- "."
-- "*"
-- "_"
+  - "."
+  - "*"
+  - "_"
 
 # Should blocks be locked automatically when a player places them?
+# Route: Dialog: /bp admin -> Config -> Players | Menu: /bp admin -> Config -> Players (slot 10)
 lock_on_place_by_default: true
 
 # Should public blocks be considered as friends by default?
+# Route: Dialog: /bp admin -> Config -> Players | Menu: /bp admin -> Config -> Players (slot 11)
 public_is_friend_by_default: false
 
 # Max number of locked blocks a player can have. (-1 for unlimited)
+# Route: Dialog: /bp admin -> Config -> Players | Menu: /bp admin -> Config -> Players (slot 12)
 player_max_locked_block_count: -1
 
 # Cooldown (in seconds) between showing lock hints (e.g., using a stick).
+# Route: Dialog: /bp admin -> Config -> Players | Menu: /bp admin -> Config -> Players (slot 13)
 lock_hint_cooldown_in_seconds: 10
 
 # Similarity threshold for finding friends by name (0.0 to 1.0).
+# Route: Dialog: /bp admin -> Config -> Players | Menu: /bp admin -> Config -> Players (slot 14)
 friend_search_similarity: 0.5
 
 # Globally disable the friends system if not needed.
+# Route: Dialog: /bp admin -> Config -> Players | Menu: /bp admin -> Config -> Players (slot 15)
 disable_friend_functionality: false
 
 # [Blocks and locking behavior]
@@ -57,67 +69,87 @@ disable_friend_functionality: false
 # IMPORTANT: This flag NEVER reads or modifies blocks.yml on startup/reload.
 # blocks.yml is always read as-is. Expressions are parsed regardless of this flag.
 # When all lockable lists are empty, this flag auto-disables to false.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Behavior | Menu: /bp admin -> Config -> Blocks -> Behavior (slot 12)
 modern_family_blocks: false
 
 # Should redstone be disallowed from interacting with locked blocks by default?
+# Route: Dialog: /bp admin -> Config -> Blocks -> Behavior | Menu: /bp admin -> Config -> Blocks -> Behavior (slot 13)
 redstone_disallowed_by_default: false
 
 # Enable simpler hopper logic to save server performance.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Behavior | Menu: /bp admin -> Config -> Blocks -> Behavior (slot 14)
 simplified_hopper_logic: false
 
 # Protect locked blocks from being destroyed by explosions.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Locking | Menu: /bp admin -> Config -> Blocks -> Locking (slot 11)
 protect_locked_blocks_from_explosions: true
 
 # Prevent pistons from moving locked blocks.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Locking | Menu: /bp admin -> Config -> Blocks -> Locking (slot 12)
 block_protected_block_piston_movement: true
 
 # Clear protection of a shulker box when it is broken.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Locking | Menu: /bp admin -> Config -> Blocks -> Locking (slot 13)
 clear_protection_on_shulker_break: false
 
 # Allow players to break protected blocks they don't own. (Data stays).
+# Route: Dialog: /bp admin -> Config -> Blocks -> Locking | Menu: /bp admin -> Config -> Blocks -> Locking (slot 14)
 allow_break_protected_blocks: false
 
 # Respect the vanilla spawn protection.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Locking | Menu: /bp admin -> Config -> Blocks -> Locking (slot 15)
 respect_spawn_protection: true
 
 # Show particle effects when interacting with a locked block.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Effects | Menu: /bp admin -> Config -> Blocks -> Effects (slot 11)
 block_lock_effects: true
 
 # Play sounds when interacting with a locked block.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Effects | Menu: /bp admin -> Config -> Blocks -> Effects (slot 12)
 block_lock_sounds: true
 
 # Consolidate all menus into a single GUI accessible via /bp user (players) and
 # /bp admin (admins with OP or blockprot.admin permission). When false, each
 # feature uses its dedicated subcommand (/bp settings, /bp friends, etc.).
+# Route: Dialog: /bp admin -> Config -> Blocks -> Effects | Menu: /bp admin -> Config -> Blocks -> Effects (slot 13)
 use_menus: false
 
 # Use Minecraft's native dialog system instead of inventories/anvils/chat
 # for interaction menus. Requires Paper 1.21.7 or later; if the running
 # server does not expose the dialog API, this is auto-disabled to false
 # and a warning is logged. Set to true only on Paper 1.21.7+.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Effects | Menu: /bp admin -> Config -> Blocks -> Effects (slot 14)
 use_dialogs: false
 
 # Maximum duration (in days) when granting timed access to a player.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Effects | Menu: /bp admin -> Config -> Blocks -> Effects (slot 15)
 timed_access_max_duration_days: 90
 
 # [Entity protection]
 
 entity_protection:
   # Enable entity protection feature (for animals, villagers, etc.).
+  # Route: Dialog: /bp admin -> Config -> Entity | Menu: /bp admin -> Config -> Entity (slot 10)
   enabled: false
   # Automatically protect entities when they are tamed.
+  # Route: Dialog: /bp admin -> Config -> Entity | Menu: /bp admin -> Config -> Entity (slot 11)
   auto_protect_on_tame: true
   # The item used for the entity protection menu.
+  # Route: Dialog: /bp admin -> Config -> Entity | Menu: /bp admin -> Config -> Entity (slot 12)
   menu_item: STICK
   # Seconds to locate a villager.
+  # Route: Dialog: /bp admin -> Config -> Entity | Menu: /bp admin -> Config -> Entity (slot 13)
   villager_locate_seconds: 6
 
 villager_workstation_protection:
   # Automatically protect workstations belonging to protected villagers.
+  # Route: Dialog: /bp admin -> Config -> Entity | Menu: /bp admin -> Config -> Entity (slot 14)
   enabled: true
   # Horizontal radius.
+  # Route: Dialog: /bp admin -> Config -> Entity | Menu: /bp admin -> Config -> Entity (slot 15)
   radius: 2
   # Vertical radius.
+  # Route: Dialog: /bp admin -> Config -> Entity | Menu: /bp admin -> Config -> Entity (slot 16)
   vertical_radius: 1
 
 # [Expiry]
@@ -128,60 +160,76 @@ villager_workstation_protection:
 
 world_expiry:
   # Enable global expiry of inactive block protections.
+  # Route: Dialog: /bp admin -> Config -> Expiry | Menu: /bp admin -> Config -> Expiry (slot 12)
   enabled: false
   # Interval in minutes to check for expirations.
+  # Route: Dialog: /bp admin -> Config -> Expiry | Menu: /bp admin -> Config -> Expiry (slot 14)
   check_interval_minutes: 10
   # World-specific expiry times.
+  # Route: Dialog: /bp admin -> Config -> Expiry -> Per-World Expiry | Menu: /bp admin -> World Expiry (slot 12)
   worlds: {}
 
 # [Raid detection]
 
 raid_detection:
   # Protect locked blocks or entities from raids.
+  # Route: Dialog: /bp admin -> Config -> Raid | Menu: /bp admin -> Config -> Raid (slot 13)
   enabled: false
 
 # [Notifications]
 
 # Send a notification to server operators when an update is available.
+# Route: Dialog: /bp admin -> Config -> Notifications | Menu: /bp admin -> Config -> Notifications (slot 12)
 notify_op_of_updates: false
 
 owner_notifications:
   # Allow owners to receive notifications about their blocks.
+  # Route: Dialog: /bp admin -> Config -> Notifications | Menu: /bp admin -> Config -> Notifications (slot 14)
   enabled: true
   # Notify when someone opens their block.
+  # Route: Dialog: /bp admin -> Config -> Notifications | Menu: /bp admin -> Config -> Notifications (slot 20)
   notify_on_open: true
   # Notify when someone takes items from their block.
+  # Route: Dialog: /bp admin -> Config -> Notifications | Menu: /bp admin -> Config -> Notifications (slot 22)
   notify_on_take: true
   # Notify when someone places items in their block.
+  # Route: Dialog: /bp admin -> Config -> Notifications | Menu: /bp admin -> Config -> Notifications (slot 24)
   notify_on_place: true
 
 # [Maintenance]
 
 # Days of inactivity before a player's protections are automatically removed. (-1 to disable)
+# Route: Dialog: /bp admin -> Config -> Maintenance | Menu: /bp admin -> Config -> Maintenance (slot 11)
 inactivity_cleanup_days: -1
 
 # Automatically reload configurations if files are changed externally.
+# Route: Dialog: /bp admin -> Config -> Maintenance | Menu: /bp admin -> Config -> Maintenance (slot 12)
 auto_reload_configs: true
 
 # Quiet period (in seconds, 0-5) to wait after detecting an external file
 # change before applying it. Batches multiple rapid saves (e.g. an editor
 # that writes twice, or several config files edited back to back) into a
 # single reload instead of reloading on every individual write.
+# Route: Dialog: /bp admin -> Config -> Maintenance | Menu: /bp admin -> Config -> Maintenance (slot 13)
 auto_reload_delay_seconds: 2
 
 # Enable session logging.
+# Route: Dialog: /bp admin -> Config -> Maintenance | Menu: /bp admin -> Config -> Maintenance (slot 14)
 enable_session_log: true
 
 # Create database backups automatically.
+# Route: Dialog: /bp admin -> Config -> Maintenance | Menu: /bp admin -> Config -> Maintenance (slot 15)
 enable_backups: true
 
 # Administrative tiers and granular security.
 # When false (default), blockprot.user.admin grants all admin capabilities.
 # When true, permissions are segmented into t1, t2, t3, owner, and custom tiers.
+# Route: Dialog: /bp admin -> Config -> Maintenance | Menu: /bp admin -> Config -> Maintenance (slot 22)
 admin_tiers:
   enabled: false
 
 # Duration in seconds to display temporary action bar alerts.
+# Route: Dialog: /bp admin -> Config -> Blocks -> Effects | Menu: /bp admin -> Config -> Blocks -> Effects (slot 22)
 action_bar:
   duration_seconds: 6
 

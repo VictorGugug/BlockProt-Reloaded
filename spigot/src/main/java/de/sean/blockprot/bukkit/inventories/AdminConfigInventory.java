@@ -230,7 +230,7 @@ public final class AdminConfigInventory extends BlockProtInventory {
         }
     }
 
-    private ItemStack item(Material mat, String name, String... lore) {
+    static ItemStack item(Material mat, String name, String... lore) {
         ItemStack item = new ItemStack(mat);
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;

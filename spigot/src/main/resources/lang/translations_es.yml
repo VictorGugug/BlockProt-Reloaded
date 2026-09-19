@@ -671,6 +671,11 @@ dialogs:
     restore_hint: "Haz clic para restaurar estas {count} protecciones."
     cant_undo: "Esta accion no se puede deshacer!"
     deleting: "Eliminando protecciones en {world}..."
+  world_expiry:
+    header: "Expiracion por Mundo"
+    active_label: "Activo: {duration}"
+    disabled_label: "Desactivado"
+    click_hint: "Clic para configurar la duracion de expiracion."
   choose_option: "Elige una opción:"
   admin_choose: "Selecciona una acción administrativa:"
   click_to_open: "Haz clic para abrir."
@@ -794,6 +799,9 @@ dialogs:
       friend_search_hint: "Similitud (0.0 - 1.0)"
       disable_friends: "Desactivar sistema de amigos globalmente."
       disable_friends_title: "Desactivar Sistema de Amigos"
+      bedrock_prefixes: "Prefijos de usuario tratados como jugadores Bedrock (Geyser/Floodgate)."
+      bedrock_prefixes_title: "Prefijos de Bedrock"
+      bedrock_prefixes_hint: "Prefijos separados por comas (ej. ., *, _)"
     blocks:
       modern_family: "Usar expresiones compactas en blocks.yml."
       modern_family_title: "Expresiones de Familia"
@@ -822,6 +830,9 @@ dialogs:
       timed_access: "Duración máxima de acceso temporal (días)."
       timed_access_title: "Duración Máxima de Acceso"
       timed_access_hint: "Máx días"
+      action_bar_duration: "Duracion en segundos de los mensajes en la barra de accion."
+      action_bar_duration_title: "Duracion de Action Bar"
+      action_bar_duration_hint: "Segundos (minimo 1)"
       locking_title: "Bloqueo"
       behavior_title: "Comportamiento"
       effects_title: "Efectos"
@@ -851,6 +862,8 @@ dialogs:
       check_interval: "Intervalo de revisión (minutos)."
       check_interval_title: "Intervalo de Comprobación"
       check_interval_hint: "Minutos entre revisiones"
+      per_world: "Configurar duracion de expiracion por cada mundo."
+      per_world_title: "Expiracion por Mundo"
     raid:
       enabled: "Proteger bloques de incursiones."
       enabled_title: "Protección contra Saqueos"
@@ -860,8 +873,11 @@ dialogs:
       owner_enabled: "Permitir notificaciones al dueño."
       owner_enabled_title: "Notificaciones al Propietario"
       owner_open: "Notificar al abrir tu bloque."
+      owner_open_title: "Notificar al Abrir"
       owner_take: "Notificar al sacar ítems."
+      owner_take_title: "Notificar al Sacar"
       owner_place: "Notificar al poner ítems."
+      owner_place_title: "Notificar al Colocar"
     maintenance:
       inactivity_cleanup: "Días antes de limpiar protecciones (-1 = off)."
       inactivity_cleanup_title: "Limpieza por Inactividad"
@@ -875,6 +891,8 @@ dialogs:
       session_log_title: "Registro de Sesiones"
       backups: "Crear copias de seguridad automáticas."
       backups_title: "Copias de Seguridad"
+      admin_tiers: "Activar configuración de límites por tiers para admins."
+      admin_tiers_title: "Tiers de Administración"
     deprecated:
       we_paste_enabled: "Auto-bloqueo de pegado de WorldEdit."
 

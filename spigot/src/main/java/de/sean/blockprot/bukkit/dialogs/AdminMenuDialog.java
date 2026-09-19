@@ -72,6 +72,8 @@ public final class AdminMenuDialog {
         String debug = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG));
         String info = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO));
         String protdel = stripColor(Translator.get(TranslationKey.INVENTORIES__WORLD_PROT_DEL__TITLE));
+        String worldExpiry = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY));
+        String unlock = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UNLOCK));
 
         List<DialogBodyEntry> body = new ArrayList<>();
         body.add(DialogBodyEntry.text(Component.text(
@@ -83,6 +85,43 @@ public final class AdminMenuDialog {
             Component.text(stripColor(Translator.get(TranslationKey.ICON__LOCKABLES)) + lockables, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__LOCKABLES)), PASTEL_MINT),
             p -> LockablesDialog.show(p, DialogOrigin.ADMIN_MENU)
+        );
+
+        DialogButton configBtn = new DialogButton("config",
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__CONFIG)) + config, NamedTextColor.WHITE),
+            tooltip(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_MENU__CONFIG_TOOLTIP)), PASTEL_GOLD),
+            p -> AdminConfigDialog.show(p, DialogOrigin.ADMIN_MENU)
+        );
+
+        DialogButton worldExpiryBtn = new DialogButton("world_expiry",
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__WORLD_EXPIRY)) + worldExpiry, NamedTextColor.WHITE),
+            tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY_LORE)), SOFT_BLUE),
+            p -> WorldExpiryDialog.show(p, DialogOrigin.ADMIN_MENU)
+        );
+
+        DialogButton protdelBtn = new DialogButton("protdel",
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__DISABLE_ALL)) + protdel, NamedTextColor.WHITE),
+            tooltip(protdel, PASTEL_CORAL),
+            p -> ProtdelDialog.show(p, null, DialogOrigin.ADMIN_MENU)
+        );
+
+        DialogButton unlockBtn = new DialogButton("unlock",
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__UNLOCK)) + unlock, NamedTextColor.WHITE),
+            tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UNLOCK_LORE)), PASTEL_CORAL),
+            p -> AdminConfigValueDialog.openText(
+                p,
+                "unlock_player",
+                stripColor(Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_USAGE)),
+                "",
+                targetName -> {
+                    if (targetName == null || targetName.isBlank()) {
+                        return stripColor(Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_USAGE));
+                    }
+                    return null;
+                },
+                targetName -> UnlockDialog.show(p, DialogOrigin.ADMIN_MENU, targetName.trim(), 0),
+                () -> show(p, backOrigin)
+            )
         );
 
         DialogButton reloadBtn = new DialogButton("reload",
@@ -108,12 +147,6 @@ public final class AdminMenuDialog {
             Component.text(stripColor(Translator.get(TranslationKey.ICON__INTEGRATIONS)) + integrations, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS)), SOFT_BLUE),
             p -> IntegrationsDialog.show(p, DialogOrigin.ADMIN_MENU)
-        );
-
-        DialogButton configBtn = new DialogButton("config",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__CONFIG)) + config, NamedTextColor.WHITE),
-            tooltip(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_MENU__CONFIG_TOOLTIP)), PASTEL_GOLD),
-            p -> AdminConfigDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
         DialogButton statsBtn = new DialogButton("stats",
@@ -146,12 +179,6 @@ public final class AdminMenuDialog {
             p -> InfoDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
-        DialogButton protdelBtn = new DialogButton("protdel",
-            Component.text(stripColor(Translator.get(TranslationKey.ICON__DISABLE_ALL)) + protdel, NamedTextColor.WHITE),
-            tooltip(protdel, PASTEL_CORAL),
-            p -> ProtdelDialog.show(p, null, DialogOrigin.ADMIN_MENU)
-        );
-
         DialogButton aboutBtn = new DialogButton("about",
             Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)), NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)), PASTEL_GOLD),
@@ -168,13 +195,15 @@ public final class AdminMenuDialog {
         List<DialogButton> actions = new ArrayList<>();
         actions.add(lockablesBtn);
         actions.add(configBtn);
+        actions.add(worldExpiryBtn);
         actions.add(protdelBtn);
-        actions.add(statsBtn);
+        actions.add(unlockBtn);
         actions.add(integrationsBtn);
-        actions.add(updateBtn);
-        actions.add(reloadBtn);
-        actions.add(debugBtn);
+        actions.add(statsBtn);
         actions.add(infoBtn);
+        actions.add(reloadBtn);
+        actions.add(updateBtn);
+        actions.add(debugBtn);
         actions.add(aboutBtn);
         bridge.showMultiAction(player, title, body, actions, exitBtn, 2);
     }

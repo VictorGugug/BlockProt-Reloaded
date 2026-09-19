@@ -390,93 +390,93 @@ layer on top.
 
 ### Language
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `language_file` | `translations_en.yml` | Active translation file. |
-| `fallback_string` | `"Unknown translation"` | Text shown for a missing translation key. |
-| `replace_translations` | `true` | Automatically fill missing keys from the English file. |
+| Setting | Default | Meaning | In-Game Route |
+|---|---|---|---|
+| `language_file` | `translations_en.yml` | Active translation file. | Dialog: `/bp admin -> Config -> Language`<br>Menu: `/bp admin -> Config -> Language` (slot 11) |
+| `fallback_string` | `"Unknown translation"` | Text shown for a missing translation key. | Dialog: `/bp admin -> Config -> Language`<br>Menu: `/bp admin -> Config -> Language` (slot 13) |
+| `replace_translations` | `true` | Automatically fill missing keys from the English file. | Dialog: `/bp admin -> Config -> Language`<br>Menu: `/bp admin -> Config -> Language` (slot 15) |
 
 ### Worlds
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `excluded_worlds` | `[]` | Worlds where the plugin is completely disabled. |
-| `per_worlds_config` | `false` | Use per-world lockable lists from `worlds.yml`. |
+| Setting | Default | Meaning | In-Game Route |
+|---|---|---|---|
+| `excluded_worlds` | `[]` | Worlds where the plugin is completely disabled. | Dialog: `/bp admin -> Config -> Worlds`<br>Menu: `/bp admin -> Config -> Worlds` (slot 11) |
+| `per_worlds_config` | `false` | Use per-world lockable lists from `worlds.yml`. | Dialog: `/bp admin -> Config -> Worlds`<br>Menu: `/bp admin -> Config -> Worlds` (slot 13) |
 
 ### Players and friends
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `bedrock_username_prefixes` | `.`, `*`, `_` | Username prefixes treated as Bedrock (Geyser/Floodgate) players. |
-| `lock_on_place_by_default` | `true` | Auto-lock blocks when a player places them (see section 7). |
-| `public_is_friend_by_default` | `false` | Treat public blocks as friends everywhere. |
-| `player_max_locked_block_count` | `-1` | Max locked blocks per player (`-1` = unlimited). Exempt players with the `blockprot.lockmax` permission (unlimited) or `blockprot.locklimit.<N>` (a specific cap). |
-| `lock_hint_cooldown_in_seconds` | `10` | Seconds between hint messages. |
-| `friend_search_similarity` | `0.5` | Friend-search fuzziness (0.0 exact, 1.0 very loose). Search always checks every currently online player (even one who has never played before) plus every player in the offline-player cache, so a player who is online right now is never missed even if their name has not been written to the offline cache yet. |
-| `disable_friend_functionality` | `false` | Disable the friends system entirely. |
+| Setting | Default | Meaning | In-Game Route |
+|---|---|---|---|
+| `bedrock_username_prefixes` | `.`, `*`, `_` | Username prefixes treated as Bedrock (Geyser/Floodgate) players. | Dialog: `/bp admin -> Config -> Players`<br>Menu: `/bp admin -> Config -> Players` (slot 22) |
+| `lock_on_place_by_default` | `true` | Auto-lock blocks when a player places them (see section 7). | Dialog: `/bp admin -> Config -> Players`<br>Menu: `/bp admin -> Config -> Players` (slot 10) |
+| `public_is_friend_by_default` | `false` | Treat public blocks as friends everywhere. | Dialog: `/bp admin -> Config -> Players`<br>Menu: `/bp admin -> Config -> Players` (slot 11) |
+| `player_max_locked_block_count` | `-1` | Max locked blocks per player (`-1` = unlimited). Exempt players with the `blockprot.lockmax` permission (unlimited) or `blockprot.locklimit.<N>` (a specific cap). | Dialog: `/bp admin -> Config -> Players`<br>Menu: `/bp admin -> Config -> Players` (slot 12) |
+| `lock_hint_cooldown_in_seconds` | `10` | Seconds between hint messages. | Dialog: `/bp admin -> Config -> Players`<br>Menu: `/bp admin -> Config -> Players` (slot 13) |
+| `friend_search_similarity` | `0.5` | Friend-search fuzziness (0.0 exact, 1.0 very loose). Search always checks every currently online player (even one who has never played before) plus every player in the offline-player cache, so a player who is online right now is never missed even if their name has not been written to the offline cache yet. | Dialog: `/bp admin -> Config -> Players`<br>Menu: `/bp admin -> Config -> Players` (slot 14) |
+| `disable_friend_functionality` | `false` | Disable the friends system entirely. | Dialog: `/bp admin -> Config -> Players`<br>Menu: `/bp admin -> Config -> Players` (slot 15) |
 
 ### Blocks and locking behavior
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `modern_family_blocks` | `false` | Format written by `/bp lockables`: `false` = flat names, `true` = family expressions. **Never** rewrites existing `blocks.yml` content. |
-| `redstone_disallowed_by_default` | `false` | Deny redstone interaction with locked blocks by default. |
-| `simplified_hopper_logic` | `false` | Simpler (faster) hopper logic for large servers. |
-| `protect_locked_blocks_from_explosions` | `true` | Locked blocks survive explosions. |
-| `block_protected_block_piston_movement` | `true` | Pistons cannot move locked blocks. |
-| `clear_protection_on_shulker_break` | `false` | Clear protection when a shulker box is broken. Note: when an **admin** breaks another player's shulker, protection is always cleared regardless of this setting. |
-| `allow_break_protected_blocks` | `false` | Anyone may break protected blocks (protection data stays on the item). |
-| `respect_spawn_protection` | `true` | Respect vanilla spawn protection. |
-| `block_lock_effects` | `true` | Particles when interacting with a locked block. |
-| `block_lock_sounds` | `true` | Sounds when interacting with a locked block. |
-| `action_bar.duration_seconds` | `6` | Duration in seconds that action-bar notifications remain visible on screen. |
-| `use_menus` | `false` | Consolidate menus into `/bp user` and `/bp admin`. |
-| `use_dialogs` | `false` | Use Paper's native dialog system (Paper 1.21.7+ only; auto-disables otherwise). |
-| `timed_access_max_duration_days` | `90` | Editable in the admin config dialog (`/bp admin` -> Config), but has no functional effect yet (reserved for a future timed-access feature). |
+| Setting | Default | Meaning | In-Game Route |
+|---|---|---|---|
+| `modern_family_blocks` | `false` | Format written by `/bp lockables`: `false` = flat names, `true` = family expressions. **Never** rewrites existing `blocks.yml` content. | Dialog: `/bp admin -> Config -> Blocks -> Behavior`<br>Menu: `/bp admin -> Config -> Blocks -> Behavior` (slot 12) |
+| `redstone_disallowed_by_default` | `false` | Deny redstone interaction with locked blocks by default. | Dialog: `/bp admin -> Config -> Blocks -> Behavior`<br>Menu: `/bp admin -> Config -> Blocks -> Behavior` (slot 13) |
+| `simplified_hopper_logic` | `false` | Simpler (faster) hopper logic for large servers. | Dialog: `/bp admin -> Config -> Blocks -> Behavior`<br>Menu: `/bp admin -> Config -> Blocks -> Behavior` (slot 14) |
+| `protect_locked_blocks_from_explosions` | `true` | Locked blocks survive explosions. | Dialog: `/bp admin -> Config -> Blocks -> Locking`<br>Menu: `/bp admin -> Config -> Blocks -> Locking` (slot 11) |
+| `block_protected_block_piston_movement` | `true` | Pistons cannot move locked blocks. | Dialog: `/bp admin -> Config -> Blocks -> Locking`<br>Menu: `/bp admin -> Config -> Blocks -> Locking` (slot 12) |
+| `clear_protection_on_shulker_break` | `false` | Clear protection when a shulker box is broken. Note: when an **admin** breaks another player's shulker, protection is always cleared regardless of this setting. | Dialog: `/bp admin -> Config -> Blocks -> Locking`<br>Menu: `/bp admin -> Config -> Blocks -> Locking` (slot 13) |
+| `allow_break_protected_blocks` | `false` | Anyone may break protected blocks (protection data stays on the item). | Dialog: `/bp admin -> Config -> Blocks -> Locking`<br>Menu: `/bp admin -> Config -> Blocks -> Locking` (slot 14) |
+| `respect_spawn_protection` | `true` | Respect vanilla spawn protection. | Dialog: `/bp admin -> Config -> Blocks -> Locking`<br>Menu: `/bp admin -> Config -> Blocks -> Locking` (slot 15) |
+| `block_lock_effects` | `true` | Particles when interacting with a locked block. | Dialog: `/bp admin -> Config -> Blocks -> Effects`<br>Menu: `/bp admin -> Config -> Blocks -> Effects` (slot 11) |
+| `block_lock_sounds` | `true` | Sounds when interacting with a locked block. | Dialog: `/bp admin -> Config -> Blocks -> Effects`<br>Menu: `/bp admin -> Config -> Blocks -> Effects` (slot 12) |
+| `action_bar.duration_seconds` | `6` | Duration in seconds that action-bar notifications remain visible on screen. | Dialog: `/bp admin -> Config -> Blocks -> Effects`<br>Menu: `/bp admin -> Config -> Blocks -> Effects` (slot 22) |
+| `use_menus` | `false` | Consolidate menus into `/bp user` and `/bp admin`. | Dialog: `/bp admin -> Config -> Blocks -> Effects`<br>Menu: `/bp admin -> Config -> Blocks -> Effects` (slot 13) |
+| `use_dialogs` | `false` | Use Paper's native dialog system (Paper 1.21.7+ only; auto-disables otherwise). | Dialog: `/bp admin -> Config -> Blocks -> Effects`<br>Menu: `/bp admin -> Config -> Blocks -> Effects` (slot 14) |
+| `timed_access_max_duration_days` | `90` | Editable in the admin config dialog (`/bp admin` -> Config), but has no functional effect yet (reserved for a future timed-access feature). | Dialog: `/bp admin -> Config -> Blocks -> Effects`<br>Menu: `/bp admin -> Config -> Blocks -> Effects` (slot 15) |
 
 ### Entity protection
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `entity_protection.enabled` | `false` | Enable protection for tamed entities. |
-| `entity_protection.auto_protect_on_tame` | `true` | Auto-protect newly tamed animals. |
-| `entity_protection.menu_item` | `STICK` | Item used to open the entity protection menu. |
-| `entity_protection.villager_locate_seconds` | `6` | Seconds to locate a villager via particles. |
-| `villager_workstation_protection.enabled` | `true` | Auto-protect workstations of protected villagers. |
-| `villager_workstation_protection.radius` | `2` | Horizontal radius. |
-| `villager_workstation_protection.vertical_radius` | `1` | Vertical radius. |
+| Setting | Default | Meaning | In-Game Route |
+|---|---|---|---|
+| `entity_protection.enabled` | `false` | Enable protection for tamed entities. | Dialog: `/bp admin -> Config -> Entity`<br>Menu: `/bp admin -> Config -> Entity` (slot 10) |
+| `entity_protection.auto_protect_on_tame` | `true` | Auto-protect newly tamed animals. | Dialog: `/bp admin -> Config -> Entity`<br>Menu: `/bp admin -> Config -> Entity` (slot 11) |
+| `entity_protection.menu_item` | `STICK` | Item used to open the entity protection menu. | Dialog: `/bp admin -> Config -> Entity`<br>Menu: `/bp admin -> Config -> Entity` (slot 12) |
+| `entity_protection.villager_locate_seconds` | `6` | Seconds to locate a villager via particles. | Dialog: `/bp admin -> Config -> Entity`<br>Menu: `/bp admin -> Config -> Entity` (slot 13) |
+| `villager_workstation_protection.enabled` | `true` | Auto-protect workstations of protected villagers. | Dialog: `/bp admin -> Config -> Entity`<br>Menu: `/bp admin -> Config -> Entity` (slot 14) |
+| `villager_workstation_protection.radius` | `2` | Horizontal radius. | Dialog: `/bp admin -> Config -> Entity`<br>Menu: `/bp admin -> Config -> Entity` (slot 15) |
+| `villager_workstation_protection.vertical_radius` | `1` | Vertical radius. | Dialog: `/bp admin -> Config -> Entity`<br>Menu: `/bp admin -> Config -> Entity` (slot 16) |
 
 ### Admin tiers
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `admin_tiers.enabled` | `false` | When true, enables the 4-tier admin hierarchy (`t1`, `t2`, `t3`, `owner`) and granular action permissions instead of the single legacy `blockprot.user.admin` permission (section 16). |
+| Setting | Default | Meaning | In-Game Route |
+|---|---|---|---|
+| `admin_tiers.enabled` | `false` | When true, enables the 4-tier admin hierarchy (`t1`, `t2`, `t3`, `owner`) and granular action permissions instead of the single legacy `blockprot.user.admin` permission (section 16). | Dialog: `/bp admin -> Config -> Maintenance`<br>Menu: `/bp admin -> Config -> Maintenance` (slot 22) |
 
 ### Expiry
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `world_expiry.enabled` | `false` | Enable world-level expiry of inactive protections. |
-| `world_expiry.check_interval_minutes` | `10` | How often to check for expirations. |
-| `world_expiry.worlds` | `{}` | Per-world expiry times. |
+| Setting | Default | Meaning | In-Game Route |
+|---|---|---|---|
+| `world_expiry.enabled` | `false` | Enable world-level expiry of inactive protections. | Dialog: `/bp admin -> Config -> Expiry`<br>Menu: `/bp admin -> Config -> Expiry` (slot 12) |
+| `world_expiry.check_interval_minutes` | `10` | How often to check for expirations. | Dialog: `/bp admin -> Config -> Expiry`<br>Menu: `/bp admin -> Config -> Expiry` (slot 14) |
+| `world_expiry.worlds` | `{}` | Per-world expiry times. | Dialog: `/bp admin -> Config -> Expiry -> Per-World Expiry`<br>Menu: `/bp admin -> World Expiry` (slot 12) |
 
 > Per-block manual expiry is planned for a future release and is not available yet.
 
 ### Raid detection
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `raid_detection.enabled` | `false` | Detect and alert on possible raid attempts against locked blocks (section 9). Off by default; turn it on once you have decided how you want raid alerts handled on your server. |
+| Setting | Default | Meaning | In-Game Route |
+|---|---|---|---|
+| `raid_detection.enabled` | `false` | Detect and alert on possible raid attempts against locked blocks (section 9). Off by default; turn it on once you have decided how you want raid alerts handled on your server. | Dialog: `/bp admin -> Config -> Raid`<br>Menu: `/bp admin -> Config -> Raid` (slot 13) |
 
 ### Notifications
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `notify_op_of_updates` | `false` | Notify OPs when an update is available. |
-| `owner_notifications.enabled` | `true` | Allow owner notifications. |
-| `owner_notifications.notify_on_open` | `true` | Notify owner when someone opens their block. |
-| `owner_notifications.notify_on_take` | `true` | Notify owner when someone takes items. |
-| `owner_notifications.notify_on_place` | `true` | Notify owner when someone places items. |
+| Setting | Default | Meaning | In-Game Route |
+|---|---|---|---|
+| `notify_op_of_updates` | `false` | Notify OPs when an update is available. | Dialog: `/bp admin -> Config -> Notifications`<br>Menu: `/bp admin -> Config -> Notifications` (slot 12) |
+| `owner_notifications.enabled` | `true` | Allow owner notifications. | Dialog: `/bp admin -> Config -> Notifications`<br>Menu: `/bp admin -> Config -> Notifications` (slot 14) |
+| `owner_notifications.notify_on_open` | `true` | Notify owner when someone opens their block. | Dialog: `/bp admin -> Config -> Notifications`<br>Menu: `/bp admin -> Config -> Notifications` (slot 20) |
+| `owner_notifications.notify_on_take` | `true` | Notify owner when someone takes items. | Dialog: `/bp admin -> Config -> Notifications`<br>Menu: `/bp admin -> Config -> Notifications` (slot 22) |
+| `owner_notifications.notify_on_place` | `true` | Notify owner when someone places items. | Dialog: `/bp admin -> Config -> Notifications`<br>Menu: `/bp admin -> Config -> Notifications` (slot 24) |
 
 Update notifications are channel-aware: the plugin tells you whether the
 available update is a stable release, an important bug-fix (hotfix, stating
@@ -487,13 +487,13 @@ channel the running build is: stable, hotfix, or experimental BEDev.
 
 ### Maintenance
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `inactivity_cleanup_days` | `-1` | Remove protections after this many days of inactivity (`-1` = disabled). |
-| `auto_reload_configs` | `true` | Automatically reload when files change externally. |
-| `auto_reload_delay_seconds` | `2` | Quiet period (0-5 s) after a file change before reloading; batches rapid saves. |
-| `enable_session_log` | `true` | Write a session header to the log at startup. |
-| `enable_backups` | `true` | Create automatic backups. |
+| Setting | Default | Meaning | In-Game Route |
+|---|---|---|---|
+| `inactivity_cleanup_days` | `-1` | Remove protections after this many days of inactivity (`-1` = disabled). | Dialog: `/bp admin -> Config -> Maintenance`<br>Menu: `/bp admin -> Config -> Maintenance` (slot 11) |
+| `auto_reload_configs` | `true` | Automatically reload when files change externally. | Dialog: `/bp admin -> Config -> Maintenance`<br>Menu: `/bp admin -> Config -> Maintenance` (slot 12) |
+| `auto_reload_delay_seconds` | `2` | Quiet period (0-5 s) after a file change before reloading; batches rapid saves. | Dialog: `/bp admin -> Config -> Maintenance`<br>Menu: `/bp admin -> Config -> Maintenance` (slot 13) |
+| `enable_session_log` | `true` | Write a session header to the log at startup. | Dialog: `/bp admin -> Config -> Maintenance`<br>Menu: `/bp admin -> Config -> Maintenance` (slot 14) |
+| `enable_backups` | `true` | Create automatic backups. | Dialog: `/bp admin -> Config -> Maintenance`<br>Menu: `/bp admin -> Config -> Maintenance` (slot 15) |
 
 ## 11. Storage: NBT vs. MySQL
 

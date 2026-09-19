@@ -52,7 +52,7 @@ public final class AdminConfigBlocksInventory extends BlockProtInventory {
 
     private static final int LOCKING_SLOT_COUNT = 5;
     private static final int BEHAVIOR_SLOT_COUNT = 3;
-    private static final int EFFECTS_SLOT_COUNT = 5;
+    private static final int EFFECTS_SLOT_COUNT = 6;
 
     public AdminConfigBlocksInventory() { super(false); }
 
@@ -151,7 +151,7 @@ public final class AdminConfigBlocksInventory extends BlockProtInventory {
     public Inventory fillEffects(@NotNull Player player) {
         currentScreen = Screen.EFFECTS;
         inventory = createInventory();
-        fillSeparators(new int[]{0,1,2,3,4,5,6,7,8, 9,10, 16,17, 18,19,20,21,22,23,24,25,26, 27,28,29,30,31,32,33,34,35, 36,37,38,39,40,41,42,43,44, 45,46,47,48, 50,51,52,53});
+        fillSeparators(new int[]{0,1,2,3,4,5,6,7,8, 9,10, 16,17, 18,19,20,21, 23,24,25,26, 27,28,29,30,31,32,33,34,35, 36,37,38,39,40,41,42,43,44, 45,46,47,48, 50,51,52,53});
         DefaultConfig cfg = BlockProt.getDefaultConfig();
 
         inventory.setItem(11, AdminConfigInventory.toggleItem(
@@ -183,6 +183,13 @@ public final class AdminConfigBlocksInventory extends BlockProtInventory {
             String.valueOf(timedAccessDays),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__TIMED_ACCESS),
             "timed_access_max_duration_days"));
+
+        int actionBarDuration = cfg.getActionBarDurationSeconds();
+        inventory.setItem(22, AdminConfigInventory.valueItem(
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__ACTION_BAR_DURATION_TITLE),
+            String.valueOf(actionBarDuration),
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__ACTION_BAR_DURATION),
+            "action_bar.duration_seconds"));
 
         setBackButton(SLOT_BACK);
         return inventory;
@@ -262,7 +269,7 @@ public final class AdminConfigBlocksInventory extends BlockProtInventory {
                 }
             }
             case EFFECTS -> {
-                if (slot >= 11 && slot <= 15) {
+                if ((slot >= 11 && slot <= 15) || slot == 22) {
                     switch (slot) {
                         case 11 -> {
                             cfg.setLockEffects(!cfg.isLockEffectEnabled());
@@ -286,6 +293,19 @@ public final class AdminConfigBlocksInventory extends BlockProtInventory {
                                 if (input == null || input.isBlank()) return;
                                 try {
                                     cfg.setAndSave("timed_access_max_duration_days", Integer.parseInt(input.trim()));
+                                } catch (NumberFormatException e) {
+                                    player.sendMessage(Translator.get(
+                                        TranslationKey.DIALOGS__ADMIN_CONFIG__INVALID_NUMBER).replace("{input}", input));
+                                    return;
+                                }
+                                player.openInventory(fillEffects(player));
+                            });
+                        case 22 -> TextInput.open(player, BlockProt.getInstance(),
+                            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__BLOCKS__ACTION_BAR_DURATION_HINT), input -> {
+                                if (input == null || input.isBlank()) return;
+                                try {
+                                    int val = Integer.parseInt(input.trim());
+                                    cfg.setAndSave("action_bar.duration_seconds", Math.max(1, val));
                                 } catch (NumberFormatException e) {
                                     player.sendMessage(Translator.get(
                                         TranslationKey.DIALOGS__ADMIN_CONFIG__INVALID_NUMBER).replace("{input}", input));

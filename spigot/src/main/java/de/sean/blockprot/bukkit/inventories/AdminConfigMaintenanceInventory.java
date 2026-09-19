@@ -45,12 +45,13 @@ public final class AdminConfigMaintenanceInventory extends BlockProtInventory {
     private static final int SLOT_AUTO_RELOAD_DELAY = 13;
     private static final int SLOT_SESSION_LOG = 14;
     private static final int SLOT_BACKUPS = 15;
+    private static final int SLOT_ADMIN_TIERS = 22;
     private static final int SLOT_BACK = 49;
 
     private static final int[] SEPARATOR_SLOTS = {
         0,1,2,3,4,5,6,7,8,
         9,10, 16,17,
-        18,19,20,21,22,23,24,25,26,
+        18,19,20,21, 23,24,25,26,
         27,28,29,30,31,32,33,34,35,
         36,37,38,39,40,41,42,43,44,
         45,46,47,48, 50,51,52,53
@@ -97,6 +98,11 @@ public final class AdminConfigMaintenanceInventory extends BlockProtInventory {
             "enable_backups",
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__BACKUPS),
             cfg.isBackupsEnabled()));
+        inventory.setItem(SLOT_ADMIN_TIERS, AdminConfigInventory.toggleItem(
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__ADMIN_TIERS_TITLE),
+            "admin_tiers.enabled",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__ADMIN_TIERS),
+            cfg.isAdminTiersEnabled()));
 
         setBackButton(SLOT_BACK);
         return inventory;
@@ -147,6 +153,9 @@ public final class AdminConfigMaintenanceInventory extends BlockProtInventory {
             player.openInventory(fill(player));
         } else if (slot == SLOT_BACKUPS) {
             cfg.setBackupsEnabled(!cfg.isBackupsEnabled());
+            player.openInventory(fill(player));
+        } else if (slot == SLOT_ADMIN_TIERS) {
+            cfg.setAndSave("admin_tiers.enabled", !cfg.isAdminTiersEnabled());
             player.openInventory(fill(player));
         }
     }

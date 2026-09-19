@@ -30,4 +30,5 @@ public enum DialogOrigin {
     INFO,
     LOCKABLES,
     UNLOCK,
+    ADMIN_CONFIG_EXPIRY,
 }

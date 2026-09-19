@@ -103,6 +103,26 @@ public final class AdminConfigPlayersDialog {
             colorblind,
             p -> { cfg.setAndSave("disable_friend_functionality", !cfg.isFriendFunctionalityDisabled()); show(p, backOrigin); }));
 
+        List<String> prefixes = cfg.getBedrockUsernamePrefixes();
+        String prefixesJoined = String.join(", ", prefixes);
+        buttons.add(AdminConfigDialog.valueBtn("bedrock_username_prefixes", "bedrock_username_prefixes",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__BEDROCK_PREFIXES_TITLE),
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__BEDROCK_PREFIXES),
+            prefixesJoined,
+            p -> AdminConfigValueDialog.openText(p, "bedrock_username_prefixes",
+                AdminConfigDialog.stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__PLAYERS__BEDROCK_PREFIXES_HINT)),
+                prefixesJoined,
+                input -> null,
+                v -> {
+                    List<String> updated = java.util.Arrays.stream(v.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
+                    cfg.setAndSave("bedrock_username_prefixes", updated);
+                    show(p, backOrigin);
+                },
+                () -> show(p, backOrigin))));
+
         AdminConfigDialog.bridgeReturn(player, bridge, title, body, buttons, backOrigin);
     }
 }

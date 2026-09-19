@@ -93,6 +93,12 @@ public final class AdminConfigMaintenanceDialog {
             cfg.isBackupsEnabled(),
             colorblind,
             p -> { cfg.setBackupsEnabled(!cfg.isBackupsEnabled()); show(p, backOrigin); }));
+        buttons.add(AdminConfigDialog.toggleBtn("admin_tiers.enabled", "admin_tiers.enabled",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__ADMIN_TIERS_TITLE),
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__MAINTENANCE__ADMIN_TIERS),
+            cfg.isAdminTiersEnabled(),
+            colorblind,
+            p -> { cfg.setAndSave("admin_tiers.enabled", !cfg.isAdminTiersEnabled()); show(p, backOrigin); }));
 
         AdminConfigDialog.bridgeReturn(player, bridge, title, body, buttons, backOrigin);
     }

@@ -42,12 +42,13 @@ public final class AdminConfigExpiryInventory extends BlockProtInventory {
 
     private static final int SLOT_ENABLED = 12;
     private static final int SLOT_CHECK_INTERVAL = 14;
+    private static final int SLOT_PER_WORLD = 22;
     private static final int SLOT_BACK = 49;
 
     private static final int[] SEPARATOR_SLOTS = {
         0,1,2,3,4,5,6,7,8,
         9,10,11, 13, 15,16,17,
-        18,19,20,21,22,23,24,25,26,
+        18,19,20,21, 23,24,25,26,
         27,28,29,30,31,32,33,34,35,
         36,37,38,39,40,41,42,43,44,
         45,46,47,48, 50,51,52,53
@@ -78,6 +79,9 @@ public final class AdminConfigExpiryInventory extends BlockProtInventory {
             String.valueOf(cfg.getWorldExpiryCheckInterval()),
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__CHECK_INTERVAL),
             "world_expiry.check_interval_minutes"));
+        inventory.setItem(SLOT_PER_WORLD, AdminConfigInventory.item(Material.COMPASS,
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__PER_WORLD_TITLE),
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__EXPIRY__PER_WORLD)));
 
         setBackButton(SLOT_BACK);
         return inventory;
@@ -109,6 +113,14 @@ public final class AdminConfigExpiryInventory extends BlockProtInventory {
                     }
                     player.openInventory(fill(player));
                 });
+        } else if (slot == SLOT_PER_WORLD) {
+            InventoryState newState = InventoryState.builder()
+                .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                .build();
+            newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
+            newState.currentPageIndex = 0;
+            InventoryState.set(player.getUniqueId(), newState);
+            player.openInventory(new WorldExpiryInventory().fill(player, 0));
         }
     }
 

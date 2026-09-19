@@ -42,12 +42,15 @@ public final class AdminConfigNotificationsInventory extends BlockProtInventory 
 
     private static final int SLOT_NOTIFY_OPS = 12;
     private static final int SLOT_OWNER_NOTIFICATIONS = 14;
+    private static final int SLOT_NOTIFY_OPEN = 20;
+    private static final int SLOT_NOTIFY_TAKE = 22;
+    private static final int SLOT_NOTIFY_PLACE = 24;
     private static final int SLOT_BACK = 49;
 
     private static final int[] SEPARATOR_SLOTS = {
         0,1,2,3,4,5,6,7,8,
         9,10,11, 13, 15,16,17,
-        18,19,20,21,22,23,24,25,26,
+        18,19, 21, 23, 25,26,
         27,28,29,30,31,32,33,34,35,
         36,37,38,39,40,41,42,43,44,
         45,46,47,48, 50,51,52,53
@@ -79,6 +82,27 @@ public final class AdminConfigNotificationsInventory extends BlockProtInventory 
             Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_ENABLED),
             cfg.isOwnerNotificationsEnabled()));
 
+        boolean notifyOpen = cfg.getBukkitConfig().getBoolean("owner_notifications.notify_on_open", true);
+        inventory.setItem(SLOT_NOTIFY_OPEN, AdminConfigInventory.toggleItem(
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_OPEN_TITLE),
+            "owner_notifications.notify_on_open",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_OPEN),
+            notifyOpen));
+
+        boolean notifyTake = cfg.getBukkitConfig().getBoolean("owner_notifications.notify_on_take", true);
+        inventory.setItem(SLOT_NOTIFY_TAKE, AdminConfigInventory.toggleItem(
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_TAKE_TITLE),
+            "owner_notifications.notify_on_take",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_TAKE),
+            notifyTake));
+
+        boolean notifyPlace = cfg.getBukkitConfig().getBoolean("owner_notifications.notify_on_place", true);
+        inventory.setItem(SLOT_NOTIFY_PLACE, AdminConfigInventory.toggleItem(
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_PLACE_TITLE),
+            "owner_notifications.notify_on_place",
+            Translator.get(TranslationKey.DIALOGS__ADMIN_CONFIG__NOTIFICATIONS__OWNER_PLACE),
+            notifyPlace));
+
         setBackButton(SLOT_BACK);
         return inventory;
     }
@@ -98,6 +122,18 @@ public final class AdminConfigNotificationsInventory extends BlockProtInventory 
             player.openInventory(fill(player));
         } else if (slot == SLOT_OWNER_NOTIFICATIONS) {
             cfg.setAndSave("owner_notifications.enabled", !cfg.isOwnerNotificationsEnabled());
+            player.openInventory(fill(player));
+        } else if (slot == SLOT_NOTIFY_OPEN) {
+            boolean notifyOpen = cfg.getBukkitConfig().getBoolean("owner_notifications.notify_on_open", true);
+            cfg.setAndSave("owner_notifications.notify_on_open", !notifyOpen);
+            player.openInventory(fill(player));
+        } else if (slot == SLOT_NOTIFY_TAKE) {
+            boolean notifyTake = cfg.getBukkitConfig().getBoolean("owner_notifications.notify_on_take", true);
+            cfg.setAndSave("owner_notifications.notify_on_take", !notifyTake);
+            player.openInventory(fill(player));
+        } else if (slot == SLOT_NOTIFY_PLACE) {
+            boolean notifyPlace = cfg.getBukkitConfig().getBoolean("owner_notifications.notify_on_place", true);
+            cfg.setAndSave("owner_notifications.notify_on_place", !notifyPlace);
             player.openInventory(fill(player));
         }
     }
