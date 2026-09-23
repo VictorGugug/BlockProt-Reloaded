@@ -206,4 +206,46 @@ public final class AdminTierManager {
             }
         }
     }
+
+    @NotNull
+    public static AdminTier getRole(@NotNull UUID uuid) {
+        AdminRoleEntry entry = ADMIN_ENTRIES.get(uuid);
+        return entry != null ? entry.tier() : AdminTier.NONE;
+    }
+
+    @NotNull
+    public static Set<AdminAction> getCustomFlags(@NotNull UUID uuid) {
+        AdminRoleEntry entry = ADMIN_ENTRIES.get(uuid);
+        if (entry != null && !entry.customFlags().isEmpty()) {
+            return EnumSet.copyOf(entry.customFlags());
+        }
+        Player online = Bukkit.getPlayer(uuid);
+        if (online != null) {
+            return getCustomFlags(online);
+        }
+        return EnumSet.noneOf(AdminAction.class);
+    }
+
+    public static boolean toggleCustomFlag(@NotNull UUID uuid, @NotNull AdminAction action) {
+        Set<AdminAction> current = EnumSet.copyOf(getCustomFlags(uuid));
+        boolean nowActive;
+        if (current.contains(action)) {
+            current.remove(action);
+            nowActive = false;
+        } else {
+            current.add(action);
+            nowActive = true;
+        }
+        setPlayerRole(uuid, AdminTier.CUSTOM, current);
+        return nowActive;
+    }
+
+    @NotNull
+    public static Map<UUID, AdminTier> getAllConfiguredRoles() {
+        Map<UUID, AdminTier> result = new HashMap<>();
+        for (Map.Entry<UUID, AdminRoleEntry> entry : ADMIN_ENTRIES.entrySet()) {
+            result.put(entry.getKey(), entry.getValue().tier());
+        }
+        return Collections.unmodifiableMap(result);
+    }
 }

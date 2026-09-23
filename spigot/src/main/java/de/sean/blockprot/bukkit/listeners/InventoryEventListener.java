@@ -50,6 +50,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
@@ -81,69 +82,85 @@ public class InventoryEventListener implements Listener {
     @EventHandler
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
         final Player player = (Player) event.getWhoClicked();
-        final InventoryState state = InventoryState.get(player.getUniqueId());
-        if (state != null) {
-            InventoryHolder holder = event.getInventory().getHolder();
-            if (holder instanceof BlockProtInventory) {
-                event.setCancelled(true);
-                final var clickedInventory = event.getClickedInventory();
-                if (clickedInventory != null && clickedInventory.getHolder() instanceof BlockProtInventory bpInventory) {
-                    bpInventory.onClick(event, state);
-                }
-                player.updateInventory();
-            }
-        } else {
-            try {
-                if (event.getInventory().getHolder() == null) return;
-                InventoryHolder rawHolder = event.getInventory().getHolder();
-                if (rawHolder instanceof Entity entity && isProtectedInventoryEntity(entity)) {
-                    handleEntityInventoryClick(event, player, entity);
-                    return;
-                }
-                BlockInventoryHolder blockHolder = (BlockInventoryHolder) rawHolder;
-                Block block = blockHolder.getBlock();
-                if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) {
-                    BlockNBTHandler handler = new BlockNBTHandler(block);
-                    String playerUuid = player.getUniqueId().toString();
+        final InventoryHolder topHolder = event.getInventory().getHolder();
 
-                    if (handler.isProtected() && !handler.isOwner(playerUuid)) {
-                        final var friend = handler.getFriend(playerUuid);
-                        if (friend.isPresent()) {
-                            if (!friend.get().canWrite()) {
-                                event.setCancelled(true);
-                            } else if (!friend.get().canRead()) {
-                                event.setCancelled(true);
-                                player.closeInventory();
-                            } else {
-                                if (event.getClickedInventory() != null
-                                        && event.getClickedInventory().equals(event.getInventory())) {
-                                    notifyOwnerItemAction(handler, player, block, event.getAction(), event.getCurrentItem());
-                                }
-                            }
-                        } else {
-                            player.closeInventory();
+        if (topHolder instanceof BlockProtInventory) {
+            event.setCancelled(true);
+            InventoryState state = InventoryState.get(player.getUniqueId());
+            if (state == null) {
+                state = InventoryState.builder().build();
+                InventoryState.set(player.getUniqueId(), state);
+            }
+            final var clickedInventory = event.getClickedInventory();
+            if (clickedInventory != null && clickedInventory.getHolder() instanceof BlockProtInventory bpInventory) {
+                try {
+                    bpInventory.onClick(event, state);
+                } catch (Throwable t) {
+                    BlockProtLogger.error("Failed to process inventory click in " + bpInventory.getClass().getSimpleName(), t);
+                    ComponentMessages.sendLegacy(player, "§cAn internal error occurred while processing this menu action. Check server console.");
+                }
+            }
+            player.updateInventory();
+            return;
+        }
+
+        try {
+            InventoryHolder rawHolder = event.getInventory().getHolder();
+            if (rawHolder == null) return;
+            if (rawHolder instanceof Entity entity && isProtectedInventoryEntity(entity)) {
+                handleEntityInventoryClick(event, player, entity);
+                return;
+            }
+            if (!(rawHolder instanceof BlockInventoryHolder blockHolder)) return;
+            Block block = blockHolder.getBlock();
+            if (BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld())) {
+                BlockNBTHandler handler = new BlockNBTHandler(block);
+                String playerUuid = player.getUniqueId().toString();
+
+                if (handler.isProtected() && !handler.isOwner(playerUuid)) {
+                    final var friend = handler.getFriend(playerUuid);
+                    if (friend.isPresent()) {
+                        if (!friend.get().canWrite()) {
                             event.setCancelled(true);
+                        } else if (!friend.get().canRead()) {
+                            event.setCancelled(true);
+                            player.closeInventory();
+                        } else {
+                            if (event.getClickedInventory() != null
+                                    && event.getClickedInventory().equals(event.getInventory())) {
+                                notifyOwnerItemAction(handler, player, block, event.getAction(), event.getCurrentItem());
+                            }
                         }
-                    } else if (handler.isProtected() && handler.isOwner(playerUuid)) {
-                        // Owner: log item actions to audit
-                        if (event.getClickedInventory() != null
-                                && event.getClickedInventory().equals(event.getInventory())) {
-                            ItemStack item = event.getCurrentItem();
-                            if (item != null && !item.getType().isAir()) {
-                                AuditLogger audit = BlockProt.getAuditLogger();
-                                if (audit != null) {
-                                    AuditLogger.Action act = TAKE_ACTIONS.contains(event.getAction())
-                                        ? AuditLogger.Action.ITEM_TAKEN
-                                        : (PLACE_ACTIONS.contains(event.getAction()) ? AuditLogger.Action.ITEM_PLACED : null);
-                                    if (act != null) audit.log(player.getUniqueId(), player.getName(), block.getLocation(), act);
-                                }
+                    } else {
+                        player.closeInventory();
+                        event.setCancelled(true);
+                    }
+                } else if (handler.isProtected() && handler.isOwner(playerUuid)) {
+                    // Owner: log item actions to audit
+                    if (event.getClickedInventory() != null
+                            && event.getClickedInventory().equals(event.getInventory())) {
+                        ItemStack item = event.getCurrentItem();
+                        if (item != null && !item.getType().isAir()) {
+                            AuditLogger audit = BlockProt.getAuditLogger();
+                            if (audit != null) {
+                                AuditLogger.Action act = TAKE_ACTIONS.contains(event.getAction())
+                                    ? AuditLogger.Action.ITEM_TAKEN
+                                    : (PLACE_ACTIONS.contains(event.getAction()) ? AuditLogger.Action.ITEM_PLACED : null);
+                                if (act != null) audit.log(player.getUniqueId(), player.getName(), block.getLocation(), act);
                             }
                         }
                     }
                 }
-            } catch (ClassCastException e) {
-                // Not a block inventory.
             }
+        } catch (Throwable t) {
+            BlockProtLogger.error("Failed to handle container inventory click", t);
+        }
+    }
+
+    @EventHandler
+    public void onInventoryDrag(@NotNull InventoryDragEvent event) {
+        if (event.getInventory().getHolder() instanceof BlockProtInventory) {
+            event.setCancelled(true);
         }
     }
 
@@ -175,7 +192,11 @@ public class InventoryEventListener implements Listener {
         if (state == null) return;
         InventoryHolder holder = event.getInventory().getHolder();
         if (holder instanceof BlockProtInventory bpInventory) {
-            ((BlockProtInventory) holder).onClose(event, state);
+            try {
+                bpInventory.onClose(event, state);
+            } catch (Throwable t) {
+                BlockProtLogger.error("Failed to process inventory close in " + bpInventory.getClass().getSimpleName(), t);
+            }
             if (!state.originStack.isEmpty()) {
                 // Player-initiated close (ESC / E / X) on a submenu: reopen the parent
                 // menu next tick. Programmatic navigation reopens another inventory

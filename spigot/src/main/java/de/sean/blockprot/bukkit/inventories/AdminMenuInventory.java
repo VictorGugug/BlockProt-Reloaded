@@ -57,6 +57,7 @@ public class AdminMenuInventory extends BlockProtInventory {
     private static final int SLOT_UNLOCK        = 14;
     private static final int SLOT_INTEGRATIONS  = 15;
     private static final int SLOT_STATS         = 16;
+    private static final int SLOT_TIERS         = 19;
     private static final int SLOT_INFO          = 20;
     private static final int SLOT_RELOAD        = 21;
     private static final int SLOT_UPDATE        = 22;
@@ -67,7 +68,7 @@ public class AdminMenuInventory extends BlockProtInventory {
     private static final int[] SEPARATOR_SLOTS = {
         0, 1, 2, 3, 4, 5, 6, 7, 8,
         9, 17,
-        18, 19, 25, 26,
+        18, 25, 26,
         27, 28, 29, 30, 32, 33, 34, 35
     };
 
@@ -106,6 +107,10 @@ public class AdminMenuInventory extends BlockProtInventory {
         inventory.setItem(SLOT_STATS, item(Material.BOOK,
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS_LORE)));
+
+        inventory.setItem(SLOT_TIERS, item(Material.NETHERITE_CHESTPLATE,
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__TIERS),
+            Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__TIERS_LORE)));
 
         setPlayerSkullAsync(SLOT_INFO, player, player.getUniqueId(), player.getName(),
             Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO),
@@ -173,6 +178,20 @@ public class AdminMenuInventory extends BlockProtInventory {
                 newState.currentPageIndex = 0;
                 InventoryState.set(player.getUniqueId(), newState);
                 player.openInventory(new AdminConfigInventory().fill(player));
+            }
+
+        } else if (slot == SLOT_TIERS) {
+            if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
+                player.closeInventory();
+                de.sean.blockprot.bukkit.dialogs.AdminTiersDialog.show(player, DialogOrigin.ADMIN_MENU);
+            } else {
+                InventoryState newState = InventoryState.builder()
+                    .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                    .build();
+                newState.originStack.push(InventoryState.MenuOrigin.ADMIN_MENU);
+                newState.currentPageIndex = 0;
+                InventoryState.set(player.getUniqueId(), newState);
+                player.openInventory(new AdminTiersInventory().fill(player, 0));
             }
 
         } else if (slot == SLOT_RELOAD) {

@@ -68,6 +68,7 @@ public final class AdminMenuDialog {
         String update = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE));
         String integrations = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS));
         String config = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__CONFIG));
+        String tiers = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__TIERS));
         String stats = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS));
         String debug = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG));
         String info = stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO));
@@ -91,6 +92,12 @@ public final class AdminMenuDialog {
             Component.text(stripColor(Translator.get(TranslationKey.ICON__CONFIG)) + config, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_MENU__CONFIG_TOOLTIP)), PASTEL_GOLD),
             p -> AdminConfigDialog.show(p, DialogOrigin.ADMIN_MENU)
+        );
+
+        DialogButton tiersBtn = new DialogButton("tiers",
+            Component.text(stripColor(Translator.get(TranslationKey.ICON__TIERS)) + tiers, NamedTextColor.WHITE),
+            tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__TIERS_LORE)), PASTEL_GOLD),
+            p -> AdminTiersDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
         DialogButton worldExpiryBtn = new DialogButton("world_expiry",
@@ -195,6 +202,7 @@ public final class AdminMenuDialog {
         List<DialogButton> actions = new ArrayList<>();
         actions.add(lockablesBtn);
         actions.add(configBtn);
+        actions.add(tiersBtn);
         actions.add(worldExpiryBtn);
         actions.add(protdelBtn);
         actions.add(unlockBtn);

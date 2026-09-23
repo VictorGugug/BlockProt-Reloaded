@@ -27,6 +27,10 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.admin.AdminAction;
 import de.sean.blockprot.bukkit.admin.AdminTier;
 import de.sean.blockprot.bukkit.admin.AdminTierManager;
+import de.sean.blockprot.bukkit.dialogs.AdminTiersDialog;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
+import de.sean.blockprot.bukkit.inventories.AdminTiersInventory;
+import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -64,6 +68,23 @@ public final class TiersCommand implements CommandExecutor {
             return true;
         }
 
+        if (args.length <= 1 || (args.length == 2 && (args[1].equalsIgnoreCase("gui") || args[1].equalsIgnoreCase("menu")))) {
+            if (sender instanceof Player player) {
+                if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
+                    AdminTiersDialog.show(player, DialogOrigin.ADMIN_MENU);
+                } else {
+                    InventoryState state = InventoryState.builder()
+                        .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                        .build();
+                    InventoryState.set(player.getUniqueId(), state);
+                    player.openInventory(new AdminTiersInventory().fill(player, 0));
+                }
+                return true;
+            }
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_SETROLE_USAGE));
+            return true;
+        }
+
         String targetName = null;
         String roleName = null;
 
@@ -73,12 +94,13 @@ public final class TiersCommand implements CommandExecutor {
         } else if (args.length == 3 && !args[1].equalsIgnoreCase("setrole")) {
             targetName = args[1];
             roleName = args[2];
+        } else if (args.length == 2 && !args[1].equalsIgnoreCase("setrole")) {
+            targetName = args[1];
         } else {
             ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_SETROLE_USAGE));
             return true;
         }
 
-        AdminTier tier = AdminTier.fromString(roleName);
         Player target = Bukkit.getPlayer(targetName);
         UUID targetUuid = target != null ? target.getUniqueId() : null;
         if (targetUuid == null) {
@@ -86,18 +108,36 @@ public final class TiersCommand implements CommandExecutor {
                 targetUuid = UUID.fromString(targetName);
             } catch (IllegalArgumentException ignored) {}
         }
+        boolean isOp = false;
         if (targetUuid == null) {
+            @SuppressWarnings("deprecation")
             OfflinePlayer op = Bukkit.getOfflinePlayer(targetName);
             if (op.hasPlayedBefore() || op.isOnline()) {
                 targetUuid = op.getUniqueId();
+                isOp = op.isOp();
             }
+        } else if (target != null) {
+            isOp = target.isOp();
+        } else {
+            isOp = Bukkit.getOfflinePlayer(targetUuid).isOp();
         }
+
         if (targetUuid == null) {
             ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_PLAYER_NOT_FOUND)
                 .replace("{player}", targetName));
             return true;
         }
 
+        if (roleName == null) {
+            AdminTier configuredTier = AdminTierManager.getRole(targetUuid);
+            String opDisplay = isOp ? "§cYes" : "§7No";
+            ComponentMessages.sendLegacy(sender, "§7[BlockProt] §e" + targetName + " §7- "
+                + Translator.get(TranslationKey.INVENTORIES__ADMIN_TIERS__CURRENT_ROLE).replace("{role}", configuredTier.getIdentifier())
+                + " §7| §cOP: " + opDisplay);
+            return true;
+        }
+
+        AdminTier tier = AdminTier.fromString(roleName);
         AdminTierManager.setPlayerRole(targetUuid, tier, null);
         ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_SETROLE_SUCCESS)
             .replace("{player}", targetName)
@@ -111,13 +151,14 @@ public final class TiersCommand implements CommandExecutor {
         if (!canUseCommand(sender)) return Collections.emptyList();
 
         if (args.length == 2) {
-            return List.of("setrole");
+            return List.of("setrole", "gui");
         }
-        if (args.length == 3 && args[1].equalsIgnoreCase("setrole")) {
-            return null;
+        if (args.length == 3) {
+            if (args[1].equalsIgnoreCase("setrole")) return null;
+            return List.of("owner", "t3", "t2", "t1", "custom", "user", "none");
         }
         if (args.length == 4 && args[1].equalsIgnoreCase("setrole")) {
-            return List.of("t1", "t2", "t3", "owner", "none");
+            return List.of("owner", "t3", "t2", "t1", "custom", "user", "none");
         }
         return Collections.emptyList();
     }

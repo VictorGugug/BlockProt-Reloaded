@@ -24,6 +24,9 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.BukkitCompat;
 import de.sean.blockprot.bukkit.Permissions;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTier;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.VersionCompat;
@@ -238,6 +241,7 @@ public class DebugCommand implements CommandExecutor {
 
                 // Domain 6 (Sync part): Commands & Permissions
                 runGroup(player, passed, failed, "6b. Commands registered",   () -> checkCommandsRegistered(player, passed, failed));
+                runGroup(player, passed, failed, "6c. Admin tiers",           () -> checkAdminTiers(player, passed, failed));
 
                 // Domain 7: Event Listeners & Engine
                 runDomain("7/9", "EVENT LISTENERS & ENGINE");
@@ -999,6 +1003,9 @@ public class DebugCommand implements CommandExecutor {
         inv(p, f, "AdminConfigRaidInventory",    () -> new AdminConfigRaidInventory().fill(player));
         inv(p, f, "AdminConfigNotificationsInventory", () -> new AdminConfigNotificationsInventory().fill(player));
         inv(p, f, "AdminConfigMaintenanceInventory", () -> new AdminConfigMaintenanceInventory().fill(player));
+        inv(p, f, "AdminTiersInventory", () -> new AdminTiersInventory().fill(player, 0));
+        inv(p, f, "AdminTierSelectInventory", () -> new AdminTierSelectInventory(player.getName(), player.getUniqueId()).fill(player));
+        inv(p, f, "AdminCustomFlagsInventory", () -> new AdminCustomFlagsInventory(player.getName(), player.getUniqueId()).fill(player));
 
         BlockProtLogger.log("Inventory skipped: FriendSearchInventory (chat-input gateway, no fill() to build)");
         touchScreen(INVENTORY_PACKAGE, "FriendSearchInventory");
@@ -1387,6 +1394,22 @@ public class DebugCommand implements CommandExecutor {
                 if (w == null) return;
                 WorldLockableDetailDialog.show(player, DialogOrigin.ADMIN_MENU, w);
             });
+            dlg(p, f, "AdminTiersDialog", () -> AdminTiersDialog.show(player, DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminTierSelectDialog", () -> AdminTierSelectDialog.show(player, player.getName(), player.getUniqueId(), DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "AdminCustomFlagsDialog", () -> AdminCustomFlagsDialog.show(player, player.getName(), player.getUniqueId(), DialogOrigin.ADMIN_MENU));
+            dlg(p, f, "FriendDetailDialog", () -> {
+                var loc = player.getLocation().clone();
+                var world = player.getWorld();
+                var orig = world.getBlockAt(loc).getType();
+                world.setType(loc, Material.CHEST);
+                var block = world.getBlockAt(loc);
+                var h = new BlockNBTHandler(block);
+                h.setOwner(player.getUniqueId().toString());
+                h.addFriend(player.getUniqueId().toString());
+                FriendDetailDialog.showForBlock(player, block, h, player.getUniqueId().toString(), 0);
+                world.setType(loc, orig);
+            });
+            dlg(p, f, "WorldExpiryDialog", () -> WorldExpiryDialog.show(player, DialogOrigin.ADMIN_MENU));
         } finally {
             DialogBridgeFactory.setTestBridge(null);
         }
@@ -1435,7 +1458,8 @@ public class DebugCommand implements CommandExecutor {
             "HelpCommand", "SettingsCommand", "FriendsAddAllCommand", "StatisticsCommand",
             "TransferCommand", "AboutCommand", "HintsCommand", "InfoCommand",
             "ReloadCommand", "UpdateCommand", "IntegrationsCommand", "DebugCommand",
-            "AdminUnlockCommand", "WorldProtDeleteCommand", "LockablesCommand", "RecommendedCommand"
+            "AdminUnlockCommand", "WorldProtDeleteCommand", "LockablesCommand", "RecommendedCommand",
+            "TiersCommand"
         };
         java.util.Set<String> wired = new java.util.HashSet<>();
         for (String name : commandClasses) {
@@ -1474,6 +1498,103 @@ public class DebugCommand implements CommandExecutor {
                 + " integration classes constructed in BlockProt.onLoad()");
             p.incrementAndGet();
         } else {
+            f.incrementAndGet();
+        }
+    }
+
+    private void checkAdminTiers(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        try {
+            boolean parsingOk = AdminTier.fromString("t1") == AdminTier.T1
+                && AdminTier.fromString("t2") == AdminTier.T2
+                && AdminTier.fromString("t3") == AdminTier.T3
+                && AdminTier.fromString("owner") == AdminTier.OWNER
+                && AdminTier.fromString("custom") == AdminTier.CUSTOM
+                && AdminTier.fromString("user") == AdminTier.NONE
+                && AdminTier.fromString("normal") == AdminTier.NONE
+                && AdminTier.fromString("none") == AdminTier.NONE
+                && AdminTier.fromString("unknown_val") == AdminTier.NONE;
+            if (!parsingOk) {
+                BlockProtLogger.fail("AdminTier parsing", "fromString failed to resolve expected tier");
+                f.incrementAndGet();
+                return;
+            }
+
+            boolean hierarchyOk = AdminTier.OWNER.includes(AdminTier.T3)
+                && AdminTier.T3.includes(AdminTier.T2)
+                && AdminTier.T2.includes(AdminTier.T1)
+                && AdminTier.T1.includes(AdminTier.T1)
+                && !AdminTier.T1.includes(AdminTier.T2)
+                && !AdminTier.NONE.includes(AdminTier.T1);
+            if (!hierarchyOk) {
+                BlockProtLogger.fail("AdminTier hierarchy", "includes() hierarchy check failed");
+                f.incrementAndGet();
+                return;
+            }
+
+            boolean actionsOk = AdminAction.INFO.getMinimumTier() == AdminTier.T1
+                && AdminAction.TELEPORT.getMinimumTier() == AdminTier.T1
+                && AdminAction.LOGS.getMinimumTier() == AdminTier.T1
+                && AdminAction.BREAK.getMinimumTier() == AdminTier.T2
+                && AdminAction.UNLOCK.getMinimumTier() == AdminTier.T2
+                && AdminAction.LOCKABLES.getMinimumTier() == AdminTier.T2
+                && AdminAction.CONTAINER_BYPASS.getMinimumTier() == AdminTier.T2
+                && AdminAction.PROTDEL.getMinimumTier() == AdminTier.T3
+                && AdminAction.CONFIG.getMinimumTier() == AdminTier.T3
+                && AdminAction.DEBUG.getMinimumTier() == AdminTier.T3
+                && AdminAction.RELOAD.getMinimumTier() == AdminTier.OWNER
+                && AdminAction.UPDATE.getMinimumTier() == AdminTier.OWNER
+                && AdminAction.INTEGRATIONS.getMinimumTier() == AdminTier.OWNER
+                && AdminAction.RECOMMENDED.getMinimumTier() == AdminTier.OWNER
+                && AdminAction.SETROLE.getMinimumTier() == AdminTier.OWNER;
+            if (!actionsOk) {
+                BlockProtLogger.fail("AdminAction mappings", "unexpected minimum tier mapping");
+                f.incrementAndGet();
+                return;
+            }
+
+            boolean consolePerms = true;
+            for (AdminAction action : AdminAction.values()) {
+                if (!AdminTierManager.hasPermission(Bukkit.getConsoleSender(), action)) {
+                    consolePerms = false;
+                    break;
+                }
+            }
+            if (!consolePerms) {
+                BlockProtLogger.fail("AdminTierManager", "Console sender denied on admin action");
+                f.incrementAndGet();
+                return;
+            }
+
+            UUID testUuid = UUID.randomUUID();
+            AdminTierManager.setPlayerRole(testUuid, AdminTier.CUSTOM, EnumSet.of(AdminAction.RELOAD));
+            AdminTierManager.save();
+            AdminTierManager.load();
+            AdminTier loadedRole = AdminTierManager.getRole(testUuid);
+            boolean allRolesOk = AdminTierManager.getAllConfiguredRoles().containsKey(testUuid);
+            boolean flagsOk = AdminTierManager.getCustomFlags(testUuid).contains(AdminAction.RELOAD);
+            boolean toggledOn = AdminTierManager.toggleCustomFlag(testUuid, AdminAction.DEBUG);
+            boolean toggledOff = !AdminTierManager.toggleCustomFlag(testUuid, AdminAction.DEBUG);
+            if (loadedRole != AdminTier.CUSTOM || !allRolesOk || !flagsOk || !toggledOn || !toggledOff) {
+                BlockProtLogger.fail("AdminTierManager", "getRole / customFlags roundtrip mismatch for test entry");
+                f.incrementAndGet();
+                return;
+            }
+            AdminTierManager.setPlayerRole(testUuid, AdminTier.NONE, null);
+            AdminTierManager.save();
+            if (AdminTierManager.getRole(testUuid) != AdminTier.NONE) {
+                BlockProtLogger.fail("AdminTierManager", "Role not removed after set to NONE");
+                f.incrementAndGet();
+                return;
+            }
+
+            AdminTier currentTier = AdminTierManager.getPlayerTier(player);
+            boolean anyAdmin = AdminTierManager.hasAnyAdminPermission(player);
+
+            BlockProtLogger.pass("Admin tiers: parsing, hierarchy, actions (15), console bypass, and storage roundtrip OK"
+                + " (callerTier=" + currentTier.getIdentifier() + ", hasAnyAdmin=" + anyAdmin + ")");
+            p.incrementAndGet();
+        } catch (Exception e) {
+            BlockProtLogger.fail("Admin tiers", e.getMessage());
             f.incrementAndGet();
         }
     }
@@ -1959,6 +2080,15 @@ public class DebugCommand implements CommandExecutor {
 
     private void checkStructuralClasses(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         String[] names = {
+            "de.sean.blockprot.bukkit.admin.AdminTier",
+            "de.sean.blockprot.bukkit.admin.AdminAction",
+            "de.sean.blockprot.bukkit.admin.AdminTierManager",
+            "de.sean.blockprot.bukkit.dialogs.AdminTiersDialog",
+            "de.sean.blockprot.bukkit.dialogs.AdminTierSelectDialog",
+            "de.sean.blockprot.bukkit.dialogs.AdminCustomFlagsDialog",
+            "de.sean.blockprot.bukkit.inventories.AdminTiersInventory",
+            "de.sean.blockprot.bukkit.inventories.AdminTierSelectInventory",
+            "de.sean.blockprot.bukkit.inventories.AdminCustomFlagsInventory",
             "de.sean.blockprot.bukkit.events.BlockAccessEvent",
             "de.sean.blockprot.bukkit.events.BlockAccessMenuEvent",
             "de.sean.blockprot.bukkit.events.BlockLockOnPlaceEvent",
@@ -2112,6 +2242,7 @@ public class DebugCommand implements CommandExecutor {
 
     @Override
     public boolean canUseCommand(@NotNull CommandSender sender) {
-        return sender.isOp() || sender.hasPermission(Permissions.DEBUG.key());
+        return sender.isOp() || AdminTierManager.hasPermission(sender, AdminAction.DEBUG)
+            || sender.hasPermission(Permissions.DEBUG.key());
     }
 }

@@ -189,29 +189,39 @@ public final class BlockProtLogger {
 
     public static void warn(@NotNull String message) {
         log("WARN: " + message);
-        BlockProt plugin = BlockProt.getInstance();
-        if (plugin == null) return;
-        isReentrancyGuard = true;
-        try {
-            plugin.getLogger().warning(COLOR_STRIP.matcher(message).replaceAll(""));
-        } finally {
-            isReentrancyGuard = false;
+        BlockProt plugin = BlockProt.getInstanceOrNull();
+        if (plugin != null) {
+            isReentrancyGuard = true;
+            try {
+                plugin.getLogger().warning(COLOR_STRIP.matcher(message).replaceAll(""));
+            } finally {
+                isReentrancyGuard = false;
+            }
+        } else {
+            Logger.getLogger("BlockProt").warning(COLOR_STRIP.matcher(message).replaceAll(""));
         }
     }
 
     public static void error(@NotNull String message, @Nullable Throwable throwable) {
         log("ERROR: " + message);
-        BlockProt plugin = BlockProt.getInstance();
-        if (plugin == null) return;
-        isReentrancyGuard = true;
-        try {
-            if (throwable != null) {
-                plugin.getLogger().log(java.util.logging.Level.SEVERE, COLOR_STRIP.matcher(message).replaceAll(""), throwable);
-            } else {
-                plugin.getLogger().severe(COLOR_STRIP.matcher(message).replaceAll(""));
+        BlockProt plugin = BlockProt.getInstanceOrNull();
+        if (plugin != null) {
+            isReentrancyGuard = true;
+            try {
+                if (throwable != null) {
+                    plugin.getLogger().log(java.util.logging.Level.SEVERE, COLOR_STRIP.matcher(message).replaceAll(""), throwable);
+                } else {
+                    plugin.getLogger().severe(COLOR_STRIP.matcher(message).replaceAll(""));
+                }
+            } finally {
+                isReentrancyGuard = false;
             }
-        } finally {
-            isReentrancyGuard = false;
+        } else {
+            if (throwable != null) {
+                Logger.getLogger("BlockProt").log(java.util.logging.Level.SEVERE, COLOR_STRIP.matcher(message).replaceAll(""), throwable);
+            } else {
+                Logger.getLogger("BlockProt").severe(COLOR_STRIP.matcher(message).replaceAll(""));
+            }
         }
     }
 

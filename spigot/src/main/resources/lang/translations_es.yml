@@ -28,6 +28,7 @@ icon:
   "false": "○ falso"
   toggle_on_active: "● "
   toggle_off_inactive: "○ "
+  tiers: "🛡 "
 
 search_aliases:
   chest: "cofre, cofres"
@@ -222,8 +223,40 @@ inventories:
     config_lore: "Abre el diálogo de configuración de administrador."
     about: "§fAcerca de BlockProt"
     about_lore: "Información y versión del plugin."
+    tiers: "§6Tiers de Admin"
+    tiers_lore: "Gestiona los tiers y roles administrativos de jugadores."
     auto_drop: "§bAuto-Drop"
     auto_drop_lore: "Configura qué bloques entregan su contenido al romperlos directamente al inventario."
+  admin_tiers:
+    title: "Tiers y Roles de Admin"
+    set_offline: "§eAsignar por Nombre"
+    set_offline_lore: "Asigna un rol a un jugador desconectado o UUID personalizada."
+    current_role: "§7Rol: §f{role}"
+    click_to_assign: "§eClic para cambiar rol"
+    select_role_title: "Rol: {player}"
+    role_owner: "§cOwner (Dueño)"
+    role_owner_lore: "Acceso administrativo total y asignación de roles."
+    role_t3: "§6T3 Admin"
+    role_t3_lore: "Acciones destructivas, configuración y diagnósticos de depuración."
+    role_t2: "§aT2 Helper (Ayudante)"
+    role_t2_lore: "Desbloqueos, configuración de bloqueables y bypass de contenedores."
+    role_t1: "§bT1 Moderador"
+    role_t1_lore: "Acciones de solo lectura, info de bloques, registros y teletransporte."
+    role_none: "§7Usuario (Normal)"
+    role_none_lore: "Permisos estándar de jugador sin ningún tier administrativo."
+    role_custom: "§dPersonalizado (Custom)"
+    role_custom_lore: "Acciones administrativas granulares configuradas por jugador."
+    status_op: "§c● Operador del Servidor (OP)"
+    status_not_op: "§7○ Jugador Estándar"
+    select_role_below: "§eClic abajo para seleccionar rol"
+    custom_left_click: "§7[✓] Clic izquierdo: asignar rol"
+    custom_right_click: "§d[*] Clic derecho: configurar acciones"
+  admin_custom_flags:
+    title: "Acciones Custom: {player}"
+    enabled: "§a● Habilitado"
+    disabled: "§c○ Deshabilitado"
+    min_tier: "§8Tier mínimo: §7{tier}"
+    click_to_toggle: "§eClic para alternar"
   player_list:
     title: "Todos los Jugadores"
     empty: "§7No se encontraron jugadores."
@@ -581,6 +614,22 @@ dialogs:
   admin_menu:
     header: "Menu de Admin"
     config_tooltip: "Editar configuracion de config.yml"
+  admin_tiers:
+    title: "Tiers y Roles de Admin"
+    header: "Tiers y Roles de Admin"
+    subtitle: "Selecciona un jugador conectado o introduce un nombre para asignar un tier"
+    set_offline_btn: "Asignar Jugador por Nombre"
+    set_offline_tooltip: "Introduce el nombre del jugador o su UUID"
+    assign_title: "Asignar Rol: {player}"
+    assign_prompt: "Elige el tier administrativo para {player}:"
+    current_tier: "Tier actual: {tier}"
+    status_op: "Operador del Servidor (OP)"
+    status_not_op: "Jugador Estándar"
+    custom_config_btn: "Configurar Custom"
+    custom_config_tooltip: "Configura permisos granulares para {player}"
+    custom_flags_title: "Acciones Custom: {player}"
+    custom_flags_header: "Permisos Granulares"
+    custom_flags_subtitle: "Activa o desactiva acciones administrativas para {player}:"
   settings:
     header: "Ajustes"
     auto_lock_desc: "Bloquear bloques automaticamente al colocarlos."
@@ -939,3 +988,51 @@ help:
   gui_mode_title: "§6► Modo GUI"
   gui_user: "§7  /bp user  §f- Abre el Menú de Usuario (ajustes, amigos, estadísticas, acerca de)"
   gui_admin: "§7  /bp admin §f- Abre el Menú de Admin (recargar, actualizar, integraciones, estadísticas, debug, info, bloqueables)"
+
+admin_action:
+  info:
+    name: "Info e Inspección"
+    desc: "Ver información de protección de bloques y jugadores."
+  teleport:
+    name: "Teletransporte"
+    desc: "Teletransportarse a bloques protegidos y ubicaciones."
+  logs:
+    name: "Registros de Protección"
+    desc: "Inspeccionar registros de acceso a protecciones."
+  break:
+    name: "Bypass de Romper Bloques"
+    desc: "Romper bloques protegidos propiedad de otros."
+  unlock:
+    name: "Desbloqueo Forzado"
+    desc: "Desbloquear y eliminar protecciones de otros jugadores."
+  lockables:
+    name: "Menú de Bloqueables"
+    desc: "Configurar tipos de bloques bloqueables en el servidor."
+  container_bypass:
+    name: "Bypass de Contenedores"
+    desc: "Abrir e interactuar con contenedores bloqueados."
+  protdel:
+    name: "Borrado de Protecciones de Mundo"
+    desc: "Purgar bloques protegidos por mundo."
+  config:
+    name: "Editar Configuración"
+    desc: "Modificar configuración y ajustes del plugin."
+  debug:
+    name: "Diagnósticos de Depuración"
+    desc: "Ejecutar pruebas y diagnósticos del sistema."
+  reload:
+    name: "Recargar Plugin"
+    desc: "Recargar archivos de configuración del plugin."
+  update:
+    name: "Actualizaciones del Plugin"
+    desc: "Comprobar y gestionar actualizaciones del plugin."
+  integrations:
+    name: "Integraciones"
+    desc: "Inspeccionar integraciones con plugins de terceros."
+  recommended:
+    name: "Valores Recomendados"
+    desc: "Aplicar configuración recomendada del servidor."
+  setrole:
+    name: "Asignar Roles"
+    desc: "Asignar tiers y roles administrativos a jugadores."
+

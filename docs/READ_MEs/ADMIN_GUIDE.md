@@ -597,7 +597,7 @@ Run `/bp integrations` to list which are active on your server.
 | Command | Access | What it does |
 |---|---|---|
 | `/bp admin` | OP or `blockprot.user.admin` | Admin menu hub: lockables, config editor, reload, update, integrations, stats, debug, info, about, world expiry, world protection deletion. Auto-Drop lives under `/bp lockables` -> Auto Drop, not the admin hub. |
-| `/bp tiers [setrole] <player> <tier>` | OP or `blockprot.user.admin.owner` | Assign an admin tier (`t1`, `t2`, `t3`, `owner`, `none`) to a player when `admin_tiers.enabled: true`, saved to player NBT and mirrored to `admins.yml`. |
+| `/bp tiers [setrole] [player] [tier]` | OP or `blockprot.user.admin.owner` | Staff roles menu (chest inventory or dialog). Without arguments, opens the staff management GUI. With arguments, assigns an admin tier (`t1`, `t2`, `t3`, `owner`, `custom`, `none`) to a player when `admin_tiers.enabled: true`. |
 | `/bp lockables` | OP or `blockprot.user.admin` | Browse and toggle which blocks are lockable (the GUI writes `blocks.yml`). This is the only in-game way to add lockable blocks; regular players cannot use it. |
 | `/bp info <player>` | OP or `blockprot.user.admin` | Opens a player's block list. |
 | `/bp unlock <player>` | OP or `blockprot.user.admin` | Opens a GUI to unlock/remove protections for a player. |
@@ -646,8 +646,14 @@ Starting in 1.3.6, setting `admin_tiers.enabled: true` in `config.yml` activates
 
 If your server runs without LuckPerms or another permissions plugin, you can manage admin tiers directly in-game:
 
-- Use `/bp tiers setrole <player> <tier>` (or `/bp tiers <player> <tier>`, requires OP or `owner` tier) to assign a staff member's tier (`t1`, `t2`, `t3`, `owner`, or `none`).
-- Roles assigned this way are stored in the player's persistent NBT (`admin/tier`) and mirrored to `admins.yml` in the plugin folder.
+- Use `/bp tiers` to open the Staff Roles management menu (chest inventory or native Paper dialog).
+- Clicking a player opens their role selector, showing their current tier, server operator status, and available roles (`None`, `Low (Moderator)`, `Medium (Helper)`, `High (Admin)`, `Owner`, `Custom`).
+- The `Custom` role allows fine-grained toggle of 15 administrative action permissions:
+  - In Chest Inventory GUI: left-click selects the Custom role and immediately opens the permissions configuration menu (`AdminCustomFlagsInventory`); right-click opens the configuration menu directly to view or edit existing custom permissions without reassigning.
+  - In Paper Dialogs: two distinct buttons are provided ("Custom" to assign and open permissions; "Config" to open permissions directly).
+  - Inside the custom permissions menu, clicking any of the 15 actions toggles that flag on or off for the player, persisting immediately to player NBT and `admins.yml`.
+- Alternatively, use `/bp tiers setrole <player> <tier>` (or `/bp tiers <player> <tier>`, requires OP or `owner` tier) to assign a staff member's tier directly from chat or console.
+- Roles assigned this way are stored in the player's persistent NBT (`admin/tier`, `admin/custom_flags`) and mirrored to `admins.yml` in the plugin folder.
 - When `admin_tiers.enabled: true`, the plugin checks LuckPerms / Bukkit permissions first, then falls back to `admins.yml` and player NBT, ensuring offline staff remain recognized.
 
 ## 17. Troubleshooting

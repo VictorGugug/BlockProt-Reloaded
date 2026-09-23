@@ -66,6 +66,7 @@ public enum AdminTier {
             case "t3", "3", "high", "admin" -> T3;
             case "owner", "t4", "4" -> OWNER;
             case "custom" -> CUSTOM;
+            case "user", "normal", "none", "0" -> NONE;
             default -> NONE;
         };
     }

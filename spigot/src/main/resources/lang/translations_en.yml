@@ -30,6 +30,7 @@ icon:
   "false": "○ false"
   toggle_on_active: "● "
   toggle_off_inactive: "○ "
+  tiers: "🛡 "
 
 search_aliases:
   chest: "chest, chests"
@@ -223,8 +224,40 @@ inventories:
     config_lore: "Open the admin configuration dialog."
     about: "§fAbout BlockProt"
     about_lore: "Plugin information and version."
+    tiers: "§6Admin Tiers"
+    tiers_lore: "Manage player administrative tiers and roles."
     auto_drop: "§bAuto-Drop"
     auto_drop_lore: "Configure which blocks auto-drop contents to the breaker's inventory."
+  admin_tiers:
+    title: "Admin Tiers & Roles"
+    set_offline: "§eSet by Name"
+    set_offline_lore: "Assign a role to an offline player or custom UUID."
+    current_role: "§7Role: §f{role}"
+    click_to_assign: "§eClick to change role"
+    select_role_title: "Role: {player}"
+    role_owner: "§cOwner"
+    role_owner_lore: "Full administrative access and role assignment."
+    role_t3: "§6T3 Admin"
+    role_t3_lore: "Destructive actions, configs, and debug diagnostics."
+    role_t2: "§aT2 Helper"
+    role_t2_lore: "Unlocks, lockables, and container bypass."
+    role_t1: "§bT1 Moderator"
+    role_t1_lore: "Read-only actions, block info, logs, and teleport."
+    role_none: "§7User (Normal)"
+    role_none_lore: "Standard player permissions with no administrative tier."
+    role_custom: "§dCustom"
+    role_custom_lore: "Granular administrative actions configured per-player."
+    status_op: "§c● Server Operator (OP)"
+    status_not_op: "§7○ Standard Player"
+    select_role_below: "§eClick below to select role"
+    custom_left_click: "§7[✓] Left-click: assign role"
+    custom_right_click: "§d[*] Right-click: configure actions"
+  admin_custom_flags:
+    title: "Custom Actions: {player}"
+    enabled: "§a● Enabled"
+    disabled: "§c○ Disabled"
+    min_tier: "§8Minimum tier: §7{tier}"
+    click_to_toggle: "§eClick to toggle"
   admin_block_list:
     title: "{player}'s Blocks"
   player_list:
@@ -585,6 +618,22 @@ dialogs:
   admin_menu:
     header: "Admin Menu"
     config_tooltip: "Edit config.yml settings"
+  admin_tiers:
+    title: "Admin Tiers & Roles"
+    header: "Admin Tiers & Roles"
+    subtitle: "Select an online player or enter a name to assign a tier"
+    set_offline_btn: "Set Player by Name"
+    set_offline_tooltip: "Enter player name or UUID"
+    assign_title: "Assign Role: {player}"
+    assign_prompt: "Choose the administrative tier for {player}:"
+    current_tier: "Current tier: {tier}"
+    status_op: "Server Operator (OP)"
+    status_not_op: "Standard Player"
+    custom_config_btn: "Configure Custom"
+    custom_config_tooltip: "Configure granular permissions for {player}"
+    custom_flags_title: "Custom Actions: {player}"
+    custom_flags_header: "Granular Permissions"
+    custom_flags_subtitle: "Toggle administrative actions for {player}:"
   settings:
     header: "Settings"
     auto_lock_desc: "Automatically lock blocks when placed."
@@ -945,3 +994,51 @@ help:
   gui_mode_title: "§6► GUI Mode"
   gui_user: "§7  /bp user  §f- Open User Menu (settings, friends, stats, about)"
   gui_admin: "§7  /bp admin §f- Open Admin Menu (reload, update, integrations, stats, debug, info, lockables)"
+
+admin_action:
+  info:
+    name: "Info & Inspection"
+    desc: "View block and player protection info."
+  teleport:
+    name: "Teleport"
+    desc: "Teleport to protected blocks and locations."
+  logs:
+    name: "Protection Logs"
+    desc: "Inspect protection access logs."
+  break:
+    name: "Bypass Block Break"
+    desc: "Break protected blocks owned by others."
+  unlock:
+    name: "Force Unlock"
+    desc: "Unlock and remove protections of other players."
+  lockables:
+    name: "Lockables Menu"
+    desc: "Configure server-wide lockable block types."
+  container_bypass:
+    name: "Container Bypass"
+    desc: "Open and interact with locked containers."
+  protdel:
+    name: "World Protection Delete"
+    desc: "Purge protected blocks per world."
+  config:
+    name: "Edit Configuration"
+    desc: "Modify plugin configuration and settings."
+  debug:
+    name: "Debug Diagnostics"
+    desc: "Run system diagnostics and tests."
+  reload:
+    name: "Reload Plugin"
+    desc: "Reload plugin configuration files."
+  update:
+    name: "Plugin Updates"
+    desc: "Check and manage plugin updates."
+  integrations:
+    name: "Integrations"
+    desc: "Inspect third-party plugin integrations."
+  recommended:
+    name: "Recommended Defaults"
+    desc: "Apply recommended server configuration."
+  setrole:
+    name: "Assign Roles"
+    desc: "Assign administrative tiers and roles to players."
+
