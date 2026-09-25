@@ -12,11 +12,12 @@
 [![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
 [![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
 [![Paper](https://img.shields.io/badge/Paper-1.21.1%2B%20%7C%2026.x-white?style=flat-square)](https://papermc.io/)
-Java 25, Paper 1.21.1 through 26.x, MySQL index, per-world config, access audit, entity protection, villager workstation protection, auto-backup, ownership transfer, item frame and vehicle protection
+
+Java 25, Paper 1.21.1 through 26.x, Folia support, Native Paper Dialogs, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
 
 </div>
 
-Block protection plugin for Paper and Spigot servers. Players lock chests, furnaces, doors, and other blocks through a GUI - no commands required. This fork extends the original NBT core with stability fixes, performance improvements, and new features not present in upstream.
+Block protection plugin for Paper, Purpur, Spigot, and Folia servers. Players protect chests, furnaces, barrels, doors, trapdoors, item frames, vehicles, and workstations through an intuitive GUI or native Paper Dialogs - no complex commands required. This fork extends the original NBT core with enterprise stability, thread-safe asynchronous architecture, and rich modern features.
 
 ## Philosophy
 
@@ -28,22 +29,22 @@ Translations are managed through **[GitLocalize](https://gitlocalize.com/repo/10
 
 [![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
 
-The English file `translations_en.yml` is the reference. Missing keys fall back to English automatically.
+The English file `translations_en.yml` is the primary reference. Missing keys fall back to English automatically without server errors.
 
 ### Languages on GitLocalize
 
-These languages are available on [GitLocalize](https://gitlocalize.com/repo/10833) and accepting contributions:
+These 25 languages are bundled in `lang/` and actively accepting contributions:
 
-ar, cs, de, es, fi, fr, he, hu, id, it, ja, ko, nl, pl, pt-br, ro, ru, sk, sv, th, tr, uk, zh-CN, zh-TW
+ar, cs, de, es, fi, fr, he, hu, id, it, ja, ko, nl, pl, pt-br, ro, ru, sk, sv, th, tr, uk, zh-CN, zh-TW.
 
-The editor shows the English source on the left and your translations on the right. Both legacy color codes (`&a`, `&6`) and MiniMessage format (`<gold>`, `<gradient:...>`) are accepted.
+Both legacy color codes (`&a`, `&6`) and Adventure MiniMessage format (`<gold>`, `<gradient:...>`) are fully supported.
 
 ## Screenshots
 
 ### Block Lock Menu
 ![Block lock](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/main_menu.png)
 
-The main interface for locking blocks. Sneak and right-click any lockable block to open it. The two-row inventory shows functional buttons on top and utility buttons on the bottom row.
+The main interface for locking blocks. Sneak and right-click any lockable block to open it. The two-row inventory displays functional controls on the top row and utility options on the bottom row.
 
 ### Friend Settings
 ![Friend settings](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/friend_settings.png)
@@ -53,7 +54,7 @@ Add or remove friends from your protected blocks and assign them Read, Write, or
 ### Player Settings
 ![Player settings](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/user_settings.png)
 
-Configure personal preferences such as lock-on-place behavior and hint toggles.
+Configure personal preferences such as lock-on-place behavior, notification sounds, and action bar hint toggles.
 
 ### Redstone Settings
 ![Redstone settings](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/redstone_settings.png)
@@ -63,12 +64,12 @@ Control redstone, piston, and hopper interaction for each of your protected bloc
 ### Block Info
 ![Block info](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/block_info.png)
 
-View the owner, friend list, protection status, and additional metadata for any protected block.
+View the owner, friend list, protection status, and metadata for any protected block.
 
 ### Access Log
 ![Access log](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/access_log.png)
 
-See a summary of all access attempts to your protected blocks. The log records when friends opened or interacted with your blocks.
+Summary of all access attempts to your protected blocks. The audit log records when friends opened or interacted with your blocks.
 
 ### Access Log Detail
 ![Inside log](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/inside_log.png)
@@ -78,17 +79,16 @@ Each access record shows a timestamp, player name, and action type: opened, item
 ### Timed Access
 ![Timed access](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/timed_access.png)
 
-Grant temporary access to a friend with a time limit. Access is automatically revoked when the timer expires.
+Grant temporary access to a friend with an expiration countdown. Access is automatically revoked when the timer expires.
 
 ### Admin Player Block-List
 ![Admin view](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/admin_view.png)
 
-Admin tool to view all blocks owned by any player, including offline players. Click any entry to teleport. Shows real block icons and lock timestamps.
-
+Admin inspection tool to view all blocks owned by any player, including offline players. Click any entry to teleport. Shows real block icons and lock timestamps.
 
 ## Installing
 
-Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` folder. Requires **Java 25** and **Paper or Spigot 1.21.1+**.
+Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` directory. Requires **Java 25** (JDK 25 runtime) and **Paper, Purpur, Spigot, or Folia 1.21.1+** (compatible through 26.x).
 
 ### Build from Source
 
@@ -105,28 +105,26 @@ cd BlockProt-Reloaded
 
 Output is placed at `spigot/build/libs/BlockProtReloaded-VERSION.jar`.
 
-The version suffix is controlled by the `versionSuffix` property in `gradle.properties`:
+The version suffix is controlled by `versionSuffix` in `gradle.properties`:
 
 | Value | Output |
 |---|---|
 | *(blank)* | `BlockProtReloaded-1.3.6.jar` - stable release |
-| `SNAPSHOT` | `BlockProtReloaded-1.3.6-SNAPSHOT.jar` |
-| `beta.1` | `BlockProtReloaded-1.3.6-beta.1.jar` |
-| `rc.1` | `BlockProtReloaded-1.3.6-rc.1.jar` |
-
+| `BEDev` | `BlockProtReloaded-1.3.6-BEDev.jar` - experimental pre-release |
+| `hotfix` | `BlockProtReloaded-1.3.6-hotfix.jar` - targeted bugfix release |
 
 ## File Layout
 
 ```
 plugins/BlockProtReloaded/
 ├── config.yml                    Main configuration
-├── blocks.yml                    Lockable block definitions
-├── worlds.yml                    Per-world overrides (optional)
-├── admins.yml                    Admin tiers and staff permissions (optional)
-├── integrations.yml              Third-party plugin integration settings
-├── blockprot_usercache.sqlite    Player UUID cache
+├── blocks.yml                    Lockable block definitions and family expressions
+├── worlds.yml                    Per-world overrides (optional, enabled by per_worlds_config)
+├── admins.yml                    Admin tiers hierarchy and staff permissions (optional)
+├── integrations.yml              Centralized third-party plugin integration settings
+├── blockprot_usercache.sqlite    Player UUID and name resolution cache
 ├── mysql/
-│   ├── mysql.yml                 MySQL / storage configuration
+│   ├── mysql.yml                 MySQL / MariaDB storage index configuration
 │   └── blockprot_audit.sqlite    SQLite access audit log
 ├── lang/
 │   └── translations_*.yml        25 bundled language files
@@ -137,294 +135,173 @@ plugins/BlockProtReloaded/
     └── YYYY-MM-DD_HH-MM_vVERSION.zip   Created on version upgrade
 ```
 
-`blocks.yml` is generated automatically on first start. If your existing `config.yml` had lockable block lists in it, those values are migrated to `blocks.yml` automatically and removed from `config.yml`. The player UUID cache is now stored inside the plugin folder, not next to `server.jar`.
+`blocks.yml` is generated automatically on first start. If an existing `config.yml` contains legacy block lists, those values are automatically migrated to `blocks.yml`. The player UUID cache is stored safely inside the plugin folder.
 
+## User Interfaces
 
-## GUI Overview
+BlockProt Reloaded provides complete interface parity across three display engines:
+
+1. **Chest Inventory GUIs:** Classic inventory screens with click protection and pagination.
+2. **Native Paper Dialogs:** Seamless modal dialogs on modern Paper servers (`use_dialogs: true`), featuring an established pastel palette (`PASTEL_MINT`, `PASTEL_CORAL`, `PASTEL_GOLD`, `SOFT_BLUE`, `PASTEL_PURPLE`) without occupying the inventory.
+3. **Bedrock Forms (Cumulus API):** Native touch-friendly modal forms for players connecting via Geyser and Floodgate.
 
 ### Block Lock Menu
 
-Opened by sneaking and right-clicking any lockable block. Two-row inventory.
+Opened by sneaking and right-clicking any lockable block.
 
 **Top row - functional buttons:**
 
 | Slot | Item | Function |
 |---|---|---|
 | 0 | Block icon | Lock or unlock toggle |
-| 1 | Redstone | Redstone, piston, and hopper settings *(storage and traversal blocks only)* |
-| 2 | Player Head | Manage friends |
-| 3 | Name Tag | Set a custom block name |
+| 1 | Redstone | Redstone, piston, and hopper settings *(storage and traversal blocks)* |
+| 2 | Player Head | Manage friends and permissions |
+| 3 | Name Tag | Set a custom block display name |
 | 4 | Ender Pearl | Transfer block ownership |
-| 5 | Emerald | Locate the villager linked to this workstation *(workstation blocks only)* |
+| 5 | Emerald | Locate linked villager *(workstation blocks only)* |
 
-The redstone button is not shown for display-only blocks such as signs, lecterns, and workstations, because those have no hopper or redstone interaction to gate. Every button above lives in a fixed slot regardless of block type - a slot that does not apply to the current block is simply left empty, so the remaining buttons never shift position.
+The redstone button is automatically hidden for display-only blocks such as signs, lecterns, and workstations. Button positions remain fixed so muscle memory is preserved across block types.
 
 **Bottom row - utility buttons:**
 
-| Slot | Item | When shown |
+| Slot | Item | Condition |
 |---|---|---|
-| 9 | Spyglass | Owner or admin, block has an inventory |
-| 13 | Clock | Owner or admin, audit logger active |
-| 14 | Knowledge Book | Manager role, clipboard has data |
+| 9 | Spyglass | Owner or staff, block has an inventory |
+| 13 | Clock | Owner or staff, audit logger enabled |
+| 14 | Knowledge Book | Manager role, clipboard contains copied settings |
 | 15 | Paper | Manager role |
 | 16 | Compass | Manager role or admin |
-| 17 | Barrier | Always |
+| 17 | Barrier | Always displayed (close menu) |
 
-Copying sends a confirmation to the action bar. Pasting replaces the entire friend list rather than appending, which matches the expected behavior and resolves upstream issue [#268](https://github.com/spnda/BlockProt/issues/268).
-
-### Item Frame and Vehicle Protection
-
-Item frames, glowing item frames, chest boats, storage minecarts, and hopper minecarts can all be protected using the same sneak-and-right-click flow. The menu shown for these entities is simplified: it only shows lock/unlock and friend management, since redstone and expiry options do not apply to them. See the Features section for full details.
-
-### Lockable Blocks Browser (`/bp lockables`)
-
-Six-row paged GUI listing every block the plugin knows about, organized by category with active entries first.
-
-Blocks with a green **Status: ACTIVE** label are currently lockable. Blocks with a red **Status: INACTIVE** label are recognized by the system but not enabled in `blocks.yml`. Left-click any entry to toggle its state: inactive blocks become active and vice versa, updating `blocks.yml` on disk and reloading automatically. Each category has a NETHER STAR entry that enables every material in that category at once. Right-click copies `-MATERIAL_NAME` to your clipboard for use as an exclusion token in a family expression.
-
-The info book shows your server version, your client version when ViaVersion is active, and a count of active vs inactive blocks. Full documentation of families and sub-families is in [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](docs/MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md).
-
-### Statistics List
-
-Each entry shows the real block icon with its type and coordinates, plus how long ago the block was locked. Clicking an entry teleports you to it, provided you have the `blockprot.blocks.tp` permission. Stale entries where the block no longer exists are filtered automatically.
-
-### Player Block-List (`/bp info <player>`)
-
-Six-row GUI showing every block owned by the selected player with real block icons, coordinates, and lock timestamps. Supports pagination. Works for offline players. Requires `blockprot.user.admin`.
-
-### User Menu (`/bp user`, requires `use_menus: true`)
-
-| Slot | Item | Action |
-|---|---|---|
-| 11 | Writable Book | Personal settings |
-| 12 | Player Head | Default friend list |
-| 13 | Book | Block statistics |
-| 14 | Nether Star | About this plugin |
-
-### Admin Menu (`/bp admin`, requires `use_menus: true` and `blockprot.user.admin`)
-
-| Slot | Item | Action |
-|---|---|---|
-| 11 | Comparator | Reload config and translations |
-| 12 | Spyglass | Check for updates |
-| 13 | Chain | List active integrations |
-| 14 | Book | Server statistics |
-| 15 | Command Block | Run diagnostics |
-| 16 | Player Head | Open player block-list GUI |
-
+Copying settings sends an action bar confirmation. Pasting replaces the friend list rather than appending, preventing stale permission accumulation.
 
 ## Commands
 
-Command visibility is controlled by `use_menus` in `config.yml`. With `use_menus: false` (the default), all CLI subcommands below are active. With `use_menus: true`, only `/bp user` and `/bp admin` are active and everything else is hidden from tab-complete.
+Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus: false`, all subcommands are available via chat. When `use_menus: true`, commands route to `/bp user` and `/bp admin`.
 
-**GUI commands (active when `use_menus: true`):**
-
-| Command | Permission | Description |
-|---|---|---|
-| `/bp user` | `blockprot.user` | Open the User Menu |
-| `/bp admin` | `blockprot.user.admin` | Open the Admin Menu |
-
-**User commands (active when `use_menus: false`):**
+**Menu Commands:**
 
 | Command | Permission | Description |
 |---|---|---|
-| `/bp help` | `blockprot.user` | Show available commands |
-| `/bp about` | `blockprot.user` | Show plugin version and fork info |
-| `/bp settings` | `blockprot.user` | Open personal settings GUI |
-| `/bp friends` | `blockprot.user` | Manage your default friend list |
-| `/bp friends addall <player>` | `blockprot.user` | Add a player as friend on all blocks you own at once |
-| `/bp stats` | `blockprot.user` | Open your block statistics GUI |
-| `/bp transfer <player>` | `blockprot.user` | Transfer the looked-at block to another player |
-| `/bp transfer all <player>` | `blockprot.user` | Transfer every block you own to another player |
-| `/bp disablehints` | `blockprot.user` | Toggle protection hint messages |
+| `/bp user` | `blockprot.user` | Open personal user menu or dialog |
+| `/bp admin` | `blockprot.user.admin` | Open administrative control menu or dialog |
 
-**Admin commands (always accessible regardless of `use_menus`):**
+**Player Commands:**
 
 | Command | Permission | Description |
 |---|---|---|
-| `/bp info <player>` | `blockprot.user.admin` | View all blocks owned by a player, including offline players |
-| `/bp unlock <player>` | `blockprot.user.admin` | GUI to inspect or remove protections from any player's blocks |
-| `/bp lockables` | `blockprot.user.admin` | Browse all blocks the system knows about with active/inactive status |
+| `/bp help` | `blockprot.user` | Display available player commands |
+| `/bp about` | `blockprot.user` | Display version and environment information |
+| `/bp settings` | `blockprot.user` | Open personal preferences interface |
+| `/bp friends` | `blockprot.user` | Manage global default friends list |
+| `/bp friends addall <player>` | `blockprot.user` | Add a friend to every block you currently own |
+| `/bp stats` | `blockprot.user` | Open block statistics and location list |
+| `/bp transfer <player>` | `blockprot.user` | Transfer target looked-at block to another player |
+| `/bp transfer all <player>` | `blockprot.user` | Transfer all owned blocks to another player |
+| `/bp disablehints` | `blockprot.user` | Toggle protection action bar hint messages |
+
+**Admin Commands:**
+
+| Command | Permission | Description |
+|---|---|---|
+| `/bp info <player>` | `blockprot.user.admin` | Inspect all blocks owned by a player (online or offline) |
+| `/bp unlock <player>` | `blockprot.user.admin` | Inspect or unlock protections owned by a player |
+| `/bp lockables` | `blockprot.user.admin` | Interactive browser for all known materials with toggleable active status |
 | `/bp tiers [setrole] <player> <role>` | op or `blockprot.user.admin.owner` | Manage staff admin tiers (t1, t2, t3, owner, none) and admins.yml |
-| `/bp protdel` | op or `blockprot.user.admin` | Delete all protections in the current world with undo support |
-| `/bp reload` | op or `blockprot.user.admin.owner` | Backup then reload all config files and translations |
-| `/bp update` | op or `blockprot.user.admin.owner` | Check for plugin updates |
-| `/bp integrations` | op or `blockprot.user.admin.owner` | List active plugin integrations |
-| `/bp debug <subcommand>` | `blockprot.debug` | Run diagnostics |
-| `/bp recommended <blocks\|config\|all>` | op or console | Apply recommended production configuration or lockable lists |
-
+| `/bp protdel` | op or `blockprot.user.admin` | Bulk delete protections in the current world with undo support |
+| `/bp reload` | op or `blockprot.user.admin.owner` | Create safety backup and reload configs, blocks, and translations |
+| `/bp update` | op or `blockprot.user.admin.owner` | Check GitHub releases for updates with intelligent channel detection |
+| `/bp integrations` | op or `blockprot.user.admin.owner` | Inspect status of all third-party integrations |
+| `/bp debug <subcommand>` | `blockprot.debug` | Run structural diagnostic checks and class coverage scans |
+| `/bp recommended <blocks|config|all>` | op or console | Apply recommended production configuration profiles |
 
 ## Permissions
 
 | Permission | Default | Description |
 |---|---|---|
-| `blockprot.user` | true | All standard player features: lock, friends, settings, stats, transfer |
-| `blockprot.user.admin` | op | Full admin features: player block-lists, unlock GUI, admin commands |
-| `blockprot.user.admin.t1` | op | Tier 1 (Moderator): read-only inspection, info list, teleport, audit logs |
-| `blockprot.user.admin.t2` | op | Tier 2 (Helper): T1 plus block unlock, break protected, lockables GUI |
-| `blockprot.user.admin.t3` | op | Tier 3 (Admin): T2 plus world protection deletion, full config dialogs |
-| `blockprot.user.admin.owner` | op | Tier 4 (Owner): Full control, reload, update, staff management, recommended |
-| `blockprot.user.admin.custom` | false | Custom staff role evaluating granular action flags |
-| `blockprot.lockmax` | false | Exempt from the `player_max_locked_block_count` limit |
-| `blockprot.locklimit.<N>` | false | Override the per-player cap with a specific limit |
-| `blockprot.blocks.tp` | op | Teleport to blocks from the statistics or admin block-list GUI |
-| `blockprot.debug` | op | Access to `/bp debug` diagnostics |
+| `blockprot.user` | true | Standard player features: lock, friends, settings, stats, transfer |
+| `blockprot.user.admin` | op | Full administrator privileges and GUI inspection |
+| `blockprot.user.admin.t1` | op | Staff Tier 1 (Moderator): read-only block info, teleport, audit inspect |
+| `blockprot.user.admin.t2` | op | Staff Tier 2 (Helper): T1 plus block unlock, break protected, lockables GUI |
+| `blockprot.user.admin.t3` | op | Staff Tier 3 (Admin): T2 plus world protection deletion, full config dialogs |
+| `blockprot.user.admin.owner` | op | Staff Tier 4 (Owner): full control, reload, update, staff role assignments |
+| `blockprot.user.admin.custom` | false | Custom staff role evaluating granular action flags from admins.yml |
+| `blockprot.lockmax` | false | Exemption from the `player_max_locked_block_count` limit |
+| `blockprot.locklimit.<N>` | false | Assigns a custom maximum locked block limit to the player |
+| `blockprot.blocks.tp` | op | Allows teleportation to blocks from statistics and admin block lists |
+| `blockprot.debug` | op | Access to `/bp debug` system diagnostics |
 
+## Key Features
 
-## Features
+### Modern Minecraft Compatibility
+Compatible across Java 21 through Java 25. Supports Minecraft versions from 1.20.5 through 26.2 and future drops. Version detection evaluates numbers dynamically, ensuring immediate compatibility when new patch releases drop without requiring hardcoded updates.
 
-### Core Block Protection
+### Native Paper Dialogs Parity
+Full support for modern Paper modal dialogs (`use_dialogs: true`). Dialog menus render directly on client viewports with styled pastel themes (`PASTEL_MINT`, `PASTEL_CORAL`, `PASTEL_GOLD`, `SOFT_BLUE`, `PASTEL_PURPLE`), eliminating inventory clicking glitches and container desynchronization.
 
-Sneak and right-click any lockable block to open the protection GUI. Add friends with Read, Write, or Manager permission levels. Redstone, hopper, and piston interaction can be toggled per block. Copy and paste protection settings between blocks. A per-player default friend list is applied to all new locks automatically.
+### Four-Tier Staff Hierarchy (`admins.yml`)
+Configurable four-tier staff management system (`admin_tiers.enabled: true`):
+- **Tier 1 (Moderator):** Non-destructive inspection, audit review, and teleportation.
+- **Tier 2 (Helper):** Container unlock and break authorization.
+- **Tier 3 (Admin):** World-wide protection administration and configuration dialogs.
+- **Tier 4 (Owner):** System reloads, updates, recommended profiles, and staff assignments.
+- Custom roles can also be declared with granular action flags.
 
-### Java 25 and Paper 1.21.1 through 26.x Compatibility
-
-Compiles against the Paper 1.21.1 API and runs on every version from 1.21.1 through the current 26.x line, including 26.2 and later drops: version detection compares numbers rather than matching a fixed list, so new 26.x releases are recognized automatically. 1.20.x received its last big update in 1.3.3. Both the classic `1.x` and the year-based `26.x` version schemes are detected at runtime.
-
-### Item Frame Protection
-
-Item frames and glowing item frames can be protected with the same sneak-and-right-click flow used for blocks. Once protected, non-owners cannot rotate or swap the displayed item and cannot break or shoot the frame. The ImageFrame plugin is supported: frames carrying an ImageFrame creator tag are automatically treated as owned by the creator, protecting multi-map image displays without any extra configuration. Protection data is stored in the entity's persistent NBT and survives chunk reloads and server restarts.
-
-A frame mounted on a lockable block (a chest, a door, etc.) is automatically linked to that block on placement instead of becoming an independent protection unit. A linked frame has no owner of its own: it shares the underlying block's owner, friends, and lock state exactly, and interacting with it opens that block's lock menu directly. This avoids having to separately protect a decorative frame placed next to a chest you already protected, and stops griefers from placing a frame on someone else's storage block to interfere with it. Frames not mounted on a lockable block keep the standalone entity-protection flow described above.
-
-### Chest Boat and Minecart Protection
-
-Chest boats, storage minecarts, and hopper minecarts can be protected the same way. Once protected, right-clicking the vehicle without sneaking is blocked for non-owners and non-friends, preventing inventory access. The protection menu shows only lock/unlock and friend management, since redstone settings and expiry do not apply to mobile entities.
-
-### Contextual Lock Menu
-
-The lock menu adapts its available options based on the type of block being protected. Storage blocks such as chests, barrels, hoppers, and furnaces show the full set of options including redstone settings and expiry. Traversal blocks such as doors, trapdoors, and fence gates show redstone settings but not expiry. Display blocks such as signs, lecterns, and beehives show only friends, name, and transfer. Workstations and other interactive blocks show the same reduced set.
-
-### Villager Workstation Protection
-
-A villager whose job-site memory points to a protected workstation block inherits that block's protection. Non-owners cannot damage or trade with the linked villager, and cannot break or interact with blocks in a configurable area around the workstation (default: 2 blocks horizontal, 1 block vertical). The protection menu for a linked workstation shows an Emerald button that starts a short particle effect on the villager's location, visible only to the player who clicked it, to help find which villager is linked. The horizontal and vertical search radius and the feature itself are independently configurable in `config.yml` under `villager_workstation_protection`.
-
-### StatHandler Stability Fixes
-
-`StatHandler.saveFile()` was completely rewritten for 1.3.3. The old code used an unconditional `Files.move(ATOMIC_MOVE)` which crashes on Windows and some Linux filesystems that do not support atomic cross-directory moves, causing `Failed to swap backup NBT file` spam every five minutes. The new implementation writes to a temp file first, validates it, copies it to the backup, then replaces the live file - with a fallback to a non-atomic copy-and-delete when atomic move is not available. A Caffeine cache also throttles the per-player stale-entry scan to at most once per 60 seconds per player. The chunk-load guard in `purgeStalePbsEntries` prevents the 20-second server freeze that occurred when that method triggered a synchronous chunk load on an unloaded chunk.
-
-### Block Family Expression System
-
-`blocks.yml` supports a compact family expression syntax alongside the standard flat material lists. Expressions are always parsed regardless of the `modern_family_blocks` flag - that flag only controls whether flat lists are auto-converted to expressions on startup.
-
+### Block Family Expressions
+`blocks.yml` supports compact, expressive family expressions:
 ```yaml
 lockable_tile_entities:
-  - "[*]"                          # all tile entities
-  - "[*-CHEST]"                    # only chest variants
-  - "[* -*SIGN]"                   # all tile entities except signs
-  - "[*-FURNACE *-CHEST]"         # only furnaces and chests
+  - "[*]"                               # all tile entities
+  - "[*-CHEST]"                         # only chest variants
+  - "[* -*SIGN]"                        # all tile entities except signs
+  - "[*-FURNACE *-CHEST]"              # furnaces and chests
 
 lockable_shulker_boxes:
   - "[*-SHULKERS -WHITE_SHULKER_BOX]"   # all shulkers except white
 
 lockable_entities:
-  - "[*-CHEST_BOATS]"             # all chest boat variants
+  - "[*-CHEST_BOATS]"                  # all chest boat variants
   - "[*-CHEST_MINECARTS *-HOPPER_MINECARTS]"
 ```
+Full documentation: [`docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md`](docs/MODERN%20SYNTAX%20AND%20LEGACY/BLOCK_FAMILY_SYNTAX.md).
 
-Full syntax reference: [`docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md`](docs/MODERN%20SYNTAX%20AND%20LEGACY/BLOCK_FAMILY_SYNTAX.md). Full block list: [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](docs/MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md).
+### Item Frame and Vehicle Protection
+Item frames, glowing item frames, chest boats, storage minecarts, and hopper minecarts are protected using the standard sneak-right-click interaction. Frames mounted directly onto locked containers link to the underlying container automatically, sharing ownership and friends without requiring duplicate protection.
 
-### Config and Blocks Auto-Merge
+### Villager Workstation Protection
+Villagers whose job-site points to a protected workstation inherit its protection. Non-owners cannot trade with or damage the linked villager, and cannot break blocks in the configured radius around the workstation. An Emerald button in the workstation menu initiates a particle indicator pointing to the linked villager.
 
-On every startup and on `/bp reload`, all config files are updated. Missing keys are added from JAR defaults, renamed keys are migrated, and new blocks are appended to `blocks.yml` in legacy flat-list mode. No existing values are overwritten.
+### High-Performance Hopper Protection
+Hoppers are checked using a thread-safe Caffeine cache and `ProtectedBlockCache`, resolving server tick lag without needing to completely disable hopper extraction.
 
-### Per-World Configuration
+### Hybrid MySQL / SQLite Access Audit
+Stores block protections in PersistentDataContainer / NBT on the block itself, while providing an optional asynchronous MySQL / MariaDB index for high-speed cross-server lookup. An asynchronous SQLite audit log (`blockprot_audit.sqlite`) records open, item take, item place, and access denied events.
 
-Enable `per_worlds_config: true` in `config.yml` to activate `worlds.yml`, which lets you override lockable block lists per world and enable or disable protection entirely for individual worlds.
+### Per-World Configuration (`worlds.yml`)
+Enable `per_worlds_config: true` to configure independent block whitelists, protection rules, and feature toggles per world.
 
-### Auto-Reload
+### Inactivity Cleanup and World Expiry
+Configurable automated cleanup (`inactivity_cleanup_days`) that unregisters protections belonging to players who have been offline for extended periods.
 
-The plugin watches its config files and reloads automatically when it detects a change. If you prefer to control reloads manually, set `auto_reload_configs: false` and use `/bp reload` instead.
+## Integrations
 
-### SQLite Usercache
-
-The `blockprot_usercache.sqlite` file is now stored inside the plugin's data folder (`plugins/BlockProtReloaded/`) rather than next to `server.jar`. If an existing file is found at the old location on startup, it is moved automatically.
-
-### Persistent Session Logging
-
-One log file (`blockprot-current.log`) is shared across restarts. After 24 hours it is rotated to a dated archive and a new file is started.
-
-### Hybrid MySQL / NBT Backend
-
-NBT is the source of truth. MySQL or MariaDB can be enabled as an optional index for fast lookups, backed by a HikariCP connection pool. All SQL operations are asynchronous. Configured in `mysql/mysql.yml`.
-
-### SQLite Access Audit Log
-
-Stored at `mysql/blockprot_audit.sqlite`. Records access denied, access granted, opened, item taken, and item placed events. Writes are asynchronous and the log is automatically pruned at 50,000 entries. Accessible from the Clock button in the block lock menu. Owner access is never logged.
-
-### Automatic Backup on Version Upgrade
-
-A zip backup of the plugin data folder is created automatically whenever the plugin version changes. No backup is created on routine restarts.
-
-### Inactivity Cleanup
-
-Set `inactivity_cleanup_days` to a positive number to remove protections owned by long-inactive players on startup. Disabled by default.
-
-### Security Options
-
-| Option | Default | Description |
-|---|---|---|
-| `protect_locked_blocks_from_explosions` | true | Explosions cannot destroy locked blocks |
-| `block_protected_block_piston_movement` | true | Pistons cannot move locked blocks |
-| `allow_break_protected_blocks` | false | Any player can break protected blocks (protection is cleared on break) |
-| `respect_spawn_protection` | true | Prevent locking blocks inside the spawn protection radius |
-| `clear_protection_on_shulker_break` | false | Remove protection data when a shulker box is broken |
-
-### WorldEdit Paste Auto-Lock
-
-Automatically locks unprotected blocks near a WorldEdit paste origin. Disabled by default. Configurable radius and block limit per paste.
-
-### Entity Protection
-
-Protects tamed animals including wolves, cats, parrots, horses, and llamas. Right-click your pet while holding the configured menu item (default: Stick) to open the settings GUI. Disabled by default. In `blocks.yml`, the `protectable_entities` list allows server owners to extend protection to non-tameable entities such as Allays, Armadillos, Iron Golems, and Villagers.
-
-### Native Bedrock Forms Integration (Geyser and Floodgate)
-
-Bedrock Edition players connecting via Geyser and Floodgate automatically receive native touch-friendly Bedrock Forms (Cumulus API) for menus, block locking, settings, friend management, and admin dialogs. Bedrock players can toggle between native forms and Java inventory menus at any time in `/bp settings`. In addition, Bedrock player skins are resolved on player heads using the Geyser Global Skin API.
-
-### Colored Particle Effects and Sounds
-
-Locking shows a green dust ring with a sound. Unlocking shows a red dust ring. Shulker boxes use their open and close sounds. Effects and sounds can be toggled independently.
-
-### SkinsRestorer Support
-
-Displays correct player head icons on offline-mode servers using the SkinsRestorer skin cache. Skins are pre-fetched asynchronously on login.
-
-### MiniMessage and Adventure Color Support
-
-Translation files accept both legacy color codes (`&a`, `§6`) and MiniMessage format (`<gold>`, `<gradient:...>`).
-
-### PlaceholderAPI Integration
-
-| Placeholder | Description |
+| Plugin | Notes |
 |---|---|
-| `%blockprot_global_block_count%` | Total blocks locked on the server |
-| `%blockprot_own_block_count%` | Blocks locked by the current player |
-| `%blockprot_default_friends%` | The player's default friend list |
+| Towny | Respects town, plot, and nation boundaries; cleans unclaims; ruined town bypass |
+| WorldGuard | Evaluates region flags and respects the `allow-blockprot` custom region flag |
+| Lands | Honors claim permissions; wilderness protection restrictions |
+| ClaimChunk | Restricts locking and container access to chunk owners |
+| GriefPrevention | Honors claim ownership; prevents locking outside or inside foreign claims |
+| Residence | Restricts locking and container interaction to residence owners |
+| PlaceholderAPI | Exposes global and per-player block counts and default friend placeholders |
+| SkinsRestorer | Resolves authentic player head textures on offline-mode servers asynchronously |
+| WorldEdit / FAWE | Optional paste auto-lock for newly pasted structures |
+| Floodgate / Geyser | Resolves Bedrock names and skins; native Bedrock touch forms (Cumulus) |
+| ImageFrame | Automatically protects image frame multi-map displays for creators |
+| ViaVersion | Client protocol version detection in the `/bp lockables` interface |
+| Folia | Asynchronous chunk handling and region scheduler compatibility |
 
-### Folia Support
-
-The plugin uses the FoliaLib scheduler and is compatible with Folia-based server forks.
-
-### Legacy Folder Migration
-
-On first boot after a plugin rename, BlockProt Reloaded automatically copies data from the old folder (`BlockProt` or `BlockProtPlus`) into the new one. Existing files are never overwritten. The source folder is left intact with a `.migrated` marker so the migration never runs twice.
-
-
-## Block Coverage
-
-All block lists are defined in `blocks.yml` and can be changed without restarting. Full details are in [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](docs/MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md).
-
-**Storage blocks:** all chest variants including all copper oxidation stages (1.21.9+), all 17 shulker box colors, furnace, smoker, blast furnace, hopper, dispenser, dropper, barrel, brewing stand, decorated pot, chiseled bookshelf, crafter, jukebox, lectern, beehive, bee nest, beacon, all 12 shelf variants, and all sign variants (standing, hanging, wall).
-
-**Interactive blocks:** dragon egg, composter, bell, note block, all cauldron variants, all anvil damage stages, enchanting table, grindstone, stonecutter, loom, cartography table, smithing table, fletching table.
-
-**Doors, trapdoors, and fence gates:** all 12 wood variants for each, plus iron and all copper oxidation stages for doors and trapdoors.
-
-**Entities (via sneak and right-click):** item frames, glowing item frames, all chest boat wood variants, chest minecart, hopper minecart.
-
-
-## Configuration Reference
+## Configuration Overview
 
 ```yaml
 # General
@@ -432,12 +309,12 @@ language_file: translations_en.yml
 replace_translations: true
 notify_op_of_updates: false
 excluded_worlds: []
-per_worlds_config: false           # enables worlds.yml (renamed from worlds_config_enabled)
+per_worlds_config: false           # enables worlds.yml
 inactivity_cleanup_days: -1        # -1 = disabled
-auto_reload_configs: true          # set to false to disable the file watcher
+auto_reload_configs: true          # automatic file watcher
 
 # Block format
-modern_family_blocks: false        # true = auto-convert flat lists to family expressions
+modern_family_blocks: false        # auto-convert flat lists to family expressions
 
 # Player defaults
 lock_on_place_by_default: true
@@ -456,20 +333,24 @@ respect_spawn_protection: true
 
 # Action bar
 action_bar:
-  duration_seconds: 6              # duration in seconds alerts persist (refreshed every 40 ticks)
+  duration_seconds: 6
 
 # Admin tiers
 admin_tiers:
-  enabled: false                   # enable 4-tier admin hierarchy and admins.yml support
+  enabled: false                   # enable 4-tier admin hierarchy and admins.yml
 
-# Owner notifications (server-wide defaults, overridable per player via /bp settings)
+# UI Modes
+use_menus: false                   # true = route commands to GUI/Dialog menus
+use_dialogs: false                 # true = use native Paper Dialog modals on Paper 1.21.1+
+
+# Owner notifications
 owner_notifications:
   enabled: true
   notify_on_open: true
   notify_on_take: true
   notify_on_place: true
 
-# Pet protection (legacy key name, still read automatically)
+# Entity protection
 entity_protection:
   enabled: false
   auto_protect_on_tame: true
@@ -479,96 +360,29 @@ entity_protection:
 # Villager workstation protection
 villager_workstation_protection:
   enabled: true
-  radius: 2            # horizontal search radius in blocks
-  vertical_radius: 1   # vertical search radius in blocks
+  radius: 2
+  vertical_radius: 1
 
-# Effects
+# Effects and sounds
 block_lock_effects: true
 block_lock_sounds: true
 
 # Timed access
 timed_access_max_duration_days: 90
 
-# WorldEdit (DEPRECATED, configured in integrations.yml under worldedit.paste_autolock)
-# worldedit_paste_autolock:
-#   enabled: false
-#   radius: 24
-#   max_blocks_per_paste: 5000
-#   delay_ticks: 20
-
-# Menus
-use_menus: false
-
-# World-level default expiry (per-block manual expiry is not implemented yet)
-world_expiry:
-  enabled: false
-  check_interval_minutes: 10
-  worlds: {}
-
 # Logging and backups
 enable_session_log: true
 enable_backups: true
 ```
 
-MySQL is configured separately in `mysql/mysql.yml`.
+## Documentation and Release History
 
-
-## Integrations
-
-| Plugin | Notes |
-|---|---|
-| Towny | Respects town and nation permissions |
-| WorldGuard | Honors region flags |
-| Lands | Supports Lands claim permission checks |
-| ClaimChunk | Prevents locking blocks in chunks the player does not own |
-| PlaceholderAPI | Exposes stats and protection status as placeholders |
-| SkinsRestorer | Correct player head icons on offline-mode servers |
-| WorldEdit / FAWE | Optional paste auto-lock |
-| Floodgate / Geyser | Bedrock player name resolution, Geyser Global Skin API skin cache, and native Bedrock forms (Cumulus) |
-| ImageFrame | Item frame creator tag is read for automatic ownership |
-| ViaVersion | Client version shown in `/bp lockables` info book |
-| Folia | Asynchronous chunk handling support |
-
-
-## Compatibility
-
-| | |
-|---|---|
-| Minecraft | 1.21.1, 1.21.x, 26.x (no upper cap, detected numerically at runtime) |
-| Server software | Paper, Spigot, Purpur, Folia |
-| Java | 25+ required |
-| MySQL | MySQL 8+, MariaDB 10.5+ (optional) |
-
-
-## Roadmap
-
-| Issue | Description | Status |
-|---|---|---|
-| [#346](https://github.com/spnda/BlockProt/issues/346) | Clear protection when a shulker box is broken so gifted shulkers arrive unlocked | [OK] Implemented |
-| [#345](https://github.com/spnda/BlockProt/issues/345) | Official Paper 26.1.x support | [OK] Implemented |
-| [#344](https://github.com/spnda/BlockProt/issues/344) | `NbtApiException` spam on shulker box place | [OK] Fixed |
-| [#343](https://github.com/spnda/BlockProt/issues/343) | 1.21.11 support | [OK] Implemented |
-| [#334](https://github.com/spnda/BlockProt/issues/334) | Configurable message colors via MiniMessage | [OK] Implemented |
-| [#329](https://github.com/spnda/BlockProt/issues/329) | `RuntimeException` on AIR block in `EntityChangeBlockEvent` | [OK] Fixed |
-| [#324](https://github.com/spnda/BlockProt/issues/324) | Allow breaking protected blocks for reinforcement-plugin compatibility | [OK] Implemented |
-| [#318](https://github.com/spnda/BlockProt/issues/318) | Per-world lockable block configuration | [OK] Implemented |
-| [#306](https://github.com/spnda/BlockProt/issues/306) | Server lag caused by `HopperEventListener` | [OK] Fixed via Caffeine cache and `ProtectedBlockCache` |
-| [#303](https://github.com/spnda/BlockProt/issues/303) | Respect spawn-protection radius | [OK] Implemented |
-| [#298](https://github.com/spnda/BlockProt/issues/298) | ClaimChunk integration | [OK] Implemented |
-| [#295](https://github.com/spnda/BlockProt/issues/295) | Lock trapdoors and iron doors | [OK] Implemented |
-| [#282](https://github.com/spnda/BlockProt/issues/282) | MySQL support | [OK] Implemented |
-| - | Filter `/bp lockables` material list by client protocol version when ViaVersion is active | Pending |
-
-
-## Documentation policy from 1.3.4 onward
-
-1.3.3 is the last release where this README is updated feature-by-feature in full detail. Starting with 1.3.4, this README will be condensed into a short summary of all current features, and `docs/RELEASE_NOTES.md` becomes the single place where what changed between versions is recorded in detail. This keeps documentation effort proportional to development time as the plugin grows. Check [`docs/RELEASE_NOTES/1.3.3.RELEASE_NOTES.md`](docs/RELEASE_NOTES/1.3.3.RELEASE_NOTES.md) for the complete version-by-version history going forward.
-
+- **Release Notes:** Detailed version-by-version changelogs, migration guides, and upgrade notes are maintained in [`docs/RELEASE_NOTES/`](docs/RELEASE_NOTES/).
+- **Block Configuration Reference:** Comprehensive guide on family expressions, sub-families, and material references is located in [`docs/MODERN SYNTAX AND LEGACY/`](docs/MODERN%20SYNTAX%20AND%20LEGACY/).
 
 ## Contact and Support
 
 Maintained by **Zar**. [Open an issue](https://github.com/VictorGugug/BlockProt-Reloaded/issues) for bugs or feature suggestions.
-
 
 ## License
 
