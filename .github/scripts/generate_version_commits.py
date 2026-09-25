@@ -165,104 +165,207 @@ def categorize_commit(subject):
     return "General"
 
 
-def build_markdown_report(version, prev_tag, prev_version, base_commit, commits, repo_url, platforms="", mc_range=""):
-    """Generate comprehensive Markdown report."""
+def resolve_release_commit(version, cwd=None):
+    """Resolve commit hash for active version (tag if exists, else HEAD)."""
+    commit = run_command(["git", "rev-parse", f"{version}^{{commit}}"], cwd=cwd, allow_failure=True)
+    if not commit:
+        commit = run_command(["git", "rev-parse", version], cwd=cwd, allow_failure=True)
+    if not commit:
+        commit = run_command(["git", "rev-parse", "HEAD"], cwd=cwd, allow_failure=True)
+    return commit
+
+
+def resolve_tag_commit(tag, cwd=None):
+    """Resolve commit hash for a tag."""
+    if not tag:
+        return ""
+    commit = run_command(["git", "rev-parse", f"{tag}^{{commit}}"], cwd=cwd, allow_failure=True)
+    if not commit:
+        commit = run_command(["git", "rev-parse", tag], cwd=cwd, allow_failure=True)
+    return commit
+
+
+def collect_previous_releases(current_version, repo_url, cwd=None):
+    """Collect previous releases from git tags in reverse chronological order."""
+    raw_tags = run_command(
+        ["git", "for-each-ref", "--sort=-creatordate", "--format=%(refname:short)|%(creatordate:short)", "refs/tags"],
+        cwd=cwd,
+        allow_failure=True,
+    )
+
+    releases = []
+    if not raw_tags:
+        return releases
+
+    seen_tags = set()
+    for line in raw_tags.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split("|")
+        tag = parts[0].strip()
+        date = parts[1].strip() if len(parts) > 1 else ""
+
+        norm_tag = tag.lstrip("v").lower()
+        norm_curr = current_version.lstrip("v").lower()
+
+        if norm_tag == norm_curr or tag in seen_tags:
+            continue
+        seen_tags.add(tag)
+
+        commit = resolve_tag_commit(tag, cwd=cwd)
+        short_commit = commit[:7] if commit else ""
+
+        releases.append({
+            "tag": tag,
+            "date": date,
+            "short_commit": short_commit,
+            "commit": commit,
+            "github_url": f"https://github.com/{repo_url}/releases/tag/{tag}",
+            "modrinth_url": f"https://modrinth.com/plugin/blockprot-reloaded/version/{tag}",
+            "curseforge_url": "https://www.curseforge.com/minecraft/bukkit-plugins/blockprot-reloaded1565977",
+            "hangar_url": "https://hangar.papermc.io/VictorGugug/BlockProt-Reloaded/versions",
+        })
+
+    return releases
+
+
+def is_version_released(version, cwd=None):
+    """Check if a git tag already exists for the specified version."""
+    existing = run_command(["git", "tag", "--list", version], cwd=cwd, allow_failure=True)
+    if not existing:
+        existing = run_command(["git", "tag", "--list", f"v{version}"], cwd=cwd, allow_failure=True)
+    return bool(existing.strip())
+
+
+def build_markdown_report(version, release_commit, prev_tag, prev_commit, prev_version, base_commit, commits, repo_url, previous_releases, platforms="", mc_range="", released=False):
+    """Generate comprehensive Markdown report without bulky inlined commits."""
     compare_ref = prev_tag if prev_tag else (f"{base_commit[:7]}~1" if base_commit else "")
     compare_url = f"https://github.com/{repo_url}/compare/{compare_ref}...main" if compare_ref else ""
+    status_label = "Released" if released else "Not yet released"
+    plat_status = "Available" if released else "Not yet released"
 
     lines = []
-    lines.append(f"# BlockProt Reloaded {version} Commit Summary")
+    lines.append(f"# BlockProt Reloaded {version} Release Summary")
     lines.append("")
     lines.append("## Release Cycle Metadata")
     lines.append("")
     lines.append("| Property | Value |")
     lines.append("| :--- | :--- |")
     lines.append(f"| **Active Version** | `{version}` |")
+    lines.append(f"| **Release Status** | `{status_label}` |")
+    if release_commit:
+        lines.append(f"| **Release Commit** | [`{release_commit[:7]}`](https://github.com/{repo_url}/commit/{release_commit}) |")
     if platforms:
         lines.append(f"| **Supported Platforms** | `{platforms}` |")
     if mc_range:
         lines.append(f"| **Supported Minecraft Range** | `{mc_range}` |")
     lines.append(f"| **Previous Version** | `{prev_version if prev_version else 'N/A'}` |")
-    lines.append(f"| **Previous Tag** | `{prev_tag if prev_tag else 'N/A'}` |")
+    if prev_tag:
+        lines.append(f"| **Previous Release Tag** | [`{prev_tag}`](https://github.com/{repo_url}/releases/tag/{prev_tag}) |")
+    if prev_commit:
+        lines.append(f"| **Previous Release Commit** | [`{prev_commit[:7]}`](https://github.com/{repo_url}/commit/{prev_commit}) |")
     if base_commit:
         lines.append(f"| **Cycle Start Commit** | [`{base_commit[:7]}`](https://github.com/{repo_url}/commit/{base_commit}) |")
     lines.append(f"| **Total Commits in Cycle** | `{len(commits)}` |")
     if compare_url:
-        lines.append(f"| **Full Comparison Diff** | [View Changes on GitHub]({compare_url}) |")
+        lines.append(f"| **Full Comparison Diff** | [Compare {compare_ref}...main on GitHub]({compare_url}) |")
     lines.append("")
 
-    lines.append("## Commits by Category")
+    lines.append("## Distribution Platforms")
+    lines.append("")
+    lines.append("| Platform | Target / URL | Status |")
+    lines.append("| :--- | :--- | :---: |")
+    lines.append(f"| **GitHub Release** | [View on GitHub](https://github.com/{repo_url}/releases/tag/{version}) | {plat_status} |")
+    lines.append(f"| **Modrinth** | [View on Modrinth](https://modrinth.com/plugin/blockprot-reloaded/version/{version}) | {plat_status} |")
+    lines.append(f"| **CurseForge** | [View on CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/blockprot-reloaded1565977) | {plat_status} |")
+    lines.append(f"| **Hangar** | [View on Hangar](https://hangar.papermc.io/VictorGugug/BlockProt-Reloaded/versions) | {plat_status} |")
     lines.append("")
 
-    categories = {
-        "Features": [],
-        "Fixes": [],
-        "Refactoring": [],
-        "Documentation": [],
-        "Maintenance": [],
-        "General": [],
-    }
+    lines.append("## Commits & Differential Changes")
+    lines.append("")
+    if compare_url:
+        lines.append("All commits and differential changes for this release cycle can be viewed directly on GitHub:")
+        lines.append(f"-> [View Full Commit History and Diff on GitHub ({compare_ref}...main - {len(commits)} commits)]({compare_url})")
+    else:
+        lines.append(f"Total commits in cycle: {len(commits)}")
+    lines.append("")
 
-    for c in commits:
-        cat = categorize_commit(c["subject"])
-        categories[cat].append(c)
-
-    for cat_name, cat_commits in categories.items():
-        if not cat_commits:
-            continue
-        lines.append(f"### {cat_name}")
+    if previous_releases:
+        lines.append("## Previous Releases History")
         lines.append("")
-        for c in cat_commits:
-            commit_url = f"https://github.com/{repo_url}/commit/{c['full_hash']}"
-            lines.append(f"- [`{c['short_hash']}`]({commit_url}): {c['subject']} ({c['author']}, {c['date']})")
+        lines.append("| Version | Release Date | Release Commit | GitHub | Modrinth | CurseForge | Hangar |")
+        lines.append("| :--- | :---: | :---: | :---: | :---: | :---: | :---: |")
+        for r in previous_releases:
+            c_link = f"[`{r['short_commit']}`](https://github.com/{repo_url}/commit/{r['commit']})" if r["commit"] else "N/A"
+            gh_link = f"[GitHub]({r['github_url']})"
+            mod_link = f"[Modrinth]({r['modrinth_url']})"
+            curse_link = f"[CurseForge]({r['curseforge_url']})"
+            hangar_link = f"[Hangar]({r['hangar_url']})"
+            lines.append(f"| **{r['tag']}** | `{r['date']}` | {c_link} | {gh_link} | {mod_link} | {curse_link} | {hangar_link} |")
         lines.append("")
-
-    lines.append("## All Commits (Chronological)")
-    lines.append("")
-    lines.append("| Commit | Date | Author | Description |")
-    lines.append("| :--- | :--- | :--- | :--- |")
-    for c in commits:
-        commit_url = f"https://github.com/{repo_url}/commit/{c['full_hash']}"
-        escaped_subj = c["subject"].replace("|", "\\|")
-        lines.append(f"| [`{c['short_hash']}`]({commit_url}) | `{c['date']}` | {c['author']} | {escaped_subj} |")
-    lines.append("")
 
     return "\n".join(lines), compare_url
 
 
-def build_release_body(version, prev_tag, base_commit, commits, repo_url):
-    """Generate concise changelog body for GitHub Releases."""
+def build_release_body(version, release_commit, prev_tag, prev_commit, base_commit, commits, repo_url, previous_releases, platforms="", mc_range="", released=False):
+    """Generate concise changelog body for GitHub Releases and platform publications."""
     compare_ref = prev_tag if prev_tag else (f"{base_commit[:7]}~1" if base_commit else "")
     compare_url = f"https://github.com/{repo_url}/compare/{compare_ref}...{version}" if compare_ref else ""
+    status_label = "Released" if released else "Not yet released"
+    status_suffix = "" if released else " *(Not yet released)*"
 
     lines = []
-    lines.append(f"## BlockProt Reloaded {version}")
+    lines.append(f"# BlockProt Reloaded {version}")
+    lines.append("")
+    lines.append("### Release Information")
+    lines.append("")
+    lines.append("| Property | Value |")
+    lines.append("| :--- | :--- |")
+    lines.append(f"| **Release Version** | `{version}` |")
+    lines.append(f"| **Release Status** | `{status_label}` |")
+    if release_commit:
+        lines.append(f"| **Release Commit** | [`{release_commit[:7]}`](https://github.com/{repo_url}/commit/{release_commit}) |")
+    if prev_tag:
+        lines.append(f"| **Previous Release** | [`{prev_tag}`](https://github.com/{repo_url}/releases/tag/{prev_tag}) |")
+    if prev_commit:
+        lines.append(f"| **Previous Release Commit** | [`{prev_commit[:7]}`](https://github.com/{repo_url}/commit/{prev_commit}) |")
+    if platforms:
+        lines.append(f"| **Supported Platforms** | `{platforms}` |")
+    if mc_range:
+        lines.append(f"| **Supported Minecraft Range** | `{mc_range}` |")
+    if compare_url:
+        lines.append(f"| **Full Changelog & Commits** | [Compare with {compare_ref}]({compare_url}) |")
+    lines.append("")
+
+    lines.append("### Distribution Platforms")
+    lines.append("")
+    lines.append(f"- **GitHub Release:** [View on GitHub](https://github.com/{repo_url}/releases/tag/{version}){status_suffix}")
+    lines.append(f"- **Modrinth:** [View on Modrinth](https://modrinth.com/plugin/blockprot-reloaded/version/{version}){status_suffix}")
+    lines.append(f"- **CurseForge:** [View on CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/blockprot-reloaded1565977){status_suffix}")
+    lines.append(f"- **Hangar:** [View on Hangar](https://hangar.papermc.io/VictorGugug/BlockProt-Reloaded/versions){status_suffix}")
+    lines.append("")
+
+    lines.append("### Changes")
     lines.append("")
     if compare_url:
-        lines.append(f"Full Changelog: [Compare with {compare_ref}]({compare_url})")
+        lines.append("All commits and differential changes for this release can be inspected directly on GitHub:")
+        lines.append(f"-> [Compare changes on GitHub ({compare_ref}...{version} - {len(commits)} commits)]({compare_url})")
+    else:
+        lines.append(f"Total commits in this release: {len(commits)}")
+    lines.append("")
+
+    if previous_releases:
+        lines.append("### Previous Releases History")
         lines.append("")
-
-    categories = {
-        "Features": [],
-        "Fixes": [],
-        "Refactoring": [],
-        "Documentation": [],
-        "Maintenance": [],
-        "General": [],
-    }
-
-    for c in commits:
-        cat = categorize_commit(c["subject"])
-        categories[cat].append(c)
-
-    for cat_name, cat_commits in categories.items():
-        if not cat_commits:
-            continue
-        lines.append(f"### {cat_name}")
-        lines.append("")
-        for c in cat_commits:
-            commit_url = f"https://github.com/{repo_url}/commit/{c['full_hash']}"
-            lines.append(f"- [`{c['short_hash']}`]({commit_url}): {c['subject']}")
+        lines.append("| Version | Release Date | Release Commit | GitHub | Modrinth | CurseForge | Hangar |")
+        lines.append("| :--- | :---: | :---: | :---: | :---: | :---: | :---: |")
+        for r in previous_releases:
+            c_link = f"[`{r['short_commit']}`](https://github.com/{repo_url}/commit/{r['commit']})" if r["commit"] else "N/A"
+            gh_link = f"[GitHub]({r['github_url']})"
+            mod_link = f"[Modrinth]({r['modrinth_url']})"
+            curse_link = f"[CurseForge]({r['curseforge_url']})"
+            hangar_link = f"[Hangar]({r['hangar_url']})"
+            lines.append(f"| **{r['tag']}** | `{r['date']}` | {c_link} | {gh_link} | {mod_link} | {curse_link} | {hangar_link} |")
         lines.append("")
 
     return "\n".join(lines)
@@ -283,12 +386,18 @@ def main():
 
     base_commit, prev_tag, prev_version, range_spec = resolve_version_commit_range(version, cwd=repo_dir)
     commits = collect_commits(range_spec, cwd=repo_dir)
+    release_commit = resolve_release_commit(version, cwd=repo_dir)
+    prev_commit = resolve_tag_commit(prev_tag, cwd=repo_dir)
+    previous_releases = collect_previous_releases(version, repo_url, cwd=repo_dir)
+    released = is_version_released(version, cwd=repo_dir)
 
     if args.release_body:
-        content = build_release_body(version, prev_tag, base_commit, commits, repo_url)
+        content = build_release_body(
+            version, release_commit, prev_tag, prev_commit, base_commit, commits, repo_url, previous_releases, platforms, mc_range, released=released
+        )
     else:
         content, compare_url = build_markdown_report(
-            version, prev_tag, prev_version, base_commit, commits, repo_url, platforms, mc_range
+            version, release_commit, prev_tag, prev_commit, prev_version, base_commit, commits, repo_url, previous_releases, platforms, mc_range, released=released
         )
 
     out_path = Path(args.output_file)
@@ -310,7 +419,11 @@ def main():
         compare_url = f"https://github.com/{repo_url}/compare/{compare_ref}...main" if compare_ref else ""
         with open(github_output, "a", encoding="utf-8") as f:
             f.write(f"version={version}\n")
+            f.write(f"release_commit={release_commit}\n")
+            f.write(f"released={'true' if released else 'false'}\n")
+            f.write(f"release_status={'Released' if released else 'Not yet released'}\n")
             f.write(f"previous_tag={prev_tag}\n")
+            f.write(f"previous_commit={prev_commit}\n")
             f.write(f"previous_version={prev_version}\n")
             f.write(f"commit_count={len(commits)}\n")
             f.write(f"compare_url={compare_url}\n")
