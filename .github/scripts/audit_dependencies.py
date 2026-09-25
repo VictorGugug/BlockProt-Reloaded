@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import argparse
 import concurrent.futures
 import json
 import os
@@ -6,6 +7,7 @@ import re
 import sys
 import urllib.request
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 if sys.stdout.encoding != "utf-8":
     try:
@@ -425,6 +427,12 @@ def audit_server_platforms(version_info):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Audit project dependencies and server platform upstream builds.")
+    parser.add_argument("--json-output", help="Path to write audit results in JSON format.")
+    parser.add_argument("--output-file", help="Path to write markdown audit report.")
+    parser.add_argument("--no-summary", action="store_true", help="Do not write directly to GITHUB_STEP_SUMMARY.")
+    args = parser.parse_args()
+
     props, supported_mc = parse_gradle_properties(REPO_ROOT)
     version_info = get_plugin_version_info(props, supported_mc)
     gv = parse_gradle_build_files(REPO_ROOT)
@@ -543,8 +551,32 @@ def main():
 
     md_content = "\n".join(md_lines) + "\n"
 
+    if args.json_output:
+        json_path = Path(args.json_output)
+        if not json_path.is_absolute():
+            json_path = Path(REPO_ROOT) / json_path
+        json_path.parent.mkdir(parents=True, exist_ok=True)
+        audit_payload = {
+            "version_info": version_info,
+            "dependency_results": results,
+            "platform_results": platform_results,
+            "up_to_date_count": up_to_date_count,
+            "outdated_count": outdated_count,
+            "total_count": total_count,
+        }
+        json_path.write_text(json.dumps(audit_payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"Audit results exported to JSON: {json_path}")
+
+    if args.output_file:
+        out_file = Path(args.output_file)
+        if not out_file.is_absolute():
+            out_file = Path(REPO_ROOT) / out_file
+        out_file.parent.mkdir(parents=True, exist_ok=True)
+        out_file.write_text(md_content, encoding="utf-8")
+        print(f"Audit markdown report written to: {out_file}")
+
     step_summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
-    if step_summary_path:
+    if step_summary_path and not args.no_summary:
         try:
             with open(step_summary_path, "a", encoding="utf-8") as f:
                 f.write("\n" + md_content)

@@ -377,6 +377,7 @@ def main():
     parser.add_argument("--version", default=None, help="Optional version override (defaults to gradle.properties).")
     parser.add_argument("--output-file", default="build/reports/version-commits.md", help="Markdown output file path.")
     parser.add_argument("--release-body", action="store_true", help="Generate concise release notes body only.")
+    parser.add_argument("--no-summary", action="store_true", help="Do not write directly to GITHUB_STEP_SUMMARY.")
     args = parser.parse_args()
 
     repo_dir = os.path.abspath(args.repo_dir)
@@ -408,7 +409,7 @@ def main():
 
     # If running in GitHub Actions, append to GITHUB_STEP_SUMMARY
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
-    if summary_path and not args.release_body:
+    if summary_path and not args.release_body and not args.no_summary:
         with open(summary_path, "a", encoding="utf-8") as f:
             f.write(content + "\n")
 
