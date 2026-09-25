@@ -1,7 +1,7 @@
 ![LOCKABLE BLOCKS REFERENCE](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/docs/LOCKABLE%20BLOCKS%20REFERENCE.png)
 
 Complete list of every block and entity that can be locked, organized by family and sub-family.
-Covers all Minecraft versions up to 1.21.x / 26.1 (The Copper Age).
+Covers all Minecraft versions from 1.20.5 up to 26.2.
 
 For the same catalog organized by family: see `LOCKABLE_BLOCKS_BY_FAMILY.md`.
 

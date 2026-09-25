@@ -1,14 +1,14 @@
 <img src="https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BlockProtReloaded.png" alt="BlockProt Reloaded" />
 
 ---
-BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper and Spigot servers (Minecraft 1.21.1 through the current 26.x line). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
+BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper, Purpur, Spigot, and Folia servers (Minecraft 1.20.5 through 26.2). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
 
 
 ## What it does
 
-Players sneak and right-click any lockable block or entity to open the protection GUI - no commands required. From the GUI they can lock or unlock, manage a per-block friend list and make blocks public, control redstone and hopper access, inspect the access audit trail, and copy and paste settings between blocks.
+Players sneak and right-click any lockable block or entity to open the protection GUI: no commands required. From the GUI they can lock or unlock, manage a per-block friend list and make blocks public, control redstone and hopper access, inspect the access audit trail, and copy and paste settings between blocks.
 
-Admins get a separate toolset: a paged block browser (`/bp lockables`), per-player block lists (`/bp info`), an unlock GUI (`/bp unlock`), diagnostics (`/bp debug run`), and a full audit log per protected block.
+Admins get a separate toolset: a paged block browser (`/bp lockables`), per-player block lists (`/bp info`), an unlock GUI (`/bp unlock`), staff roles management (`/bp tiers`), diagnostics (`/bp debug run`), and a full audit log per protected block.
 
 
 ## What is protected
@@ -17,7 +17,7 @@ Admins get a separate toolset: a paged block browser (`/bp lockables`), per-play
 
 **Interactive blocks:** doors, trapdoors, and fence gates (all wood variants plus iron and all copper oxidation stages), anvils, cauldrons, enchanting table, grindstone, stonecutter, loom, cartography table, smithing table, composter, bell, note block, dragon egg.
 
-**Entities:** item frames, glowing item frames, chest boats (all wood variants), chest minecarts, hopper minecarts. Tamed animals (wolves, cats, parrots, horses, llamas) via the entity protection system.
+**Entities:** item frames, glowing item frames, chest boats (all wood variants), chest minecarts, hopper minecarts. Tamed animals (wolves, cats, parrots, horses, llamas) and non-tameable protectable entities (villagers) via the entity protection system.
 
 All block lists are defined in `blocks.yml` and can be changed at runtime without restarting.
 
@@ -28,7 +28,7 @@ All block lists are defined in `blocks.yml` and can be changed at runtime withou
 Every button in the Block Lock GUI now occupies a fixed slot across all block and entity types. Previously, a missing button (for example, no Redstone button on a workstation) caused all subsequent buttons to shift left, making the menu inconsistent between block types.
 
 ### Entity protection
-Tamed animals (wolves, cats, parrots, horses, llamas) can be protected. Right-click your tamed animal while holding the configured menu item (default: Stick) to open the protection GUI. Disabled by default; enable under `entity_protection` in `config.yml`. Renamed from `pet_protection` in earlier versions - the old key is migrated automatically on upgrade, no manual edit needed.
+Tamed animals (wolves, cats, parrots, horses, llamas) and villagers can be protected. Right-click your entity while holding the configured menu item (default: Stick) to open the protection GUI. Disabled by default; enable under `entity_protection` in `config.yml`. Renamed from `pet_protection` in earlier versions: the old key is migrated automatically on upgrade, no manual edit needed.
 
 ### Villager workstation protection
 A villager whose job-site memory points to a protected workstation block inherits that block's protection automatically. Non-owners cannot damage or trade with the linked villager and cannot break or interact with blocks in a configurable area around the workstation. A "Locate linked villager" Emerald button appears in the workstation's lock menu, showing a short particle effect at the villager's location visible only to the clicking player. Configurable in `config.yml`:
@@ -62,7 +62,7 @@ Sub-families: `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN` (tile ent
 Full syntax: [`docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md`](../MODERN%20SYNTAX%20AND%20LEGACY/BLOCK_FAMILY_SYNTAX.md). Full material list: [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](../MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md).
 
 ### Config and blocks auto-merge on every reload
-On every startup and `/bp reload`, missing keys are added from JAR defaults and renamed keys are migrated. Existing values - including every family expression already written in `blocks.yml` - are never overwritten or reordered. In legacy flat-list mode, new material entries from a newer JAR are appended automatically so new block types become lockable without manual edits.
+On every startup and `/bp reload`, missing keys are added from JAR defaults and renamed keys are migrated. Existing values: including every family expression already written in `blocks.yml`: are never overwritten or reordered. In legacy flat-list mode, new material entries from a newer JAR are appended automatically so new block types become lockable without manual edits.
 
 ### Raid detection
 Monitors explosions near lockable blocks. Logs the event, alerts the owner via action bar and chat if online, or queues the alert for delivery at next login. Configurable via `raid_detection.enabled`.
@@ -76,6 +76,9 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 - All SQL and NBT I/O is asynchronous.
 
 ### Other additions
+- Multi-tier staff permissions (`admin_tiers.enabled`) and standalone `admins.yml` hierarchy.
+- Native Paper Dialogs (`use_dialogs: true`) with pastel color palettes.
+- Bedrock touch forms (Cumulus API via Geyser and Floodgate).
 - Ownership transfer: `/bp transferall <player>` moves ownership of all your blocks to another player.
 - Per-world configuration via `worlds.yml` (`per_worlds_config: true`).
 - Auto-reload via `ConfigFileWatcher` (`auto_reload_configs`, default `true`).
@@ -94,6 +97,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 | Command | Permission | Description |
 |---|---|---|
 | `/bp lockables` | `blockprot.user.admin` | Paged GUI listing all blocks and entities with active/inactive status |
+| `/bp tiers` | `blockprot.user.admin.owner` | Staff roles GUI and custom permissions manager |
 | `/bp info <player>` | `blockprot.user.admin` | All blocks owned by a player with teleport links |
 | `/bp unlock <player>` | `blockprot.user.admin` | Inspect or remove any player's protections |
 | `/bp reload` | op | Reload all config files and merge missing keys |
@@ -107,6 +111,10 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 |---|---|---|
 | `blockprot.user` | true | All standard player features |
 | `blockprot.user.admin` | op | Admin commands and GUIs |
+| `blockprot.user.admin.t1` | op | Low staff tier (moderator inspection) |
+| `blockprot.user.admin.t2` | op | Medium staff tier (helper unlock/lockables) |
+| `blockprot.user.admin.t3` | op | High staff tier (admin world delete/config) |
+| `blockprot.user.admin.owner` | op | Full owner control and staff role assignment |
 | `blockprot.lockmax` | false | Exempt from the block count limit (unlimited) |
 | `blockprot.locklimit.<N>` | false | Per-player cap override (e.g. `blockprot.locklimit.500`) |
 | `blockprot.blocks.tp` | op | Teleport to blocks from stats and admin GUIs |
@@ -117,31 +125,30 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 
 | | |
 |---|---|
-| Minecraft | 1.21.1, 1.21.x, 26.x (no upper cap, detected numerically at runtime) |
+| Minecraft | 1.20.5 - 26.2 (detected numerically at runtime) |
 | Server software | Paper, Spigot, Purpur, Folia |
-| Java | 25+ required |
+| Java | 21+ required (JDK 25 toolchain) |
 | MySQL | MySQL 8+, MariaDB 10.5+ (optional) |
-| Languages | 20 languages on [GitLocalize](https://gitlocalize.com/repo/10833): CS, DE, EN, ES, FI, FR, HU, ID, IT, JA, KO, NL, PL, PT-BR, RU, SK, TH, TR, ZH-CN, ZH-TW |
+| Languages | 25 languages on [GitLocalize](https://gitlocalize.com/repo/10833): AR, CS, DE, EN, ES, FI, FR, HE, HU, ID, IT, JA, KO, NL, PL, PT-BR, RO, RU, SK, SV, TH, TR, UK, ZH-CN, ZH-TW |
 
 
 ## Integrations
 
-Towny, WorldGuard, Lands, ClaimChunk, PlaceholderAPI, SkinsRestorer, WorldEdit/FAWE, Floodgate/Geyser, ImageFrame, ViaVersion/ViaBackwards/ViaRewind, Folia.
+Towny, WorldGuard, Lands, ClaimChunk, GriefPrevention, Residence, PlaceholderAPI, SkinsRestorer, WorldEdit/FAWE, Floodgate/Geyser, ImageFrame, ViaVersion/ViaBackwards/ViaRewind, Folia.
 
 
 ## Install
 
-Place the JAR in `plugins/` and restart. Requires Java 25 and Paper or Spigot 1.21.1+. On upgrade, config keys are migrated automatically - no manual edits required.
+Place the JAR in `plugins/` and restart. Requires Java 21+ and Paper, Purpur, Spigot, or Folia 1.20.5 - 26.2. On upgrade, config keys are migrated automatically: no manual edits required.
 
 
 ## Documentation
 
-- Release history: [`docs/RELEASE_NOTES/1.3.3.RELEASE_NOTES.md`](../RELEASE_NOTES/1.3.3.RELEASE_NOTES.md)
+- Release history: [`docs/RELEASE_NOTES/`](../RELEASE_NOTES/)
 - Block family syntax: [`docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md`](../MODERN%20SYNTAX%20AND%20LEGACY/BLOCK_FAMILY_SYNTAX.md)
 - Full lockable materials reference: [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](../MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md)
-
-**Documentation policy from 1.3.4 onward:** `README.md` will be condensed to a short feature summary. [`docs/RELEASE_NOTES/1.3.3.RELEASE_NOTES.md`](../RELEASE_NOTES/1.3.3.RELEASE_NOTES.md) becomes the single authoritative record of what changed between versions. This file (Modrinth/Hangar description) will continue to be updated for store listings.
-
+- Administrator guide: [`docs/READ_MEs/ADMIN_GUIDE.md`](ADMIN_GUIDE.md)
+- Player guide: [`docs/READ_MEs/PLAYER_GUIDE.md`](PLAYER_GUIDE.md)
 
 Repository: https://github.com/VictorGugug/BlockProt-Reloaded
 Issues and contributions: https://github.com/VictorGugug/BlockProt-Reloaded/issues

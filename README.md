@@ -11,9 +11,9 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](LICENSE)
 [![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
 [![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
-[![Paper](https://img.shields.io/badge/Paper-1.21.1%2B%20%7C%2026.x-white?style=flat-square)](https://papermc.io/)
+[![Paper](https://img.shields.io/badge/Paper-1.20.5%20--%2026.2-white?style=flat-square)](https://papermc.io/)
 
-Java 25, Paper 1.21.1 through 26.x, Folia support, Native Paper Dialogs, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
+Java 21 bytecode (JDK 25 toolchain), Paper 1.20.5 through 26.2, Folia support, Native Paper Dialogs, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
 
 </div>
 
@@ -35,7 +35,7 @@ The English file `translations_en.yml` is the primary reference. Missing keys fa
 
 These 25 languages are bundled in `lang/` and actively accepting contributions:
 
-ar, cs, de, es, fi, fr, he, hu, id, it, ja, ko, nl, pl, pt-br, ro, ru, sk, sv, th, tr, uk, zh-CN, zh-TW.
+ar, cs, de, en, es, fi, fr, he, hu, id, it, ja, ko, nl, pl, pt-br, ro, ru, sk, sv, th, tr, uk, zh-CN, zh-TW.
 
 Both legacy color codes (`&a`, `&6`) and Adventure MiniMessage format (`<gold>`, `<gradient:...>`) are fully supported.
 
@@ -88,7 +88,7 @@ Admin inspection tool to view all blocks owned by any player, including offline 
 
 ## Installing
 
-Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` directory. Requires **Java 25** (JDK 25 runtime) and **Paper, Purpur, Spigot, or Folia 1.21.1+** (compatible through 26.x).
+Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` directory. Requires **Java 21+** (JDK 25 toolchain) and **Paper, Purpur, Spigot, or Folia 1.20.5 - 26.2**.
 
 ### Build from Source
 
@@ -304,75 +304,82 @@ Configurable automated cleanup (`inactivity_cleanup_days`) that unregisters prot
 ## Configuration Overview
 
 ```yaml
-# General
+# [Language]
 language_file: translations_en.yml
+fallback_string: "Unknown translation"
 replace_translations: true
-notify_op_of_updates: false
+
+# [Worlds]
 excluded_worlds: []
-per_worlds_config: false           # enables worlds.yml
-inactivity_cleanup_days: -1        # -1 = disabled
-auto_reload_configs: true          # automatic file watcher
+per_worlds_config: false           # enables per-world configuration via worlds.yml
 
-# Block format
-modern_family_blocks: false        # auto-convert flat lists to family expressions
-
-# Player defaults
+# [Players and friends]
+bedrock_username_prefixes:
+  - "."
+  - "*"
+  - "_"
 lock_on_place_by_default: true
 public_is_friend_by_default: false
 player_max_locked_block_count: -1  # -1 = unlimited
+lock_hint_cooldown_in_seconds: 10
 friend_search_similarity: 0.5
 disable_friend_functionality: false
-redstone_disallowed_by_default: false
 
-# Safety
+# [Blocks and locking behavior]
+modern_family_blocks: false        # auto-convert flat lists to compact family expressions
+redstone_disallowed_by_default: false
+simplified_hopper_logic: false
 protect_locked_blocks_from_explosions: true
 block_protected_block_piston_movement: true
 clear_protection_on_shulker_break: false
 allow_break_protected_blocks: false
 respect_spawn_protection: true
-
-# Action bar
+block_lock_effects: true
+block_lock_sounds: true
+use_menus: false                   # route commands into /bp user and /bp admin
+use_dialogs: false                 # native Paper Dialog modals (Paper 1.21.7+)
+timed_access_max_duration_days: 90
 action_bar:
-  duration_seconds: 6
+  duration_seconds: 6              # duration in seconds alerts persist
 
-# Admin tiers
-admin_tiers:
-  enabled: false                   # enable 4-tier admin hierarchy and admins.yml
-
-# UI Modes
-use_menus: false                   # true = route commands to GUI/Dialog menus
-use_dialogs: false                 # true = use native Paper Dialog modals on Paper 1.21.1+
-
-# Owner notifications
-owner_notifications:
-  enabled: true
-  notify_on_open: true
-  notify_on_take: true
-  notify_on_place: true
-
-# Entity protection
+# [Entity protection]
 entity_protection:
   enabled: false
   auto_protect_on_tame: true
   menu_item: STICK
   villager_locate_seconds: 6
 
-# Villager workstation protection
 villager_workstation_protection:
   enabled: true
   radius: 2
   vertical_radius: 1
 
-# Effects and sounds
-block_lock_effects: true
-block_lock_sounds: true
+# [Expiry]
+world_expiry:
+  enabled: false
+  check_interval_minutes: 10
+  worlds: {}
 
-# Timed access
-timed_access_max_duration_days: 90
+# [Raid detection]
+raid_detection:
+  enabled: false
 
-# Logging and backups
+# [Notifications]
+notify_op_of_updates: false
+owner_notifications:
+  enabled: true
+  notify_on_open: true
+  notify_on_take: true
+  notify_on_place: true
+
+# [Maintenance]
+inactivity_cleanup_days: -1        # -1 = disabled
+auto_reload_configs: true          # automatic file watcher
+auto_reload_delay_seconds: 2
 enable_session_log: true
 enable_backups: true
+admin_tiers:
+  enabled: false                   # 4-tier admin hierarchy and admins.yml
 ```
 
 ## Documentation and Release History

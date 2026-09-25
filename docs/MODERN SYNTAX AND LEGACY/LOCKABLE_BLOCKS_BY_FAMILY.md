@@ -11,8 +11,7 @@ Family membership is defined by the plugin's built-in family registry
 (`BlockFamilyParser`): every material listed below comes from the registry's
 `is*` predicates and `Family`/`SubFamily` entries. New Minecraft materials
 that match the same name patterns (for example a new `*_CHEST` variant) join
-the family automatically at runtime; the tables below stop at 1.21.x / 26.1
-(The Copper Age).
+the family automatically at runtime; the tables below cover 1.20.5 - 26.2.
 
 For the expression syntax that selects these families: see
 `BLOCK_FAMILY_SYNTAX.md`.
@@ -406,7 +405,7 @@ lockable_entities:
 
 ## Family coverage summary
 
-| Family | Config key | Sub-families | Materials (1.21.x / 26.1) |
+| Family | Config key | Sub-families | Materials (1.20.5 - 26.2) |
 |---|---|---|---|
 | `TILE_ENTITIES` | `lockable_tile_entities` | `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN` | 47 listed + sign patterns |
 | `SHULKER_BOXES` | `lockable_shulker_boxes` | `SHULKERS` | 17 |
