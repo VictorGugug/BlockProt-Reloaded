@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
 import de.sean.blockprot.bukkit.dialogs.UserSettingsDialog;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.UserSettingsInventory;
@@ -55,7 +56,7 @@ public class SettingsCommand implements CommandExecutor {
             return true;
         }
         if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-            UserSettingsDialog.show(player);
+            UserSettingsDialog.show(player, DialogOrigin.NONE);
             return true;
         }
 

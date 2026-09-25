@@ -73,7 +73,7 @@ public final class AdminUnlockCommand implements CommandExecutor {
 
         if (args.length < 2) {
             if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-                InfoDialog.show(player, DialogOrigin.ADMIN_MENU);
+                InfoDialog.show(player, DialogOrigin.NONE);
                 return true;
             }
             ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_USAGE));

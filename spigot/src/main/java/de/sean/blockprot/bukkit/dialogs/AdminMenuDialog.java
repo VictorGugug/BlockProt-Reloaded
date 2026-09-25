@@ -189,7 +189,7 @@ public final class AdminMenuDialog {
         DialogButton aboutBtn = new DialogButton("about",
             Component.text(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)), NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__ABOUT)), PASTEL_GOLD),
-            p -> AboutDialog.show(p)
+            p -> AboutDialog.show(p, DialogOrigin.ADMIN_MENU)
         );
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);

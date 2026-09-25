@@ -151,8 +151,9 @@ public final class AdminTierSelectInventory extends BlockProtInventory {
 
         if (slot == SLOT_BACK) {
             InventoryState backState = InventoryState.builder()
-                .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                .origin(state.origin)
                 .build();
+            backState.originStack.addAll(state.originStack);
             InventoryState.set(player.getUniqueId(), backState);
             player.openInventory(new AdminTiersInventory().fill(player, 0));
             return;

@@ -142,7 +142,13 @@ public final class AdminTiersInventory extends BlockProtInventory {
                 Translator.get(TranslationKey.INVENTORIES__NEXT_PAGE), ""));
         }
 
-        setBackButton(SLOT_BACK);
+        InventoryState state = InventoryState.get(player.getUniqueId());
+        boolean hasParent = state != null && (state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty());
+        if (hasParent) {
+            setBackButton(SLOT_BACK);
+        } else {
+            setItemStack(SLOT_BACK, Material.BARRIER, TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        }
         return inventory;
     }
 
@@ -154,11 +160,12 @@ public final class AdminTiersInventory extends BlockProtInventory {
         if (slot < 0 || slot >= getSize()) return;
 
         if (slot == SLOT_BACK) {
-            InventoryState backState = InventoryState.builder()
-                .origin(InventoryState.MenuOrigin.ADMIN_MENU)
-                .build();
-            InventoryState.set(player.getUniqueId(), backState);
-            player.openInventory(new AdminMenuInventory().fill(player));
+            boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
+            if (hasParent) {
+                goBack(player, state);
+            } else {
+                closeAndOpen(player, null);
+            }
             return;
         }
 
@@ -202,8 +209,9 @@ public final class AdminTiersInventory extends BlockProtInventory {
                         final UUID finalUuid = targetUuid;
                         Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
                             InventoryState selectState = InventoryState.builder()
-                                .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                                .origin(state.origin)
                                 .build();
+                            selectState.originStack.addAll(state.originStack);
                             InventoryState.set(player.getUniqueId(), selectState);
                             player.openInventory(new AdminTierSelectInventory(clean, finalUuid).fill(player));
                         });
@@ -219,8 +227,9 @@ public final class AdminTiersInventory extends BlockProtInventory {
                 if (index < entries.size()) {
                     PlayerEntry entry = entries.get(index);
                     InventoryState selectState = InventoryState.builder()
-                        .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                        .origin(state.origin)
                         .build();
+                    selectState.originStack.addAll(state.originStack);
                     InventoryState.set(player.getUniqueId(), selectState);
                     player.openInventory(new AdminTierSelectInventory(entry.name, entry.uuid).fill(player));
                 }

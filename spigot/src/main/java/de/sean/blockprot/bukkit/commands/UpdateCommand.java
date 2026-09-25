@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
 import de.sean.blockprot.bukkit.dialogs.UpdateDialog;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
 import org.bukkit.Bukkit;
@@ -41,7 +42,7 @@ public class UpdateCommand implements CommandExecutor {
         if (!canUseCommand(sender)) return false;
 
         if (sender instanceof Player player && BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-            UpdateDialog.show(player);
+            UpdateDialog.show(player, DialogOrigin.NONE);
             return true;
         }
 

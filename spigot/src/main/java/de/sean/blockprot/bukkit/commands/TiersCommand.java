@@ -71,10 +71,10 @@ public final class TiersCommand implements CommandExecutor {
         if (args.length <= 1 || (args.length == 2 && (args[1].equalsIgnoreCase("gui") || args[1].equalsIgnoreCase("menu")))) {
             if (sender instanceof Player player) {
                 if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-                    AdminTiersDialog.show(player, DialogOrigin.ADMIN_MENU);
+                    AdminTiersDialog.show(player, DialogOrigin.NONE);
                 } else {
                     InventoryState state = InventoryState.builder()
-                        .origin(InventoryState.MenuOrigin.ADMIN_MENU)
+                        .origin(InventoryState.MenuOrigin.NONE)
                         .build();
                     InventoryState.set(player.getUniqueId(), state);
                     player.openInventory(new AdminTiersInventory().fill(player, 0));

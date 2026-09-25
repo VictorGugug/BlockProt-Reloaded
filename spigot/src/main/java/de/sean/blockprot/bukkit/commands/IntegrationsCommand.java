@@ -24,6 +24,7 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtAPI;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
 import de.sean.blockprot.bukkit.dialogs.IntegrationsDialog;
 import de.sean.blockprot.bukkit.integrations.PluginIntegration;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
@@ -45,7 +46,7 @@ public class IntegrationsCommand implements CommandExecutor {
             return false;
 
         if (sender instanceof Player player && BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-            IntegrationsDialog.show(player);
+            IntegrationsDialog.show(player, DialogOrigin.NONE);
             return true;
         }
 

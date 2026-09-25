@@ -111,7 +111,11 @@ public class UserSettingsInventory extends BlockProtInventory {
                     boolean nextState = !h.getPreferDialogs();
                     h.setPreferDialogs(nextState);
                     if (nextState) {
-                        de.sean.blockprot.bukkit.dialogs.UserSettingsDialog.show(player);
+                        de.sean.blockprot.bukkit.dialogs.DialogOrigin dOrigin =
+                            (state.origin == InventoryState.MenuOrigin.NONE && state.originStack.isEmpty())
+                                ? de.sean.blockprot.bukkit.dialogs.DialogOrigin.NONE
+                                : de.sean.blockprot.bukkit.dialogs.DialogOrigin.USER_MENU;
+                        de.sean.blockprot.bukkit.dialogs.UserSettingsDialog.show(player, dOrigin);
                     } else {
                         fill(player);
                         player.updateInventory();

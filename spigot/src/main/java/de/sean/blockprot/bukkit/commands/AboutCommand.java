@@ -27,6 +27,7 @@ import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.dialogs.AboutDialog;
+import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -64,7 +65,7 @@ public class AboutCommand implements CommandExecutor {
         BlockProtLogger.log("command", senderName + " executed /bp about");
 
         if (sender instanceof Player player && BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-            AboutDialog.show(player);
+            AboutDialog.show(player, DialogOrigin.NONE);
             return true;
         }
 
