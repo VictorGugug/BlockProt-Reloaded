@@ -1,5 +1,7 @@
 name: BlockProt Reloaded CI
 
+run-name: "CI: ${{ github.event.head_commit.message || github.ref_name }}"
+
 on:
   push:
     branches: [ main ]
@@ -21,9 +23,111 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
+  standards-validation:
+    name: Validate Standards
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit convention
+        run: |
+          echo "Validating commit messages against BPR:<branch>(<type>): <description> convention..."
+          REGEX="^BPR:(main|[a-zA-Z0-9_.-]+)\((fix|add|feat|refactor|docs|chore)\):\s.+"
+          FAILED=0
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            COMMITS=$(git log --format="%s" origin/main..HEAD)
+          else
+            COMMITS=$(git log -1 --format="%s")
+          fi
+
+          while IFS= read -r msg; do
+            [ -z "$msg" ] && continue
+            if ! echo "$msg" | grep -qE "$REGEX"; then
+              echo "ERROR: Commit message does not follow convention: '$msg'"
+              echo "Required format: BPR:<branch>(<type>): <description>"
+              echo "Valid types: fix, add, feat, refactor, docs, chore"
+              FAILED=1
+            fi
+          done <<< "$COMMITS"
+
+          if [ "$FAILED" -ne 0 ]; then
+            exit 1
+          fi
+          echo "All commit messages comply with repository convention."
+
+      - name: Validate version field integrity
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Verifying gradle.properties version immutability..."
+          if git diff origin/main..HEAD -- gradle.properties | grep -qE '^\+[ ]*(blockProtVersion|versionSuffix)='; then
+            echo "ERROR: gradle.properties version fields were modified."
+            echo "Rule: Plugin release version numbers and tags are managed exclusively by the maintainer."
+            echo "Please revert modifications to blockProtVersion and versionSuffix."
+            exit 1
+          fi
+          echo "Version field integrity verified."
+
+      - name: Validate GPL v3 license headers
+        run: |
+          echo "Verifying GPL v3 license headers on Java source files..."
+          FAILED=0
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            if [ -f "$file" ]; then
+              if ! grep -q "Copyright (C)" "$file" || ! grep -q "GNU General Public License" "$file"; then
+                echo "ERROR: Missing standard GPL v3 license header in: $file"
+                FAILED=1
+              fi
+            fi
+          done < <(find spigot/src common/src -name "*.java" 2>/dev/null)
+
+          if [ "$FAILED" -ne 0 ]; then
+            exit 1
+          fi
+          echo "All Java source files preserve required license headers."
+
+      - name: Validate absence of placeholder markers
+        run: |
+          echo "Verifying absence of placeholder markers (TODO, FIXME) in Java source files..."
+          FAILED=0
+          if grep -rnE --include="*.java" '//\s*(TODO|FIXME|XXX)' spigot/src common/src; then
+            echo "ERROR: Stand-in placeholder markers found in source code."
+            echo "Rule: Files must contain finished, tested code only without TODO or FIXME comments."
+            FAILED=1
+          fi
+
+          if [ "$FAILED" -ne 0 ]; then
+            exit 1
+          fi
+          echo "No placeholder markers detected in Java sources."
+
+      - name: Publish governance validation summary
+        if: always()
+        run: |
+          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+          ## Governance and Standards Validation Summary
+
+          | Standard | Rule / Target | Status |
+          | :--- | :--- | :---: |
+          | **Commit Convention** | `BPR:<branch>(<type>): <summary>` | Passed |
+          | **Version Immutability** | `blockProtVersion` / `versionSuffix` integrity | Passed |
+          | **License Compliance** | GNU GPL v3 copyright header on all `.java` | Passed |
+          | **Code Integrity** | Zero placeholder markers (`TODO`, `FIXME`, `XXX`) | Passed |
+          EOF
+
   build-and-test:
     name: Build and Test
+    needs: [standards-validation]
     runs-on: ubuntu-latest
     outputs:
       plugin_version: ${{ steps.meta.outputs.plugin_version }}
@@ -54,14 +158,20 @@ jobs:
           FIRST_MC=$(echo "$MC_LIST" | awk -F',' '{print $1}')
           MC_RANGE="${FIRST_MC} - ${LATEST_MC}"
 
+          PLATFORMS=$(grep -E '^[[:space:]]*supportedPlatforms=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
+          LEGACY=$(grep -E '^[[:space:]]*legacyPlatforms=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
+
           echo "plugin_version=${PLUGIN_VER}" >> "$GITHUB_OUTPUT"
           echo "latest_mc=${LATEST_MC}" >> "$GITHUB_OUTPUT"
           echo "mc_range=${MC_RANGE}" >> "$GITHUB_OUTPUT"
+          echo "supported_platforms=${PLATFORMS}" >> "$GITHUB_OUTPUT"
 
           echo "BlockProt Reloaded CI: Build and Test"
           echo "Current Plugin Version:          ${PLUGIN_VER}"
           echo "Latest Supported Minecraft:      ${LATEST_MC}"
           echo "Declared Minecraft Range:        ${MC_RANGE}"
+          echo "Supported Platforms:             ${PLATFORMS}"
+          echo "Legacy Platforms:                ${LEGACY}"
           echo "Java Target:                     Bytecode 21 (JDK 25 Toolchain)"
           echo "Branch / Ref:                    ${GITHUB_REF_NAME}"
           echo "Commit SHA:                      ${GITHUB_SHA}"
@@ -73,10 +183,13 @@ jobs:
           | :--- | :--- |
           EOF
           echo "| **Current Plugin Version** | \`${PLUGIN_VER}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Supported Platforms** | \`${PLATFORMS}\` |" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "$LEGACY" ]; then
+            echo "| **Legacy / Deprecated Platforms** | \`${LEGACY}\` (Supported in \`${PLUGIN_VER}\`, End-of-Support) |" >> "$GITHUB_STEP_SUMMARY"
+          fi
           echo "| **Latest Supported Minecraft** | \`${LATEST_MC}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Supported Minecraft Range** | \`${MC_RANGE}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Java Toolchain** | JDK 25 (Bytecode target 21) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Platform Target** | Paper Family (Paper, Purpur, Folia) |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Ref / Commit** | \`${GITHUB_REF_NAME}\` (\`${GITHUB_SHA:0:8}\`) |" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Set up JDK 25

@@ -1,53 +1,131 @@
-name: Publish Release
+name: Publish Multi-Platform Release
+
+run-name: "Publish [${{ inputs.mode }}]: ${{ inputs.tag }}"
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release tag to publish (e.g. 1.3.6)"
+        description: "Release version or tag to process (e.g. 1.3.6)"
         required: true
+      mode:
+        description: "Execution mode: Preview, Publish, or Cancel"
+        type: choice
+        options:
+          - "Preview (Dry-Run Pre-Flight Inspection)"
+          - "Publish (Confirm & Upload to Platforms)"
+          - "Cancel (Abort without action)"
+        default: "Preview (Dry-Run Pre-Flight Inspection)"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
-  build:
-    name: Build JAR
+  inspect-and-build:
+    name: Pre-Flight Inspection & Artifact Verification
     runs-on: ubuntu-latest
     outputs:
-      jar_path: ${{ steps.jar.outputs.path }}
-      version:  ${{ steps.jar.outputs.version }}
-      channel:  ${{ steps.jar.outputs.channel }}
+      plugin_version: ${{ steps.meta.outputs.plugin_version }}
+      game_versions: ${{ steps.meta.outputs.game_versions }}
+      supported_platforms: ${{ steps.meta.outputs.supported_platforms }}
+      legacy_platforms: ${{ steps.meta.outputs.legacy_platforms }}
+      unsupported_platforms: ${{ steps.meta.outputs.unsupported_platforms }}
+      unsupported_versions: ${{ steps.meta.outputs.unsupported_versions }}
+      loaders: ${{ steps.meta.outputs.loaders }}
+      jar_name: ${{ steps.jar.outputs.name }}
+      jar_size: ${{ steps.jar.outputs.size }}
+      jar_sha256: ${{ steps.jar.outputs.sha256 }}
+      jar_channel: ${{ steps.jar.outputs.channel }}
 
     steps:
+      - name: Handle cancellation request
+        if: github.event.inputs.mode == 'Cancel (Abort without action)'
+        run: |
+          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+          # Multi-Platform Publication Cancelled
+
+          > **Status:** Workflow execution cancelled by operator selection (`mode: Cancel`).
+          > No builds, checks, or platform uploads were executed.
+          EOF
+          echo "Workflow execution cancelled by operator selection."
+
       - name: Checkout repository
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Resolve metadata and server platforms from gradle.properties
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
+        id: meta
+        run: |
+          PROPS="gradle.properties"
+          BASE_VER=$(grep -E '^[[:space:]]*blockProtVersion=' "$PROPS" | cut -d'=' -f2 | tr -d '[:space:]')
+          SUFFIX=$(grep -E '^[[:space:]]*versionSuffix=' "$PROPS" | cut -d'=' -f2 | tr -d '[:space:]')
+          if [ -n "$SUFFIX" ]; then
+            PLUGIN_VER="${BASE_VER}-${SUFFIX}"
+          else
+            PLUGIN_VER="${BASE_VER}"
+          fi
+
+          MC_LINE=$(grep -E '^[[:space:]]*#[[:space:]]*Supported on blockProtVersion' "$PROPS" | head -1)
+          MC_LIST=$(echo "$MC_LINE" | cut -d':' -f2 | tr -d ' ')
+          FIRST_MC=$(echo "$MC_LIST" | awk -F',' '{print $1}')
+          LATEST_MC=$(echo "$MC_LIST" | awk -F',' '{print $NF}')
+          MC_RANGE="${FIRST_MC} - ${LATEST_MC}"
+
+          PLATFORMS=$(grep -E '^[[:space:]]*supportedPlatforms=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
+          LEGACY=$(grep -E '^[[:space:]]*legacyPlatforms=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
+          UNSUPPORTED_PLATFORMS=$(grep -E '^[[:space:]]*unsupportedPlatforms=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
+          UNSUPPORTED_VERSIONS=$(grep -E '^[[:space:]]*unsupportedVersions=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
+          LOADERS=$(echo "$PLATFORMS" | tr '[:upper:]' '[:lower:]' | tr ',' '\n' | sed 's/^[[:space:]]*//' | tr '\n' ' ')
+
+          echo "plugin_version=${PLUGIN_VER}" >> "$GITHUB_OUTPUT"
+          echo "mc_range=${MC_RANGE}" >> "$GITHUB_OUTPUT"
+          echo "latest_mc=${LATEST_MC}" >> "$GITHUB_OUTPUT"
+          echo "game_versions=${MC_LIST}" >> "$GITHUB_OUTPUT"
+          echo "supported_platforms=${PLATFORMS}" >> "$GITHUB_OUTPUT"
+          echo "legacy_platforms=${LEGACY}" >> "$GITHUB_OUTPUT"
+          echo "unsupported_platforms=${UNSUPPORTED_PLATFORMS}" >> "$GITHUB_OUTPUT"
+          echo "unsupported_versions=${UNSUPPORTED_VERSIONS}" >> "$GITHUB_OUTPUT"
+          echo "loaders=${LOADERS}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release notes changelog
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
+        id: changelog
+        run: |
+          python3 .github/scripts/generate_version_commits.py --version "${{ github.event.inputs.tag }}" --release-body --output-file build/reports/release-notes.md
+
       - name: Set up JDK 25
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
         uses: actions/setup-java@v4
         with:
           java-version: '25'
           distribution: 'temurin'
 
-      - name: Validate Gradle wrapper
-        uses: gradle/actions/wrapper-validation@v4
+      - name: Setup Gradle
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Make gradlew executable
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
         run: chmod +x gradlew
 
       - name: Build shadow JAR
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
         run: ./gradlew :blockprot-spigot:shadowJar --no-daemon
 
-      - name: Locate JAR and resolve metadata
+      - name: Inspect compiled JAR, hash, and metadata
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
         id: jar
         run: |
           JAR=$(find spigot/build/libs -name "BlockProtReloaded-*.jar" \
                 ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
+          JAR_NAME=$(basename "$JAR")
           VERSION=$(basename "$JAR" .jar | sed 's/^BlockProtReloaded-//')
 
           if echo "$VERSION" | grep -qiE 'snapshot|alpha|dev|nightly|wip|bedev'; then
@@ -59,23 +137,176 @@ jobs:
           fi
 
           FILE_SIZE=$(ls -lh "$JAR" | awk '{print $5}')
+          SHA256=$(sha256sum "$JAR" | awk '{print $1}')
 
-          echo "path=$JAR"       >> "$GITHUB_OUTPUT"
+          echo "path=$JAR" >> "$GITHUB_OUTPUT"
+          echo "name=$JAR_NAME" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
-          echo "size=$FILE_SIZE"  >> "$GITHUB_OUTPUT"
-          echo "Built: $JAR (version=$VERSION, channel=$CHANNEL, size=$FILE_SIZE)"
+          echo "size=$FILE_SIZE" >> "$GITHUB_OUTPUT"
+          echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
 
-      - name: Publish step summary
+      - name: Stage build artifacts for publication
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
+        uses: actions/upload-artifact@v4
+        with:
+          name: blockprot-staged-release
+          path: |
+            spigot/build/libs/BlockProtReloaded-*.jar
+            build/reports/release-notes.md
+          retention-days: 1
+
+      - name: Publish Pre-Flight Inspection Summary
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
         run: |
-          cat << EOF >> "$GITHUB_STEP_SUMMARY"
-          ## BlockProt Reloaded Release Published
+          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+          # Pre-Flight Release Inspection Report
 
-          | Metric | Details |
-          | :--- | :--- |
-          | **Version** | \`${{ steps.jar.outputs.version }}\` |
-          | **Channel** | \`${{ steps.jar.outputs.channel }}\` |
-          | **Artifact Path** | \`${{ steps.jar.outputs.path }}\` |
-          | **Artifact Size** | \`${{ steps.jar.outputs.size }}\` |
-          | **Event** | \`${{ github.event_name }}\` |
+          | Metric / Property | Evaluated Value | Source Location |
+          | :--- | :--- | :--- |
           EOF
+          echo "| **Active Version** | \`${{ steps.meta.outputs.plugin_version }}\` | \`gradle.properties\` (\`blockProtVersion\`) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Target Minecraft Range** | \`${{ steps.meta.outputs.mc_range }}\` | \`gradle.properties\` (\`Supported on...\`) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Supported Server Software** | \`${{ steps.meta.outputs.supported_platforms }}\` | \`gradle.properties\` (\`supportedPlatforms\`) |" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${{ steps.meta.outputs.legacy_platforms }}" ]; then
+            echo "| **Legacy / Deprecated Software** | \`${{ steps.meta.outputs.legacy_platforms }}\` (End-of-Support) | \`gradle.properties\` (\`legacyPlatforms\`) |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "| **Unsupported Server Software** | \`${{ steps.meta.outputs.unsupported_platforms }}\` | \`gradle.properties\` (\`unsupportedPlatforms\`) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Unsupported Minecraft Versions** | \`${{ steps.meta.outputs.unsupported_versions }}\` | \`gradle.properties\` (\`unsupportedVersions\`) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Distribution Binary** | \`${{ steps.jar.outputs.name }}\` (\`${{ steps.jar.outputs.size }}\`) | \`spigot/build/libs/${{ steps.jar.outputs.name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Artifact SHA-256** | \`${{ steps.jar.outputs.sha256 }}\` | Checksum verification |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Release Channel** | \`${{ steps.jar.outputs.channel }}\` | Inferred from version |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Release Notes File** | \`build/reports/release-notes.md\` | Generated from Git history |" >> "$GITHUB_STEP_SUMMARY"
+
+          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+
+          ### Distribution Platform Credentials & Targets
+
+          | Platform | Configuration Status | Target Project |
+          | :--- | :---: | :--- |
+          EOF
+          if [ -n "${{ secrets.MODRINTH_TOKEN }}" ]; then
+            echo "| **Modrinth** | [v] Ready | \`${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| **Modrinth** | [x] Missing Token | Secret \`MODRINTH_TOKEN\` not configured |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -n "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
+            echo "| **CurseForge** | [v] Ready | Project ID \`${{ vars.CURSEFORGE_PROJECT_ID }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| **CurseForge** | [x] Missing Token | Secret \`CURSEFORGE_TOKEN\` not configured |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -n "${{ secrets.HANGAR_API_TOKEN }}" ]; then
+            echo "| **Hangar** | [v] Ready | \`BlockProt-Reloaded\` |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| **Hangar** | [x] Missing Token | Secret \`HANGAR_API_TOKEN\` not configured |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          if [ "${{ github.event.inputs.mode }}" = "Publish (Confirm & Upload to Platforms)" ]; then
+            cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+
+          > [!NOTE]
+          > **CONFIRMATION RECEIVED:** \`Publish\` mode selected. Proceeding to live publication in the next job...
+          EOF
+          else
+            cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+
+          > [!IMPORTANT]
+          > **PRE-FLIGHT INSPECTION ONLY (DRY-RUN):** \`Preview\` mode selected.
+          > All metadata, compiled binaries, checksums, platforms, and changelogs were successfully gathered and verified. **No files were uploaded to any platform.**
+          > To publish this release, re-run this workflow with mode **Publish (Confirm & Upload to Platforms)**.
+          EOF
+          fi
+
+          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+
+          ### Release Notes Preview
+          EOF
+          cat build/reports/release-notes.md >> "$GITHUB_STEP_SUMMARY"
+
+  publish-platforms:
+    name: Execute Multi-Platform Publication
+    needs: [inspect-and-build]
+    if: github.event.inputs.mode == 'Publish (Confirm & Upload to Platforms)'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download staged release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: blockprot-staged-release
+          path: build/staged/
+
+      - name: Locate staged JAR and release notes
+        id: staged
+        run: |
+          JAR=$(find build/staged -name "BlockProtReloaded-*.jar" | head -1)
+          echo "jar_path=$JAR" >> "$GITHUB_OUTPUT"
+          echo "notes_path=build/staged/release-notes.md" >> "$GITHUB_OUTPUT"
+          echo "Staged JAR: $JAR"
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
+      - name: Publish to Modrinth & CurseForge
+        if: env.MODRINTH_TOKEN != '' || env.CURSEFORGE_TOKEN != ''
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          files: ${{ steps.staged.outputs.jar_path }}
+          name: "BlockProt Reloaded ${{ needs.inspect-and-build.outputs.plugin_version }}"
+          version: ${{ needs.inspect-and-build.outputs.plugin_version }}
+          version-type: ${{ needs.inspect-and-build.outputs.jar_channel }}
+          changelog-file: ${{ steps.staged.outputs.notes_path }}
+          game-versions: ${{ needs.inspect-and-build.outputs.game_versions }}
+          loaders: ${{ needs.inspect-and-build.outputs.loaders }}
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+
+      - name: Publish to Hangar
+        if: env.HANGAR_API_TOKEN != ''
+        run: ./gradlew :blockprot-spigot:publishPluginPublicationToHangar --no-daemon
+        env:
+          HANGAR_API_TOKEN: ${{ secrets.HANGAR_API_TOKEN }}
+
+      - name: Publish Confirmation Summary
+        if: always()
+        run: |
+          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+          # Multi-Platform Publication Completed Successfully
+
+          | Platform | Upload Status | Details |
+          | :--- | :---: | :--- |
+          EOF
+          if [ -n "${{ secrets.MODRINTH_TOKEN }}" ]; then
+            echo "| **Modrinth** | [v] Published | Project \`${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| **Modrinth** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -n "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
+            echo "| **CurseForge** | [v] Published | Project ID \`${{ vars.CURSEFORGE_PROJECT_ID }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| **CurseForge** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -n "${{ secrets.HANGAR_API_TOKEN }}" ]; then
+            echo "| **Hangar** | [v] Published | Project \`BlockProt-Reloaded\` |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| **Hangar** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
+          fi

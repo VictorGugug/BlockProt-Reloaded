@@ -45,6 +45,10 @@ def get_plugin_version_info(props, supported_mc):
     latest_mc = supported_mc[-1] if supported_mc else "Unknown"
     mc_range = f"{supported_mc[0]} - {latest_mc}" if len(supported_mc) > 1 else latest_mc
     java_target = props.get("targetJavaVersion", "21")
+    supported_platforms = [p.strip() for p in props.get("supportedPlatforms", "Paper, Purpur, Folia").split(",") if p.strip()]
+    legacy_platforms = [p.strip() for p in props.get("legacyPlatforms", "Spigot").split(",") if p.strip()]
+    unsupported_platforms = [p.strip() for p in props.get("unsupportedPlatforms", "Forge, Fabric, NeoForge, Bedrock Dedicated Server, BungeeCord, Velocity").split(",") if p.strip()]
+    unsupported_versions = props.get("unsupportedVersions", "<=1.20.4, >=26.3")
     return {
         "version": full_version,
         "base_version": base_version,
@@ -53,6 +57,10 @@ def get_plugin_version_info(props, supported_mc):
         "supported_mc": supported_mc,
         "mc_range": mc_range,
         "java_target": java_target,
+        "supported_platforms": supported_platforms,
+        "legacy_platforms": legacy_platforms,
+        "unsupported_platforms": unsupported_platforms,
+        "unsupported_versions": unsupported_versions,
     }
 
 
@@ -223,6 +231,199 @@ def run_target_check(item):
     }
 
 
+def audit_server_platforms(version_info):
+    """Audit server platform software targets, their declared support, and live upstream builds."""
+    latest_declared_mc = version_info.get("latest_mc", "26.2")
+    plugin_ver = version_info.get("version", "Unknown")
+    mc_range = version_info.get("mc_range", latest_declared_mc)
+    results = []
+
+    # 1. Paper
+    try:
+        req = urllib.request.Request(
+            "https://fill.papermc.io/v3/projects/paper",
+            headers={"User-Agent": f"BlockProt-Reloaded-Audit/{plugin_ver}"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            p_data = json.loads(r.read().decode("utf-8"))
+            p_vers = list(p_data.get("versions", {}).keys())
+            upstream_newest = p_vers[0] if p_vers else latest_declared_mc
+
+        req_dec = urllib.request.Request(
+            f"https://fill.papermc.io/v3/projects/paper/versions/{latest_declared_mc}/builds",
+            headers={"User-Agent": f"BlockProt-Reloaded-Audit/{plugin_ver}"},
+        )
+        with urllib.request.urlopen(req_dec, timeout=10) as r:
+            b_list = json.loads(r.read().decode("utf-8"))
+            stables = [b for b in b_list if b.get("channel") in ["STABLE", "RELEASE"]]
+            alphas = [b for b in b_list if b.get("channel") in ["ALPHA", "BETA", "EXPERIMENTAL"]]
+            stable_id = str(stables[-1].get("id")) if stables else "None"
+            stable_str = f"{latest_declared_mc} #{stable_id}" if stables else "None (alpha channel)"
+            exp_id = str(alphas[-1].get("id")) if alphas else "None"
+            exp_ch = str(alphas[-1].get("channel", "ALPHA")) if alphas else "ALPHA"
+            exp_str = f"{latest_declared_mc} {exp_ch} #{exp_id}" if alphas else "None"
+
+        if upstream_newest != latest_declared_mc:
+            req_new = urllib.request.Request(
+                f"https://fill.papermc.io/v3/projects/paper/versions/{upstream_newest}/builds",
+                headers={"User-Agent": f"BlockProt-Reloaded-Audit/{plugin_ver}"},
+            )
+            try:
+                with urllib.request.urlopen(req_new, timeout=10) as r:
+                    nb_list = json.loads(r.read().decode("utf-8"))
+                    if nb_list:
+                        exp_str = f"{upstream_newest} {nb_list[-1].get('channel', 'ALPHA')} #{nb_list[-1].get('id')}"
+            except Exception:
+                pass
+            up_status = f"[!] Next Cycle ({upstream_newest})"
+        else:
+            up_status = f"[v] Supported in {plugin_ver}"
+
+        results.append({
+            "platform": "Paper",
+            "tier": "[v] Native",
+            "plugin_support": f"{plugin_ver} ({mc_range})",
+            "declared_mc": latest_declared_mc,
+            "stable_build": stable_str,
+            "experimental_build": exp_str,
+            "upstream_status": up_status,
+        })
+    except Exception as e:
+        results.append({
+            "platform": "Paper",
+            "tier": "[v] Native",
+            "plugin_support": f"{plugin_ver} ({mc_range})",
+            "declared_mc": latest_declared_mc,
+            "stable_build": "Unknown",
+            "experimental_build": "Unknown",
+            "upstream_status": f"Error: {e}",
+        })
+
+    # 2. Folia
+    try:
+        req = urllib.request.Request(
+            "https://fill.papermc.io/v3/projects/folia",
+            headers={"User-Agent": f"BlockProt-Reloaded-Audit/{plugin_ver}"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            f_data = json.loads(r.read().decode("utf-8"))
+            f_vers = list(f_data.get("versions", {}).keys())
+            f_newest = f_vers[0] if f_vers else latest_declared_mc
+
+        req_f = urllib.request.Request(
+            f"https://fill.papermc.io/v3/projects/folia/versions/{latest_declared_mc}/builds",
+            headers={"User-Agent": f"BlockProt-Reloaded-Audit/{plugin_ver}"},
+        )
+        with urllib.request.urlopen(req_f, timeout=10) as r:
+            fb_list = json.loads(r.read().decode("utf-8"))
+            f_alphas = [b for b in fb_list if b.get("channel") in ["ALPHA", "BETA", "EXPERIMENTAL"]]
+            f_stables = [b for b in fb_list if b.get("channel") in ["STABLE", "RELEASE"]]
+            f_stable_str = f"{latest_declared_mc} #{f_stables[-1].get('id')}" if f_stables else "None (beta channel)"
+            f_exp_str = f"{latest_declared_mc} {f_alphas[-1].get('channel', 'BETA')} #{f_alphas[-1].get('id')}" if f_alphas else "None"
+
+        if f_newest != latest_declared_mc:
+            f_status = f"[!] Next Cycle ({f_newest})"
+        else:
+            f_status = f"[v] Supported in {plugin_ver}"
+
+        results.append({
+            "platform": "Folia",
+            "tier": "[v] FoliaLib",
+            "plugin_support": f"{plugin_ver} ({mc_range})",
+            "declared_mc": latest_declared_mc,
+            "stable_build": f_stable_str,
+            "experimental_build": f_exp_str,
+            "upstream_status": f_status,
+        })
+    except Exception as e:
+        results.append({
+            "platform": "Folia",
+            "tier": "[v] FoliaLib",
+            "plugin_support": f"{plugin_ver} ({mc_range})",
+            "declared_mc": latest_declared_mc,
+            "stable_build": "Unknown",
+            "experimental_build": "Unknown",
+            "upstream_status": f"Error: {e}",
+        })
+
+    # 3. Purpur
+    try:
+        req = urllib.request.Request(
+            "https://api.purpurmc.org/v2/purpur",
+            headers={"User-Agent": f"BlockProt-Reloaded-Audit/{plugin_ver}"},
+        )
+        with urllib.request.urlopen(req, timeout=10) as r:
+            pu_data = json.loads(r.read().decode("utf-8"))
+            pu_vers = pu_data.get("versions", [])
+            pu_newest = pu_vers[-1] if pu_vers else latest_declared_mc
+
+        req_pu = urllib.request.Request(
+            f"https://api.purpurmc.org/v2/purpur/{latest_declared_mc}",
+            headers={"User-Agent": f"BlockProt-Reloaded-Audit/{plugin_ver}"},
+        )
+        with urllib.request.urlopen(req_pu, timeout=10) as r:
+            pb_data = json.loads(r.read().decode("utf-8"))
+            p_stable = f"{latest_declared_mc} #{pb_data.get('builds', {}).get('latest', 'Unknown')}"
+
+        if pu_newest != latest_declared_mc:
+            req_pun = urllib.request.Request(
+                f"https://api.purpurmc.org/v2/purpur/{pu_newest}",
+                headers={"User-Agent": f"BlockProt-Reloaded-Audit/{plugin_ver}"},
+            )
+            with urllib.request.urlopen(req_pun, timeout=10) as r:
+                pbn_data = json.loads(r.read().decode("utf-8"))
+                p_exp = f"{pu_newest} #{pbn_data.get('builds', {}).get('latest', 'Unknown')}"
+            pu_status = f"[!] Next Cycle ({pu_newest})"
+        else:
+            p_exp = "None"
+            pu_status = f"[v] Supported in {plugin_ver}"
+
+        results.append({
+            "platform": "Purpur",
+            "tier": "[v] Compatible",
+            "plugin_support": f"{plugin_ver} ({mc_range})",
+            "declared_mc": latest_declared_mc,
+            "stable_build": p_stable,
+            "experimental_build": p_exp,
+            "upstream_status": pu_status,
+        })
+    except Exception as e:
+        results.append({
+            "platform": "Purpur",
+            "tier": "[v] Compatible",
+            "plugin_support": f"{plugin_ver} ({mc_range})",
+            "declared_mc": latest_declared_mc,
+            "stable_build": "Unknown",
+            "experimental_build": "Unknown",
+            "upstream_status": f"Error: {e}",
+        })
+
+    # 4. Spigot
+    results.append({
+        "platform": "Spigot",
+        "tier": "[!] Deprecated",
+        "plugin_support": f"{plugin_ver} (Final)",
+        "declared_mc": latest_declared_mc,
+        "stable_build": f"{latest_declared_mc} (BuildTools)",
+        "experimental_build": "N/A",
+        "upstream_status": f"[!] End-of-Support in {plugin_ver}",
+    })
+
+    # 5. Unsupported Platforms from gradle.properties
+    for unp in version_info.get("unsupported_platforms", []):
+        results.append({
+            "platform": unp,
+            "tier": "[x] Unsupported",
+            "plugin_support": "None (Incompatible Architecture)",
+            "declared_mc": "N/A",
+            "stable_build": "N/A",
+            "experimental_build": "N/A",
+            "upstream_status": "[x] Incompatible",
+        })
+
+    return results
+
+
 def main():
     props, supported_mc = parse_gradle_properties(REPO_ROOT)
     version_info = get_plugin_version_info(props, supported_mc)
@@ -312,6 +513,33 @@ def main():
 
         evaluation = "Up to date" if r["up_to_date"] else "Update available"
         md_lines.append(f"| `{r['status']}` | **{r['name']}** | `{r['current']}` | `{r['latest']}` | {evaluation} |")
+
+    # Audit server platform software and upstream builds
+    platform_results = audit_server_platforms(version_info)
+    print("\nServer Platform Software & Upstream Build Audit")
+    print(f"{'Platform':<26} {'Support Tier':<16} {'Plugin Support':<24} {'Declared MC':<14} {'Stable Build':<20} {'Experimental Build':<24} {'Upstream Status'}")
+    for p in platform_results:
+        print(f"{p['platform']:<26} {p['tier']:<16} {p['plugin_support']:<24} {p['declared_mc']:<14} {p['stable_build']:<20} {p['experimental_build']:<24} {p['upstream_status']}")
+
+    print("\nDeclared Compatibility Boundaries:")
+    print(f"  Supported Platforms:   {', '.join(version_info.get('supported_platforms', []))}")
+    if version_info.get("legacy_platforms"):
+        print(f"  Legacy Platforms:      {', '.join(version_info.get('legacy_platforms', []))}")
+    print(f"  Unsupported Platforms: {', '.join(version_info.get('unsupported_platforms', []))}")
+    print(f"  Unsupported Versions:  {version_info.get('unsupported_versions', '')}")
+
+    md_lines.append("\n### Server Platform Software and Upstream Builds\n")
+    md_lines.append("| Platform | Support Tier | Plugin Support Range | Declared Target | Latest Stable Build | Latest Experimental Build | Upstream Status |")
+    md_lines.append("| :--- | :---: | :---: | :---: | :--- | :--- | :--- |")
+    for p in platform_results:
+        md_lines.append(f"| **{p['platform']}** | `{p['tier']}` | `{p['plugin_support']}` | `{p['declared_mc']}` | `{p['stable_build']}` | `{p['experimental_build']}` | {p['upstream_status']} |")
+
+    md_lines.append("\n### Declared Compatibility Boundaries\n")
+    md_lines.append(f"- **Supported Server Platforms:** `{', '.join(version_info.get('supported_platforms', []))}`")
+    if version_info.get("legacy_platforms"):
+        md_lines.append(f"- **Legacy Server Platform:** `{', '.join(version_info.get('legacy_platforms', []))}` (Final release cycle support)")
+    md_lines.append(f"- **Unsupported Server Platforms:** `{', '.join(version_info.get('unsupported_platforms', []))}`")
+    md_lines.append(f"- **Unsupported Minecraft Versions:** `{version_info.get('unsupported_versions', '')}`")
 
     md_content = "\n".join(md_lines) + "\n"
 

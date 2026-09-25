@@ -55,7 +55,7 @@ def resolve_repository_url(cwd=None):
 
 
 def parse_gradle_properties(root_dir):
-    """Extract blockProtVersion from gradle.properties."""
+    """Extract blockProtVersion, supportedPlatforms, and MC range from gradle.properties."""
     props_path = Path(root_dir) / "gradle.properties"
     if not props_path.exists():
         raise FileNotFoundError(f"gradle.properties not found at: {props_path}")
@@ -64,8 +64,19 @@ def parse_gradle_properties(root_dir):
     match = re.search(r"^blockProtVersion\s*=\s*(.+)$", content, re.MULTILINE)
     if not match:
         raise ValueError("Could not find blockProtVersion in gradle.properties")
+    version = match.group(1).strip()
 
-    return match.group(1).strip()
+    plat_match = re.search(r"^supportedPlatforms\s*=\s*(.+)$", content, re.MULTILINE)
+    platforms = plat_match.group(1).strip() if plat_match else "Paper, Purpur, Folia"
+
+    mc_match = re.search(r"^#\s*Supported on blockProtVersion.*:\s*(.+)$", content, re.MULTILINE)
+    mc_range = ""
+    if mc_match:
+        mc_list = [x.strip() for x in mc_match.group(1).split(",") if x.strip()]
+        if mc_list:
+            mc_range = f"{mc_list[0]} - {mc_list[-1]}" if len(mc_list) > 1 else mc_list[0]
+
+    return version, platforms, mc_range
 
 
 def resolve_version_commit_range(version, cwd=None):
@@ -154,7 +165,7 @@ def categorize_commit(subject):
     return "General"
 
 
-def build_markdown_report(version, prev_tag, prev_version, base_commit, commits, repo_url):
+def build_markdown_report(version, prev_tag, prev_version, base_commit, commits, repo_url, platforms="", mc_range=""):
     """Generate comprehensive Markdown report."""
     compare_ref = prev_tag if prev_tag else (f"{base_commit[:7]}~1" if base_commit else "")
     compare_url = f"https://github.com/{repo_url}/compare/{compare_ref}...main" if compare_ref else ""
@@ -167,6 +178,10 @@ def build_markdown_report(version, prev_tag, prev_version, base_commit, commits,
     lines.append("| Property | Value |")
     lines.append("| :--- | :--- |")
     lines.append(f"| **Active Version** | `{version}` |")
+    if platforms:
+        lines.append(f"| **Supported Platforms** | `{platforms}` |")
+    if mc_range:
+        lines.append(f"| **Supported Minecraft Range** | `{mc_range}` |")
     lines.append(f"| **Previous Version** | `{prev_version if prev_version else 'N/A'}` |")
     lines.append(f"| **Previous Tag** | `{prev_tag if prev_tag else 'N/A'}` |")
     if base_commit:
@@ -262,7 +277,8 @@ def main():
     args = parser.parse_args()
 
     repo_dir = os.path.abspath(args.repo_dir)
-    version = args.version.strip() if args.version else parse_gradle_properties(repo_dir)
+    prop_ver, platforms, mc_range = parse_gradle_properties(repo_dir)
+    version = args.version.strip() if args.version else prop_ver
     repo_url = resolve_repository_url(cwd=repo_dir)
 
     base_commit, prev_tag, prev_version, range_spec = resolve_version_commit_range(version, cwd=repo_dir)
@@ -272,7 +288,7 @@ def main():
         content = build_release_body(version, prev_tag, base_commit, commits, repo_url)
     else:
         content, compare_url = build_markdown_report(
-            version, prev_tag, prev_version, base_commit, commits, repo_url
+            version, prev_tag, prev_version, base_commit, commits, repo_url, platforms, mc_range
         )
 
     out_path = Path(args.output_file)

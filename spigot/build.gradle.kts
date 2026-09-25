@@ -9,6 +9,7 @@ plugins {
     // Updated to com.gradleup.shadow which supports Java 25+ (ASM updated)
     id("com.gradleup.shadow") version "9.6.1"
     id("xyz.jpenilla.run-paper") version "3.0.2"
+    id("io.papermc.hangar-publish-plugin") version "0.1.4"
 }
 
 val nbtApiVersion = project.property("nbtApiVersion") as String
@@ -212,5 +213,20 @@ publishing {
     }
     repositories {
         mavenLocal()
+    }
+}
+
+hangarPublish {
+    publications.register("plugin") {
+        version.set(project.version.toString())
+        id.set("BlockProt-Reloaded")
+        channel.set("Release")
+        apiKey.set(providers.environmentVariable("HANGAR_API_TOKEN"))
+        platforms {
+            paper {
+                jar.set(tasks.shadowJar.flatMap { it.archiveFile })
+                platformVersions.set(listOf("1.20.5", "1.20.6", "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1", "26.2"))
+            }
+        }
     }
 }

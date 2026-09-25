@@ -101,13 +101,6 @@ public abstract class PluginIntegration {
     }
 
     /**
-     * This lets all registered plugin integrations filter out friends that they don't want
-     * players to add to {@code block}.This method will check {@link PluginIntegration#filterFriendByUuid(UUID, Player, Block)}
-     * and {@link PluginIntegration#filterFriendsInternal(ArrayList, Player, Block)} for backwards
-     * compatibility. Uses reflection to determine which function to
-     * call; {@link PluginIntegration#filterFriendByUuidForAll(UUID, Player, Block)}
-     * is a more performant option when applicable.
-    /**
      * This lets all registered plugin integrations filter out friends that
      * they don't want players to add to {@code block}. This method will exclusively
      * check {@link PluginIntegration#filterFriendByUuid(UUID, Player, Block)}.
