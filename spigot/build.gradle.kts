@@ -182,6 +182,7 @@ tasks.shadowJar {
     val jarSuffix  = if (isMaster) "" else "-$branch"
     archiveFileName.set("BlockProtReloaded-${jarVersion}${jarSuffix}.jar")
     from(sourceSets["dialogs"].output)
+    exclude("META-INF/*.kotlin_module")
 }
 
 tasks.build {
