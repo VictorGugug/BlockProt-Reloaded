@@ -11,7 +11,7 @@ Family membership is defined by the plugin's built-in family registry
 (`BlockFamilyParser`): every material listed below comes from the registry's
 `is*` predicates and `Family`/`SubFamily` entries. New Minecraft materials
 that match the same name patterns (for example a new `*_CHEST` variant) join
-the family automatically at runtime; the tables below cover 1.20.5 - 26.2.
+the family automatically at runtime; the tables below cover 1.20.5 - 26.3.
 
 For the expression syntax that selects these families: see
 `BLOCK_FAMILY_SYNTAX.md`.
@@ -74,6 +74,7 @@ in 26.1 (The Copper Age).
 | `MANGROVE_SHELF` | 26.1 |
 | `CHERRY_SHELF` | 26.1 |
 | `PALE_OAK_SHELF` | 26.1 |
+| `POPLAR_SHELF` | 26.3 |
 | `BAMBOO_SHELF` | 26.1 |
 | `CRIMSON_SHELF` | 26.1 |
 | `WARPED_SHELF` | 26.1 |
@@ -115,7 +116,7 @@ editing the text. Not included in the default `blocks.yml`: add `*-SIGN`
 explicitly to enable.
 
 Wood types covered: oak, spruce, birch, jungle, acacia, dark_oak, mangrove,
-cherry, bamboo, crimson, warped, pale_oak.
+cherry, bamboo, crimson, warped, pale_oak, poplar.
 
 | Pattern | MC version |
 |---|---|
@@ -211,6 +212,7 @@ Token: `*-FENCE_GATE`. Blocks non-owners from opening or closing the gate.
 | `MANGROVE_FENCE_GATE` | 1.19 |
 | `CHERRY_FENCE_GATE` | 1.20 |
 | `PALE_OAK_FENCE_GATE` | 1.21.4 |
+| `POPLAR_FENCE_GATE` | 26.3 |
 | `BAMBOO_FENCE_GATE` | 1.20 |
 | `CRIMSON_FENCE_GATE` | 1.16 |
 | `WARPED_FENCE_GATE` | 1.16 |
@@ -230,6 +232,7 @@ Token: `*-TRAPDOOR`. Blocks non-owners from opening or closing the trapdoor.
 | `MANGROVE_TRAPDOOR` | 1.19 |
 | `CHERRY_TRAPDOOR` | 1.20 |
 | `PALE_OAK_TRAPDOOR` | 1.21.4 |
+| `POPLAR_TRAPDOOR` | 26.3 |
 | `BAMBOO_TRAPDOOR` | 1.20 |
 | `CRIMSON_TRAPDOOR` | 1.16 |
 | `WARPED_TRAPDOOR` | 1.16 |
@@ -269,6 +272,7 @@ message all work identically to any other `BLOCKS` family member.
 | `GREEN_BED` | 1.0 |
 | `RED_BED` | 1.0 |
 | `BLACK_BED` | 1.0 |
+| `STRAW_BED` | 26.3 |
 
 ### Ungrouped
 
@@ -302,6 +306,7 @@ Token: `*-DOORS` (also matches `[*]`)
 | `MANGROVE_DOOR` | 1.19 |
 | `CHERRY_DOOR` | 1.20 |
 | `PALE_OAK_DOOR` | 1.21.4 |
+| `POPLAR_DOOR` | 26.3 |
 | `BAMBOO_DOOR` | 1.20 |
 | `CRIMSON_DOOR` | 1.16 |
 | `WARPED_DOOR` | 1.16 |
@@ -348,6 +353,7 @@ reflection to support both 1.20.x (`org.bukkit.entity.ChestBoat`) and
 | `MANGROVE_CHEST_BOAT` | 1.19 |
 | `CHERRY_CHEST_BOAT` | 1.20 |
 | `PALE_OAK_CHEST_BOAT` | 1.21.4 |
+| `POPLAR_CHEST_BOAT` | 26.3 |
 | `BAMBOO_CHEST_RAFT` | 1.20 |
 
 ### CHEST_MINECARTS
@@ -405,13 +411,13 @@ lockable_entities:
 
 ## Family coverage summary
 
-| Family | Config key | Sub-families | Materials (1.20.5 - 26.2) |
+| Family | Config key | Sub-families | Materials (1.20.5 - 26.3) |
 |---|---|---|---|
-| `TILE_ENTITIES` | `lockable_tile_entities` | `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN` | 47 listed + sign patterns |
+| `TILE_ENTITIES` | `lockable_tile_entities` | `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN` | 48 listed + sign patterns |
 | `SHULKER_BOXES` | `lockable_shulker_boxes` | `SHULKERS` | 17 |
-| `BLOCKS` | `lockable_blocks` | `ANVIL`, `CAULDRON`, `WORKSTATION`, `FENCE_GATE`, `TRAPDOOR`, `BED` + ungrouped | 67 |
-| `DOORS` | `lockable_doors` | `DOORS` | 21 |
-| `ENTITIES` | `lockable_entities` | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES` | 15 |
+| `BLOCKS` | `lockable_blocks` | `ANVIL`, `CAULDRON`, `WORKSTATION`, `FENCE_GATE`, `TRAPDOOR`, `BED` + ungrouped | 70 |
+| `DOORS` | `lockable_doors` | `DOORS` | 22 |
+| `ENTITIES` | `lockable_entities` | `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES` | 16 |
 
 For the per-key, sub-family-organized view of this same catalog: see
 `LOCKABLE_BLOCKS_REFERENCE.md`.

@@ -1,7 +1,7 @@
 ![LOCKABLE BLOCKS REFERENCE](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/docs/LOCKABLE%20BLOCKS%20REFERENCE.png)
 
 Complete list of every block and entity that can be locked, organized by family and sub-family.
-Covers all Minecraft versions from 1.20.5 up to 26.2.
+Covers all Minecraft versions from 1.20.5 up to 26.3.
 
 For the same catalog organized by family: see `LOCKABLE_BLOCKS_BY_FAMILY.md`.
 
@@ -106,6 +106,7 @@ Displays up to three item stacks on its front face. Added in 26.1 (The Copper Ag
 | `MANGROVE_SHELF` | 26.1 |
 | `CHERRY_SHELF` | 26.1 |
 | `PALE_OAK_SHELF` | 26.1 |
+| `POPLAR_SHELF` | 26.3 |
 | `BAMBOO_SHELF` | 26.1 |
 | `CRIMSON_SHELF` | 26.1 |
 | `WARPED_SHELF` | 26.1 |
@@ -146,7 +147,7 @@ All sign tile entities: floor signs, wall signs, hanging signs, and wall-mounted
 Locking prevents other players from editing the text. Not included in the default `blocks.yml` -
 add `*-SIGN` explicitly to enable.
 
-Wood types covered: oak, spruce, birch, jungle, acacia, dark_oak, mangrove, cherry, bamboo, crimson, warped, pale_oak.
+Wood types covered: oak, spruce, birch, jungle, acacia, dark_oak, mangrove, cherry, bamboo, crimson, warped, pale_oak, poplar.
 
 | Pattern | MC version |
 |---|---|
@@ -245,6 +246,7 @@ Blocks non-owners from opening or closing the gate.
 | `MANGROVE_FENCE_GATE` | 1.19 |
 | `CHERRY_FENCE_GATE` | 1.20 |
 | `PALE_OAK_FENCE_GATE` | 1.21.4 |
+| `POPLAR_FENCE_GATE` | 26.3 |
 | `BAMBOO_FENCE_GATE` | 1.20 |
 | `CRIMSON_FENCE_GATE` | 1.16 |
 | `WARPED_FENCE_GATE` | 1.16 |
@@ -266,6 +268,7 @@ Blocks non-owners from opening or closing the trapdoor.
 | `MANGROVE_TRAPDOOR` | 1.19 |
 | `CHERRY_TRAPDOOR` | 1.20 |
 | `PALE_OAK_TRAPDOOR` | 1.21.4 |
+| `POPLAR_TRAPDOOR` | 26.3 |
 | `BAMBOO_TRAPDOOR` | 1.20 |
 | `CRIMSON_TRAPDOOR` | 1.16 |
 | `WARPED_TRAPDOOR` | 1.16 |
@@ -306,6 +309,7 @@ lock-hint message all work identically to any other `BLOCKS` family member.
 | `GREEN_BED` | 1.0 |
 | `RED_BED` | 1.0 |
 | `BLACK_BED` | 1.0 |
+| `STRAW_BED` | 26.3 |
 
 ### Ungrouped
 
@@ -338,6 +342,7 @@ Token: `*-DOORS` (also matches `[*]`)
 | `MANGROVE_DOOR` | 1.19 |
 | `CHERRY_DOOR` | 1.20 |
 | `PALE_OAK_DOOR` | 1.21.4 |
+| `POPLAR_DOOR` | 26.3 |
 | `BAMBOO_DOOR` | 1.20 |
 | `CRIMSON_DOOR` | 1.16 |
 | `WARPED_DOOR` | 1.16 |
@@ -389,6 +394,7 @@ Protects the inventory from player access and hopper-pipeline extraction.
 | `MANGROVE_CHEST_BOAT` | 1.19 |
 | `CHERRY_CHEST_BOAT` | 1.20 |
 | `PALE_OAK_CHEST_BOAT` | 1.21.4 |
+| `POPLAR_CHEST_BOAT` | 26.3 |
 | `BAMBOO_CHEST_RAFT` | 1.20 |
 
 ### Sub-family: CHEST_MINECARTS

@@ -199,7 +199,7 @@ tasks.runServer {
     downloadPlugins {
         url("https://download.luckperms.net/1561/bukkit/loader/LuckPerms-Bukkit-5.5.71.jar")
     }
-    minecraftVersion("26.2")
+    minecraftVersion("26.3")
 }
 
 publishing {
@@ -226,7 +226,7 @@ hangarPublish {
         platforms {
             paper {
                 jar.set(tasks.shadowJar.flatMap { it.archiveFile })
-                platformVersions.set(listOf("1.20.5", "1.20.6", "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1", "26.2"))
+                platformVersions.set(listOf("1.20.5", "1.20.6", "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1", "26.2", "26.3"))
             }
         }
     }
