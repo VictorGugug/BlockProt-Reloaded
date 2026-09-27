@@ -29,6 +29,7 @@ import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.util.RegionTasks;
 import de.sean.blockprot.bukkit.util.PlayerNameResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -102,42 +103,37 @@ public final class TransferCommand implements CommandExecutor {
             }
 
             final OfflinePlayer finalNewOwner = newOwner;
-            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
-                int transferred = 0;
-                for (LocationListEntry entry : entries) {
-                    try {
-                        Location loc = entry.get();
-                        if (loc == null || loc.getWorld() == null) continue;
-                        Block block = loc.getBlock();
-                        if (!BlockProt.getDefaultConfig().isLockable(block.getType())) continue;
-                        BlockNBTHandler handler = new BlockNBTHandler(block);
-                        if (!handler.isOwner(player.getUniqueId())) continue;
-                        var result = handler.transferOwner(
-                            player.getUniqueId().toString(),
-                            finalNewOwner.getUniqueId().toString()
-                        );
-                        if (result.success) {
-                            Player onlineTarget = Bukkit.getPlayer(finalNewOwner.getUniqueId());
-                            if (onlineTarget != null) {
-                                StatHandler.addBlock(onlineTarget, loc);
-                            } else {
-                                StatHandler.addBlockByUuid(finalNewOwner.getUniqueId(), loc);
-                            }
-                            transferred++;
-                        }
-                    } catch (RuntimeException ignored) {}
+            List<Location> locations = entries.stream().map(LocationListEntry::get).toList();
+            RegionTasks.mapLocations(locations, loc -> {
+                Block block = loc.getBlock();
+                if (!BlockProt.getDefaultConfig().isLockable(block.getType())) return null;
+                BlockNBTHandler handler = new BlockNBTHandler(block);
+                if (!handler.isOwner(player.getUniqueId())) return null;
+                var result = handler.transferOwner(
+                    player.getUniqueId().toString(),
+                    finalNewOwner.getUniqueId().toString()
+                );
+                return result.success ? loc : null;
+            }).thenAccept(transferred -> RegionTasks.runFor(player, () -> {
+                Player onlineTarget = Bukkit.getPlayer(finalNewOwner.getUniqueId());
+                for (Location loc : transferred) {
+                    if (onlineTarget != null) {
+                        StatHandler.addBlock(onlineTarget, loc);
+                    } else {
+                        StatHandler.addBlockByUuid(finalNewOwner.getUniqueId(), loc);
+                    }
                 }
                 String name = finalNewOwner.getName() != null ? finalNewOwner.getName() : targetName;
                 ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_ALL_SUCCESS)
-                    .replace("{count}", String.valueOf(transferred))
+                    .replace("{count}", String.valueOf(transferred.size()))
                     .replace("{player}", name));
-            });
+            }));
         });
     }
 
     private static void resolvePlayer(@NotNull Player player, @NotNull String name,
                                 @NotNull java.util.function.Consumer<OfflinePlayer> callback) {
-        Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
             OfflinePlayer found = PlayerNameResolver.findOfflinePlayer(name);
             if (found == null) {
                 @SuppressWarnings("deprecation")
@@ -147,12 +143,11 @@ public final class TransferCommand implements CommandExecutor {
             if (found == null || found.getUniqueId() == null) {
                 final String msg = Translator.get(TranslationKey.MESSAGES__TRANSFER_PLAYER_NOT_FOUND)
                     .replace("{player}", name);
-                Bukkit.getScheduler().runTask(BlockProt.getInstance(), () ->
-                    ComponentMessages.sendLegacy(player, msg));
+                RegionTasks.runFor(player, () -> ComponentMessages.sendLegacy(player, msg));
                 return;
             }
             final OfflinePlayer resolved = found;
-            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> callback.accept(resolved));
+            RegionTasks.runFor(player, () -> callback.accept(resolved));
         });
     }
 

@@ -279,9 +279,7 @@ public class BlockInfoInventory extends BlockProtInventory {
         setBackButton(InventoryConstants.lineLength - 1);
 
         // Resolve friend profiles and refresh their skulls (placeholder first, real skin once it arrives).
-        Bukkit.getScheduler().runTaskAsynchronously(
-            BlockProt.getInstance(),
-            () -> {
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
                 try {
                     final var profiles = BlockProt.getProfileService().findAllByUuid(state.friendResultCache);
 
@@ -295,8 +293,8 @@ public class BlockInfoInventory extends BlockProtInventory {
                             ? profile.getName()
                             : profile.getUniqueId().toString().substring(0, 8);
                         final UUID pUuid = profile.getUniqueId();
-                        Bukkit.getScheduler().runTask(BlockProt.getInstance(),
-                            () -> setPlayerSkullAsync(slot, player, pUuid, pName));
+                        BlockProt.getFoliaLib().getScheduler().runAtEntity(player,
+                            syncTask -> setPlayerSkullAsync(slot, player, pUuid, pName));
                         i++;
                     }
                 } catch (Exception e) {

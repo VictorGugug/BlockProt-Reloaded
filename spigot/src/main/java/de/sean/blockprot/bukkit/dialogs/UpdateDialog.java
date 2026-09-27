@@ -29,12 +29,10 @@ import de.sean.blockprot.util.SemanticVersion;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
-import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_PURPLE;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_BLUE;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_GRAY;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -42,7 +40,6 @@ import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -134,14 +131,11 @@ public final class UpdateDialog {
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__CHECK_NOW)), NamedTextColor.WHITE),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__UPDATE__DOWNLOAD)), TextColor.color(0x888888)),
             p -> {
-                Bukkit.getScheduler().runTaskAsynchronously(
-                    BlockProt.getInstance(),
-                    new UpdateChecker(pluginVersion, () ->
-                        Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
-                            if (p.isOnline()) UpdateDialog.show(p, backOrigin);
-                        })
-                    )
-                );
+                UpdateChecker checker = new UpdateChecker(pluginVersion, () ->
+                    BlockProt.getFoliaLib().getScheduler().runAtEntity(p, syncTask -> {
+                        if (p.isOnline()) UpdateDialog.show(p, backOrigin);
+                    }));
+                BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> checker.run());
             }
         ));
 

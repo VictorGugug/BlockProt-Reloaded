@@ -30,9 +30,7 @@ import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.util.SkinCache;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -51,17 +49,12 @@ public class JoinEventListener implements Listener {
         player.updateCommands();
 
         // Pre-fetch the player's own skin so their head is ready on first GUI open.
-        Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () ->
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask ->
             SkinCache.getOrFetch(player.getName(), player.getUniqueId()));
 
         if (BlockProt.getDefaultConfig().shouldNotifyOpOfUpdates() && player.isOp()) {
-            Bukkit.getScheduler().runTaskAsynchronously(
-                BlockProt.getInstance(),
-                new UpdateChecker(
-                    BlockProt.getPluginVersion(),
-                    Collections.singletonList(player)
-                )
-            );
+            UpdateChecker checker = new UpdateChecker(BlockProt.getPluginVersion(), Collections.singletonList(player));
+            BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> checker.run());
         }
         if (BlockProt.getDefaultConfig().publicIsFriendByDefault() && !player.hasPlayedBefore()) {
             new PlayerSettingsHandler(player).addEveryoneAsFriend();

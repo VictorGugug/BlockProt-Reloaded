@@ -24,7 +24,6 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -149,7 +148,7 @@ public final class EntityFriendManageInventory extends BlockProtInventory {
         setBackButton();
 
         final List<UUID> uuidSnapshot = new ArrayList<>(state.friendResultCache);
-        Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
             try {
                 var profiles = BlockProt.getProfileService().findAllByUuid(uuidSnapshot);
                 for (var profile : profiles) {
@@ -158,8 +157,8 @@ public final class EntityFriendManageInventory extends BlockProtInventory {
                     final String pName = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
                     final UUID pUuid = profile.getUniqueId();
                     final int slot = idx;
-                    Bukkit.getScheduler().runTask(BlockProt.getInstance(),
-                        () -> setPlayerSkullAsync(slot, player, pUuid, pName));
+                    BlockProt.getFoliaLib().getScheduler().runAtEntity(player,
+                        syncTask -> setPlayerSkullAsync(slot, player, pUuid, pName));
                 }
             } catch (Exception ignored) {}
         });

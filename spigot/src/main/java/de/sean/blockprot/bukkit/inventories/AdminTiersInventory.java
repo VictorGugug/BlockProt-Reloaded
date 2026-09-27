@@ -187,7 +187,7 @@ public final class AdminTiersInventory extends BlockProtInventory {
                 inputName -> {
                     if (inputName == null || inputName.isBlank()) return;
                     String clean = inputName.trim();
-                    Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+                    BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
                         UUID targetUuid = null;
                         Player online = Bukkit.getPlayer(clean);
                         if (online != null) targetUuid = online.getUniqueId();
@@ -207,7 +207,7 @@ public final class AdminTiersInventory extends BlockProtInventory {
                             targetUuid = UUID.nameUUIDFromBytes(("OfflinePlayer:" + clean).getBytes(StandardCharsets.UTF_8));
                         }
                         final UUID finalUuid = targetUuid;
-                        Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                        BlockProt.getFoliaLib().getScheduler().runAtEntity(player, syncTask -> {
                             InventoryState selectState = InventoryState.builder()
                                 .origin(state.origin)
                                 .build();

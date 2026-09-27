@@ -25,8 +25,6 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.ReloadCoordinator;
 import de.sean.blockprot.bukkit.config.ReloadReport;
-import de.sean.blockprot.bukkit.listeners.BlockEventListener;
-import de.sean.blockprot.bukkit.tasks.BackupTask;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
@@ -42,7 +40,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -169,14 +166,7 @@ public final class AdminMenuDialog {
                 BlockProt.getInstance().getLogger().info("/bp debug run from dialog");
                 p.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS)));
-                Bukkit.getScheduler().runTaskAsynchronously(
-                    BlockProt.getInstance(),
-                    () -> {
-                        new de.sean.blockprot.bukkit.commands.DebugCommand().onCommand(
-                            p, null, "blockprot", new String[]{"debug", "run"}
-                        );
-                    }
-                );
+                de.sean.blockprot.bukkit.commands.DebugCommand.run(p);
             }
         );
 

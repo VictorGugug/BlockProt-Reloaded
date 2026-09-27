@@ -35,7 +35,6 @@ import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
 import org.bukkit.block.DoubleChest;
@@ -201,7 +200,7 @@ public class InventoryEventListener implements Listener {
                 // Player-initiated close (ESC / E / X) on a submenu: reopen the parent
                 // menu next tick. Programmatic navigation reopens another inventory
                 // before the task runs, so it never triggers this path.
-                Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                BlockProt.getFoliaLib().getScheduler().runAtEntity(player, syncTask -> {
                     Player online = Bukkit.getPlayer(player.getUniqueId());
                     if (online == null || !online.isOnline()) return;
                     if (online.getOpenInventory().getTopInventory().getHolder() instanceof BlockProtInventory) return;

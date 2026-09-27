@@ -21,7 +21,6 @@
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
@@ -38,14 +37,12 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.scheduler.BukkitTask;
+import com.tcoded.folialib.wrapper.task.WrappedTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
@@ -79,7 +76,7 @@ public final class PlayerListInventory extends BlockProtInventory {
     private SortMode sortMode = SortMode.NAME_ASC;
     private List<PlayerEntry> entries = null;
 
-    @Nullable private BukkitTask loadTask = null;
+    @Nullable private WrappedTask loadTask = null;
 
     private record PlayerEntry(OfflinePlayer player, String name, int blockCount) {}
 
@@ -109,13 +106,13 @@ public final class PlayerListInventory extends BlockProtInventory {
         fillLoading();
 
         final InventoryState finalState = state;
-        loadTask = Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+        loadTask = BlockProt.getFoliaLib().getScheduler().runLaterAsync(() -> {
             List<PlayerEntry> loaded = loadEntries();
-            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+            BlockProt.getFoliaLib().getScheduler().runAtEntity(admin, syncTask -> {
                 entries = loaded;
                 renderPage(admin, finalState);
             });
-        });
+        }, 1L);
 
         admin.openInventory(inventory);
         return inventory;
@@ -219,7 +216,7 @@ public final class PlayerListInventory extends BlockProtInventory {
                 if (!(skull.getItemMeta() instanceof SkullMeta meta)) return;
                 try { meta.setOwnerProfile(freshProfile); } catch (Throwable ignored) {}
                 skull.setItemMeta(meta);
-            }, runnable -> Bukkit.getScheduler().runTask(BlockProt.getInstance(), runnable));
+            }, runnable -> BlockProt.getFoliaLib().getScheduler().runAtEntity(admin, syncTask -> runnable.run()));
         }
     }
 

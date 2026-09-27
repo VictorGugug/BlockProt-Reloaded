@@ -26,14 +26,12 @@ import de.sean.blockprot.bukkit.Translator;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * SQLite-based access audit log. Records who attempted to access which block and when.
@@ -157,7 +155,7 @@ public final class AuditLogger {
         final String world = loc.getWorld() != null ? loc.getWorld().getName() : "unknown";
         final int bx = loc.getBlockX(), by = loc.getBlockY(), bz = loc.getBlockZ();
         final long ts = System.currentTimeMillis();
-        Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
             if (closed) return;
             try {
                 pruneIfNeeded();

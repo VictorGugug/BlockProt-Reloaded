@@ -293,7 +293,7 @@ public final class HybridDatabase {
     }
 
     private void runAsync(@NotNull SqlRunnable runnable) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
             try {
                 runnable.run();
             } catch (SQLException e) {

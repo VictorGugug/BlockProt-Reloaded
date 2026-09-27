@@ -364,8 +364,8 @@ public class BlockEventListener implements Listener {
                 }
             }
 
-            Bukkit.getScheduler().runTaskLater(
-                this.blockProt,
+            BlockProt.getFoliaLib().getScheduler().runAtLocationLater(
+                block.getLocation(),
                 () -> {
                     if (BlockFamilyParser.getSubFamilyMembers(BlockFamilyParser.SubFamily.CHEST).contains(block.getType())) {
                         final BlockState doubleChestState = BlockUtil.getDoubleChest(block);

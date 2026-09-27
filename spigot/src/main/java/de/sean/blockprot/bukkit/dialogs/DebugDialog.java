@@ -26,9 +26,6 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.commands.DebugCommand;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
-import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
-import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_PURPLE;
-import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_BLUE;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_GRAY;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
 import java.util.ArrayList;
@@ -92,12 +89,7 @@ public final class DebugDialog {
                 TextColor.color(0x888888)),
             p -> {
                 p.sendMessage(Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__DEBUG__RUN_SEPARATOR)), PASTEL_GOLD));
-                Bukkit.getScheduler().runTaskAsynchronously(
-                    BlockProt.getInstance(),
-                    () -> new DebugCommand().onCommand(
-                        p, null, "blockprot", new String[]{"debug", "run"}
-                    )
-                );
+                DebugCommand.run(p);
             }
         );
 

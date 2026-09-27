@@ -29,10 +29,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.util.RegionTasks;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
-import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
-import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_PURPLE;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_BLUE;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.SOFT_GRAY;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
@@ -106,13 +105,13 @@ public final class EntityFriendManageDialog {
             p -> {
                 bridge.closeDialog(p);
                 Consumer<String> handleName = text -> {
-                    Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+                    BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
                         double minimumSimilarity = BlockProt.getDefaultConfig().getFriendSearchSimilarityPercentage();
                         var match = de.sean.blockprot.bukkit.util.PlayerLookup.findBestMatch(text, minimumSimilarity, p.getUniqueId());
                         if (match != null) {
-                            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                            BlockProt.getFoliaLib().getScheduler().runAtEntity(entity, syncTask -> {
                                 handler.addFriend(match.getKey().toString());
-                                show(p, entity, handler);
+                                RegionTasks.runFor(p, () -> show(p, entity, handler));
                             });
                         } else {
                             ComponentMessages.sendActionBar(p, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(

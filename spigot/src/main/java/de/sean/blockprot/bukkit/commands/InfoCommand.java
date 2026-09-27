@@ -34,6 +34,7 @@ import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.util.RegionTasks;
 import de.sean.blockprot.bukkit.util.PlayerNameResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -91,7 +92,7 @@ public final class InfoCommand implements CommandExecutor {
 
         final String targetName = args[1];
 
-        Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
             OfflinePlayer offlineTarget = PlayerNameResolver.findOfflinePlayer(targetName);
             if (offlineTarget == null) {
                 @SuppressWarnings("deprecation")
@@ -102,40 +103,18 @@ public final class InfoCommand implements CommandExecutor {
             if (offlineTarget == null || offlineTarget.getUniqueId() == null) {
                 final String msg = Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_PLAYER_NOT_FOUND)
                     .replace("{player}", targetName);
-                Bukkit.getScheduler().runTask(BlockProt.getInstance(), () ->
-                    ComponentMessages.sendLegacy(sender, msg));
+                RegionTasks.runFor(sender, () -> ComponentMessages.sendLegacy(sender, msg));
                 return;
             }
 
             final OfflinePlayer finalTarget = offlineTarget;
             final String displayName = finalTarget.getName() != null ? finalTarget.getName() : targetName;
 
-            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+            RegionTasks.runFor(sender, () -> {
                 PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
                 StatHandler.getStatisticByUuid(stat, finalTarget.getUniqueId());
 
-                if (sender instanceof Player player) {
-                    if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
-                        ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_HEADER)
-                            .replace("{player}", displayName));
-                        for (LocationListEntry entry : stat.get()) {
-                            Location loc = entry.get();
-                            if (loc.getWorld() == null) continue;
-                            try {
-                                var block   = loc.getWorld().getBlockAt(loc);
-                                var handler = new BlockNBTHandler(block);
-                                if (!BlockProt.getDefaultConfig().isLockable(block.getType())) continue;
-                                if (!handler.isOwner(finalTarget.getUniqueId())) continue;
-                            } catch (RuntimeException ignored) { continue; }
-                            String line = Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_ENTRY)
-                                .replace("{world}", loc.getWorld().getName())
-                                .replace("{x}",     String.valueOf(loc.getBlockX()))
-                                .replace("{y}",     String.valueOf(loc.getBlockY()))
-                                .replace("{z}",     String.valueOf(loc.getBlockZ()));
-                            ComponentMessages.sendLegacy(player, line);
-                        }
-                        return;
-                    }
+                if (sender instanceof Player player && !BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
                     InventoryState ns = new InventoryState(null);
                     ns.currentPageIndex = 0;
                     ns.origin = InventoryState.MenuOrigin.NONE;
@@ -144,34 +123,28 @@ public final class InfoCommand implements CommandExecutor {
                     return;
                 }
 
-                List<LocationListEntry> entries = stat.get();
-                if (entries.isEmpty()) {
-                    ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_NO_BLOCKS)
+                List<Location> locations = stat.get().stream().map(LocationListEntry::get).toList();
+                RegionTasks.mapLocations(locations, loc -> {
+                    var block = loc.getBlock();
+                    if (!BlockProt.getDefaultConfig().isLockable(block.getType())) return null;
+                    return new BlockNBTHandler(block).isOwner(finalTarget.getUniqueId()) ? loc : null;
+                }).thenAccept(owned -> RegionTasks.runFor(sender, () -> {
+                    if (owned.isEmpty()) {
+                        ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_NO_BLOCKS)
+                            .replace("{player}", displayName));
+                        return;
+                    }
+                    ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_HEADER)
                         .replace("{player}", displayName));
-                    return;
-                }
-
-                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_HEADER)
-                    .replace("{player}", displayName));
-
-                final String entryTemplate = Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_ENTRY);
-                for (LocationListEntry entry : entries) {
-                    Location loc = entry.get();
-                    if (loc.getWorld() == null) continue;
-                    try {
-                        var block   = loc.getWorld().getBlockAt(loc);
-                        var handler = new BlockNBTHandler(block);
-                        if (!BlockProt.getDefaultConfig().isLockable(block.getType())) continue;
-                        if (!handler.isOwner(finalTarget.getUniqueId())) continue;
-                    } catch (RuntimeException ignored) { continue; }
-
-                    String line = entryTemplate
-                        .replace("{world}", loc.getWorld().getName())
-                        .replace("{x}",     String.valueOf(loc.getBlockX()))
-                        .replace("{y}",     String.valueOf(loc.getBlockY()))
-                        .replace("{z}",     String.valueOf(loc.getBlockZ()));
-                    ComponentMessages.sendLegacy(sender, line);
-                }
+                    final String entryTemplate = Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_ENTRY);
+                    for (Location loc : owned) {
+                        ComponentMessages.sendLegacy(sender, entryTemplate
+                            .replace("{world}", loc.getWorld().getName())
+                            .replace("{x}",     String.valueOf(loc.getBlockX()))
+                            .replace("{y}",     String.valueOf(loc.getBlockY()))
+                            .replace("{z}",     String.valueOf(loc.getBlockZ())));
+                    }
+                }));
             });
         });
 

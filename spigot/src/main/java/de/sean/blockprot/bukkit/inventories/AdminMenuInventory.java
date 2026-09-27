@@ -210,8 +210,8 @@ public class AdminMenuInventory extends BlockProtInventory {
             for (Player online : Bukkit.getOnlinePlayers()) {
                 if (online.isOp()) opRecipients.add(online);
             }
-            Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(),
-                new UpdateChecker(BlockProt.getPluginVersion(), opRecipients));
+            UpdateChecker checker = new UpdateChecker(BlockProt.getPluginVersion(), opRecipients);
+            BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> checker.run());
 
         } else if (slot == SLOT_INTEGRATIONS) {
             player.closeInventory();
@@ -262,7 +262,7 @@ public class AdminMenuInventory extends BlockProtInventory {
             player.closeInventory();
             Consumer<String> handleName = inputName -> {
                 if (inputName == null || inputName.isBlank()) return;
-                Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+                BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
                     @SuppressWarnings("deprecation")
                     OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(inputName);
                     if (target == null) {
@@ -271,7 +271,7 @@ public class AdminMenuInventory extends BlockProtInventory {
                         if (fallback.hasPlayedBefore()) target = fallback;
                     }
                     final OfflinePlayer finalTarget = target;
-                    Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                    BlockProt.getFoliaLib().getScheduler().runAtEntity(player, syncTask -> {
                         if (finalTarget == null || finalTarget.getUniqueId() == null) {
                             ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_PLAYER_NOT_FOUND)
                                 .replace("{player}", inputName));
@@ -296,7 +296,7 @@ public class AdminMenuInventory extends BlockProtInventory {
             player.closeInventory();
             Consumer<String> handleName = inputName -> {
                 if (inputName == null || inputName.isBlank()) return;
-                Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+                BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
                     @SuppressWarnings("deprecation")
                     OfflinePlayer target = Bukkit.getOfflinePlayerIfCached(inputName);
                     if (target == null) {
@@ -305,7 +305,7 @@ public class AdminMenuInventory extends BlockProtInventory {
                         if (fallback.hasPlayedBefore()) target = fallback;
                     }
                     final OfflinePlayer finalTarget = target;
-                    Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                    BlockProt.getFoliaLib().getScheduler().runAtEntity(player, syncTask -> {
                         if (finalTarget == null || finalTarget.getUniqueId() == null) {
                             ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__ADMIN_INFO_PLAYER_NOT_FOUND)
                                 .replace("{player}", inputName));

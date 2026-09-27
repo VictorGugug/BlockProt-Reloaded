@@ -24,7 +24,6 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
 import de.sean.blockprot.bukkit.dialogs.UpdateDialog;
 import de.sean.blockprot.bukkit.tasks.UpdateChecker;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -49,10 +48,8 @@ public class UpdateCommand implements CommandExecutor {
         List<Player> recipients = (sender instanceof Player p)
             ? java.util.Collections.singletonList(p)
             : null;
-        Bukkit.getScheduler().runTaskAsynchronously(
-            BlockProt.getInstance(),
-            new UpdateChecker(BlockProt.getPluginVersion(), recipients)
-        );
+        UpdateChecker checker = new UpdateChecker(BlockProt.getPluginVersion(), recipients);
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> checker.run());
         return true;
     }
 

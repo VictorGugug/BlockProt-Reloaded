@@ -27,7 +27,6 @@ import de.sean.blockprot.bukkit.events.BlockProtLockEvent;
 import de.sean.blockprot.bukkit.integrations.PluginIntegration;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -65,7 +64,7 @@ public final class WorldEditPasteListener implements Listener {
         Location origin = player.getLocation().clone();
         long delay = IntegrationConfig.getLong("worldedit.paste_autolock.delay_ticks", 20L);
 
-        Bukkit.getScheduler().runTaskLater(plugin, () -> scanAndLock(player, origin), delay);
+        BlockProt.getFoliaLib().getScheduler().runAtLocationLater(origin, () -> scanAndLock(player, origin), Math.max(1L, delay));
         BlockProtLogger.log("worldedit-paste", "Detected paste command from " + player.getName()
             + " at " + format(origin) + "; scheduled bounded NBT scan.");
     }

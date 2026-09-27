@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.util.RegionTasks;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_GOLD;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_MINT;
@@ -142,14 +143,14 @@ public final class FriendManageDialog {
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__FRIENDS__MANAGE_HINT)), TextColor.color(0x888888)),
             p -> {
                 Consumer<String> handleName = text -> {
-                    Bukkit.getScheduler().runTaskAsynchronously(BlockProt.getInstance(), () -> {
+                    BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
                         double minimumSimilarity = BlockProt.getDefaultConfig().getFriendSearchSimilarityPercentage();
                         var match = de.sean.blockprot.bukkit.util.PlayerLookup.findBestMatch(text, minimumSimilarity, p.getUniqueId());
                         if (match != null) {
-                            Bukkit.getScheduler().runTask(BlockProt.getInstance(), () -> {
+                            BlockProt.getFoliaLib().getScheduler().runAtLocation(block.getLocation(), syncTask -> {
                                 handler.addFriend(match.getKey().toString());
                                 handler.applyToOtherContainer();
-                                showForBlock(p, block, handler, safePage);
+                                RegionTasks.runFor(p, () -> showForBlock(p, block, handler, safePage));
                             });
                         } else {
                             ComponentMessages.sendActionBar(p, net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().deserialize(

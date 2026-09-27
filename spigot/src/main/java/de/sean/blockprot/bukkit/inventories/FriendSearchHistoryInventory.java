@@ -25,7 +25,6 @@ import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import de.sean.blockprot.nbt.FriendModifyAction;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -96,24 +95,20 @@ public class FriendSearchHistoryInventory extends BlockProtInventory {
 
         setBackButton();
 
-        Bukkit.getScheduler().runTaskAsynchronously(
-            BlockProt.getInstance(),
-            () -> {
-                try {
-                    final var profiles = BlockProt.getProfileService().findAllByUuid(state.friendResultCache);
-
-                    int i = 0;
-                    while (i < Math.min(profiles.size(), maxSkulls)) {
+        BlockProt.getFoliaLib().getScheduler().runAsync(asyncTask -> {
+            try {
+                final var profiles = BlockProt.getProfileService().findAllByUuid(state.friendResultCache);
+                BlockProt.getFoliaLib().getScheduler().runAtEntity(player, syncTask -> {
+                    for (int i = 0; i < Math.min(profiles.size(), maxSkulls); i++) {
                         final var profile = profiles.get(i);
                         final String pName = profile.getName() != null ? profile.getName() : profile.getUniqueId().toString();
                         setPlayerSkull(i, BlockProtInventory.createPlayerProfile(profile.getUniqueId(), pName));
-                        i++;
                     }
-                } catch (Exception e) {
-                    BlockProt.getInstance().getLogger().warning("Failed to update PlayerProfile: " + e.getMessage());
-                }
+                });
+            } catch (Exception e) {
+                BlockProt.getInstance().getLogger().warning("Failed to update PlayerProfile: " + e.getMessage());
             }
-        );
+        });
 
         return this.inventory;
     }
