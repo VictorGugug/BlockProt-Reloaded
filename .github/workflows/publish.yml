@@ -1,13 +1,14 @@
 name: Publish Multi-Platform Release
 
-run-name: "Publish [${{ inputs.mode }}]: ${{ inputs.tag }}"
+run-name: "Publish [${{ inputs.mode }}]: ${{ inputs.tag || '1.3.6' }}"
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Release version or tag to process (e.g. 1.3.6)"
-        required: true
+        description: "Release version or tag to process (leave blank to auto-detect from gradle.properties)"
+        required: false
+        default: "1.3.6"
       mode:
         description: "Execution mode: Preview, Publish, or Cancel"
         type: choice
@@ -98,7 +99,11 @@ jobs:
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
         id: changelog
         run: |
-          python3 .github/scripts/generate_version_commits.py --version "${{ github.event.inputs.tag }}" --release-body --output-file build/reports/release-notes.md
+          TARGET_TAG="${{ github.event.inputs.tag }}"
+          if [ -z "$TARGET_TAG" ]; then
+            TARGET_TAG="${{ steps.meta.outputs.plugin_version }}"
+          fi
+          python3 .github/scripts/generate_version_commits.py --version "$TARGET_TAG" --release-body --output-file build/reports/release-notes.md
 
       - name: Set up JDK 25
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
