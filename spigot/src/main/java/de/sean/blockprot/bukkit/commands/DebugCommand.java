@@ -1927,7 +1927,7 @@ public class DebugCommand implements CommandExecutor {
             //   hotfix  -> RANK_HOTFIX (ranked above the clean release)
             //   release -> legacy tag suffix normalized to a clean release
             //   exp     -> experimental, never an update
-            String curVer = BlockProt.getPluginVersion();
+            String curVer = new SemanticVersion(BlockProt.getPluginVersion()).baseVersion();
             SemanticVersion stable   = new SemanticVersion(curVer);
             SemanticVersion bedev    = new SemanticVersion(curVer + "-BEDev");
             SemanticVersion bdev     = new SemanticVersion(curVer + "-bdev");
@@ -2251,10 +2251,9 @@ public class DebugCommand implements CommandExecutor {
         }
         int total = 0;
         int uncovered = 0;
-        String[] packages = {
-            INVENTORY_PACKAGE, DIALOG_PACKAGE,
-            BlockProtCommand.class.getPackageName(), LISTENERS_PACKAGE
-        };
+        String[] packages = player != null
+            ? new String[]{INVENTORY_PACKAGE, DIALOG_PACKAGE, BlockProtCommand.class.getPackageName(), LISTENERS_PACKAGE}
+            : new String[]{BlockProtCommand.class.getPackageName(), LISTENERS_PACKAGE};
         try (var jar = new JarFile(new File(codeSource.getLocation().toURI()))) {
             for (String pkg : packages) {
                 String dir = pkg.replace('.', '/') + "/";
