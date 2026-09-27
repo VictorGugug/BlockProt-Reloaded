@@ -130,10 +130,12 @@ public final class TiersCommand implements CommandExecutor {
 
         if (roleName == null) {
             AdminTier configuredTier = AdminTierManager.getRole(targetUuid);
-            String opDisplay = isOp ? "§cYes" : "§7No";
-            ComponentMessages.sendLegacy(sender, "§7[BlockProt] §e" + targetName + " §7- "
-                + Translator.get(TranslationKey.INVENTORIES__ADMIN_TIERS__CURRENT_ROLE).replace("{role}", configuredTier.getIdentifier())
-                + " §7| §cOP: " + opDisplay);
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ADMIN_TIERS_INFO)
+                .replace("{player}", targetName)
+                .replace("{role}", Translator.get(TranslationKey.INVENTORIES__ADMIN_TIERS__CURRENT_ROLE)
+                    .replace("{role}", configuredTier.getIdentifier()))
+                .replace("{op}", Translator.get(isOp ? TranslationKey.MESSAGES__ADMIN_TIERS_OP_YES
+                    : TranslationKey.MESSAGES__ADMIN_TIERS_OP_NO)));
             return true;
         }
 

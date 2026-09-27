@@ -136,7 +136,8 @@ public final class AdminMenuDialog {
                 p.sendMessage(Component.text(
                     report.isSuccess()
                         ? Translator.get(TranslationKey.MESSAGES__ADMIN_RELOAD_DONE)
-                        : "§cReload failed: " + (report.getErrorMessage() != null ? report.getErrorMessage() : "unknown"),
+                        : Translator.get(TranslationKey.MESSAGES__ADMIN_RELOAD_FAILED)
+                            .replace("{error}", String.valueOf(report.getErrorMessage())),
                     report.isSuccess() ? PASTEL_MINT : PASTEL_CORAL));
             }
         );

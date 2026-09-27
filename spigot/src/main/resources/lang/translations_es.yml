@@ -255,6 +255,7 @@ inventories:
     title: "Acciones Custom: {player}"
     enabled: "§a● Habilitado"
     disabled: "§c○ Deshabilitado"
+    active_count: "§dPersonalizado: §f{active}/{total} activas"
     min_tier: "§8Tier mínimo: §7{tier}"
     click_to_toggle: "§eClic para alternar"
   player_list:
@@ -391,6 +392,10 @@ messages:
   remote_unlock_warning: "§e! Desproteger remotamente.\n§7Haz clic de nuevo para confirmar."
   admin_reload_done: "§aConfig y traducciones recargadas."
   admin_reload_failed: "§cLa recarga falló: {error}"
+  admin_tiers_info: "§7[BlockProt] §e{player} §7- {role} §7| §cOP: {op}"
+  admin_tiers_op_yes: "§cSí"
+  admin_tiers_op_no: "§7No"
+  menu_internal_error: "§cOcurrió un error interno al procesar esta acción del menú. Revisa la consola del servidor."
   admin_integrations: "§7Integraciones ({count}): {integrations}"
   admin_info_hint: "§7Usa §f/bp info <jugador>§7 para ver sus bloques protegidos."
   admin_debug_hint: "§7Ejecutando diagnósticos..."

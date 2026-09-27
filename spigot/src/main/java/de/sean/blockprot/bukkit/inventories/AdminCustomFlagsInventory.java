@@ -124,7 +124,9 @@ public final class AdminCustomFlagsInventory extends BlockProtInventory {
         } else {
             skullLore.add(Translator.get(TranslationKey.INVENTORIES__ADMIN_TIERS__STATUS_NOT_OP));
         }
-        skullLore.add("§dCustom: §f" + activeFlags.size() + "/" + ORDERED_ACTIONS.length + " active");
+        skullLore.add(Translator.get(TranslationKey.INVENTORIES__ADMIN_CUSTOM_FLAGS__ACTIVE_COUNT)
+            .replace("{active}", String.valueOf(activeFlags.size()))
+            .replace("{total}", String.valueOf(ORDERED_ACTIONS.length)));
         skullLore.add(Translator.get(TranslationKey.INVENTORIES__ADMIN_CUSTOM_FLAGS__CLICK_TO_TOGGLE));
 
         setPlayerSkullAsync(SLOT_PLAYER, player, targetUuid, targetName,
@@ -167,7 +169,9 @@ public final class AdminCustomFlagsInventory extends BlockProtInventory {
             } else {
                 skullLore.add(Translator.get(TranslationKey.INVENTORIES__ADMIN_TIERS__STATUS_NOT_OP));
             }
-            skullLore.add("§dCustom: §f" + activeFlags.size() + "/" + ORDERED_ACTIONS.length + " active");
+            skullLore.add(Translator.get(TranslationKey.INVENTORIES__ADMIN_CUSTOM_FLAGS__ACTIVE_COUNT)
+            .replace("{active}", String.valueOf(activeFlags.size()))
+            .replace("{total}", String.valueOf(ORDERED_ACTIONS.length)));
             skullLore.add(Translator.get(TranslationKey.INVENTORIES__ADMIN_CUSTOM_FLAGS__CLICK_TO_TOGGLE));
             setPlayerSkullAsync(SLOT_PLAYER, player, targetUuid, targetName,
                 "§e" + targetName + (isOp ? " §c[OP]" : ""),

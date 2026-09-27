@@ -96,7 +96,7 @@ public class InventoryEventListener implements Listener {
                     bpInventory.onClick(event, state);
                 } catch (Throwable t) {
                     BlockProtLogger.error("Failed to process inventory click in " + bpInventory.getClass().getSimpleName(), t);
-                    ComponentMessages.sendLegacy(player, "§cAn internal error occurred while processing this menu action. Check server console.");
+                    ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__MENU_INTERNAL_ERROR));
                 }
             }
             player.updateInventory();

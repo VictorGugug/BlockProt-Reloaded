@@ -256,6 +256,7 @@ inventories:
     title: "Custom Actions: {player}"
     enabled: "§a● Enabled"
     disabled: "§c○ Disabled"
+    active_count: "§dCustom: §f{active}/{total} active"
     min_tier: "§8Minimum tier: §7{tier}"
     click_to_toggle: "§eClick to toggle"
   admin_block_list:
@@ -411,6 +412,10 @@ messages:
   remote_unlock_warning: "§e! This will unlock the block remotely. Click again to confirm. To re-lock, visit the block directly."
   admin_reload_done: "§aConfig and translations reloaded."
   admin_reload_failed: "§cReload failed: {error}"
+  admin_tiers_info: "§7[BlockProt] §e{player} §7- {role} §7| §cOP: {op}"
+  admin_tiers_op_yes: "§cYes"
+  admin_tiers_op_no: "§7No"
+  menu_internal_error: "§cAn internal error occurred while processing this menu action. Check the server console."
   admin_integrations: "§7Integrations ({count}): {integrations}"
   admin_info_hint: "§7Use §f/bp info <player>§7 to list their protected blocks."
   admin_debug_hint: "§7Running diagnostics..."
