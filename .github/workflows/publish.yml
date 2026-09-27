@@ -489,4 +489,39 @@ jobs:
             echo "| **Hangar** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-
+      - name: Publish Discord announcement template
+        if: always() && steps.gh_release.outcome == 'success'
+        env:
+          VERSION: ${{ needs.inspect-and-build.outputs.plugin_version }}
+          REPO: ${{ github.repository }}
+          MODRINTH_ID: ${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}
+        run: |
+          FENCE='```'
+          {
+            echo ""
+            echo "## Discord Announcement"
+            echo ""
+            echo "Copy each block into the release forum post."
+            echo ""
+            echo "**Post title**"
+            echo "${FENCE}"
+            echo "${VERSION} RELEASE"
+            echo "${FENCE}"
+            echo "**Tag**"
+            echo "${FENCE}"
+            echo "V - ${VERSION}"
+            echo "${FENCE}"
+            echo "**Message 1: GitHub release**"
+            echo "${FENCE}"
+            echo "https://github.com/${REPO}/releases/tag/${VERSION}"
+            echo "${FENCE}"
+            echo "**Message 2: Download platforms**"
+            echo "${FENCE}"
+            echo "**MODRINTH:**"
+            echo "https://modrinth.com/plugin/${MODRINTH_ID}/version/${VERSION}"
+            echo "**CURSEFORGE:**"
+            echo "https://www.curseforge.com/minecraft/bukkit-plugins/blockprot-reloaded"
+            echo "**HANGAR:**"
+            echo "https://hangar.papermc.io/VictorGugug/BlockProt-Reloaded/versions/${VERSION}"
+            echo "${FENCE}"
+          } >> "$GITHUB_STEP_SUMMARY"
