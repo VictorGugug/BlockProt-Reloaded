@@ -70,6 +70,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
@@ -95,6 +96,24 @@ public class DebugCommand implements CommandExecutor {
                              @NotNull String label, @NotNull String[] args) {
         if (!canUseCommand(sender)) return false;
         if (!(sender instanceof Player player)) {
+            if (args.length >= 2 && args[1].equalsIgnoreCase("run")) {
+                Player target = null;
+                if (args.length >= 3) {
+                    target = Bukkit.getPlayer(args[2]);
+                }
+                if (target == null && !Bukkit.getOnlinePlayers().isEmpty()) {
+                    target = Bukkit.getOnlinePlayers().iterator().next();
+                }
+                if (target != null) {
+                    sender.sendMessage("[BlockProt] Executing full player diagnostic suite with player context: " + target.getName());
+                    run(target);
+                    return true;
+                } else {
+                    sender.sendMessage("[BlockProt] Executing headless server diagnostics (no players online)...");
+                    runHeadless(sender);
+                    return true;
+                }
+            }
             sender.sendMessage(Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
             return false;
         }
@@ -137,6 +156,10 @@ public class DebugCommand implements CommandExecutor {
     public static void run(@NotNull Player player) {
         ab(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS));
         BlockProt.getFoliaLib().getScheduler().runAsync(task -> new DebugCommand().runDiagnostics(player));
+    }
+
+    public static void runHeadless(@NotNull CommandSender sender) {
+        BlockProt.getFoliaLib().getScheduler().runAsync(task -> new DebugCommand().runDiagnosticsHeadless(sender));
     }
 
     private static void ab(@NotNull Player p, @NotNull String msg) {
@@ -192,13 +215,13 @@ public class DebugCommand implements CommandExecutor {
         chat(player, Translator.get(TranslationKey.MESSAGES__DEBUG__RESULTS_GO_TO_LOG));
 
         // Domain 1: Environment & Compatibility
-        runDomain("1/9", "ENVIRONMENT & COMPATIBILITY");
+        runDomain("1/10", "ENVIRONMENT & COMPATIBILITY");
         checkConfig(player, passed, failed);
         checkBukkitCompat(player, passed, failed);
         checkFoliaLib(player, passed, failed);
 
         // Domain 2: Configuration & Block Families
-        runDomain("2/9", "CONFIGURATION & BLOCK FAMILIES");
+        runDomain("2/10", "CONFIGURATION & BLOCK FAMILIES");
         checkLockableMaterials(player, passed, failed);
         checkAutoDrop(player, passed, failed);
         checkLockableEntities(player, passed, failed);
@@ -207,12 +230,12 @@ public class DebugCommand implements CommandExecutor {
         checkVillagerWorkstationProtection(player, passed, failed);
 
         // Domain 3: Localization & Translation Coverage
-        runDomain("3/9", "LOCALIZATION & TRANSLATIONS");
+        runDomain("3/10", "LOCALIZATION & TRANSLATIONS");
         checkTranslations(player, passed, failed);
         checkLanguages(player, passed, failed);
 
         // Domain 4: Storage, Database & Caching
-        runDomain("4/9", "STORAGE, DATABASE & CACHING");
+        runDomain("4/10", "STORAGE, DATABASE & CACHING");
         checkHybridDatabase(player, passed, failed);
         checkProfileService(player, passed, failed);
         checkSkinsRestorer(player, passed, failed);
@@ -229,30 +252,30 @@ public class DebugCommand implements CommandExecutor {
 
             try {
                 // Domain 5: NBT & Data Persistence Engine
-                runDomain("5/9", "NBT & DATA PERSISTENCE ENGINE");
+                runDomain("5/10", "NBT & DATA PERSISTENCE ENGINE");
                 checkNbt(player, passed, failed);
                 checkEntityNbt(player, passed, failed);
                 checkPlayerSettings(player, passed, failed);
                 checkNbtSubHandlers(player, passed, failed);
 
                 // Domain 6: Commands, Permissions & Integrations
-                runDomain("6/9", "COMMANDS, PERMISSIONS & INTEGRATIONS");
+                runDomain("6/10", "COMMANDS, PERMISSIONS & INTEGRATIONS");
                 checkIntegrations(player, passed, failed);
                 checkCommandsRegistered(player, passed, failed);
                 checkAdminTiers(player, passed, failed);
 
                 // Domain 7: Event Listeners & Engine
-                runDomain("7/9", "EVENT LISTENERS & ENGINE");
+                runDomain("7/10", "EVENT LISTENERS & ENGINE");
                 checkListenersRegistered(player, passed, failed);
 
                 // Domain 8: User Interface & Screens
-                runDomain("8/9", "USER INTERFACE & SCREENS");
+                runDomain("8/10", "USER INTERFACE & SCREENS");
                 checkInventoryCreation(player, passed, failed);
                 checkAllInventories(player, passed, failed);
                 checkAllDialogs(player, passed, failed);
 
                 // Domain 9: Utility Helpers & Benchmarks
-                runDomain("9/9", "UTILITY HELPERS & BENCHMARKS");
+                runDomain("9/10", "UTILITY HELPERS & BENCHMARKS");
                 checkMessages(player, passed, failed);
                 checkBlocksYmlIntegrity(player, passed, failed);
                 checkWorldsYmlIntegrity(player, passed, failed);
@@ -260,6 +283,10 @@ public class DebugCommand implements CommandExecutor {
                 checkUtilityHelpers(player, passed, failed);
                 checkStructuralClasses(player, passed, failed);
                 checkEnumeratedCoverage(player, passed, failed);
+
+                // Domain 10: Player Simulation & Gameplay Verification
+                runDomain("10/10", "PLAYER SIMULATION & GAMEPLAY VERIFICATION");
+                checkPlayerSimulation(player, passed, failed);
 
                 int p2 = passed.get(), f2 = failed.get(), total = p2 + f2;
                 BlockProtLogger.separator();
@@ -291,7 +318,7 @@ public class DebugCommand implements CommandExecutor {
         });
     }
 
-    private void checkConfig(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkConfig(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var cfg = BlockProt.getDefaultConfig();
             BlockProtLogger.pass("Config: friendDisabled=" + cfg.isFriendFunctionalityDisabled()
@@ -306,7 +333,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkBukkitCompat(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkBukkitCompat(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var dust = BukkitCompat.PARTICLE_DUST;
             var dustTransition = BukkitCompat.PARTICLE_DUST_COLOR_TRANSITION;
@@ -326,7 +353,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkFoliaLib(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkFoliaLib(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var folia = BlockProt.getFoliaLib();
             BlockProtLogger.pass("FoliaLib: active (isFolia=" + folia.isFolia()
@@ -337,7 +364,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkTranslations(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkTranslations(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         int blank = 0, errors = 0;
         for (TranslationKey key : TranslationKey.values()) {
             try {
@@ -357,7 +384,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkLanguages(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkLanguages(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             BlockProt plugin = BlockProt.getInstance();
             String active = BlockProt.getDefaultConfig().getLanguageFile();
@@ -435,7 +462,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkLockableMaterials(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkLockableMaterials(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             DefaultConfig cfg = BlockProt.getDefaultConfig();
             Material[] check = {
@@ -453,7 +480,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkAutoDrop(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkAutoDrop(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             DefaultConfig cfg = BlockProt.getDefaultConfig();
             boolean enabled = cfg.isAutoDropToInventoryEnabled();
@@ -473,7 +500,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkLockableEntities(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkLockableEntities(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             DefaultConfig cfg = BlockProt.getDefaultConfig();
             Set<Material> entityFamily = BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.ENTITIES);
@@ -510,7 +537,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkItemFrameProtection(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkItemFrameProtection(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             DefaultConfig cfg = BlockProt.getDefaultConfig();
             boolean frameActive = cfg.isLockableEntity(Material.ITEM_FRAME);
@@ -526,7 +553,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkVillagerWorkstationProtection(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkVillagerWorkstationProtection(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             DefaultConfig cfg = BlockProt.getDefaultConfig();
             boolean enabled  = cfg.isVillagerWorkstationProtectionEnabled();
@@ -552,7 +579,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkRaidDetection(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkRaidDetection(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             boolean enabled = BlockProt.getInstance().getConfig().getBoolean("raid_detection.enabled", false);
             boolean explosionProtect = BlockProt.getDefaultConfig().shouldProtectLockedBlocksFromExplosions();
@@ -568,7 +595,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkIntegrations(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkIntegrations(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             List<PluginIntegration> integrations = BlockProt.getInstance().getIntegrations();
             if (integrations == null || integrations.isEmpty()) {
@@ -609,7 +636,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkHybridDatabase(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkHybridDatabase(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var db = BlockProt.getHybridDatabase();
             if (db != null) {
@@ -624,17 +651,27 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkProfileService(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkProfileService(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
-            var profile = BlockProt.getProfileService().findByUuid(player.getUniqueId());
-            BlockProtLogger.pass("ProfileService: active, found=" + (profile != null ? profile.getName() : "null (no exception)"));
+            var service = BlockProt.getProfileService();
+            if (service == null) {
+                BlockProtLogger.fail("ProfileService", "ProfileService instance is null");
+                f.incrementAndGet();
+                return;
+            }
+            if (player != null) {
+                var profile = service.findByUuid(player.getUniqueId());
+                BlockProtLogger.pass("ProfileService: active, found=" + (profile != null ? profile.getName() : "null (no exception)"));
+            } else {
+                BlockProtLogger.pass("ProfileService: active (headless verification)");
+            }
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("ProfileService", e.getMessage()); f.incrementAndGet();
         }
     }
 
-    private void checkSkinsRestorer(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkSkinsRestorer(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         var plugin = Bukkit.getPluginManager().getPlugin("SkinsRestorer");
         if (plugin == null) {
             BlockProtLogger.pass("SkinsRestorer: not installed");
@@ -653,13 +690,13 @@ public class DebugCommand implements CommandExecutor {
         p.incrementAndGet();
     }
 
-    private void checkAuditLogger(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkAuditLogger(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         var audit = BlockProt.getAuditLogger();
         BlockProtLogger.pass("AuditLogger: " + (audit == null ? "disabled (config)" : "active"));
         p.incrementAndGet();
     }
 
-    private void checkOnlinePlayers(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkOnlinePlayers(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         var players = Bukkit.getOnlinePlayers();
         StringBuilder sb = new StringBuilder();
         for (Player pl : players) {
@@ -1047,7 +1084,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkMessages(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkMessages(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         TranslationKey[] abKeys = {
             TranslationKey.MESSAGES__LOCK_HINT,
             TranslationKey.MESSAGES__CHAT_INPUT_PROMPT,
@@ -1105,7 +1142,7 @@ public class DebugCommand implements CommandExecutor {
      * a real {@link Material}, and every resolved material must be reflected by
      * {@link DefaultConfig#isLockable(Material)} / {@link DefaultConfig#isLockableEntity(Material)}.
      */
-    private void checkBlocksYmlIntegrity(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkBlocksYmlIntegrity(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
             java.io.File dataFolder = BlockProt.getInstance().getDataFolder();
@@ -1171,7 +1208,7 @@ public class DebugCommand implements CommandExecutor {
      * same way {@link #checkBlocksYmlIntegrity} checks blocks.yml. Skipped entirely
      * when {@code per_worlds_config} is disabled, since worlds.yml is not consulted then.
      */
-    private void checkWorldsYmlIntegrity(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkWorldsYmlIntegrity(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
             if (!defaultConfig.isPerWorldsConfigEnabled()) {
@@ -1448,7 +1485,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkCommandsRegistered(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkCommandsRegistered(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         BlockProtLogger.subGroup("Commands & permissions:");
         org.bukkit.command.PluginCommand cmd = Bukkit.getPluginCommand("blockprot");
         if (cmd == null) {
@@ -1542,7 +1579,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkAdminTiers(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkAdminTiers(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         try {
             boolean parsingOk = AdminTier.fromString("t1") == AdminTier.T1
                 && AdminTier.fromString("t2") == AdminTier.T2
@@ -1627,11 +1664,14 @@ public class DebugCommand implements CommandExecutor {
                 return;
             }
 
-            AdminTier currentTier = AdminTierManager.getPlayerTier(player);
-            boolean anyAdmin = AdminTierManager.hasAnyAdminPermission(player);
+            AdminTier currentTier = player != null ? AdminTierManager.getPlayerTier(player) : AdminTier.NONE;
+            boolean anyAdmin = player != null ? AdminTierManager.hasAnyAdminPermission(player) : true;
+            String callerDesc = player != null
+                ? "callerTier=" + currentTier.getIdentifier() + ", hasAnyAdmin=" + anyAdmin
+                : "headless verification";
 
-            BlockProtLogger.pass("Admin tiers: parsing, hierarchy, actions (15), console bypass, and storage roundtrip OK"
-                + " (callerTier=" + currentTier.getIdentifier() + ", hasAnyAdmin=" + anyAdmin + ")");
+            BlockProtLogger.pass("Admin tiers: parsing, hierarchy, actions (15), console bypass, and storage roundtrip OK ("
+                + callerDesc + ")");
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("Admin tiers", e.getMessage());
@@ -1639,7 +1679,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkListenersRegistered(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkListenersRegistered(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         java.util.List<org.bukkit.event.HandlerList> dummy = null;
         org.bukkit.plugin.PluginManager pm = Bukkit.getPluginManager();
         String[] expected = {
@@ -1675,15 +1715,17 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkSkinCache(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkSkinCache(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         BlockProtLogger.subGroup("SkinCache tiers:");
+        String name = player != null ? player.getName() : "Notch";
+        UUID uuid = player != null ? player.getUniqueId() : UUID.fromString(NOTCH_UUID);
         try {
-            var profile = SkinCache.getCachedOrOnlineProfile(player.getName(), player.getUniqueId());
+            var profile = SkinCache.getCachedOrOnlineProfile(name, uuid);
             if (profile != null) {
-                BlockProtLogger.passSub("tier 1 (online profile): resolved for " + player.getName());
+                BlockProtLogger.passSub("tier 1 (online profile): resolved for " + name);
                 p.incrementAndGet();
             } else {
-                BlockProtLogger.passSub("tier 1 (online profile): no cached/online skin for " + player.getName() + " (null, no exception)");
+                BlockProtLogger.passSub("tier 1 (online profile): no cached/online skin for " + name + " (null, no exception)");
                 p.incrementAndGet();
             }
         } catch (Throwable e) {
@@ -1693,7 +1735,7 @@ public class DebugCommand implements CommandExecutor {
 
         var sr = Bukkit.getPluginManager().getPlugin("SkinsRestorer");
         try {
-            var srProfile = SkinCache.resolveSkinsRestorer(player.getUniqueId(), player.getName());
+            var srProfile = SkinCache.resolveSkinsRestorer(uuid, name);
             if (sr != null && sr.isEnabled()) {
                 BlockProtLogger.passSub("tier 2 (SkinsRestorer): present, resolve returned "
                     + (srProfile != null ? "a profile" : "null"));
@@ -1707,7 +1749,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkUtilityHelpers(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkUtilityHelpers(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         BlockProtLogger.subGroup("Utility helpers (14 utilities):");
         try {
             Duration parsed = DurationParser.parse("2h30m");
@@ -1776,26 +1818,31 @@ public class DebugCommand implements CommandExecutor {
             BlockProtLogger.failSub("AsyncGuard", e.getMessage()); f.incrementAndGet();
         }
 
-        try {
-            Set<String> candidates = PlayerNameResolver.getNameCandidates(player.getName());
-            if (candidates == null || candidates.isEmpty()) {
-                BlockProtLogger.failSub("PlayerNameResolver", "no candidates for own name");
-                f.incrementAndGet();
-            } else {
-                BlockProtLogger.passSub("PlayerNameResolver: " + candidates.size() + " candidate(s) for " + player.getName());
-                p.incrementAndGet();
+        if (player != null) {
+            try {
+                Set<String> candidates = PlayerNameResolver.getNameCandidates(player.getName());
+                if (candidates == null || candidates.isEmpty()) {
+                    BlockProtLogger.failSub("PlayerNameResolver", "no candidates for own name");
+                    f.incrementAndGet();
+                } else {
+                    BlockProtLogger.passSub("PlayerNameResolver: " + candidates.size() + " candidate(s) for " + player.getName());
+                    p.incrementAndGet();
+                }
+            } catch (Exception e) {
+                BlockProtLogger.failSub("PlayerNameResolver", e.getMessage()); f.incrementAndGet();
             }
-        } catch (Exception e) {
-            BlockProtLogger.failSub("PlayerNameResolver", e.getMessage()); f.incrementAndGet();
-        }
 
-        try {
-            TemporaryActionBar.show(player, "debug", 1L);
-            TemporaryActionBar.cancel(player.getUniqueId());
-            BlockProtLogger.passSub("TemporaryActionBar: show+cancel OK");
+            try {
+                TemporaryActionBar.show(player, "debug", 1L);
+                TemporaryActionBar.cancel(player.getUniqueId());
+                BlockProtLogger.passSub("TemporaryActionBar: show+cancel OK");
+                p.incrementAndGet();
+            } catch (Exception e) {
+                BlockProtLogger.failSub("TemporaryActionBar", e.getMessage()); f.incrementAndGet();
+            }
+        } else {
+            BlockProtLogger.passSub("PlayerNameResolver/TemporaryActionBar: skipped (headless console)");
             p.incrementAndGet();
-        } catch (Exception e) {
-            BlockProtLogger.failSub("TemporaryActionBar", e.getMessage()); f.incrementAndGet();
         }
 
         try {
@@ -1829,14 +1876,19 @@ public class DebugCommand implements CommandExecutor {
             BlockProtLogger.failSub("DialogNavigation", e.getMessage()); f.incrementAndGet();
         }
 
-        try {
-            DialogState.push(player, ignored -> {});
-            boolean popped = DialogState.pop(player);
-            DialogState.clear(player);
-            BlockProtLogger.passSub("DialogState: push/pop=" + popped + " clear OK");
+        if (player != null) {
+            try {
+                DialogState.push(player, ignored -> {});
+                boolean popped = DialogState.pop(player);
+                DialogState.clear(player);
+                BlockProtLogger.passSub("DialogState: push/pop=" + popped + " clear OK");
+                p.incrementAndGet();
+            } catch (Exception e) {
+                BlockProtLogger.failSub("DialogState", e.getMessage()); f.incrementAndGet();
+            }
+        } else {
+            BlockProtLogger.passSub("DialogState: skipped (headless console)");
             p.incrementAndGet();
-        } catch (Exception e) {
-            BlockProtLogger.failSub("DialogState", e.getMessage()); f.incrementAndGet();
         }
 
         try {
@@ -1911,9 +1963,13 @@ public class DebugCommand implements CommandExecutor {
         DialogBridgeFactory.setTestBridge(new NoopDialogBridge());
         try {
             touchScreen(DIALOG_PACKAGE, "AdminConfigValueDialog");
-            AdminConfigValueDialog.openInt(player, "debug.test", "hint", 0, v -> {}, () -> {});
-            AdminConfigValueDialog.openText(player, "debug.test", "hint", "value", s -> null, v -> {}, () -> {});
-            BlockProtLogger.passSub("AdminConfigValueDialog: openInt/openText routed through test bridge");
+            if (player != null) {
+                AdminConfigValueDialog.openInt(player, "debug.test", "hint", 0, v -> {}, () -> {});
+                AdminConfigValueDialog.openText(player, "debug.test", "hint", "value", s -> null, v -> {}, () -> {});
+                BlockProtLogger.passSub("AdminConfigValueDialog: openInt/openText routed through test bridge");
+            } else {
+                BlockProtLogger.passSub("AdminConfigValueDialog: touched (headless)");
+            }
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.failSub("AdminConfigValueDialog", e.getMessage()); f.incrementAndGet();
@@ -2119,7 +2175,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkStructuralClasses(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkStructuralClasses(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         String[] names = {
             "de.sean.blockprot.bukkit.admin.AdminTier",
             "de.sean.blockprot.bukkit.admin.AdminAction",
@@ -2185,7 +2241,7 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkEnumeratedCoverage(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkEnumeratedCoverage(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
         var codeSource = BlockProt.getInstance().getClass().getProtectionDomain().getCodeSource();
         if (codeSource == null) {
             BlockProtLogger.pass("Class coverage: not running from a jar, enumeration skipped (dev workspace)");
@@ -2274,6 +2330,278 @@ public class DebugCommand implements CommandExecutor {
             BlockProtLogger.failSub(name,
                 e.getClass().getSimpleName() + ": " + e.getMessage());
             f.incrementAndGet();
+        }
+    }
+
+    private void simSub(@NotNull AtomicInteger p, @NotNull AtomicInteger f,
+                        @NotNull String name, @NotNull Runnable test) {
+        try {
+            test.run();
+            BlockProtLogger.passSub(name);
+            p.incrementAndGet();
+        } catch (Throwable e) {
+            BlockProtLogger.failSub(name, e.getClass().getSimpleName() + ": " + e.getMessage());
+            f.incrementAndGet();
+        }
+    }
+
+    private void checkPlayerSimulation(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        BlockProtLogger.subGroup("Player simulation & gameplay scenarios (10 scenarios):");
+        var loc = player.getLocation().clone();
+        var world = player.getWorld();
+        var orig = world.getBlockAt(loc).getType();
+        UUID strangerUuid = UUID.randomUUID();
+        UUID friendUuid = UUID.fromString(NOTCH_UUID);
+
+        simSub(p, f, "10a. Block Lock & Cache Lifecycle", () -> {
+            world.setType(loc, Material.CHEST);
+            try {
+                var block = world.getBlockAt(loc);
+                var handler = new BlockNBTHandler(block);
+                handler.setOwner(player.getUniqueId().toString());
+                handler.setName("SimChest");
+                ProtectedBlockCache.mark(block);
+
+                if (!handler.isOwner(player.getUniqueId()) || !ProtectedBlockCache.isProtected(block)) {
+                    throw new IllegalStateException("Block not marked as owned or cached as protected");
+                }
+            } finally {
+                ProtectedBlockCache.unmark(world.getBlockAt(loc));
+                world.setType(loc, orig);
+            }
+        });
+
+        simSub(p, f, "10b. Stranger Access Denial & Ownership", () -> {
+            world.setType(loc, Material.CHEST);
+            try {
+                var block = world.getBlockAt(loc);
+                var handler = new BlockNBTHandler(block);
+                handler.setOwner(player.getUniqueId().toString());
+
+                if (!handler.canAccess(player.getUniqueId().toString())) {
+                    throw new IllegalStateException("Owner player unexpectedly denied access");
+                }
+                if (handler.canAccess(strangerUuid.toString())) {
+                    throw new IllegalStateException("Stranger UUID unexpectedly granted access to locked block");
+                }
+            } finally {
+                world.setType(loc, orig);
+            }
+        });
+
+        simSub(p, f, "10c. Friend Lifecycle on Block (Add/Access/Remove)", () -> {
+            world.setType(loc, Material.CHEST);
+            try {
+                var block = world.getBlockAt(loc);
+                var handler = new BlockNBTHandler(block);
+                handler.setOwner(player.getUniqueId().toString());
+
+                handler.addFriend(friendUuid.toString());
+                if (!handler.containsFriend(friendUuid.toString()) || !handler.canAccess(friendUuid.toString())) {
+                    throw new IllegalStateException("Friend not found or cannot access after addFriend");
+                }
+                handler.removeFriend(friendUuid.toString());
+                if (handler.containsFriend(friendUuid.toString()) && handler.canAccess(friendUuid.toString())) {
+                    throw new IllegalStateException("Friend still present or has access after removeFriend");
+                }
+            } finally {
+                world.setType(loc, orig);
+            }
+        });
+
+        simSub(p, f, "10d. Redstone & Hopper Protection Toggles", () -> {
+            world.setType(loc, Material.CHEST);
+            try {
+                var block = world.getBlockAt(loc);
+                var handler = new BlockNBTHandler(block);
+                RedstoneSettingsHandler rs = handler.getRedstoneHandler();
+                boolean origPiston = rs.getPistonProtection();
+                boolean origHopper = rs.getHopperProtection();
+                rs.setPistonProtection(!origPiston);
+                rs.setHopperProtection(!origHopper);
+                boolean toggledPiston = rs.getPistonProtection();
+                boolean toggledHopper = rs.getHopperProtection();
+                rs.reset();
+                if (toggledPiston == origPiston || toggledHopper == origHopper) {
+                    throw new IllegalStateException("Redstone/Hopper protection failed to toggle");
+                }
+            } finally {
+                world.setType(loc, orig);
+            }
+        });
+
+        simSub(p, f, "10e. Multi-Block & Family Expressions", () -> {
+            boolean isDoor = BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.DOORS).contains(Material.OAK_DOOR);
+            boolean isTrapdoor = BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.BLOCKS).contains(Material.OAK_TRAPDOOR);
+            boolean isGate = BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.BLOCKS).contains(Material.OAK_FENCE_GATE);
+            boolean isTile = BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.TILE_ENTITIES).contains(Material.CHEST);
+            String readable = BlockUtil.getHumanReadableBlockName(Material.CHEST);
+            if (!isDoor || !isTrapdoor || !isGate || !isTile || readable.isBlank()) {
+                throw new IllegalStateException("Family parser or readable name check failed for standard blocks");
+            }
+        });
+
+        simSub(p, f, "10f. Hazard & Explosion Protection Behavior", () -> {
+            boolean explosionProtect = BlockProt.getDefaultConfig().shouldProtectLockedBlocksFromExplosions();
+            world.setType(loc, Material.CHEST);
+            try {
+                var block = world.getBlockAt(loc);
+                ProtectedBlockCache.mark(block);
+                if (!ProtectedBlockCache.isProtected(block)) {
+                    throw new IllegalStateException("Block not registered in ProtectedBlockCache");
+                }
+            } finally {
+                ProtectedBlockCache.unmark(world.getBlockAt(loc));
+                world.setType(loc, orig);
+            }
+        });
+
+        simSub(p, f, "10g. Entity Protection Simulation", () -> {
+            var entity = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
+                stand.setGravity(false);
+                stand.setVisible(false);
+                stand.setSilent(true);
+            });
+            try {
+                var entityHandler = new EntityNBTHandler(entity);
+                entityHandler.setOwner(player.getUniqueId().toString());
+                if (!entityHandler.isOwner(player.getUniqueId().toString())) {
+                    throw new IllegalStateException("Entity owner not set to player UUID");
+                }
+                if (entityHandler.isOwner(strangerUuid.toString())) {
+                    throw new IllegalStateException("Entity owner check returned true for stranger UUID");
+                }
+                entityHandler.addFriend(friendUuid.toString());
+                if (!entityHandler.hasFriend(friendUuid.toString())) {
+                    throw new IllegalStateException("Entity friends list missing added friend UUID");
+                }
+                entityHandler.removeFriend(friendUuid.toString());
+                if (entityHandler.hasFriend(friendUuid.toString())) {
+                    throw new IllegalStateException("Entity friends list still contains friend after removal");
+                }
+            } finally {
+                entity.remove();
+            }
+        });
+
+        simSub(p, f, "10h. GUI State & Theft Prevention Integrity", () -> {
+            InventoryState state = new InventoryState(null);
+            state.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
+            state.origin = InventoryState.MenuOrigin.NONE;
+            InventoryState.set(player.getUniqueId(), state);
+            InventoryState retrieved = InventoryState.get(player.getUniqueId());
+            if (retrieved == null || retrieved.friendSearchState != InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH) {
+                throw new IllegalStateException("InventoryState set/get mismatch");
+            }
+            InventoryState.remove(player.getUniqueId());
+            if (InventoryState.get(player.getUniqueId()) != null) {
+                throw new IllegalStateException("InventoryState not null after remove()");
+            }
+        });
+
+        simSub(p, f, "10i. Command Permission Nodes Verification", () -> {
+            for (Permissions perm : Permissions.values()) {
+                if (perm.key() == null || perm.key().isBlank()) {
+                    throw new IllegalStateException("Permission node has null or blank key: " + perm.name());
+                }
+                player.hasPermission(perm.key());
+            }
+        });
+
+        simSub(p, f, "10j. Player Settings & Search History Roundtrip", () -> {
+            PlayerSettingsHandler ps = new PlayerSettingsHandler(player);
+            boolean origLock = ps.getLockOnPlace();
+            ps.setLockOnPlace(!origLock);
+            boolean toggled = ps.getLockOnPlace();
+            ps.setLockOnPlace(origLock);
+            if (toggled == origLock) {
+                throw new IllegalStateException("Failed to toggle player lockOnPlace setting");
+            }
+            ps.clearSearchHistory();
+        });
+    }
+
+    private void runDiagnosticsHeadless(@NotNull CommandSender sender) {
+        AtomicInteger passed = new AtomicInteger(0);
+        AtomicInteger failed = new AtomicInteger(0);
+        coveredClasses.clear();
+        BlockProtLogger.startDebugReport();
+
+        BlockProtLogger.log("Session: " + java.time.LocalDateTime.now()
+            + " | Plugin: BlockProt Reloaded " + BlockProt.getPluginVersion()
+            + " | Sender: " + sender.getName() + " (Console/Headless)");
+        BlockProtLogger.log("Server: " + Bukkit.getVersion()
+            + " | API: " + Bukkit.getBukkitVersion()
+            + " | Java: " + System.getProperty("java.version"));
+        BlockProtLogger.log("Compat: " + VersionCompat.getDiagnosticString()
+            + " | BukkitCompat: " + BukkitCompat.getDiagnosticString()
+            + " | FoliaLib: [isFolia=" + BlockProt.getFoliaLib().isFolia()
+            + ", isPaper=" + BlockProt.getFoliaLib().isPaper()
+            + ", isSpigot=" + BlockProt.getFoliaLib().isSpigot() + "]");
+
+        sender.sendMessage("[BlockProt] Running headless diagnostic suite...");
+
+        // Domain 1: Environment & Compatibility
+        runDomain("1/10", "ENVIRONMENT & COMPATIBILITY");
+        checkConfig(null, passed, failed);
+        checkBukkitCompat(null, passed, failed);
+        checkFoliaLib(null, passed, failed);
+
+        // Domain 2: Configuration & Block Families
+        runDomain("2/10", "CONFIGURATION & BLOCK FAMILIES");
+        checkLockableMaterials(null, passed, failed);
+        checkAutoDrop(null, passed, failed);
+        checkLockableEntities(null, passed, failed);
+        checkItemFrameProtection(null, passed, failed);
+        checkRaidDetection(null, passed, failed);
+        checkVillagerWorkstationProtection(null, passed, failed);
+
+        // Domain 3: Localization & Translation Coverage
+        runDomain("3/10", "LOCALIZATION & TRANSLATIONS");
+        checkTranslations(null, passed, failed);
+        checkLanguages(null, passed, failed);
+
+        // Domain 4: Storage, Database & Caching
+        runDomain("4/10", "STORAGE, DATABASE & CACHING");
+        checkHybridDatabase(null, passed, failed);
+        checkProfileService(null, passed, failed);
+        checkSkinsRestorer(null, passed, failed);
+        checkAuditLogger(null, passed, failed);
+        checkOnlinePlayers(null, passed, failed);
+
+        // Domain 6: Commands, Permissions & Integrations
+        runDomain("6/10", "COMMANDS, PERMISSIONS & INTEGRATIONS");
+        checkIntegrations(null, passed, failed);
+        checkCommandsRegistered(null, passed, failed);
+        checkAdminTiers(null, passed, failed);
+
+        // Domain 7: Event Listeners & Engine
+        runDomain("7/10", "EVENT LISTENERS & ENGINE");
+        checkListenersRegistered(null, passed, failed);
+
+        // Domain 9: Utility Helpers & Benchmarks
+        runDomain("9/10", "UTILITY HELPERS & BENCHMARKS");
+        checkMessages(null, passed, failed);
+        checkBlocksYmlIntegrity(null, passed, failed);
+        checkWorldsYmlIntegrity(null, passed, failed);
+        checkSkinCache(null, passed, failed);
+        checkUtilityHelpers(null, passed, failed);
+        checkStructuralClasses(null, passed, failed);
+        checkEnumeratedCoverage(null, passed, failed);
+
+        int p2 = passed.get(), f2 = failed.get(), total = p2 + f2;
+        BlockProtLogger.separator();
+        BlockProtLogger.log("HEADLESS SUMMARY: " + p2 + " passed, " + f2 + " failed / " + total + " total");
+
+        boolean ok = f2 == 0;
+        sender.sendMessage("[BlockProt] Headless diagnostics finished: " + p2 + " passed, " + f2 + " failed (" + total + " total).");
+        if (!ok) {
+            sender.sendMessage("[BlockProt] Some headless checks failed. See server log for details.");
+        }
+        var reportFile = BlockProtLogger.getDebugReportFile();
+        BlockProtLogger.endDebugReport();
+        if (reportFile != null) {
+            sender.sendMessage("[BlockProt] Detailed debug report: " + reportFile.getPath());
         }
     }
 

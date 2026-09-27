@@ -49,6 +49,10 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install Python dependencies
+        run: |
+          pip install --quiet pyyaml
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
@@ -142,6 +146,10 @@ jobs:
           fi
           echo ":common architectural boundary verified with 0 Bukkit imports."
 
+      - name: Run project file integrity audit
+        run: |
+          python3 .github/scripts/verify_project_integrity.py --report-path build/reports/integrity-report.md --summary
+
       - name: Make gradlew executable
         run: chmod +x gradlew
 
@@ -162,6 +170,13 @@ jobs:
         run: |
           python3 .github/scripts/generate_ci_summary.py
 
+      - name: Publish integrity report to summary
+        if: always()
+        run: |
+          if [ -f "build/reports/integrity-report.md" ]; then
+            cat build/reports/integrity-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Upload compiled shadow JAR artifact
         if: success()
         uses: actions/upload-artifact@v4
@@ -177,6 +192,7 @@ jobs:
           name: ci-reports
           path: |
             build/reports/ci-summary.md
+            build/reports/integrity-report.md
             build/reports/version-commits.md
             build/reports/dependency-audit.json
           retention-days: 7
