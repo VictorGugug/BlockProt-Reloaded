@@ -163,6 +163,7 @@ public final class AdminTiersDialog {
             ));
         }
 
+        BpDialogStyles.padToRowEnd(actions, 2);
         if (safePage > 0) {
             actions.add(new DialogButton("prev",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), NamedTextColor.WHITE),

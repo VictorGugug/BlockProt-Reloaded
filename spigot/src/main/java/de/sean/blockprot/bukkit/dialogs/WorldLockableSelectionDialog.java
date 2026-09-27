@@ -139,6 +139,7 @@ public final class WorldLockableSelectionDialog {
                 p -> show(p, backOrigin, nextPage)));
         }
 
+        BpDialogStyles.padToRowEnd(buttons, 2);
         buttons.addAll(navButtons);
 
         DialogButton backBtn = new DialogButton("back",

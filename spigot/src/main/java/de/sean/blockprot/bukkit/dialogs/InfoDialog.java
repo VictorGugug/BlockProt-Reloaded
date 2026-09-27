@@ -128,6 +128,7 @@ public final class InfoDialog {
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
                 p -> show(p, backOrigin, next)));
         }
+        BpDialogStyles.padToRowEnd(buttons, 2);
         buttons.addAll(navButtons);
 
         DialogOrigin exitOrigin = DialogBridgeFactory.resolveOrigin(backOrigin);

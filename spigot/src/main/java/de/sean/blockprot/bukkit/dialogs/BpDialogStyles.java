@@ -88,4 +88,8 @@ public final class BpDialogStyles {
             buttons.add(new DialogButton("spacer_" + buttons.size(), net.kyori.adventure.text.Component.empty(), null, p -> {}));
         }
     }
+
+    public static void padToRowEnd(java.util.List<DialogButton> buttons, int columns) {
+        padToGrid(buttons, (buttons.size() + columns - 1) / columns * columns);
+    }
 }

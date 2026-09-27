@@ -97,7 +97,7 @@ public final class EntityFriendManageDialog {
 
         List<DialogButton> buttons = new ArrayList<>();
 
-        buttons.add(new DialogButton("add",
+        DialogButton addBtn = new DialogButton("add",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__ADD)) + stripColor(Translator.get(TranslationKey.INVENTORIES__FRIENDS__SEARCH)),
                 NamedTextColor.WHITE),
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__FRIENDS__MANAGE_HINT)),
@@ -121,22 +121,29 @@ public final class EntityFriendManageDialog {
                 };
                 de.sean.blockprot.bukkit.inventories.TextInput.open(p, BlockProt.getInstance(), handleName);
             }
-        ));
+        );
 
-        if (safePage > 0) {
-            int prev = safePage - 1;
-            buttons.add(new DialogButton("prev",
+        DialogButton prevBtn = safePage > 0
+            ? new DialogButton("prev",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), SOFT_GRAY),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV_HINT)), TextColor.color(0x888888)),
-                p -> show(p, entity, handler, prev)));
-        }
-        if (safePage + 1 < totalPages) {
-            int next = safePage + 1;
-            buttons.add(new DialogButton("next",
+                p -> show(p, entity, handler, safePage - 1))
+            : new DialogButton("prev_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PREV)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
+        DialogButton nextBtn = safePage + 1 < totalPages
+            ? new DialogButton("next",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), SOFT_GRAY),
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
-                p -> show(p, entity, handler, next)));
-        }
+                p -> show(p, entity, handler, safePage + 1))
+            : new DialogButton("next_disabled",
+                Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT)), TextColor.color(0x555555)),
+                Component.text(""),
+                p -> {});
+        buttons.add(prevBtn);
+        buttons.add(addBtn);
+        buttons.add(nextBtn);
 
         // Always returns to the parent BlockLockDialog: this is one level of internal
         // navigation within the same entity menu, not an external-origin exit, so it must
@@ -146,7 +153,7 @@ public final class EntityFriendManageDialog {
             Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__RETURN_PREVIOUS)), TextColor.color(0x888888)),
             p -> BlockLockDialog.showForEntity(player, entity, handler));
 
-        bridge.showMultiAction(player, title, body, buttons, exitBtn, 2);
+        bridge.showMultiAction(player, title, body, buttons, exitBtn, 3);
     }
 
     private static String getPlayerName(String uuidStr) {

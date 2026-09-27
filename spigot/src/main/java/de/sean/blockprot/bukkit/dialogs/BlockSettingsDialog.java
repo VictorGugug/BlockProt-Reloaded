@@ -118,7 +118,7 @@ public final class BlockSettingsDialog {
             p -> BlockLockDialog.show(p, block, handler)
         );
 
-        bridge.showMultiAction(player, title, body, actions, exitBtn, 2);
+        bridge.showMultiAction(player, title, body, actions, exitBtn, 3);
     }
 
     private static DialogButton toggleBtn(String id, TranslationKey labelKey, boolean active, boolean colorblind,

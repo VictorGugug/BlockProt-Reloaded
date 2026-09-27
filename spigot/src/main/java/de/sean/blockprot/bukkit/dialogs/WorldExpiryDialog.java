@@ -178,6 +178,6 @@ public final class WorldExpiryDialog {
             }
         );
 
-        bridge.showMultiAction(player, title, body, buttons, backBtn, 2);
+        bridge.showMultiAction(player, title, body, buttons, backBtn, 3);
     }
 }

@@ -110,6 +110,7 @@ public final class FriendCandidateSelectionDialog {
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__NEXT_HINT)), TextColor.color(0x888888)),
                 p -> show(player, candidates, onSelect, onCancel, nextPage)));
         }
+        BpDialogStyles.padToRowEnd(buttons, 2);
         buttons.addAll(navButtons);
 
         DialogButton backBtn = new DialogButton("back",
