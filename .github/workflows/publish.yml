@@ -41,6 +41,7 @@ jobs:
       jar_size: ${{ steps.jar.outputs.size }}
       jar_sha256: ${{ steps.jar.outputs.sha256 }}
       jar_channel: ${{ steps.jar.outputs.channel }}
+      github_only: ${{ steps.jar.outputs.github_only }}
       notes_path: ${{ steps.changelog.outputs.notes_path }}
       notes_url: ${{ steps.changelog.outputs.notes_url }}
       notes_source: ${{ steps.changelog.outputs.notes_source }}
@@ -179,6 +180,12 @@ jobs:
             CHANNEL="release"
           fi
 
+          if echo "$VERSION" | grep -qiE 'bedev|bdev|snapshot|(^|-)exp'; then
+            GITHUB_ONLY="true"
+          else
+            GITHUB_ONLY="false"
+          fi
+
           FILE_SIZE=$(ls -lh "$JAR" | awk '{print $5}')
           SHA256=$(sha256sum "$JAR" | awk '{print $1}')
 
@@ -186,6 +193,7 @@ jobs:
           echo "name=$JAR_NAME" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
+          echo "github_only=$GITHUB_ONLY" >> "$GITHUB_OUTPUT"
           echo "size=$FILE_SIZE" >> "$GITHUB_OUTPUT"
           echo "sha256=$SHA256" >> "$GITHUB_OUTPUT"
 
@@ -257,6 +265,11 @@ jobs:
           echo "| **Distribution Binary** | \`${{ steps.jar.outputs.name }}\` (\`${{ steps.jar.outputs.size }}\`) | \`spigot/build/libs/${{ steps.jar.outputs.name }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Artifact SHA-256** | \`${{ steps.jar.outputs.sha256 }}\` | Checksum verification |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Release Channel** | \`${{ steps.jar.outputs.channel }}\` | Inferred from version |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.jar.outputs.github_only }}" = "true" ]; then
+            echo "| **Distribution Scope** | GitHub Releases only (pre-release) | Development build suffix detected in version |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| **Distribution Scope** | GitHub, Modrinth, CurseForge, Hangar | Stable or hotfix version |" >> "$GITHUB_STEP_SUMMARY"
+          fi
           if [ "${{ steps.changelog.outputs.notes_source }}" = "curated" ]; then
             echo "| **Release Notes File** | [\`${{ steps.changelog.outputs.notes_path }}\`](${{ steps.changelog.outputs.notes_url }}) | Curated Project Release Documentation |" >> "$GITHUB_STEP_SUMMARY"
           else
@@ -370,6 +383,7 @@ jobs:
 
       - name: Detect existing platform releases
         id: detect
+        if: needs.inspect-and-build.outputs.github_only != 'true'
         run: |
           VERSION="${{ needs.inspect-and-build.outputs.plugin_version }}"
           MODRINTH_ID="${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}"
@@ -400,7 +414,7 @@ jobs:
           fi
 
       - name: Publish to Modrinth & CurseForge
-        if: (env.MODRINTH_TOKEN != '' && steps.detect.outputs.modrinth_skip != 'true') || (env.CURSEFORGE_TOKEN != '' && steps.detect.outputs.curseforge_skip != 'true')
+        if: needs.inspect-and-build.outputs.github_only != 'true' && ((env.MODRINTH_TOKEN != '' && steps.detect.outputs.modrinth_skip != 'true') || (env.CURSEFORGE_TOKEN != '' && steps.detect.outputs.curseforge_skip != 'true'))
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}
@@ -421,24 +435,24 @@ jobs:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
 
       - name: Set up JDK 25
-        if: env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
+        if: needs.inspect-and-build.outputs.github_only != 'true' && env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
         uses: actions/setup-java@v4
         with:
           java-version: '25'
           distribution: 'temurin'
 
       - name: Setup Gradle
-        if: env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
+        if: needs.inspect-and-build.outputs.github_only != 'true' && env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
         uses: gradle/actions/setup-gradle@v4
 
       - name: Make gradlew executable
-        if: env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
+        if: needs.inspect-and-build.outputs.github_only != 'true' && env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
         run: chmod +x gradlew
 
       - name: Publish to Hangar
         id: hangar
         continue-on-error: true
-        if: env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
+        if: needs.inspect-and-build.outputs.github_only != 'true' && env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
         run: |
           CLEAN_TOKEN=$(echo "$HANGAR_API_TOKEN" | tr -d ' "\r\n\t'"'")
           LEN=${#CLEAN_TOKEN}
@@ -462,6 +476,10 @@ jobs:
             echo "| **GitHub Releases** | [v] Published | Tag \`${{ needs.inspect-and-build.outputs.plugin_version }}\` (Complete Build Assets Attached) |" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "| **GitHub Releases** | [x] Failed | Could not create GitHub Release |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "${{ needs.inspect-and-build.outputs.github_only }}" = "true" ]; then
+            echo "| **Modrinth / CurseForge / Hangar** | [-] Not applicable | Development build: published on GitHub Releases only |" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
           fi
           if [ "${{ steps.detect.outputs.modrinth_skip }}" = "true" ]; then
             echo "| **Modrinth** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on Modrinth (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
@@ -493,6 +511,7 @@ jobs:
         if: always() && steps.gh_release.outcome == 'success'
         env:
           VERSION: ${{ needs.inspect-and-build.outputs.plugin_version }}
+          GITHUB_ONLY: ${{ needs.inspect-and-build.outputs.github_only }}
           REPO: ${{ github.repository }}
           MODRINTH_ID: ${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}
         run: |
@@ -515,6 +534,9 @@ jobs:
             echo "${FENCE}"
             echo "https://github.com/${REPO}/releases/tag/${VERSION}"
             echo "${FENCE}"
+            if [ "$GITHUB_ONLY" = "true" ]; then
+              echo "Development build: GitHub Releases only, no platform links."
+            else
             echo "**Message 2: Download platforms**"
             echo "${FENCE}"
             echo "**MODRINTH:**"
@@ -524,4 +546,5 @@ jobs:
             echo "**HANGAR:**"
             echo "https://hangar.papermc.io/VictorGugug/BlockProt-Reloaded/versions/${VERSION}"
             echo "${FENCE}"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
