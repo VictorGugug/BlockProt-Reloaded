@@ -20,6 +20,7 @@
 
 package de.sean.blockprot.bukkit.commands;
 
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
@@ -48,8 +49,8 @@ public class StatisticsCommand implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage(Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
-            return false;
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
+            return true;
         }
         if (!canUseCommand(sender)) {
             player.sendMessage(Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));

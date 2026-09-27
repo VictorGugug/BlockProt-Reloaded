@@ -30,6 +30,7 @@ import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.inventories.WorldProtDeleteConfirmInventory;
 import de.sean.blockprot.bukkit.inventories.WorldProtDeleteInventory;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
+import de.sean.blockprot.bukkit.tasks.WorldProtectionEraser;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -39,6 +40,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -55,7 +57,8 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
+            if (canUseCommand(sender)) runFromConsole(sender, args);
+            else ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }
 
@@ -92,15 +95,50 @@ public final class WorldProtDeleteCommand implements CommandExecutor {
         return true;
     }
 
+    private void runFromConsole(@NotNull CommandSender sender, @NotNull String[] args) {
+        UUID key = WorldProtectionEraser.keyOf(sender);
+        if (args.length == 2 && args[1].equalsIgnoreCase("undo")) {
+            WorldProtectionEraser.UndoBatch batch = WorldProtectionEraser.latestUndo(key);
+            if (batch == null) {
+                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_UNDO_NOTHING));
+                return;
+            }
+            WorldProtectionEraser.undo(key, batch, restored -> ComponentMessages.sendLegacy(sender,
+                Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_UNDO_DONE).replace("{count}", String.valueOf(restored))));
+            return;
+        }
+        if (args.length < 3 || !args[2].equalsIgnoreCase("confirm")) {
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_CONSOLE_USAGE));
+            return;
+        }
+        String worldName = args[1];
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_WORLD_NOT_FOUND)
+                .replace("{world}", worldName));
+            return;
+        }
+        ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.DIALOGS__PROTDEL__DELETING)
+            .replace("{world}", world.getName()));
+        WorldProtectionEraser.erase(world, key, count -> ComponentMessages.sendLegacy(sender, count == 0
+            ? Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_NONE).replace("{world}", world.getName())
+            : Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_DONE).replace("{world}", world.getName())
+                .replace("{count}", String.valueOf(count))));
+    }
+
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
                                                 @NotNull String alias, @NotNull String[] args) {
         if (args.length == 2) {
             String partial = args[1].toLowerCase(Locale.ROOT);
-            return Bukkit.getWorlds().stream()
-                .map(World::getName)
+            List<String> options = new java.util.ArrayList<>(Bukkit.getWorlds().stream().map(World::getName).toList());
+            if (!(sender instanceof Player)) options.add("undo");
+            return options.stream()
                 .filter(n -> n.toLowerCase(Locale.ROOT).startsWith(partial))
                 .collect(Collectors.toList());
+        }
+        if (args.length == 3 && !(sender instanceof Player)) {
+            return List.of("confirm");
         }
         return List.of();
     }

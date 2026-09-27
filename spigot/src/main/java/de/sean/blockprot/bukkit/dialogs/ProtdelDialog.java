@@ -23,34 +23,19 @@ package de.sean.blockprot.bukkit.dialogs;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
-import de.sean.blockprot.bukkit.inventories.WorldProtDeleteConfirmInventory;
-import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
-import de.sean.blockprot.bukkit.nbt.StatHandler;
-import de.sean.blockprot.bukkit.listeners.HopperEventListener;
-import de.sean.blockprot.bukkit.storage.HybridDatabase;
-import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
+import de.sean.blockprot.bukkit.tasks.WorldProtectionEraser;
+import de.sean.blockprot.bukkit.tasks.WorldProtectionEraser.UndoBatch;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
-import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockState;
-import org.bukkit.block.TileState;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -62,13 +47,6 @@ public final class ProtdelDialog {
     private static final TextColor PASTEL_MINT = TextColor.color(0x8FE3B0);
     private static final TextColor PASTEL_GOLD = TextColor.color(0xD2B48C);
     private static final TextColor SOFT_BLUE = TextColor.color(0xA0C4E8);
-
-    private static final int BATCH_PER_TICK = 20;
-
-    static final Map<UUID, List<UndoBatch>> UNDO_BATCHES = new HashMap<>();
-
-    public record UndoBatch(long timestamp, List<WorldProtDeleteConfirmInventory.ProtectionSnapshot> snapshots) {}
-    public record UndoEntry(int index, UndoBatch batch) {}
 
     private ProtdelDialog() {}
 
@@ -113,8 +91,8 @@ public final class ProtdelDialog {
         }
 
         List<DialogButton> undoNav = new ArrayList<>();
-        if (UNDO_BATCHES.containsKey(player.getUniqueId()) && !UNDO_BATCHES.get(player.getUniqueId()).isEmpty()) {
-            List<UndoBatch> batches = UNDO_BATCHES.get(player.getUniqueId());
+        List<UndoBatch> batches = WorldProtectionEraser.getUndoHistory(player.getUniqueId());
+        if (!batches.isEmpty()) {
             undoNav.add(new DialogButton("undo_all",
                 Component.text(stripColor(Translator.get(TranslationKey.DIALOGS__PROTDEL__UNDO_LABEL))
                     .replace("{count}", String.valueOf(batches.size())), PASTEL_GOLD),
@@ -145,7 +123,7 @@ public final class ProtdelDialog {
             stripColor(Translator.get(TranslationKey.DIALOGS__PROTDEL__UNDO_TITLE)),
             PASTEL_GOLD, TextDecoration.BOLD);
 
-        List<UndoBatch> batches = UNDO_BATCHES.getOrDefault(player.getUniqueId(), List.of());
+        List<UndoBatch> batches = WorldProtectionEraser.getUndoHistory(player.getUniqueId());
         List<DialogBodyEntry> body = new ArrayList<>();
         if (batches.isEmpty()) {
             body.add(DialogBodyEntry.text(Component.text(
@@ -228,137 +206,24 @@ public final class ProtdelDialog {
             stripColor(Translator.get(TranslationKey.DIALOGS__PROTDEL__DELETING))
                 .replace("{world}", worldName), SOFT_GRAY));
 
-        HybridDatabase db = BlockProt.getHybridDatabase();
-        final List<Location> locations;
-
-        if (db != null && db.isEnabled()) {
-            locations = db.getBlockIndexByWorld(world.getName());
-        } else {
-            locations = new ArrayList<>();
-            Chunk[] chunks = world.getLoadedChunks();
-            for (Chunk chunk : chunks) {
-                for (BlockState state : chunk.getTileEntities()) {
-                    locations.add(state.getLocation());
-                }
-                for (int x = 0; x < 16; x++) {
-                    for (int z = 0; z < 16; z++) {
-                        for (int y = world.getMinHeight(); y < world.getMaxHeight(); y++) {
-                            Block block = chunk.getBlock(x, y, z);
-                            if (block.getState() instanceof TileState) continue;
-                            Material t = block.getType();
-                            if (t == Material.CHEST || t.name().contains("SHULKER") || t.name().endsWith("_DOOR")
-                                || t.name().contains("FURNACE") || t.name().contains("HOPPER")
-                                || t.name().contains("DISPENSER") || t.name().contains("DROPPER")
-                                || t.name().contains("BARREL") || t.name().contains("SIGN")
-                                || t.name().contains("ANVIL") || t.name().contains("CAULDRON")
-                                || t.name().contains("GRINDSTONE") || t.name().contains("BELL")
-                                || t.name().contains("CRAFTING") || t.name().contains("LOOM")
-                                || t.name().contains("CARTOGRAPHY") || t.name().contains("SMITHING")
-                                || t.name().contains("STONECUTTER") || t.name().contains("BREWING")
-                                || t.name().contains("ENCHANTING") || t.name().contains("JUKEBOX")
-                                || t.name().contains("BEE")) {
-                                locations.add(block.getLocation());
-                            }
-                        }
-                    }
-                }
+        WorldProtectionEraser.erase(world, player.getUniqueId(), count -> {
+            String msg = count == 0
+                ? stripColor(Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_NONE))
+                    .replace("{world}", worldName)
+                : stripColor(Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_DONE))
+                    .replace("{world}", worldName)
+                    .replace("{count}", String.valueOf(count));
+            ComponentMessages.send(player, Component.text(msg, count == 0 ? SOFT_GRAY : PASTEL_MINT));
+            if (player.isOnline()) {
+                BlockProt.getFoliaLib().getScheduler().runAtEntity(player, task -> show(player, null, backOrigin));
             }
-        }
-
-        final List<WorldProtDeleteConfirmInventory.ProtectionSnapshot> snapshots = new ArrayList<>();
-        final int[] counter = {0};
-        final int[] idx = {0};
-
-        World w = world;
-        new org.bukkit.scheduler.BukkitRunnable() {
-            @Override
-            public void run() {
-                int processed = 0;
-                while (idx[0] < locations.size() && processed < BATCH_PER_TICK) {
-                    Location loc = locations.get(idx[0]++);
-                    processed++;
-                    if (loc.getWorld() == null) continue;
-                    Block block = loc.getBlock();
-                    try {
-                        BlockNBTHandler handler = new BlockNBTHandler(block);
-                        if (!handler.isProtected()) continue;
-                        String owner = handler.getOwner();
-                        List<String> friends = handler.getFriends().stream()
-                            .map(f -> f.getName()).collect(Collectors.toList());
-                        snapshots.add(new WorldProtDeleteConfirmInventory.ProtectionSnapshot(
-                            loc.clone(), owner, friends));
-                        handler.clear();
-                        counter[0]++;
-                        try { handler.applyToOtherContainer(); } catch (RuntimeException ignored) {}
-                        HopperEventListener.invalidate(block);
-                        ProtectedBlockCache.unmark(block);
-                        if (owner != null && !owner.isEmpty()) {
-                            try { StatHandler.removeContainerByUuid(UUID.fromString(owner), loc.clone()); }
-                            catch (IllegalArgumentException ignored) {}
-                        }
-                    } catch (RuntimeException ignored) {}
-                }
-
-                if (idx[0] >= locations.size()) {
-                    cancel();
-                    List<UndoBatch> batches = UNDO_BATCHES.computeIfAbsent(player.getUniqueId(), k -> new ArrayList<>());
-                    batches.add(0, new UndoBatch(System.currentTimeMillis(), snapshots));
-                    String msg = counter[0] == 0
-                        ? stripColor(Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_NONE))
-                            .replace("{world}", worldName)
-                        : stripColor(Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_DONE))
-                            .replace("{world}", worldName)
-                            .replace("{count}", String.valueOf(counter[0]));
-                    ComponentMessages.send(player, Component.text(msg, counter[0] == 0 ? SOFT_GRAY : PASTEL_MINT));
-                    show(player, null, backOrigin);
-                }
-            }
-        }.runTaskTimer(BlockProt.getInstance(), 0L, 1L);
+        });
     }
 
     private static void executeUndo(@NotNull Player player, @NotNull UndoBatch batch) {
-        List<UndoBatch> playerBatches = UNDO_BATCHES.get(player.getUniqueId());
-        if (playerBatches != null) {
-            playerBatches.remove(batch);
-        }
-
-        List<WorldProtDeleteConfirmInventory.ProtectionSnapshot> snapshots = batch.snapshots();
-        if (snapshots.isEmpty()) return;
-
-        int[] restored = {0};
-        int[] idx = {0};
-
-        new org.bukkit.scheduler.BukkitRunnable() {
-            @Override
-            public void run() {
-                int processed = 0;
-                while (idx[0] < snapshots.size() && processed < BATCH_PER_TICK) {
-                    var snap = snapshots.get(idx[0]++);
-                    processed++;
-                    if (snap.location().getWorld() == null) continue;
-                    Block block = snap.location().getBlock();
-                    try {
-                        BlockNBTHandler handler = new BlockNBTHandler(block);
-                        handler.setOwner(snap.ownerUuid());
-                        for (String friend : snap.friendUuids()) {
-                            handler.addFriend(friend);
-                        }
-                        handler.applyToOtherContainer();
-                        ProtectedBlockCache.mark(block);
-                        try { StatHandler.addBlockByUuid(UUID.fromString(snap.ownerUuid()), snap.location().clone()); }
-                        catch (IllegalArgumentException ignored) {}
-                        restored[0]++;
-                    } catch (RuntimeException ignored) {}
-                }
-
-                if (idx[0] >= snapshots.size()) {
-                    cancel();
-                    String msg = stripColor(Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_UNDO_DONE))
-                        .replace("{count}", String.valueOf(restored[0]));
-                    ComponentMessages.send(player, Component.text(msg, PASTEL_MINT));
-                }
-            }
-        }.runTaskTimer(BlockProt.getInstance(), 0L, 1L);
+        WorldProtectionEraser.undo(player.getUniqueId(), batch, restored -> ComponentMessages.send(player,
+            Component.text(stripColor(Translator.get(TranslationKey.MESSAGES__WORLD_PROT_DEL_UNDO_DONE))
+                .replace("{count}", String.valueOf(restored)), PASTEL_MINT)));
     }
 
     private static String stripColor(String s) {

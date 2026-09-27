@@ -420,6 +420,8 @@ messages:
   bp_unlock_usage: "§cUso: /bp unlock <jugador>"
   bp_unlock_player_not_found: "§cJugador no encontrado: {player}"
   bp_unlock_no_blocks: "§7{player} no tiene bloques protegidos."
+  bp_unlock_console_header: "§e{player} tiene §f{count}§e bloque(s) protegido(s):"
+  bp_unlock_console_entry: "§7- §f{world} {x} {y} {z}"
   world_expiry:
     set: "§aExpiración configurada para §f{world} §aen §f{duration}§a."
     cleared: "§cExpiración eliminada para §f{world}§c."
@@ -450,6 +452,7 @@ messages:
   world_prot_del_none: "§eNo se encontraron bloques protegidos en el mundo §f{world}§e."
   world_prot_del_world_not_found: "§cMundo no encontrado: {world}"
   world_prot_del_usage: "§cUso: /bp protdel [world]"
+  world_prot_del_console_usage: "§cUso desde la consola: /bp protdel <mundo> confirm | /bp protdel undo"
   world_prot_del_undo_done: "§aDeshacer completo: se restauraron §f{count}§a protección(es)."
   world_prot_del_undo_nothing: "§eNo hay ninguna eliminación que deshacer."
   debug:
@@ -463,6 +466,9 @@ messages:
     checks_passed_chat: "§a§l[BlockProt] §r§aTodas las §l{passed}§r§a comprobaciones pasaron."
     checks_failed_chat: "§c§l[BlockProt] §r§c{failed} comprobación(es) FALLARON - ver log."
     log_path: "§7Log: §f{path}"
+    headless_start: "§e[BlockProt] Ejecutando diagnósticos de consola en el spawn del mundo (sin jugadores conectados)..."
+    headless_player_context: "§e[BlockProt] Ejecutando diagnósticos completos con el contexto del jugador: §f{player}"
+    headless_finished: "§a[BlockProt] Diagnósticos de consola terminados: §f{passed} correctas, {failed} fallidas ({total} en total)."
     inventory_title: "§cBlockProt Debug"
   first_run:
     header: "§x§D§2§B§4§8§C§m{line}"

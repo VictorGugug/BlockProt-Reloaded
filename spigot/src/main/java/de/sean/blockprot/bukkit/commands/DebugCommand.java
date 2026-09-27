@@ -67,7 +67,9 @@ import de.sean.blockprot.bukkit.util.TemporaryActionBar;
 import de.sean.blockprot.util.SemanticVersion;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -96,7 +98,7 @@ public class DebugCommand implements CommandExecutor {
                              @NotNull String label, @NotNull String[] args) {
         if (!canUseCommand(sender)) return false;
         if (!(sender instanceof Player player)) {
-            if (args.length >= 2 && args[1].equalsIgnoreCase("run")) {
+            if (args.length < 2 || args[1].equalsIgnoreCase("run")) {
                 Player target = null;
                 if (args.length >= 3) {
                     target = Bukkit.getPlayer(args[2]);
@@ -105,11 +107,10 @@ public class DebugCommand implements CommandExecutor {
                     target = Bukkit.getOnlinePlayers().iterator().next();
                 }
                 if (target != null) {
-                    sender.sendMessage("[BlockProt] Executing full player diagnostic suite with player context: " + target.getName());
+                    ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__DEBUG__HEADLESS_PLAYER_CONTEXT).replace("{player}", target.getName()));
                     run(target);
                     return true;
                 } else {
-                    sender.sendMessage("[BlockProt] Executing headless server diagnostics (no players online)...");
                     runHeadless(sender);
                     return true;
                 }
@@ -253,10 +254,10 @@ public class DebugCommand implements CommandExecutor {
             try {
                 // Domain 5: NBT & Data Persistence Engine
                 runDomain("5/10", "NBT & DATA PERSISTENCE ENGINE");
-                checkNbt(player, passed, failed);
-                checkEntityNbt(player, passed, failed);
+                checkNbt(player.getLocation(), passed, failed);
+                checkEntityNbt(player.getLocation(), passed, failed);
                 checkPlayerSettings(player, passed, failed);
-                checkNbtSubHandlers(player, passed, failed);
+                checkNbtSubHandlers(player.getLocation(), passed, failed);
 
                 // Domain 6: Commands, Permissions & Integrations
                 runDomain("6/10", "COMMANDS, PERMISSIONS & INTEGRATIONS");
@@ -286,7 +287,7 @@ public class DebugCommand implements CommandExecutor {
 
                 // Domain 10: Player Simulation & Gameplay Verification
                 runDomain("10/10", "PLAYER SIMULATION & GAMEPLAY VERIFICATION");
-                checkPlayerSimulation(player, passed, failed);
+                checkPlayerSimulation(player.getLocation(), player.getUniqueId(), player, passed, failed);
 
                 int p2 = passed.get(), f2 = failed.get(), total = p2 + f2;
                 BlockProtLogger.separator();
@@ -707,10 +708,10 @@ public class DebugCommand implements CommandExecutor {
         p.incrementAndGet();
     }
 
-    private void checkNbt(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkNbt(@NotNull Location origin, AtomicInteger p, AtomicInteger f) {
         try {
-            var loc   = player.getLocation().clone();
-            var world = player.getWorld();
+            var loc   = origin.clone();
+            var world = origin.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
             try {
@@ -735,10 +736,10 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkEntityNbt(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkEntityNbt(@NotNull Location origin, AtomicInteger p, AtomicInteger f) {
         try {
-            var loc = player.getLocation().clone();
-            var world = player.getWorld();
+            var loc = origin.clone();
+            var world = origin.getWorld();
             var entity = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
                 stand.setGravity(false);
                 stand.setVisible(false);
@@ -1978,11 +1979,11 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkNbtSubHandlers(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkNbtSubHandlers(@NotNull Location origin, AtomicInteger p, AtomicInteger f) {
         BlockProtLogger.subGroup("NBT sub-handlers (8 handlers):");
         try {
-            var loc   = player.getLocation().clone();
-            var world = player.getWorld();
+            var loc   = origin.clone();
+            var world = origin.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
             try {
@@ -2014,8 +2015,8 @@ public class DebugCommand implements CommandExecutor {
         }
 
         try {
-            var loc   = player.getLocation().clone();
-            var world = player.getWorld();
+            var loc   = origin.clone();
+            var world = origin.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
             try {
@@ -2056,8 +2057,8 @@ public class DebugCommand implements CommandExecutor {
         }
 
         try {
-            var loc   = player.getLocation().clone();
-            var world = player.getWorld();
+            var loc   = origin.clone();
+            var world = origin.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
             try {
@@ -2095,8 +2096,8 @@ public class DebugCommand implements CommandExecutor {
         }
 
         try {
-            var loc   = player.getLocation().clone();
-            var world = player.getWorld();
+            var loc   = origin.clone();
+            var world = origin.getWorld();
             var ent = world.spawn(loc, org.bukkit.entity.ArmorStand.class, stand -> {
                 stand.setGravity(false);
                 stand.setVisible(false);
@@ -2137,8 +2138,8 @@ public class DebugCommand implements CommandExecutor {
         }
 
         try {
-            var loc   = player.getLocation().clone();
-            var world = player.getWorld();
+            var loc   = origin.clone();
+            var world = origin.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
             try {
@@ -2345,10 +2346,11 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
-    private void checkPlayerSimulation(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+    private void checkPlayerSimulation(@NotNull Location origin, @NotNull UUID actor, @Nullable Player player,
+                                       AtomicInteger p, AtomicInteger f) {
         BlockProtLogger.subGroup("Player simulation & gameplay scenarios (10 scenarios):");
-        var loc = player.getLocation().clone();
-        var world = player.getWorld();
+        var loc = origin.clone();
+        var world = origin.getWorld();
         var orig = world.getBlockAt(loc).getType();
         UUID strangerUuid = UUID.randomUUID();
         UUID friendUuid = UUID.fromString(NOTCH_UUID);
@@ -2358,11 +2360,11 @@ public class DebugCommand implements CommandExecutor {
             try {
                 var block = world.getBlockAt(loc);
                 var handler = new BlockNBTHandler(block);
-                handler.setOwner(player.getUniqueId().toString());
+                handler.setOwner(actor.toString());
                 handler.setName("SimChest");
                 ProtectedBlockCache.mark(block);
 
-                if (!handler.isOwner(player.getUniqueId()) || !ProtectedBlockCache.isProtected(block)) {
+                if (!handler.isOwner(actor) || !ProtectedBlockCache.isProtected(block)) {
                     throw new IllegalStateException("Block not marked as owned or cached as protected");
                 }
             } finally {
@@ -2376,9 +2378,9 @@ public class DebugCommand implements CommandExecutor {
             try {
                 var block = world.getBlockAt(loc);
                 var handler = new BlockNBTHandler(block);
-                handler.setOwner(player.getUniqueId().toString());
+                handler.setOwner(actor.toString());
 
-                if (!handler.canAccess(player.getUniqueId().toString())) {
+                if (!handler.canAccess(actor.toString())) {
                     throw new IllegalStateException("Owner player unexpectedly denied access");
                 }
                 if (handler.canAccess(strangerUuid.toString())) {
@@ -2394,7 +2396,7 @@ public class DebugCommand implements CommandExecutor {
             try {
                 var block = world.getBlockAt(loc);
                 var handler = new BlockNBTHandler(block);
-                handler.setOwner(player.getUniqueId().toString());
+                handler.setOwner(actor.toString());
 
                 handler.addFriend(friendUuid.toString());
                 if (!handler.containsFriend(friendUuid.toString()) || !handler.canAccess(friendUuid.toString())) {
@@ -2464,8 +2466,8 @@ public class DebugCommand implements CommandExecutor {
             });
             try {
                 var entityHandler = new EntityNBTHandler(entity);
-                entityHandler.setOwner(player.getUniqueId().toString());
-                if (!entityHandler.isOwner(player.getUniqueId().toString())) {
+                entityHandler.setOwner(actor.toString());
+                if (!entityHandler.isOwner(actor.toString())) {
                     throw new IllegalStateException("Entity owner not set to player UUID");
                 }
                 if (entityHandler.isOwner(strangerUuid.toString())) {
@@ -2488,13 +2490,13 @@ public class DebugCommand implements CommandExecutor {
             InventoryState state = new InventoryState(null);
             state.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
             state.origin = InventoryState.MenuOrigin.NONE;
-            InventoryState.set(player.getUniqueId(), state);
-            InventoryState retrieved = InventoryState.get(player.getUniqueId());
+            InventoryState.set(actor, state);
+            InventoryState retrieved = InventoryState.get(actor);
             if (retrieved == null || retrieved.friendSearchState != InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH) {
                 throw new IllegalStateException("InventoryState set/get mismatch");
             }
-            InventoryState.remove(player.getUniqueId());
-            if (InventoryState.get(player.getUniqueId()) != null) {
+            InventoryState.remove(actor);
+            if (InventoryState.get(actor) != null) {
                 throw new IllegalStateException("InventoryState not null after remove()");
             }
         });
@@ -2504,10 +2506,14 @@ public class DebugCommand implements CommandExecutor {
                 if (perm.key() == null || perm.key().isBlank()) {
                     throw new IllegalStateException("Permission node has null or blank key: " + perm.name());
                 }
-                player.hasPermission(perm.key());
+                if (player != null) player.hasPermission(perm.key());
             }
         });
 
+        if (player == null) {
+            BlockProtLogger.skipSub("10j. Player Settings & Search History Roundtrip", "requires an online player");
+            return;
+        }
         simSub(p, f, "10j. Player Settings & Search History Roundtrip", () -> {
             PlayerSettingsHandler ps = new PlayerSettingsHandler(player);
             boolean origLock = ps.getLockOnPlace();
@@ -2539,7 +2545,7 @@ public class DebugCommand implements CommandExecutor {
             + ", isPaper=" + BlockProt.getFoliaLib().isPaper()
             + ", isSpigot=" + BlockProt.getFoliaLib().isSpigot() + "]");
 
-        sender.sendMessage("[BlockProt] Running headless diagnostic suite...");
+        ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__DEBUG__HEADLESS_START));
 
         // Domain 1: Environment & Compatibility
         runDomain("1/10", "ENVIRONMENT & COMPATIBILITY");
@@ -2569,40 +2575,67 @@ public class DebugCommand implements CommandExecutor {
         checkAuditLogger(null, passed, failed);
         checkOnlinePlayers(null, passed, failed);
 
-        // Domain 6: Commands, Permissions & Integrations
-        runDomain("6/10", "COMMANDS, PERMISSIONS & INTEGRATIONS");
-        checkIntegrations(null, passed, failed);
-        checkCommandsRegistered(null, passed, failed);
-        checkAdminTiers(null, passed, failed);
+        World world = Bukkit.getWorlds().get(0);
+        Location spawn = world.getSpawnLocation();
+        Location origin = new Location(world, spawn.getBlockX(), world.getMaxHeight() - 2, spawn.getBlockZ());
+        UUID actor = UUID.nameUUIDFromBytes("BlockProtDebugConsole".getBytes(StandardCharsets.UTF_8));
 
-        // Domain 7: Event Listeners & Engine
-        runDomain("7/10", "EVENT LISTENERS & ENGINE");
-        checkListenersRegistered(null, passed, failed);
+        BlockProt.getFoliaLib().getScheduler().runAtLocation(origin, task -> {
+            DefaultConfig cfg = BlockProt.getDefaultConfig();
+            boolean tempChestAdded = false;
+            if (!cfg.isLockableTileEntity(Material.CHEST, world) && !cfg.isLockableBlock(Material.CHEST, world)) {
+                cfg.addTestLockable(Material.CHEST);
+                tempChestAdded = true;
+            }
+            try {
+                runDomain("5/10", "NBT & DATA PERSISTENCE ENGINE");
+                checkNbt(origin, passed, failed);
+                checkEntityNbt(origin, passed, failed);
+                BlockProtLogger.skipSub("PlayerSettings", "requires an online player");
+                checkNbtSubHandlers(origin, passed, failed);
 
-        // Domain 9: Utility Helpers & Benchmarks
-        runDomain("9/10", "UTILITY HELPERS & BENCHMARKS");
-        checkMessages(null, passed, failed);
-        checkBlocksYmlIntegrity(null, passed, failed);
-        checkWorldsYmlIntegrity(null, passed, failed);
-        checkSkinCache(null, passed, failed);
-        checkUtilityHelpers(null, passed, failed);
-        checkStructuralClasses(null, passed, failed);
-        checkEnumeratedCoverage(null, passed, failed);
+                runDomain("6/10", "COMMANDS, PERMISSIONS & INTEGRATIONS");
+                checkIntegrations(null, passed, failed);
+                checkCommandsRegistered(null, passed, failed);
+                checkAdminTiers(null, passed, failed);
 
-        int p2 = passed.get(), f2 = failed.get(), total = p2 + f2;
-        BlockProtLogger.separator();
-        BlockProtLogger.log("HEADLESS SUMMARY: " + p2 + " passed, " + f2 + " failed / " + total + " total");
+                runDomain("7/10", "EVENT LISTENERS & ENGINE");
+                checkListenersRegistered(null, passed, failed);
 
-        boolean ok = f2 == 0;
-        sender.sendMessage("[BlockProt] Headless diagnostics finished: " + p2 + " passed, " + f2 + " failed (" + total + " total).");
-        if (!ok) {
-            sender.sendMessage("[BlockProt] Some headless checks failed. See server log for details.");
-        }
-        var reportFile = BlockProtLogger.getDebugReportFile();
-        BlockProtLogger.endDebugReport();
-        if (reportFile != null) {
-            sender.sendMessage("[BlockProt] Detailed debug report: " + reportFile.getPath());
-        }
+                runDomain("8/10", "USER INTERFACE & SCREENS");
+                BlockProtLogger.skipSub("Inventories and dialogs", "require an online player to render");
+
+                runDomain("9/10", "UTILITY HELPERS & BENCHMARKS");
+                checkMessages(null, passed, failed);
+                checkBlocksYmlIntegrity(null, passed, failed);
+                checkWorldsYmlIntegrity(null, passed, failed);
+                checkSkinCache(null, passed, failed);
+                checkUtilityHelpers(null, passed, failed);
+                checkStructuralClasses(null, passed, failed);
+                checkEnumeratedCoverage(null, passed, failed);
+
+                runDomain("10/10", "PLAYER SIMULATION & GAMEPLAY VERIFICATION");
+                checkPlayerSimulation(origin, actor, null, passed, failed);
+
+                int p2 = passed.get(), f2 = failed.get(), total = p2 + f2;
+                BlockProtLogger.separator();
+                BlockProtLogger.log("HEADLESS SUMMARY: " + p2 + " passed, " + f2 + " failed / " + total + " total");
+                ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__DEBUG__HEADLESS_FINISHED)
+                    .replace("{passed}", String.valueOf(p2))
+                    .replace("{failed}", String.valueOf(f2))
+                    .replace("{total}", String.valueOf(total)));
+                var reportFile = BlockProtLogger.getDebugReportFile();
+                BlockProtLogger.endDebugReport();
+                if (reportFile != null) {
+                    ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__DEBUG__LOG_PATH)
+                        .replace("{path}", reportFile.getPath()));
+                }
+            } finally {
+                if (tempChestAdded) {
+                    cfg.removeTestLockable(Material.CHEST);
+                }
+            }
+        });
     }
 
     @Nullable

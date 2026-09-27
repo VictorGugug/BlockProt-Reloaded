@@ -421,6 +421,8 @@ messages:
   bp_unlock_usage: "§cUsage: /bp unlock <player>"
   bp_unlock_player_not_found: "§cPlayer not found: {player}"
   bp_unlock_no_blocks: "§7{player} owns no locked blocks."
+  bp_unlock_console_header: "§e{player} owns §f{count}§e locked block(s):"
+  bp_unlock_console_entry: "§7- §f{world} {x} {y} {z}"
   world_expiry:
     set: "§aSet expiry for §f{world} §ato §f{duration}§a."
     cleared: "§cCleared expiry for §f{world}§c."
@@ -443,6 +445,7 @@ messages:
   world_prot_del_none: "§eNo protected blocks found in world §f{world}§e."
   world_prot_del_world_not_found: "§cWorld not found: {world}"
   world_prot_del_usage: "§cUsage: /bp protdel [world]"
+  world_prot_del_console_usage: "§cUsage from console: /bp protdel <world> confirm | /bp protdel undo"
   world_prot_del_undo_done: "§aUndo complete: restored §f{count}§a protection(s)."
   world_prot_del_undo_nothing: "§eNo deletion to undo."
   debug:
@@ -456,6 +459,9 @@ messages:
     checks_passed_chat: "§a§l[BlockProt] §r§aAll §l{passed}§r§a checks passed."
     checks_failed_chat: "§c§l[BlockProt] §r§c{failed} check(s) FAILED - see log."
     log_path: "§7Log: §f{path}"
+    headless_start: "§e[BlockProt] Running console diagnostics at world spawn (no players online)..."
+    headless_player_context: "§e[BlockProt] Running full diagnostics using player context: §f{player}"
+    headless_finished: "§a[BlockProt] Console diagnostics finished: §f{passed} passed, {failed} failed ({total} total)."
     inventory_title: "§cBlockProt Debug"
   time:
     days: "days"

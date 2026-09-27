@@ -62,7 +62,8 @@ public final class AdminUnlockCommand implements CommandExecutor {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
                              @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player player)) {
-            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__ONLY_PLAYERS));
+            if (canUseCommand(sender)) listFromConsole(sender, args);
+            else ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
             return true;
         }
 
@@ -112,6 +113,39 @@ public final class AdminUnlockCommand implements CommandExecutor {
         BpUnlockInventory inv = new BpUnlockInventory();
         player.openInventory(inv.fill(player, resolvedName, stat));
         return true;
+    }
+
+    private void listFromConsole(@NotNull CommandSender sender, @NotNull String[] args) {
+        if (args.length < 2) {
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_USAGE));
+            return;
+        }
+        @SuppressWarnings("deprecation")
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+        if (target.getName() == null) {
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_PLAYER_NOT_FOUND)
+                .replace("{player}", args[1]));
+            return;
+        }
+        PlayerBlocksStatistic stat = new PlayerBlocksStatistic();
+        StatHandler.getStatisticByUuid(stat, target.getUniqueId());
+        var entries = stat.get();
+        if (entries.isEmpty()) {
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_NO_BLOCKS)
+                .replace("{player}", target.getName()));
+            return;
+        }
+        ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_CONSOLE_HEADER)
+            .replace("{player}", target.getName())
+            .replace("{count}", String.valueOf(entries.size())));
+        for (var entry : entries) {
+            var loc = entry.get();
+            ComponentMessages.sendLegacy(sender, Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_CONSOLE_ENTRY)
+                .replace("{world}", loc.getWorld() != null ? loc.getWorld().getName() : "?")
+                .replace("{x}", String.valueOf(loc.getBlockX()))
+                .replace("{y}", String.valueOf(loc.getBlockY()))
+                .replace("{z}", String.valueOf(loc.getBlockZ())));
+        }
     }
 
     @Override
