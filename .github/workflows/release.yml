@@ -115,17 +115,41 @@ jobs:
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
         run: chmod +x gradlew
 
-      - name: Build shadow JAR
+      - name: Build complete project artifacts
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
-        run: ./gradlew :blockprot-spigot:shadowJar --no-daemon
+        run: ./gradlew build :blockprot-spigot:shadowJar --no-daemon
 
-      - name: Locate JAR
+      - name: Stage build artifacts for release
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
         id: jar
         run: |
           JAR=$(find spigot/build/libs -name "BlockProtReloaded-*.jar" \
                 ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
           FILE_SIZE=$(ls -lh "$JAR" | awk '{print $5}')
+          VERSION="${{ steps.ver.outputs.version }}"
+
+          mkdir -p build/github-release
+          cp "$JAR" build/github-release/
+
+          SRC_JAR=$(find spigot/build/libs -name "*-sources.jar" | head -1)
+          if [ -n "$SRC_JAR" ] && [ -f "$SRC_JAR" ]; then
+            cp "$SRC_JAR" "build/github-release/BlockProtReloaded-${VERSION}-sources.jar"
+          fi
+
+          DOC_JAR=$(find spigot/build/libs -name "*-javadoc.jar" | head -1)
+          if [ -n "$DOC_JAR" ] && [ -f "$DOC_JAR" ]; then
+            cp "$DOC_JAR" "build/github-release/BlockProtReloaded-${VERSION}-javadoc.jar"
+          fi
+
+          COMMON_JAR=$(find common/build/libs -name "common-*.jar" | head -1)
+          if [ -n "$COMMON_JAR" ] && [ -f "$COMMON_JAR" ]; then
+            cp "$COMMON_JAR" build/github-release/
+          fi
+
+          cd build/github-release
+          sha256sum *.jar > checksums.sha256
+          cd ../..
+
           echo "path=$JAR" >> "$GITHUB_OUTPUT"
           echo "name=$(basename $JAR)" >> "$GITHUB_OUTPUT"
           echo "size=$FILE_SIZE" >> "$GITHUB_OUTPUT"
@@ -138,7 +162,10 @@ jobs:
           tag_name: ${{ steps.ver.outputs.version }}
           name: "BlockProt Reloaded ${{ steps.ver.outputs.version }}"
           body_path: build/reports/release-notes.md
-          files: ${{ steps.jar.outputs.path }}
+          files: |
+            build/github-release/BlockProtReloaded-*.jar
+            build/github-release/common-*.jar
+            build/github-release/checksums.sha256
           draft: false
           prerelease: ${{ contains(steps.ver.outputs.version, 'SNAPSHOT') || contains(steps.ver.outputs.version, 'BEDev') || contains(steps.ver.outputs.version, 'dev') || contains(steps.ver.outputs.version, 'alpha') || contains(steps.ver.outputs.version, 'beta') || contains(steps.ver.outputs.version, 'rc') }}
         env:
@@ -148,8 +175,8 @@ jobs:
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
         uses: actions/upload-artifact@v4
         with:
-          name: blockprot-jar
-          path: ${{ steps.jar.outputs.path }}
+          name: blockprot-release-suite
+          path: build/github-release/
           retention-days: 1
 
       - name: Publish release step summary

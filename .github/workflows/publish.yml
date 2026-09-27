@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   inspect-and-build:
@@ -158,9 +158,9 @@ jobs:
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
         run: chmod +x gradlew
 
-      - name: Build shadow JAR
+      - name: Build complete project artifacts
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
-        run: ./gradlew :blockprot-spigot:shadowJar --no-daemon
+        run: ./gradlew build :blockprot-spigot:shadowJar --no-daemon
 
       - name: Inspect compiled JAR, hash, and metadata
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
@@ -192,11 +192,42 @@ jobs:
       - name: Stage build artifacts for publication
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
         run: |
-          mkdir -p build/staged-upload
-          cp "${{ steps.jar.outputs.path }}" build/staged-upload/
-          cp build/reports/release-notes.md build/staged-upload/release-notes.md
-          echo "Staged files for upload:"
-          ls -la build/staged-upload
+          mkdir -p build/staged-upload/clean
+          mkdir -p build/staged-upload/github
+
+          # 1. Clean distribution for plugin platforms (Modrinth, CurseForge, Hangar)
+          cp "${{ steps.jar.outputs.path }}" build/staged-upload/clean/
+          cp build/reports/release-notes.md build/staged-upload/clean/release-notes.md
+
+          # 2. Complete build suite for GitHub Releases (binary, sources, javadocs, common, checksums)
+          VERSION="${{ steps.jar.outputs.version }}"
+          cp "${{ steps.jar.outputs.path }}" build/staged-upload/github/
+
+          SRC_JAR=$(find spigot/build/libs -name "*-sources.jar" | head -1)
+          if [ -n "$SRC_JAR" ] && [ -f "$SRC_JAR" ]; then
+            cp "$SRC_JAR" "build/staged-upload/github/BlockProtReloaded-${VERSION}-sources.jar"
+          fi
+
+          DOC_JAR=$(find spigot/build/libs -name "*-javadoc.jar" | head -1)
+          if [ -n "$DOC_JAR" ] && [ -f "$DOC_JAR" ]; then
+            cp "$DOC_JAR" "build/staged-upload/github/BlockProtReloaded-${VERSION}-javadoc.jar"
+          fi
+
+          COMMON_JAR=$(find common/build/libs -name "common-*.jar" | head -1)
+          if [ -n "$COMMON_JAR" ] && [ -f "$COMMON_JAR" ]; then
+            cp "$COMMON_JAR" build/staged-upload/github/
+          fi
+
+          cp build/reports/release-notes.md build/staged-upload/github/release-notes.md
+
+          cd build/staged-upload/github
+          sha256sum *.jar > checksums.sha256
+          cd ../../..
+
+          echo "Staged clean files for distributor platforms:"
+          ls -la build/staged-upload/clean
+          echo "Staged complete build files for GitHub Releases:"
+          ls -la build/staged-upload/github
 
       - name: Upload staged build artifacts
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
@@ -236,8 +267,9 @@ jobs:
 
           ### Distribution Platform Credentials & Targets
 
-          | Platform | Configuration Status | Target Project |
+          | Platform | Configuration Status | Target Project / Assets |
           | :--- | :---: | :--- |
+          | **GitHub Releases** | [v] Ready | Complete Build Assets (Shadow JAR, Sources, Javadoc, Common, SHA-256) |
           EOF
           if [ -n "${{ secrets.MODRINTH_TOKEN }}" ]; then
             echo "| **Modrinth** | [v] Ready | \`${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}\` |" >> "$GITHUB_STEP_SUMMARY"
@@ -295,51 +327,99 @@ jobs:
           name: blockprot-staged-release
           path: build/staged/
 
-      - name: Locate staged JAR and release notes
+      - name: Locate staged artifacts and release notes
         id: staged
         run: |
-          JAR=$(find build/staged -name "BlockProtReloaded-*.jar" ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
-          NOTES=$(find build/staged -name "release-notes.md" -o -name "*.md" | head -1)
-          if [ -z "$JAR" ] || [ ! -f "$JAR" ]; then
-            echo "::error::Could not find staged BlockProt JAR in build/staged!"
-            find build/staged -type f || true
-            exit 1
-          fi
-          if [ -z "$NOTES" ] || [ ! -f "$NOTES" ]; then
-            echo "::error::Could not find staged release notes in build/staged!"
-            find build/staged -type f || true
-            exit 1
-          fi
-          echo "jar_path=$JAR" >> "$GITHUB_OUTPUT"
-          echo "notes_path=$NOTES" >> "$GITHUB_OUTPUT"
-          echo "Staged JAR: $JAR ($(ls -lh "$JAR" | awk '{print $5}'))"
-          echo "Staged Notes: $NOTES ($(wc -l < "$NOTES") lines)"
+          CLEAN_JAR=$(find build/staged/clean -name "BlockProtReloaded-*.jar" ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
+          CLEAN_NOTES=$(find build/staged/clean -name "release-notes.md" -o -name "*.md" | head -1)
+          GITHUB_NOTES=$(find build/staged/github -name "release-notes.md" -o -name "*.md" | head -1)
 
-      - name: Set up JDK 25
-        uses: actions/setup-java@v4
+          if [ -z "$CLEAN_JAR" ] || [ ! -f "$CLEAN_JAR" ]; then
+            echo "::error::Could not find staged clean BlockProt JAR in build/staged/clean!"
+            find build/staged -type f || true
+            exit 1
+          fi
+          if [ -z "$CLEAN_NOTES" ] || [ ! -f "$CLEAN_NOTES" ]; then
+            echo "::error::Could not find staged release notes in build/staged/clean!"
+            find build/staged -type f || true
+            exit 1
+          fi
+
+          echo "clean_jar=$CLEAN_JAR" >> "$GITHUB_OUTPUT"
+          echo "clean_notes=$CLEAN_NOTES" >> "$GITHUB_OUTPUT"
+          echo "github_notes=$GITHUB_NOTES" >> "$GITHUB_OUTPUT"
+          echo "Staged Clean JAR (for distributors): $CLEAN_JAR ($(ls -lh "$CLEAN_JAR" | awk '{print $5}'))"
+          echo "Staged GitHub Releases suite:"
+          ls -la build/staged/github
+
+      - name: Publish to GitHub Releases
+        id: gh_release
+        uses: softprops/action-gh-release@v2
         with:
-          java-version: '25'
-          distribution: 'temurin'
+          tag_name: ${{ needs.inspect-and-build.outputs.plugin_version }}
+          name: "BlockProt Reloaded ${{ needs.inspect-and-build.outputs.plugin_version }}"
+          body_path: ${{ steps.staged.outputs.github_notes }}
+          files: |
+            build/staged/github/BlockProtReloaded-*.jar
+            build/staged/github/common-*.jar
+            build/staged/github/checksums.sha256
+          draft: false
+          prerelease: ${{ contains(needs.inspect-and-build.outputs.plugin_version, 'SNAPSHOT') || contains(needs.inspect-and-build.outputs.plugin_version, 'BEDev') || contains(needs.inspect-and-build.outputs.plugin_version, 'dev') || contains(needs.inspect-and-build.outputs.plugin_version, 'alpha') || contains(needs.inspect-and-build.outputs.plugin_version, 'beta') || contains(needs.inspect-and-build.outputs.plugin_version, 'rc') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: Detect existing platform releases
+        id: detect
+        run: |
+          VERSION="${{ needs.inspect-and-build.outputs.plugin_version }}"
+          MODRINTH_ID="${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}"
+          CF_ID="${{ vars.CURSEFORGE_PROJECT_ID || '1565977' }}"
 
-      - name: Make gradlew executable
-        run: chmod +x gradlew
+          # 1. Modrinth duplicate check
+          if curl -s "https://api.modrinth.com/v2/project/${MODRINTH_ID}/version" | grep -q "\"version_number\":\"${VERSION}\""; then
+            echo "Modrinth already has version ${VERSION}. Will skip Modrinth upload to avoid duplicate conflict."
+            echo "modrinth_skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "modrinth_skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          # 2. CurseForge duplicate check
+          if [ -n "$CURSEFORGE_TOKEN" ] && [ -n "$CF_ID" ]; then
+            CF_RESP=$(curl -s -H "x-api-key: $CURSEFORGE_TOKEN" "https://api.curseforge.com/v1/mods/${CF_ID}/files")
+            if echo "$CF_RESP" | grep -qiE "(BlockProtReloaded-${VERSION}\.jar|displayName\":\"BlockProt Reloaded ${VERSION}\")"; then
+              echo "CurseForge already has version ${VERSION}. Will skip CurseForge upload to avoid duplicate conflict."
+              echo "curseforge_skip=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "curseforge_skip=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "curseforge_skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          # 3. Hangar duplicate check
+          if curl -s "https://hangar.papermc.io/api/v1/projects/BlockProt-Reloaded/versions?limit=10" | grep -q "\"name\":\"${VERSION}\""; then
+            echo "Hangar already has version ${VERSION}. Will skip Hangar upload to avoid duplicate conflict."
+            echo "hangar_skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "hangar_skip=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
 
       - name: Publish to Modrinth & CurseForge
-        if: env.MODRINTH_TOKEN != '' || env.CURSEFORGE_TOKEN != ''
+        if: (env.MODRINTH_TOKEN != '' && steps.detect.outputs.modrinth_skip != 'true') || (env.CURSEFORGE_TOKEN != '' && steps.detect.outputs.curseforge_skip != 'true')
         uses: Kir-Antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID }}
-          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
-          files: ${{ steps.staged.outputs.jar_path }}
+          modrinth-token: ${{ steps.detect.outputs.modrinth_skip != 'true' && secrets.MODRINTH_TOKEN || '' }}
+          modrinth-unfeature-mode: none
+          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID || '1565977' }}
+          curseforge-token: ${{ steps.detect.outputs.curseforge_skip != 'true' && secrets.CURSEFORGE_TOKEN || '' }}
+          files: ${{ steps.staged.outputs.clean_jar }}
           name: "BlockProt Reloaded ${{ needs.inspect-and-build.outputs.plugin_version }}"
           version: ${{ needs.inspect-and-build.outputs.plugin_version }}
           version-type: ${{ needs.inspect-and-build.outputs.jar_channel }}
-          changelog-file: ${{ steps.staged.outputs.notes_path }}
+          changelog-file: ${{ steps.staged.outputs.clean_notes }}
           game-versions: ${{ needs.inspect-and-build.outputs.game_versions }}
           game-version-filter: none
           loaders: ${{ needs.inspect-and-build.outputs.loaders }}
@@ -347,9 +427,32 @@ jobs:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
 
+      - name: Set up JDK 25
+        if: env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        if: env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        if: env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
+        run: chmod +x gradlew
+
       - name: Publish to Hangar
-        if: env.HANGAR_API_TOKEN != ''
-        run: ./gradlew :blockprot-spigot:publishPluginPublicationToHangar --no-daemon
+        id: hangar
+        continue-on-error: true
+        if: env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
+        run: |
+          CLEAN_TOKEN=$(echo "$HANGAR_API_TOKEN" | tr -d ' "\r\n\t'"'")
+          LEN=${#CLEAN_TOKEN}
+          if [ "$LEN" -ne 73 ]; then
+            echo "::warning::HANGAR_API_TOKEN length is $LEN characters. Hangar requires a 73-character key (<UUID>.<token>). If publishing fails with 400 Bad Request, verify your secret in GitHub Settings."
+          fi
+          HANGAR_API_TOKEN="$CLEAN_TOKEN" ./gradlew :blockprot-spigot:publishPluginPublicationToHangar --stacktrace --no-daemon
         env:
           HANGAR_API_TOKEN: ${{ secrets.HANGAR_API_TOKEN }}
 
@@ -362,18 +465,35 @@ jobs:
           | Platform | Upload Status | Details |
           | :--- | :---: | :--- |
           EOF
-          if [ -n "${{ secrets.MODRINTH_TOKEN }}" ]; then
-            echo "| **Modrinth** | [v] Published | Project \`${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.gh_release.outcome }}" = "success" ]; then
+            echo "| **GitHub Releases** | [v] Published | Tag \`${{ needs.inspect-and-build.outputs.plugin_version }}\` (Complete Build Assets Attached) |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| **GitHub Releases** | [x] Failed | Could not create GitHub Release |" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ "${{ steps.detect.outputs.modrinth_skip }}" = "true" ]; then
+            echo "| **Modrinth** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on Modrinth (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "${{ secrets.MODRINTH_TOKEN }}" ]; then
+            echo "| **Modrinth** | [v] Published | Project \`${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "| **Modrinth** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
           fi
-          if [ -n "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
-            echo "| **CurseForge** | [v] Published | Project ID \`${{ vars.CURSEFORGE_PROJECT_ID }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.detect.outputs.curseforge_skip }}" = "true" ]; then
+            echo "| **CurseForge** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on CurseForge (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
+            echo "| **CurseForge** | [v] Published | Project ID \`${{ vars.CURSEFORGE_PROJECT_ID || '1565977' }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "| **CurseForge** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
           fi
-          if [ -n "${{ secrets.HANGAR_API_TOKEN }}" ]; then
-            echo "| **Hangar** | [v] Published | Project \`BlockProt-Reloaded\` |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.detect.outputs.hangar_skip }}" = "true" ]; then
+            echo "| **Hangar** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on Hangar (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "${{ secrets.HANGAR_API_TOKEN }}" ]; then
+            if [ "${{ steps.hangar.outcome }}" = "success" ]; then
+              echo "| **Hangar** | [v] Published | Project \`BlockProt-Reloaded\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| **Hangar** | [!] Issue | Check Hangar API key format (must be 73 characters <UUID>.<token>) |" >> "$GITHUB_STEP_SUMMARY"
+            fi
           else
             echo "| **Hangar** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
           fi
+
+
