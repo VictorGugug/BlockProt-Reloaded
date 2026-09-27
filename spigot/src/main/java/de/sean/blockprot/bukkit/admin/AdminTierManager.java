@@ -102,13 +102,6 @@ public final class AdminTierManager {
         if (player.hasPermission(Permissions.ADMIN_T1.key())) return AdminTier.T1;
         if (player.hasPermission(Permissions.ADMIN_CUSTOM.key())) return AdminTier.CUSTOM;
 
-        PlayerSettingsHandler handler = new PlayerSettingsHandler(player);
-        String nbtTier = handler.getAdminTier();
-        if (!nbtTier.isEmpty()) {
-            AdminTier tier = AdminTier.fromString(nbtTier);
-            if (tier != AdminTier.NONE) return tier;
-        }
-
         AdminRoleEntry entry = ADMIN_ENTRIES.get(player.getUniqueId());
         if (entry != null && entry.tier() != AdminTier.NONE) {
             return entry.tier();
@@ -125,17 +118,6 @@ public final class AdminTierManager {
         if (entry != null) {
             flags.addAll(entry.customFlags());
         }
-
-        PlayerSettingsHandler handler = new PlayerSettingsHandler(player);
-        String rawNbtFlags = handler.getAdminCustomFlags();
-        if (!rawNbtFlags.isEmpty()) {
-            for (String part : rawNbtFlags.split(",")) {
-                try {
-                    flags.add(AdminAction.valueOf(part.trim().toUpperCase(Locale.ROOT)));
-                } catch (IllegalArgumentException ignored) {}
-            }
-        }
-
         return flags;
     }
 

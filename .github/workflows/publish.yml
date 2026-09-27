@@ -384,14 +384,9 @@ jobs:
           fi
 
           # 2. CurseForge duplicate check
-          if [ -n "$CURSEFORGE_TOKEN" ] && [ -n "$CF_ID" ]; then
-            CF_RESP=$(curl -s -H "x-api-key: $CURSEFORGE_TOKEN" "https://api.curseforge.com/v1/mods/${CF_ID}/files")
-            if echo "$CF_RESP" | grep -qiE "(BlockProtReloaded-${VERSION}\.jar|displayName\":\"BlockProt Reloaded ${VERSION}\")"; then
-              echo "CurseForge already has version ${VERSION}. Will skip CurseForge upload to avoid duplicate conflict."
-              echo "curseforge_skip=true" >> "$GITHUB_OUTPUT"
-            else
-              echo "curseforge_skip=false" >> "$GITHUB_OUTPUT"
-            fi
+          if curl -s "https://api.cfwidget.com/${CF_ID}" | grep -qF "\"name\":\"BlockProtReloaded-${VERSION}.jar\""; then
+            echo "CurseForge already has version ${VERSION}. Will skip CurseForge upload to avoid duplicate conflict."
+            echo "curseforge_skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "curseforge_skip=false" >> "$GITHUB_OUTPUT"
           fi
@@ -403,8 +398,6 @@ jobs:
           else
             echo "hangar_skip=false" >> "$GITHUB_OUTPUT"
           fi
-        env:
-          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
 
       - name: Publish to Modrinth & CurseForge
         if: (env.MODRINTH_TOKEN != '' && steps.detect.outputs.modrinth_skip != 'true') || (env.CURSEFORGE_TOKEN != '' && steps.detect.outputs.curseforge_skip != 'true')
