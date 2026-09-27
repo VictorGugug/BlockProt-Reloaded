@@ -41,6 +41,9 @@ jobs:
       jar_size: ${{ steps.jar.outputs.size }}
       jar_sha256: ${{ steps.jar.outputs.sha256 }}
       jar_channel: ${{ steps.jar.outputs.channel }}
+      notes_path: ${{ steps.changelog.outputs.notes_path }}
+      notes_url: ${{ steps.changelog.outputs.notes_url }}
+      notes_source: ${{ steps.changelog.outputs.notes_source }}
 
     steps:
       - name: Handle cancellation request
@@ -103,7 +106,34 @@ jobs:
           if [ -z "$TARGET_TAG" ]; then
             TARGET_TAG="${{ steps.meta.outputs.plugin_version }}"
           fi
-          python3 .github/scripts/generate_version_commits.py --version "$TARGET_TAG" --release-body --output-file build/reports/release-notes.md
+          CLEAN_TAG="${TARGET_TAG#v}"
+          mkdir -p build/reports
+
+          if [ -f "docs/RELEASE_NOTES/${TARGET_TAG}.RELEASE_NOTES.md" ]; then
+            NOTES_SRC="docs/RELEASE_NOTES/${TARGET_TAG}.RELEASE_NOTES.md"
+          elif [ -f "docs/RELEASE_NOTES/${CLEAN_TAG}.RELEASE_NOTES.md" ]; then
+            NOTES_SRC="docs/RELEASE_NOTES/${CLEAN_TAG}.RELEASE_NOTES.md"
+          elif [ -f "docs/RELEASE_NOTES/${{ steps.meta.outputs.plugin_version }}.RELEASE_NOTES.md" ]; then
+            NOTES_SRC="docs/RELEASE_NOTES/${{ steps.meta.outputs.plugin_version }}.RELEASE_NOTES.md"
+          else
+            NOTES_SRC=""
+          fi
+
+          if [ -n "$NOTES_SRC" ]; then
+            echo "Loading curated release notes from: $NOTES_SRC"
+            cp "$NOTES_SRC" build/reports/release-notes.md
+            REPO_URL="${{ github.repository }}"
+            REF="${{ github.ref_name }}"
+            echo "notes_source=curated" >> "$GITHUB_OUTPUT"
+            echo "notes_path=$NOTES_SRC" >> "$GITHUB_OUTPUT"
+            echo "notes_url=https://github.com/${REPO_URL}/blob/${REF}/${NOTES_SRC}" >> "$GITHUB_OUTPUT"
+          else
+            echo "Curated release notes not found; aggregating git commit history..."
+            python3 .github/scripts/generate_version_commits.py --version "$TARGET_TAG" --release-body --output-file build/reports/release-notes.md
+            echo "notes_source=generated" >> "$GITHUB_OUTPUT"
+            echo "notes_path=build/reports/release-notes.md" >> "$GITHUB_OUTPUT"
+            echo "notes_url=" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up JDK 25
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
@@ -153,12 +183,19 @@ jobs:
 
       - name: Stage build artifacts for publication
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
+        run: |
+          mkdir -p build/staged-upload
+          cp "${{ steps.jar.outputs.path }}" build/staged-upload/
+          cp build/reports/release-notes.md build/staged-upload/release-notes.md
+          echo "Staged files for upload:"
+          ls -la build/staged-upload
+
+      - name: Upload staged build artifacts
+        if: github.event.inputs.mode != 'Cancel (Abort without action)'
         uses: actions/upload-artifact@v4
         with:
           name: blockprot-staged-release
-          path: |
-            spigot/build/libs/BlockProtReloaded-*.jar
-            build/reports/release-notes.md
+          path: build/staged-upload/
           retention-days: 1
 
       - name: Publish Pre-Flight Inspection Summary
@@ -181,7 +218,11 @@ jobs:
           echo "| **Distribution Binary** | \`${{ steps.jar.outputs.name }}\` (\`${{ steps.jar.outputs.size }}\`) | \`spigot/build/libs/${{ steps.jar.outputs.name }}\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Artifact SHA-256** | \`${{ steps.jar.outputs.sha256 }}\` | Checksum verification |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Release Channel** | \`${{ steps.jar.outputs.channel }}\` | Inferred from version |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Release Notes File** | \`build/reports/release-notes.md\` | Generated from Git history |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.changelog.outputs.notes_source }}" = "curated" ]; then
+            echo "| **Release Notes File** | [\`${{ steps.changelog.outputs.notes_path }}\`](${{ steps.changelog.outputs.notes_url }}) | Curated Project Release Documentation |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| **Release Notes File** | \`build/reports/release-notes.md\` | Generated from Git history |" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
           cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
 
@@ -249,10 +290,22 @@ jobs:
       - name: Locate staged JAR and release notes
         id: staged
         run: |
-          JAR=$(find build/staged -name "BlockProtReloaded-*.jar" | head -1)
+          JAR=$(find build/staged -name "BlockProtReloaded-*.jar" ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
+          NOTES=$(find build/staged -name "release-notes.md" -o -name "*.md" | head -1)
+          if [ -z "$JAR" ] || [ ! -f "$JAR" ]; then
+            echo "::error::Could not find staged BlockProt JAR in build/staged!"
+            find build/staged -type f || true
+            exit 1
+          fi
+          if [ -z "$NOTES" ] || [ ! -f "$NOTES" ]; then
+            echo "::error::Could not find staged release notes in build/staged!"
+            find build/staged -type f || true
+            exit 1
+          fi
           echo "jar_path=$JAR" >> "$GITHUB_OUTPUT"
-          echo "notes_path=build/staged/release-notes.md" >> "$GITHUB_OUTPUT"
-          echo "Staged JAR: $JAR"
+          echo "notes_path=$NOTES" >> "$GITHUB_OUTPUT"
+          echo "Staged JAR: $JAR ($(ls -lh "$JAR" | awk '{print $5}'))"
+          echo "Staged Notes: $NOTES ($(wc -l < "$NOTES") lines)"
 
       - name: Set up JDK 25
         uses: actions/setup-java@v4

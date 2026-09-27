@@ -72,7 +72,33 @@ jobs:
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
         id: changelog
         run: |
-          python3 .github/scripts/generate_version_commits.py --version "${{ steps.ver.outputs.version }}" --release-body --output-file build/reports/release-notes.md
+          TARGET_VER="${{ steps.ver.outputs.version }}"
+          CLEAN_VER="${TARGET_VER#v}"
+          mkdir -p build/reports
+
+          if [ -f "docs/RELEASE_NOTES/${TARGET_VER}.RELEASE_NOTES.md" ]; then
+            NOTES_SRC="docs/RELEASE_NOTES/${TARGET_VER}.RELEASE_NOTES.md"
+          elif [ -f "docs/RELEASE_NOTES/${CLEAN_VER}.RELEASE_NOTES.md" ]; then
+            NOTES_SRC="docs/RELEASE_NOTES/${CLEAN_VER}.RELEASE_NOTES.md"
+          else
+            NOTES_SRC=""
+          fi
+
+          if [ -n "$NOTES_SRC" ]; then
+            echo "Loading curated release notes from: $NOTES_SRC"
+            cp "$NOTES_SRC" build/reports/release-notes.md
+            REPO_URL="${{ github.repository }}"
+            REF="${{ github.ref_name }}"
+            echo "notes_source=curated" >> "$GITHUB_OUTPUT"
+            echo "notes_path=$NOTES_SRC" >> "$GITHUB_OUTPUT"
+            echo "notes_url=https://github.com/${REPO_URL}/blob/${REF}/${NOTES_SRC}" >> "$GITHUB_OUTPUT"
+          else
+            echo "Curated release notes not found; aggregating git history commits..."
+            python3 .github/scripts/generate_version_commits.py --version "$TARGET_VER" --release-body --output-file build/reports/release-notes.md
+            echo "notes_source=generated" >> "$GITHUB_OUTPUT"
+            echo "notes_path=build/reports/release-notes.md" >> "$GITHUB_OUTPUT"
+            echo "notes_url=" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up JDK 25
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
@@ -129,6 +155,12 @@ jobs:
       - name: Publish release step summary
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
         run: |
+          if [ "${{ steps.changelog.outputs.notes_source }}" = "curated" ]; then
+            NOTES_LINE="| **Release Notes File** | [\`${{ steps.changelog.outputs.notes_path }}\`](${{ steps.changelog.outputs.notes_url }}) |"
+          else
+            NOTES_LINE="| **Release Notes File** | \`build/reports/release-notes.md\` |"
+          fi
+
           if [ "${{ github.event.inputs.mode }}" = "Release (Create tag & GitHub release)" ]; then
             cat << EOF >> "$GITHUB_STEP_SUMMARY"
           ## GitHub Release Created Successfully
@@ -138,6 +170,7 @@ jobs:
           | **Release Name** | \`BlockProt Reloaded ${{ steps.ver.outputs.version }}\` |
           | **Tag Name** | \`${{ steps.ver.outputs.version }}\` |
           | **Asset** | \`${{ steps.jar.outputs.name }}\` (\`${{ steps.jar.outputs.size }}\`) |
+          $NOTES_LINE
           | **Release URL** | [View Release](${{ steps.gh_release.outputs.url }}) |
           EOF
           else
@@ -149,6 +182,7 @@ jobs:
           | **Release Name** | \`BlockProt Reloaded ${{ steps.ver.outputs.version }}\` |
           | **Tag Name** | \`${{ steps.ver.outputs.version }}\` |
           | **Asset** | \`${{ steps.jar.outputs.name }}\` (\`${{ steps.jar.outputs.size }}\`) |
+          $NOTES_LINE
           | **Status** | Pre-Flight Verified (Dry-Run) |
 
           > [!IMPORTANT]

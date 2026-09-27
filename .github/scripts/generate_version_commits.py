@@ -392,7 +392,21 @@ def main():
     previous_releases = collect_previous_releases(version, repo_url, cwd=repo_dir)
     released = is_version_released(version, cwd=repo_dir)
 
-    if args.release_body:
+    curated_candidates = [
+        Path(repo_dir) / "docs" / "RELEASE_NOTES" / f"{version}.RELEASE_NOTES.md",
+        Path(repo_dir) / "docs" / "RELEASE_NOTES" / f"{version.lstrip('v')}.RELEASE_NOTES.md",
+    ]
+    curated_notes = None
+    curated_file_path = None
+    for candidate in curated_candidates:
+        if candidate.is_file():
+            curated_notes = candidate.read_text(encoding="utf-8")
+            curated_file_path = candidate
+            break
+
+    if args.release_body and curated_notes:
+        content = curated_notes
+    elif args.release_body:
         content = build_release_body(
             version, release_commit, prev_tag, prev_commit, base_commit, commits, repo_url, previous_releases, platforms, mc_range, released=released
         )
@@ -418,6 +432,8 @@ def main():
     if github_output:
         compare_ref = prev_tag if prev_tag else (f"{base_commit[:7]}~1" if base_commit else "")
         compare_url = f"https://github.com/{repo_url}/compare/{compare_ref}...main" if compare_ref else ""
+        notes_rel_path = os.path.relpath(curated_file_path, repo_dir).replace("\\", "/") if curated_file_path else "build/reports/release-notes.md"
+        notes_url = f"https://github.com/{repo_url}/blob/main/{notes_rel_path}" if curated_file_path else ""
         with open(github_output, "a", encoding="utf-8") as f:
             f.write(f"version={version}\n")
             f.write(f"release_commit={release_commit}\n")
@@ -429,6 +445,9 @@ def main():
             f.write(f"commit_count={len(commits)}\n")
             f.write(f"compare_url={compare_url}\n")
             f.write(f"commits_file={out_path}\n")
+            f.write(f"curated_notes={'true' if curated_notes else 'false'}\n")
+            f.write(f"notes_path={notes_rel_path}\n")
+            f.write(f"notes_url={notes_url}\n")
 
     print(f"Generated version commit report for {version} ({len(commits)} commits) -> {out_path}")
     if args.release_body:
