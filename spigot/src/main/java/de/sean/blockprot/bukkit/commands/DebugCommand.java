@@ -167,13 +167,13 @@ public class DebugCommand implements CommandExecutor {
     }
 
     private static void logEnvironmentInfo(@NotNull Player player) {
-        BlockProtLogger.log("debug", "Session: " + java.time.LocalDateTime.now()
+        BlockProtLogger.log("Session: " + java.time.LocalDateTime.now()
             + " | Plugin: BlockProt Reloaded " + BlockProt.getPluginVersion()
             + " | Player: " + player.getName() + " (" + player.getUniqueId() + ")");
-        BlockProtLogger.log("debug", "Server: " + org.bukkit.Bukkit.getVersion()
+        BlockProtLogger.log("Server: " + org.bukkit.Bukkit.getVersion()
             + " | API: " + org.bukkit.Bukkit.getBukkitVersion()
             + " | Java: " + System.getProperty("java.version"));
-        BlockProtLogger.log("debug", "Compat: " + de.sean.blockprot.bukkit.VersionCompat.getDiagnosticString()
+        BlockProtLogger.log("Compat: " + de.sean.blockprot.bukkit.VersionCompat.getDiagnosticString()
             + " | BukkitCompat: " + de.sean.blockprot.bukkit.BukkitCompat.getDiagnosticString()
             + " | FoliaLib: [isFolia=" + BlockProt.getFoliaLib().isFolia()
             + ", isPaper=" + BlockProt.getFoliaLib().isPaper()
@@ -193,35 +193,31 @@ public class DebugCommand implements CommandExecutor {
 
         // Domain 1: Environment & Compatibility
         runDomain("1/9", "ENVIRONMENT & COMPATIBILITY");
-        runGroup(player, passed, failed, "1a. Config",               () -> checkConfig(player, passed, failed));
-        runGroup(player, passed, failed, "1b. BukkitCompat",         () -> checkBukkitCompat(player, passed, failed));
-        runGroup(player, passed, failed, "1c. FoliaLib Schedulers",  () -> checkFoliaLib(player, passed, failed));
+        checkConfig(player, passed, failed);
+        checkBukkitCompat(player, passed, failed);
+        checkFoliaLib(player, passed, failed);
 
         // Domain 2: Configuration & Block Families
         runDomain("2/9", "CONFIGURATION & BLOCK FAMILIES");
-        runGroup(player, passed, failed, "2a. Lockable blocks",      () -> checkLockableMaterials(player, passed, failed));
-        runGroup(player, passed, failed, "2b. AutoDrop",             () -> checkAutoDrop(player, passed, failed));
-        runGroup(player, passed, failed, "2c. Lockable entities",    () -> checkLockableEntities(player, passed, failed));
-        runGroup(player, passed, failed, "2d. Item frame protect",   () -> checkItemFrameProtection(player, passed, failed));
-        runGroup(player, passed, failed, "2e. Raid detection",       () -> checkRaidDetection(player, passed, failed));
-        runGroup(player, passed, failed, "2f. Villager workstation", () -> checkVillagerWorkstationProtection(player, passed, failed));
+        checkLockableMaterials(player, passed, failed);
+        checkAutoDrop(player, passed, failed);
+        checkLockableEntities(player, passed, failed);
+        checkItemFrameProtection(player, passed, failed);
+        checkRaidDetection(player, passed, failed);
+        checkVillagerWorkstationProtection(player, passed, failed);
 
         // Domain 3: Localization & Translation Coverage
         runDomain("3/9", "LOCALIZATION & TRANSLATIONS");
-        runGroup(player, passed, failed, "3a. Translations",         () -> checkTranslations(player, passed, failed));
-        runGroup(player, passed, failed, "3b. Language files",       () -> checkLanguages(player, passed, failed));
+        checkTranslations(player, passed, failed);
+        checkLanguages(player, passed, failed);
 
         // Domain 4: Storage, Database & Caching
         runDomain("4/9", "STORAGE, DATABASE & CACHING");
-        runGroup(player, passed, failed, "4a. HybridDatabase",       () -> checkHybridDatabase(player, passed, failed));
-        runGroup(player, passed, failed, "4b. ProfileService",       () -> checkProfileService(player, passed, failed));
-        runGroup(player, passed, failed, "4c. SkinsRestorer",        () -> checkSkinsRestorer(player, passed, failed));
-        runGroup(player, passed, failed, "4d. AuditLogger",          () -> checkAuditLogger(player, passed, failed));
-        runGroup(player, passed, failed, "4e. OnlinePlayers",        () -> checkOnlinePlayers(player, passed, failed));
-
-        // Domain 6 (Async part): Integrations
-        runDomain("6/9", "COMMANDS, PERMISSIONS & INTEGRATIONS");
-        runGroup(player, passed, failed, "6a. Integrations",         () -> checkIntegrations(player, passed, failed));
+        checkHybridDatabase(player, passed, failed);
+        checkProfileService(player, passed, failed);
+        checkSkinsRestorer(player, passed, failed);
+        checkAuditLogger(player, passed, failed);
+        checkOnlinePlayers(player, passed, failed);
 
         BlockProt.getFoliaLib().getScheduler().runAtEntity(player, tickTask -> {
             DefaultConfig cfg = BlockProt.getDefaultConfig();
@@ -234,34 +230,36 @@ public class DebugCommand implements CommandExecutor {
             try {
                 // Domain 5: NBT & Data Persistence Engine
                 runDomain("5/9", "NBT & DATA PERSISTENCE ENGINE");
-                runGroup(player, passed, failed, "5a. NBT block write/read",  () -> checkNbt(player, passed, failed));
-                runGroup(player, passed, failed, "5b. NBT entity write/read", () -> checkEntityNbt(player, passed, failed));
-                runGroup(player, passed, failed, "5c. PlayerSettings",        () -> checkPlayerSettings(player, passed, failed));
-                runGroup(player, passed, failed, "5d. NBT sub-handlers",      () -> checkNbtSubHandlers(player, passed, failed));
+                checkNbt(player, passed, failed);
+                checkEntityNbt(player, passed, failed);
+                checkPlayerSettings(player, passed, failed);
+                checkNbtSubHandlers(player, passed, failed);
 
-                // Domain 6 (Sync part): Commands & Permissions
-                runGroup(player, passed, failed, "6b. Commands registered",   () -> checkCommandsRegistered(player, passed, failed));
-                runGroup(player, passed, failed, "6c. Admin tiers",           () -> checkAdminTiers(player, passed, failed));
+                // Domain 6: Commands, Permissions & Integrations
+                runDomain("6/9", "COMMANDS, PERMISSIONS & INTEGRATIONS");
+                checkIntegrations(player, passed, failed);
+                checkCommandsRegistered(player, passed, failed);
+                checkAdminTiers(player, passed, failed);
 
                 // Domain 7: Event Listeners & Engine
                 runDomain("7/9", "EVENT LISTENERS & ENGINE");
-                runGroup(player, passed, failed, "7a. Listeners registered",  () -> checkListenersRegistered(player, passed, failed));
+                checkListenersRegistered(player, passed, failed);
 
                 // Domain 8: User Interface & Screens
                 runDomain("8/9", "USER INTERFACE & SCREENS");
-                runGroup(player, passed, failed, "8a. Inventory creation",    () -> checkInventoryCreation(player, passed, failed));
-                runGroup(player, passed, failed, "8b. All inventories",       () -> checkAllInventories(player, passed, failed));
-                runGroup(player, passed, failed, "8c. All dialogs",           () -> checkAllDialogs(player, passed, failed));
+                checkInventoryCreation(player, passed, failed);
+                checkAllInventories(player, passed, failed);
+                checkAllDialogs(player, passed, failed);
 
                 // Domain 9: Utility Helpers & Benchmarks
                 runDomain("9/9", "UTILITY HELPERS & BENCHMARKS");
-                runGroup(player, passed, failed, "9a. Messages",              () -> checkMessages(player, passed, failed));
-                runGroup(player, passed, failed, "9b. blocks.yml integrity",  () -> checkBlocksYmlIntegrity(player, passed, failed));
-                runGroup(player, passed, failed, "9c. worlds.yml integrity",  () -> checkWorldsYmlIntegrity(player, passed, failed));
-                runGroup(player, passed, failed, "9d. SkinCache tiers",       () -> checkSkinCache(player, passed, failed));
-                runGroup(player, passed, failed, "9e. Utility helpers",       () -> checkUtilityHelpers(player, passed, failed));
-                runGroup(player, passed, failed, "9f. Structural classes",    () -> checkStructuralClasses(player, passed, failed));
-                runGroup(player, passed, failed, "9g. Class coverage",        () -> checkEnumeratedCoverage(player, passed, failed));
+                checkMessages(player, passed, failed);
+                checkBlocksYmlIntegrity(player, passed, failed);
+                checkWorldsYmlIntegrity(player, passed, failed);
+                checkSkinCache(player, passed, failed);
+                checkUtilityHelpers(player, passed, failed);
+                checkStructuralClasses(player, passed, failed);
+                checkEnumeratedCoverage(player, passed, failed);
 
                 int p2 = passed.get(), f2 = failed.get(), total = p2 + f2;
                 BlockProtLogger.separator();
@@ -293,23 +291,10 @@ public class DebugCommand implements CommandExecutor {
         });
     }
 
-    private void runGroup(@NotNull Player player, @NotNull AtomicInteger passed,
-                          @NotNull AtomicInteger failed, @NotNull String name,
-                          @NotNull Runnable body) {
-        BlockProtLogger.separator();
-        BlockProtLogger.log("[" + name + "]");
-        try {
-            body.run();
-        } catch (Exception e) {
-            BlockProtLogger.fail(name + " (group)", e.getClass().getSimpleName() + ": " + e.getMessage());
-            failed.incrementAndGet();
-        }
-    }
-
     private void checkConfig(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var cfg = BlockProt.getDefaultConfig();
-            BlockProtLogger.pass("Config OK: friendDisabled=" + cfg.isFriendFunctionalityDisabled()
+            BlockProtLogger.pass("Config: friendDisabled=" + cfg.isFriendFunctionalityDisabled()
                 + " maxBlocks=" + cfg.getMaxLockedBlockCount()
                 + " lockEffects=" + cfg.isLockEffectEnabled()
                 + " lockSound=" + cfg.isLockSoundEnabled()
@@ -318,17 +303,6 @@ public class DebugCommand implements CommandExecutor {
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("Config", e.getMessage()); f.incrementAndGet();
-        }
-    }
-
-    private boolean cfgBoolean(String key, boolean def) {
-        try {
-            var cfg = BlockProt.getDefaultConfig();
-            var method = cfg.getClass().getSuperclass().getDeclaredMethod("getBoolean", String.class, boolean.class);
-            method.setAccessible(true);
-            return (boolean) method.invoke(cfg, key, def);
-        } catch (Exception ignored) {
-            return def;
         }
     }
 
@@ -369,7 +343,7 @@ public class DebugCommand implements CommandExecutor {
             try {
                 String v = Translator.get(key);
                 if (v == null || v.isBlank()) {
-                    blank++; BlockProtLogger.warn("Translation blank: " + key.name());
+                    blank++;
                 }
             } catch (Exception e) {
                 errors++; BlockProtLogger.fail("Translation key " + key.name(), e.getMessage());
@@ -392,9 +366,12 @@ public class DebugCommand implements CommandExecutor {
             int totalKeys = TranslationKey.values().length;
             int langOk = 0, langFail = 0, skipped = 0;
 
+            BlockProtLogger.subGroup("Language files:");
+
             for (String fileName : allLangs) {
                 if (!LangConfig.isLanguageEnabled(fileName)) {
                     skipped++;
+                    BlockProtLogger.skipSub(fileName, "disabled in config");
                     continue;
                 }
                 boolean isActive = fileName.equals(active);
@@ -406,14 +383,14 @@ public class DebugCommand implements CommandExecutor {
                     } else {
                         InputStream jarStream = plugin.getResource("lang/" + fileName);
                         if (jarStream == null) {
-                            BlockProtLogger.fail("Language file", fileName + ": not found on disk or in jar");
+                            BlockProtLogger.failSub(fileName, "not found on disk or in jar");
                             langFail++; continue;
                         }
                         langFile = YamlConfiguration.loadConfiguration(
                             new BufferedReader(new InputStreamReader(jarStream, StandardCharsets.UTF_8)));
                     }
                 } catch (Exception e) {
-                    BlockProtLogger.fail("Language file", fileName + ": load error: " + e.getMessage());
+                    BlockProtLogger.failSub(fileName, "load error: " + e.getMessage());
                     langFail++; continue;
                 }
 
@@ -431,7 +408,7 @@ public class DebugCommand implements CommandExecutor {
                 }
                 int pct = totalKeys == 0 ? 0 : (int) Math.round(100.0 * presentKeys / totalKeys);
                 String status = isActive ? "ACTIVE" : "inactive";
-                BlockProtLogger.log("  [" + status + "] " + fileName + "  (" + pct + "% - " + presentKeys + "/" + totalKeys + ")");
+                String detail = fileName + " [" + status + "]: " + pct + "% (" + presentKeys + "/" + totalKeys + " keys)";
                 if (pct < 100) {
                     int totalMissing = missingKeys.size();
                     int showCount = Math.min(totalMissing, 5);
@@ -441,16 +418,15 @@ public class DebugCommand implements CommandExecutor {
                         sb.append(missingKeys.get(i));
                     }
                     if (totalMissing > showCount) sb.append(" ...");
-                    BlockProtLogger.log("    missing=" + totalMissing + " ex: " + sb);
+                    detail += " missing=" + totalMissing + " ex: " + sb;
                 }
+                BlockProtLogger.passSub(detail);
                 langOk++;
             }
 
             if (langFail == 0) {
-                BlockProtLogger.pass("Language files: " + langOk + " enabled/" + (allLangs.length - skipped) + " checked, " + skipped + " disabled (skipped)");
                 p.incrementAndGet();
             } else {
-                BlockProtLogger.fail("Language files", langFail + " file(s) could not be loaded");
                 f.incrementAndGet();
             }
         } catch (Exception e) {
@@ -502,7 +478,7 @@ public class DebugCommand implements CommandExecutor {
             DefaultConfig cfg = BlockProt.getDefaultConfig();
             Set<Material> entityFamily = BlockFamilyParser.getFamilyMembers(BlockFamilyParser.Family.ENTITIES);
             if (entityFamily.isEmpty()) {
-                BlockProtLogger.warn("Lockable entities: ENTITIES family is empty (no entity materials registered)");
+                BlockProtLogger.fail("Lockable entities", "ENTITIES family is empty (no entity materials registered)");
                 f.incrementAndGet();
                 return;
             }
@@ -516,20 +492,17 @@ public class DebugCommand implements CommandExecutor {
 
             boolean configEmpty = active.isEmpty();
             if (configEmpty) {
-                BlockProtLogger.pass("Lockable entities: EMPTY: vehicle/frame protection disabled (correct per blocks.yml)");
                 if (cfg.isLockableEntity(Material.CHEST_MINECART)) {
                     BlockProtLogger.fail("Lockable entities", "CHEST_MINECART reports lockable but lockable_entities is empty");
                     f.incrementAndGet();
                 } else {
-                    BlockProtLogger.pass("Spot-check CHEST_MINECART: correctly NOT lockable");
+                    BlockProtLogger.pass("Lockable entities: empty (vehicle/frame protection disabled per blocks.yml, CHEST_MINECART spot-check OK)");
                     p.incrementAndGet();
                 }
             } else {
                 StringBuilder sb = new StringBuilder();
                 for (Material m : active) sb.append(m.name()).append(" ");
-                BlockProtLogger.pass("Lockable entities active=[" + sb.toString().trim() + "] count=" + active.size());
-                BlockProtLogger.log("  inactive=[" + inactive.stream()
-                    .map(Material::name).reduce("", (a, b) -> a.isBlank() ? b : a + " " + b) + "]");
+                BlockProtLogger.pass("Lockable entities: active=[" + sb.toString().trim() + "] count=" + active.size());
                 p.incrementAndGet();
             }
         } catch (Exception e) {
@@ -543,10 +516,10 @@ public class DebugCommand implements CommandExecutor {
             boolean frameActive = cfg.isLockableEntity(Material.ITEM_FRAME);
             boolean glowActive  = cfg.isLockableEntity(Material.GLOW_ITEM_FRAME);
 
-            BlockProtLogger.log("  Item frame protection: ITEM_FRAME=" + (frameActive ? "ACTIVE" : "INACTIVE (default)")
-                + " GLOW_ITEM_FRAME=" + (glowActive ? "ACTIVE" : "INACTIVE (default)"));
-            BlockProtLogger.pass("Item frame protection: config readable, frames="
-                + (frameActive ? "enabled" : "disabled (lockable_entities empty or not listed)"));
+            BlockProtLogger.pass("Item frame protection: "
+                + (frameActive ? "enabled" : "disabled")
+                + " (ITEM_FRAME=" + (frameActive ? "ACTIVE" : "INACTIVE")
+                + " GLOW_ITEM_FRAME=" + (glowActive ? "ACTIVE" : "INACTIVE") + ")");
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("Item frame protection", e.getMessage()); f.incrementAndGet();
@@ -599,18 +572,19 @@ public class DebugCommand implements CommandExecutor {
         try {
             List<PluginIntegration> integrations = BlockProt.getInstance().getIntegrations();
             if (integrations == null || integrations.isEmpty()) {
-                BlockProtLogger.log("Integrations: none registered");
+                BlockProtLogger.pass("Integrations: none registered");
                 p.incrementAndGet();
                 return;
             }
             int active = 0;
+            BlockProtLogger.subGroup("Integrations (" + integrations.size() + " registered):");
             for (PluginIntegration integration : integrations) {
                 String name = integration.getClass().getSimpleName();
                 boolean enabled = integration.isEnabled();
                 if (enabled) active++;
 
                 if (integration instanceof ViaVersionIntegration via) {
-                    BlockProtLogger.log("  " + name + ": " + via.getDetailedStatus());
+                    BlockProtLogger.passSub(name + ": " + via.getDetailedStatus());
                 } else {
                     org.bukkit.plugin.Plugin plugin = integration.getPlugin();
                     String ver = "unknown";
@@ -622,10 +596,13 @@ public class DebugCommand implements CommandExecutor {
                             ver = fallback;
                         }
                     }
-                    BlockProtLogger.log("  " + name + ": " + (enabled ? "ACTIVE v" + ver : "INACTIVE (plugin not found or disabled)"));
+                    if (enabled) {
+                        BlockProtLogger.passSub(name + ": ACTIVE v" + ver);
+                    } else {
+                        BlockProtLogger.passSub(name + ": INACTIVE (plugin not found or disabled)");
+                    }
                 }
             }
-            BlockProtLogger.pass("Integrations: " + active + "/" + integrations.size() + " active");
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("Integrations", e.getMessage()); f.incrementAndGet();
@@ -650,7 +627,7 @@ public class DebugCommand implements CommandExecutor {
     private void checkProfileService(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var profile = BlockProt.getProfileService().findByUuid(player.getUniqueId());
-            BlockProtLogger.pass("ProfileService OK: " + (profile != null ? profile.getName() : "null (no exception)"));
+            BlockProtLogger.pass("ProfileService: active, found=" + (profile != null ? profile.getName() : "null (no exception)"));
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("ProfileService", e.getMessage()); f.incrementAndGet();
@@ -659,9 +636,11 @@ public class DebugCommand implements CommandExecutor {
 
     private void checkSkinsRestorer(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         var plugin = Bukkit.getPluginManager().getPlugin("SkinsRestorer");
-        if (plugin == null) BlockProtLogger.log("SkinsRestorer: not installed");
-        else if (!plugin.isEnabled()) BlockProtLogger.warn("SkinsRestorer installed but disabled");
-        else {
+        if (plugin == null) {
+            BlockProtLogger.pass("SkinsRestorer: not installed");
+        } else if (!plugin.isEnabled()) {
+            BlockProtLogger.pass("SkinsRestorer: installed but disabled");
+        } else {
             String ver;
             try { ver = plugin.getPluginMeta().getVersion(); }
             catch (NoSuchMethodError e) {
@@ -669,7 +648,7 @@ public class DebugCommand implements CommandExecutor {
                 String fallback = plugin.getDescription().getVersion();
                 ver = fallback;
             }
-            BlockProtLogger.pass("SkinsRestorer v" + ver);
+            BlockProtLogger.pass("SkinsRestorer: active v" + ver);
         }
         p.incrementAndGet();
     }
@@ -681,9 +660,13 @@ public class DebugCommand implements CommandExecutor {
     }
 
     private void checkOnlinePlayers(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
-        BlockProtLogger.log("Online players: " + Bukkit.getOnlinePlayers().size());
-        for (Player pl : Bukkit.getOnlinePlayers())
-            BlockProtLogger.log("  - " + pl.getName() + " (" + pl.getUniqueId() + ")");
+        var players = Bukkit.getOnlinePlayers();
+        StringBuilder sb = new StringBuilder();
+        for (Player pl : players) {
+            if (!sb.isEmpty()) sb.append(", ");
+            sb.append(pl.getName()).append(" (").append(pl.getUniqueId()).append(")");
+        }
+        BlockProtLogger.pass("Online players (" + players.size() + "): " + sb);
         p.incrementAndGet();
     }
 
@@ -693,19 +676,22 @@ public class DebugCommand implements CommandExecutor {
             var world = player.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
-            var h = new BlockNBTHandler(world.getBlockAt(loc));
-            h.setOwner(NOTCH_UUID);
-            h.setName("debug_nbt_test");
-            String owner   = h.getOwner();
-            String name    = h.getName();
-            long lockedAt  = h.getLockedAt();
-            world.setType(loc, orig);
-            if (NOTCH_UUID.equals(owner) && "debug_nbt_test".equals(name)) {
-                BlockProtLogger.pass("NBT block write/read OK (owner=" + owner + " name=" + name + " lockedAt=" + lockedAt + ")");
-                p.incrementAndGet();
-            } else {
-                BlockProtLogger.fail("NBT block mismatch", "owner=" + owner + " name=" + name);
-                f.incrementAndGet();
+            try {
+                var h = new BlockNBTHandler(world.getBlockAt(loc));
+                h.setOwner(NOTCH_UUID);
+                h.setName("debug_nbt_test");
+                String owner   = h.getOwner();
+                String name    = h.getName();
+                long lockedAt  = h.getLockedAt();
+                if (NOTCH_UUID.equals(owner) && "debug_nbt_test".equals(name)) {
+                    BlockProtLogger.pass("NBT block: write/read OK (owner=" + owner + " name=" + name + " lockedAt=" + lockedAt + ")");
+                    p.incrementAndGet();
+                } else {
+                    BlockProtLogger.fail("NBT block mismatch", "owner=" + owner + " name=" + name);
+                    f.incrementAndGet();
+                }
+            } finally {
+                world.setType(loc, orig);
             }
         } catch (Exception e) {
             BlockProtLogger.fail("NBT block", e.getMessage()); f.incrementAndGet();
@@ -721,20 +707,19 @@ public class DebugCommand implements CommandExecutor {
                 stand.setVisible(false);
                 stand.setSilent(true);
             });
-
-            var handler = new EntityNBTHandler(entity);
-            handler.setOwner(NOTCH_UUID);
-
-            String readBack = handler.getOwner();
-
-            entity.remove();
-
-            if (NOTCH_UUID.equals(readBack)) {
-                BlockProtLogger.pass("NBT entity write/read OK (owner=" + readBack + ")");
-                p.incrementAndGet();
-            } else {
-                BlockProtLogger.fail("NBT entity mismatch", "expected=" + NOTCH_UUID + " got=" + readBack);
-                f.incrementAndGet();
+            try {
+                var handler = new EntityNBTHandler(entity);
+                handler.setOwner(NOTCH_UUID);
+                String readBack = handler.getOwner();
+                if (NOTCH_UUID.equals(readBack)) {
+                    BlockProtLogger.pass("NBT entity: write/read OK (owner=" + readBack + ")");
+                    p.incrementAndGet();
+                } else {
+                    BlockProtLogger.fail("NBT entity mismatch", "expected=" + NOTCH_UUID + " got=" + readBack);
+                    f.incrementAndGet();
+                }
+            } finally {
+                entity.remove();
             }
         } catch (Exception e) {
             BlockProtLogger.fail("NBT entity", e.getMessage()); f.incrementAndGet();
@@ -744,7 +729,7 @@ public class DebugCommand implements CommandExecutor {
     private void checkPlayerSettings(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         try {
             var ps = new PlayerSettingsHandler(player);
-            BlockProtLogger.pass("PlayerSettings OK: lockOnPlace=" + ps.getLockOnPlace()
+            BlockProtLogger.pass("PlayerSettings: lockOnPlace=" + ps.getLockOnPlace()
                 + " hintsEnabled=" + !ps.hasPlayerInteractedWithMenu());
             p.incrementAndGet();
         } catch (Exception e) {
@@ -756,7 +741,7 @@ public class DebugCommand implements CommandExecutor {
         try {
             Inventory inv = ComponentMessages.createInventory(player, 9,
                 net.kyori.adventure.text.Component.text(Translator.get(TranslationKey.MESSAGES__DEBUG__INVENTORY_TITLE)));
-            BlockProtLogger.pass("ComponentMessages.createInventory OK (size=" + inv.getSize() + ")");
+            BlockProtLogger.pass("Inventory creation: ComponentMessages.createInventory OK (size=" + inv.getSize() + ")");
             p.incrementAndGet();
         } catch (Throwable e) {
             BlockProtLogger.fail("createInventory", e.getMessage()); f.incrementAndGet();
@@ -768,6 +753,8 @@ public class DebugCommand implements CommandExecutor {
         base.friendSearchState = InventoryState.FriendSearchState.DEFAULT_FRIEND_SEARCH;
         base.origin = InventoryState.MenuOrigin.NONE;
         InventoryState.set(player.getUniqueId(), base);
+
+        BlockProtLogger.subGroup("Inventories (28 screens):");
 
         inv(p, f, "UserMenuInventory",    () -> new UserMenuInventory().fill(player));
         inv(p, f, "AdminMenuInventory",   () -> new AdminMenuInventory().fill(player));
@@ -802,14 +789,16 @@ public class DebugCommand implements CommandExecutor {
             var world = player.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
-            var block = world.getBlockAt(loc);
-            new BlockNBTHandler(block).setOwner(player.getUniqueId().toString());
-            InventoryState rs = new InventoryState(block);
-            rs.friendSearchState = InventoryState.FriendSearchState.FRIEND_SEARCH;
-            InventoryState.set(player.getUniqueId(), rs);
-            Inventory result = new RedstoneSettingsInventory().fill(player, rs);
-            world.setType(loc, orig);
-            return result;
+            try {
+                var block = world.getBlockAt(loc);
+                new BlockNBTHandler(block).setOwner(player.getUniqueId().toString());
+                InventoryState rs = new InventoryState(block);
+                rs.friendSearchState = InventoryState.FriendSearchState.FRIEND_SEARCH;
+                InventoryState.set(player.getUniqueId(), rs);
+                return new RedstoneSettingsInventory().fill(player, rs);
+            } finally {
+                world.setType(loc, orig);
+            }
         });
 
         inv(p, f, "BlockLockInventory", () -> {
@@ -817,15 +806,17 @@ public class DebugCommand implements CommandExecutor {
             var world = player.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
-            var block = world.getBlockAt(loc);
-            var h = new BlockNBTHandler(block);
-            h.setOwner(player.getUniqueId().toString());
-            InventoryState bl = new InventoryState(block);
-            bl.friendSearchState = InventoryState.FriendSearchState.FRIEND_SEARCH;
-            InventoryState.set(player.getUniqueId(), bl);
-            Inventory result = new BlockLockInventory().fill(player, Material.CHEST, h);
-            world.setType(loc, orig);
-            return result;
+            try {
+                var block = world.getBlockAt(loc);
+                var h = new BlockNBTHandler(block);
+                h.setOwner(player.getUniqueId().toString());
+                InventoryState bl = new InventoryState(block);
+                bl.friendSearchState = InventoryState.FriendSearchState.FRIEND_SEARCH;
+                InventoryState.set(player.getUniqueId(), bl);
+                return new BlockLockInventory().fill(player, Material.CHEST, h);
+            } finally {
+                world.setType(loc, orig);
+            }
         });
 
         inv(p, f, "BlockInfoInventory", () -> {
@@ -833,15 +824,17 @@ public class DebugCommand implements CommandExecutor {
             var world = player.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
-            var block = world.getBlockAt(loc);
-            var h = new BlockNBTHandler(block);
-            h.setOwner(player.getUniqueId().toString());
-            InventoryState bi = new InventoryState(block);
-            bi.currentPageIndex = 0;
-            InventoryState.set(player.getUniqueId(), bi);
-            Inventory result = new BlockInfoInventory().fill(player, h);
-            world.setType(loc, orig);
-            return result;
+            try {
+                var block = world.getBlockAt(loc);
+                var h = new BlockNBTHandler(block);
+                h.setOwner(player.getUniqueId().toString());
+                InventoryState bi = new InventoryState(block);
+                bi.currentPageIndex = 0;
+                InventoryState.set(player.getUniqueId(), bi);
+                return new BlockInfoInventory().fill(player, h);
+            } finally {
+                world.setType(loc, orig);
+            }
         });
 
         inv(p, f, "BlockInspectContentsInventory", () -> {
@@ -849,13 +842,15 @@ public class DebugCommand implements CommandExecutor {
             var world = player.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
-            var block = world.getBlockAt(loc);
-            new BlockNBTHandler(block).setOwner(player.getUniqueId().toString());
-            InventoryState bic = new InventoryState(block);
-            InventoryState.set(player.getUniqueId(), bic);
-            Inventory result = new BlockInspectContentsInventory(player).fill();
-            world.setType(loc, orig);
-            return result;
+            try {
+                var block = world.getBlockAt(loc);
+                new BlockNBTHandler(block).setOwner(player.getUniqueId().toString());
+                InventoryState bic = new InventoryState(block);
+                InventoryState.set(player.getUniqueId(), bic);
+                return new BlockInspectContentsInventory(player).fill();
+            } finally {
+                world.setType(loc, orig);
+            }
         });
 
         inv(p, f, "AuditInventory (no entries)", () -> {
@@ -863,16 +858,18 @@ public class DebugCommand implements CommandExecutor {
             var world = player.getWorld();
             var orig  = world.getBlockAt(loc).getType();
             world.setType(loc, Material.CHEST);
-            var block = world.getBlockAt(loc);
-            InventoryState ai = new InventoryState(block);
-            ai.currentPageIndex = 0;
-            InventoryState.set(player.getUniqueId(), ai);
-            Inventory result = new AuditInventory().fill(player);
-            world.setType(loc, orig);
-            return result;
+            try {
+                var block = world.getBlockAt(loc);
+                InventoryState ai = new InventoryState(block);
+                ai.currentPageIndex = 0;
+                InventoryState.set(player.getUniqueId(), ai);
+                return new AuditInventory().fill(player);
+            } finally {
+                world.setType(loc, orig);
+            }
         });
 
-        BlockProtLogger.log("Inventory skipped: EntitySettingsInventory (requires live Entity, not testable without one)");
+        BlockProtLogger.skipSub("EntitySettingsInventory", "requires live Entity, not testable without one");
         touchScreen(INVENTORY_PACKAGE, "EntitySettingsInventory");
         p.incrementAndGet();
 
@@ -924,7 +921,7 @@ public class DebugCommand implements CommandExecutor {
         inv(p, f, "FriendSearchResultInventory", () -> new FriendSearchResultInventory().fill(player, player.getName()));
         inv(p, f, "TransferSearchInventory", () -> new TransferSearchInventory().fill(player, player.getName()));
 
-        BlockProtLogger.log("Inventory skipped: PlayerListInventory (open() opens a live GUI, no fill() to build)");
+        BlockProtLogger.skipSub("PlayerListInventory", "open() opens a live GUI, no fill() to build");
         touchScreen(INVENTORY_PACKAGE, "PlayerListInventory");
         p.incrementAndGet();
 
@@ -936,11 +933,13 @@ public class DebugCommand implements CommandExecutor {
                 stand.setVisible(false);
                 stand.setSilent(true);
             });
-            var h = new EntityNBTHandler(ent);
-            h.setOwner(player.getUniqueId().toString());
-            Inventory result = new EntityInfoInventory().fill(player, ent, h);
-            ent.remove();
-            return result;
+            try {
+                var h = new EntityNBTHandler(ent);
+                h.setOwner(player.getUniqueId().toString());
+                return new EntityInfoInventory().fill(player, ent, h);
+            } finally {
+                ent.remove();
+            }
         });
         inv(p, f, "EntityBlockSettingsInventory", () -> {
             var loc = player.getLocation().clone();
@@ -950,11 +949,13 @@ public class DebugCommand implements CommandExecutor {
                 stand.setVisible(false);
                 stand.setSilent(true);
             });
-            var h = new EntityNBTHandler(ent);
-            h.setOwner(player.getUniqueId().toString());
-            Inventory result = new EntityBlockSettingsInventory().fill(player, ent, h);
-            ent.remove();
-            return result;
+            try {
+                var h = new EntityNBTHandler(ent);
+                h.setOwner(player.getUniqueId().toString());
+                return new EntityBlockSettingsInventory().fill(player, ent, h);
+            } finally {
+                ent.remove();
+            }
         });
         inv(p, f, "EntityFriendManageInventory", () -> {
             var loc = player.getLocation().clone();
@@ -964,11 +965,13 @@ public class DebugCommand implements CommandExecutor {
                 stand.setVisible(false);
                 stand.setSilent(true);
             });
-            var h = new EntityNBTHandler(ent);
-            h.setOwner(player.getUniqueId().toString());
-            Inventory result = new EntityFriendManageInventory().fill(player, ent, h);
-            ent.remove();
-            return result;
+            try {
+                var h = new EntityNBTHandler(ent);
+                h.setOwner(player.getUniqueId().toString());
+                return new EntityFriendManageInventory().fill(player, ent, h);
+            } finally {
+                ent.remove();
+            }
         });
         inv(p, f, "EntityFriendSearchResultInventory", () -> {
             var loc = player.getLocation().clone();
@@ -978,14 +981,17 @@ public class DebugCommand implements CommandExecutor {
                 stand.setVisible(false);
                 stand.setSilent(true);
             });
-            var h = new EntityNBTHandler(ent);
-            h.setOwner(player.getUniqueId().toString());
-            Inventory result = new EntityFriendSearchResultInventory().fill(player, ent, h, player.getName());
-            ent.remove();
-            return result;
+            try {
+                var h = new EntityNBTHandler(ent);
+                h.setOwner(player.getUniqueId().toString());
+                return new EntityFriendSearchResultInventory().fill(player, ent, h, player.getName());
+            } finally {
+                ent.remove();
+            }
         });
-        BlockProtLogger.log("Inventory skipped: EntityInspectContentsInventory (requires a container entity, not testable with an ArmorStand)");
+        BlockProtLogger.skipSub("EntityInspectContentsInventory", "requires a container entity, not testable with an ArmorStand");
         touchScreen(INVENTORY_PACKAGE, "EntityInspectContentsInventory");
+        p.incrementAndGet();
         inv(p, f, "WorldProtDeleteInventory", () -> new WorldProtDeleteInventory().fill(player, null));
         inv(p, f, "WorldProtDeleteConfirmInventory", () -> {
             org.bukkit.World w = Bukkit.getWorlds().isEmpty() ? null : Bukkit.getWorlds().get(0);
@@ -1007,14 +1013,13 @@ public class DebugCommand implements CommandExecutor {
         inv(p, f, "AdminTierSelectInventory", () -> new AdminTierSelectInventory(player.getName(), player.getUniqueId()).fill(player));
         inv(p, f, "AdminCustomFlagsInventory", () -> new AdminCustomFlagsInventory(player.getName(), player.getUniqueId()).fill(player));
 
-        BlockProtLogger.log("Inventory skipped: FriendSearchInventory (chat-input gateway, no fill() to build)");
+        BlockProtLogger.skipSub("FriendSearchInventory", "chat-input gateway, no fill() to build");
         touchScreen(INVENTORY_PACKAGE, "FriendSearchInventory");
         p.incrementAndGet();
 
         InventoryState.set(player.getUniqueId(), base);
 
-        BlockProtLogger.separator();
-        BlockProtLogger.log("[Inventory title translation coverage]");
+        BlockProtLogger.subGroup("Inventory title translations (14 titles):");
         TranslationKey[] titleKeys = {
             TranslationKey.INVENTORIES__BLOCK_LOCK,
             TranslationKey.INVENTORIES__BLOCK_INFO__TITLE,
@@ -1034,9 +1039,9 @@ public class DebugCommand implements CommandExecutor {
         for (TranslationKey k : titleKeys) {
             String v = Translator.get(k);
             if (v == null || v.isBlank()) {
-                BlockProtLogger.fail("Title blank/missing", k.name()); f.incrementAndGet();
+                BlockProtLogger.failSub(k.name(), "blank/missing"); f.incrementAndGet();
             } else {
-                BlockProtLogger.pass("Title OK: " + k.name() + " = \"" + v + "\"");
+                BlockProtLogger.passSub(k.name() + " = \"" + v + "\"");
                 p.incrementAndGet();
             }
         }
@@ -1074,9 +1079,14 @@ public class DebugCommand implements CommandExecutor {
             if (v == null || v.isBlank()) { BlockProtLogger.fail("Chat msg blank", k.name()); bad++; }
             else ok++;
         }
-        BlockProtLogger.log("Messages: " + ok + " OK, " + bad + " blank");
-        if (bad == 0) { BlockProtLogger.pass("All message keys present"); p.incrementAndGet(); }
-        else f.incrementAndGet();
+        if (bad == 0) {
+            BlockProtLogger.pass("Messages: all " + (abKeys.length + chatKeys.length) + " keys present ("
+                + abKeys.length + " actionbar, " + chatKeys.length + " chat)");
+            p.incrementAndGet();
+        } else {
+            BlockProtLogger.fail("Messages", bad + " key(s) blank or missing");
+            f.incrementAndGet();
+        }
     }
 
     /** Family key -> BlockFamilyParser.Family, shared by both integrity checks below. */
@@ -1143,12 +1153,11 @@ public class DebugCommand implements CommandExecutor {
                 }
             }
 
-            BlockProtLogger.log("blocks.yml integrity: " + checked + " entries checked, "
-                + unresolved + " unresolved, " + mismatched + " mismatched");
             if (unresolved == 0 && mismatched == 0) {
-                BlockProtLogger.pass("blocks.yml integrity OK (" + checked + " entries)");
+                BlockProtLogger.pass("blocks.yml integrity: " + checked + " entries checked OK (0 unresolved, 0 mismatched)");
                 p.incrementAndGet();
             } else {
+                BlockProtLogger.fail("blocks.yml integrity", unresolved + " unresolved, " + mismatched + " mismatched");
                 f.incrementAndGet();
             }
         } catch (Exception ex) {
@@ -1166,7 +1175,7 @@ public class DebugCommand implements CommandExecutor {
         try {
             DefaultConfig defaultConfig = BlockProt.getDefaultConfig();
             if (!defaultConfig.isPerWorldsConfigEnabled()) {
-                BlockProtLogger.log("worlds.yml integrity: per_worlds_config disabled, skipping");
+                BlockProtLogger.pass("worlds.yml integrity: per_worlds_config disabled, skipping");
                 p.incrementAndGet();
                 return;
             }
@@ -1180,7 +1189,7 @@ public class DebugCommand implements CommandExecutor {
                 org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(worldsFile);
             org.bukkit.configuration.ConfigurationSection worldsSection = cfg.getConfigurationSection("worlds");
             if (worldsSection == null) {
-                BlockProtLogger.log("worlds.yml integrity: no 'worlds' section, nothing to check");
+                BlockProtLogger.pass("worlds.yml integrity: no 'worlds' section, nothing to check");
                 p.incrementAndGet();
                 return;
             }
@@ -1232,12 +1241,11 @@ public class DebugCommand implements CommandExecutor {
                 }
             }
 
-            BlockProtLogger.log("worlds.yml integrity: " + worldsChecked + " world(s), " + checked
-                + " entries checked, " + unresolved + " unresolved, " + mismatched + " mismatched");
             if (unresolved == 0 && mismatched == 0) {
-                BlockProtLogger.pass("worlds.yml integrity OK");
+                BlockProtLogger.pass("worlds.yml integrity: " + worldsChecked + " world(s), " + checked + " entries checked OK");
                 p.incrementAndGet();
             } else {
+                BlockProtLogger.fail("worlds.yml integrity", unresolved + " unresolved, " + mismatched + " mismatched");
                 f.incrementAndGet();
             }
         } catch (Exception ex) {
@@ -1273,6 +1281,7 @@ public class DebugCommand implements CommandExecutor {
     private void checkAllDialogs(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         DialogBridgeFactory.setTestBridge(new NoopDialogBridge());
         try {
+            BlockProtLogger.subGroup("Dialogs (28 screens):");
             dlg(p, f, "AboutDialog", () -> AboutDialog.show(player));
             dlg(p, f, "AdminMenuDialog", () -> AdminMenuDialog.show(player));
             dlg(p, f, "AdminConfigDialog", () -> AdminConfigDialog.show(player));
@@ -1293,10 +1302,13 @@ public class DebugCommand implements CommandExecutor {
                 var world = player.getWorld();
                 var orig = world.getBlockAt(loc).getType();
                 world.setType(loc, Material.CHEST);
-                var block = world.getBlockAt(loc);
-                new BlockNBTHandler(block).setOwner(player.getUniqueId().toString());
-                AuditDialog.show(player, block);
-                world.setType(loc, orig);
+                try {
+                    var block = world.getBlockAt(loc);
+                    new BlockNBTHandler(block).setOwner(player.getUniqueId().toString());
+                    AuditDialog.show(player, block);
+                } finally {
+                    world.setType(loc, orig);
+                }
             });
             dlg(p, f, "AutoDropDialog", () -> AutoDropDialog.show(player, DialogOrigin.ADMIN_MENU));
             dlg(p, f, "AutoDropFamilyDialog", () -> AutoDropFamilyDialog.show(player, DialogOrigin.ADMIN_MENU, BlockFamilyParser.Family.BLOCKS));
@@ -1306,33 +1318,42 @@ public class DebugCommand implements CommandExecutor {
                 var world = player.getWorld();
                 var orig = world.getBlockAt(loc).getType();
                 world.setType(loc, Material.CHEST);
-                var block = world.getBlockAt(loc);
-                var h = new BlockNBTHandler(block);
-                h.setOwner(player.getUniqueId().toString());
-                BlockInfoDialog.show(player, block, h);
-                world.setType(loc, orig);
+                try {
+                    var block = world.getBlockAt(loc);
+                    var h = new BlockNBTHandler(block);
+                    h.setOwner(player.getUniqueId().toString());
+                    BlockInfoDialog.show(player, block, h);
+                } finally {
+                    world.setType(loc, orig);
+                }
             });
             dlg(p, f, "BlockLockDialog", () -> {
                 var loc = player.getLocation().clone();
                 var world = player.getWorld();
                 var orig = world.getBlockAt(loc).getType();
                 world.setType(loc, Material.CHEST);
-                var block = world.getBlockAt(loc);
-                var h = new BlockNBTHandler(block);
-                h.setOwner(player.getUniqueId().toString());
-                BlockLockDialog.show(player, block, h);
-                world.setType(loc, orig);
+                try {
+                    var block = world.getBlockAt(loc);
+                    var h = new BlockNBTHandler(block);
+                    h.setOwner(player.getUniqueId().toString());
+                    BlockLockDialog.show(player, block, h);
+                } finally {
+                    world.setType(loc, orig);
+                }
             });
             dlg(p, f, "BlockSettingsDialog", () -> {
                 var loc = player.getLocation().clone();
                 var world = player.getWorld();
                 var orig = world.getBlockAt(loc).getType();
                 world.setType(loc, Material.CHEST);
-                var block = world.getBlockAt(loc);
-                var h = new BlockNBTHandler(block);
-                h.setOwner(player.getUniqueId().toString());
-                BlockSettingsDialog.show(player, block, h);
-                world.setType(loc, orig);
+                try {
+                    var block = world.getBlockAt(loc);
+                    var h = new BlockNBTHandler(block);
+                    h.setOwner(player.getUniqueId().toString());
+                    BlockSettingsDialog.show(player, block, h);
+                } finally {
+                    world.setType(loc, orig);
+                }
             });
             dlg(p, f, "DebugDialog", () -> DebugDialog.show(player));
             dlg(p, f, "EntityInfoDialog", () -> {
@@ -1343,10 +1364,13 @@ public class DebugCommand implements CommandExecutor {
                     stand.setVisible(false);
                     stand.setSilent(true);
                 });
-                var h = new EntityNBTHandler(ent);
-                h.setOwner(player.getUniqueId().toString());
-                EntityInfoDialog.show(player, ent, h);
-                ent.remove();
+                try {
+                    var h = new EntityNBTHandler(ent);
+                    h.setOwner(player.getUniqueId().toString());
+                    EntityInfoDialog.show(player, ent, h);
+                } finally {
+                    ent.remove();
+                }
             });
             dlg(p, f, "EntityBlockSettingsDialog", () -> {
                 var loc = player.getLocation().clone();
@@ -1356,10 +1380,13 @@ public class DebugCommand implements CommandExecutor {
                     stand.setVisible(false);
                     stand.setSilent(true);
                 });
-                var h = new EntityNBTHandler(ent);
-                h.setOwner(player.getUniqueId().toString());
-                EntityBlockSettingsDialog.show(player, ent, h);
-                ent.remove();
+                try {
+                    var h = new EntityNBTHandler(ent);
+                    h.setOwner(player.getUniqueId().toString());
+                    EntityBlockSettingsDialog.show(player, ent, h);
+                } finally {
+                    ent.remove();
+                }
             });
             dlg(p, f, "EntityFriendManageDialog", () -> {
                 var loc = player.getLocation().clone();
@@ -1369,10 +1396,13 @@ public class DebugCommand implements CommandExecutor {
                     stand.setVisible(false);
                     stand.setSilent(true);
                 });
-                var h = new EntityNBTHandler(ent);
-                h.setOwner(player.getUniqueId().toString());
-                EntityFriendManageDialog.show(player, ent, h);
-                ent.remove();
+                try {
+                    var h = new EntityNBTHandler(ent);
+                    h.setOwner(player.getUniqueId().toString());
+                    EntityFriendManageDialog.show(player, ent, h);
+                } finally {
+                    ent.remove();
+                }
             });
             dlg(p, f, "FriendManageDialog", () -> FriendManageDialog.show(player));
             dlg(p, f, "FriendCandidateSelectionDialog", () -> FriendCandidateSelectionDialog.show(
@@ -1402,12 +1432,15 @@ public class DebugCommand implements CommandExecutor {
                 var world = player.getWorld();
                 var orig = world.getBlockAt(loc).getType();
                 world.setType(loc, Material.CHEST);
-                var block = world.getBlockAt(loc);
-                var h = new BlockNBTHandler(block);
-                h.setOwner(player.getUniqueId().toString());
-                h.addFriend(player.getUniqueId().toString());
-                FriendDetailDialog.showForBlock(player, block, h, player.getUniqueId().toString(), 0);
-                world.setType(loc, orig);
+                try {
+                    var block = world.getBlockAt(loc);
+                    var h = new BlockNBTHandler(block);
+                    h.setOwner(player.getUniqueId().toString());
+                    h.addFriend(player.getUniqueId().toString());
+                    FriendDetailDialog.showForBlock(player, block, h, player.getUniqueId().toString(), 0);
+                } finally {
+                    world.setType(loc, orig);
+                }
             });
             dlg(p, f, "WorldExpiryDialog", () -> WorldExpiryDialog.show(player, DialogOrigin.ADMIN_MENU));
         } finally {
@@ -1416,15 +1449,16 @@ public class DebugCommand implements CommandExecutor {
     }
 
     private void checkCommandsRegistered(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        BlockProtLogger.subGroup("Commands & permissions:");
         org.bukkit.command.PluginCommand cmd = Bukkit.getPluginCommand("blockprot");
         if (cmd == null) {
-            BlockProtLogger.fail("Commands", "blockprot command not registered");
+            BlockProtLogger.failSub("blockprot command", "not registered");
             f.incrementAndGet();
         } else if (cmd.getExecutor() == null) {
-            BlockProtLogger.fail("Commands", "blockprot command has no executor");
+            BlockProtLogger.failSub("blockprot command", "has no executor");
             f.incrementAndGet();
         } else {
-            BlockProtLogger.pass("Commands: blockprot registered, executor="
+            BlockProtLogger.passSub("blockprot registered, executor="
                 + cmd.getExecutor().getClass().getSimpleName());
             touchScreen(COMMANDS_PACKAGE, "BlockProtCommand");
             p.incrementAndGet();
@@ -1439,17 +1473,17 @@ public class DebugCommand implements CommandExecutor {
                 String key = perm.key();
                 if (permissions == null || !permissions.contains(key)) {
                     missing++;
-                    BlockProtLogger.fail("Permission node", key + " not declared in plugin.yml");
+                    BlockProtLogger.failSub("Permission node", key + " not declared in plugin.yml");
                 }
             }
             if (missing == 0) {
-                BlockProtLogger.pass("Permissions: all " + Permissions.values().length + " nodes declared in plugin.yml");
+                BlockProtLogger.passSub("Permissions: all " + Permissions.values().length + " nodes declared in plugin.yml");
                 p.incrementAndGet();
             } else {
                 f.incrementAndGet();
             }
         } catch (Exception e) {
-            BlockProtLogger.fail("Commands", "plugin.yml read failed: " + e.getMessage());
+            BlockProtLogger.failSub("Commands", "plugin.yml read failed: " + e.getMessage());
             f.incrementAndGet();
         }
 
@@ -1468,19 +1502,25 @@ public class DebugCommand implements CommandExecutor {
                 touch(BlockProtCommand.class.getPackageName() + "." + name);
                 wired.add(name);
             } catch (Throwable e) {
-                BlockProtLogger.fail("Command class", name + ": " + e.getClass().getSimpleName() + ": " + e.getMessage());
+                BlockProtLogger.failSub("Command class", name + ": " + e.getClass().getSimpleName() + ": " + e.getMessage());
                 f.incrementAndGet();
             }
         }
-        BlockProtLogger.pass("Command classes: " + wired.size() + "/" + commandClasses.length
-            + " present and loadable" + (wired.size() == commandClasses.length ? "" : " MISSING SOME"));
-        if (wired.size() != commandClasses.length) f.incrementAndGet();
-        else p.incrementAndGet();
+        if (wired.size() == commandClasses.length) {
+            BlockProtLogger.passSub("Command classes: " + wired.size() + "/" + commandClasses.length
+                + " present and loadable");
+            p.incrementAndGet();
+        } else {
+            BlockProtLogger.failSub("Command classes", wired.size() + "/" + commandClasses.length
+                + " present and loadable (MISSING SOME)");
+            f.incrementAndGet();
+        }
 
         String[] integrationClasses = {
             "TownyIntegration", "PlaceholderAPIIntegration", "ViaVersionIntegration",
             "WorldGuardIntegration", "LandsPluginIntegration", "ClaimChunkIntegration",
-            "ResidenceIntegration", "GriefPreventionIntegration"
+            "ResidenceIntegration", "GriefPreventionIntegration",
+            "GeyserIntegration", "FloodgateIntegration"
         };
         java.util.Set<String> regNames = new java.util.HashSet<>();
         for (PluginIntegration integration : BlockProt.getInstance().getIntegrations()) {
@@ -1490,11 +1530,11 @@ public class DebugCommand implements CommandExecutor {
         for (String name : integrationClasses) {
             if (!regNames.contains(name)) {
                 regMissing++;
-                BlockProtLogger.fail("Integration wiring", name + " not in BlockProt.onLoad() integration list");
+                BlockProtLogger.failSub("Integration wiring", name + " not in BlockProt.onLoad() integration list");
             }
         }
         if (regMissing == 0) {
-            BlockProtLogger.pass("Integration wiring: all " + integrationClasses.length
+            BlockProtLogger.passSub("Integration wiring: all " + integrationClasses.length
                 + " integration classes constructed in BlockProt.onLoad()");
             p.incrementAndGet();
         } else {
@@ -1627,9 +1667,8 @@ public class DebugCommand implements CommandExecutor {
             }
         }
         touchScreen(LISTENERS_PACKAGE, "ErrorEventListener");
-        BlockProtLogger.log("Listener: ErrorEventListener is intentional (CraftBukkit fallback only)");
         if (missing == 0) {
-            BlockProtLogger.pass("Listeners: all " + expected.length + " active listeners registered");
+            BlockProtLogger.pass("Listeners: all " + expected.length + " active listeners registered (ErrorEventListener fallback intentional)");
             p.incrementAndGet();
         } else {
             f.incrementAndGet();
@@ -1637,18 +1676,18 @@ public class DebugCommand implements CommandExecutor {
     }
 
     private void checkSkinCache(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        BlockProtLogger.subGroup("SkinCache tiers:");
         try {
             var profile = SkinCache.getCachedOrOnlineProfile(player.getName(), player.getUniqueId());
-            BlockProtLogger.log("SkinCache tier 1: online profile " + (profile != null ? "resolved" : "null (no exception)"));
             if (profile != null) {
-                BlockProtLogger.pass("SkinCache tier 1 OK: " + player.getName());
+                BlockProtLogger.passSub("tier 1 (online profile): resolved for " + player.getName());
                 p.incrementAndGet();
             } else {
-                BlockProtLogger.log("SkinCache tier 1: no cached/online skin for " + player.getName());
+                BlockProtLogger.passSub("tier 1 (online profile): no cached/online skin for " + player.getName() + " (null, no exception)");
                 p.incrementAndGet();
             }
         } catch (Throwable e) {
-            BlockProtLogger.fail("SkinCache tier 1", e.getClass().getSimpleName() + ": " + e.getMessage());
+            BlockProtLogger.failSub("SkinCache tier 1", e.getClass().getSimpleName() + ": " + e.getMessage());
             f.incrementAndGet();
         }
 
@@ -1656,31 +1695,32 @@ public class DebugCommand implements CommandExecutor {
         try {
             var srProfile = SkinCache.resolveSkinsRestorer(player.getUniqueId(), player.getName());
             if (sr != null && sr.isEnabled()) {
-                BlockProtLogger.pass("SkinCache tier 2 OK: SkinsRestorer present, resolve returned "
+                BlockProtLogger.passSub("tier 2 (SkinsRestorer): present, resolve returned "
                     + (srProfile != null ? "a profile" : "null"));
             } else {
-                BlockProtLogger.pass("SkinCache tier 2 OK: SkinsRestorer absent, resolve no-opped (null)");
+                BlockProtLogger.passSub("tier 2 (SkinsRestorer): absent, resolve no-opped (null)");
             }
             p.incrementAndGet();
         } catch (Throwable e) {
-            BlockProtLogger.fail("SkinCache tier 2", e.getClass().getSimpleName() + ": " + e.getMessage());
+            BlockProtLogger.failSub("SkinCache tier 2", e.getClass().getSimpleName() + ": " + e.getMessage());
             f.incrementAndGet();
         }
     }
 
     private void checkUtilityHelpers(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        BlockProtLogger.subGroup("Utility helpers (14 utilities):");
         try {
             Duration parsed = DurationParser.parse("2h30m");
             if (parsed == null || parsed.toMinutes() != 150) {
-                BlockProtLogger.fail("DurationParser", "parse(2h30m) = " + parsed);
+                BlockProtLogger.failSub("DurationParser", "parse(2h30m) = " + parsed);
                 f.incrementAndGet();
-                return;
+            } else {
+                BlockProtLogger.passSub("DurationParser: parse(2h30m)=" + parsed
+                    + " format=" + DurationParser.format(parsed));
+                p.incrementAndGet();
             }
-            BlockProtLogger.pass("DurationParser: parse(2h30m)=" + parsed
-                + " format=" + DurationParser.format(parsed));
-            p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("DurationParser", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("DurationParser", e.getMessage()); f.incrementAndGet();
         }
 
         try {
@@ -1690,113 +1730,113 @@ public class DebugCommand implements CommandExecutor {
             boolean over = limits.validate(Duration.ofDays(3650));
             long applicable = limits.getApplicableLimit(Duration.ofDays(30));
             if (!okSec || !okDay || over || applicable <= 0) {
-                BlockProtLogger.fail("DurationLimits", "unexpected validation results");
+                BlockProtLogger.failSub("DurationLimits", "unexpected validation results");
                 f.incrementAndGet();
-                return;
+            } else {
+                BlockProtLogger.passSub("DurationLimits: 30s=" + okSec + " 2d=" + okDay + " 10y=" + over
+                    + " applicable(30d)=" + applicable + "ms");
+                p.incrementAndGet();
             }
-            BlockProtLogger.pass("DurationLimits: 30s=" + okSec + " 2d=" + okDay + " 10y=" + over
-                + " applicable(30d)=" + applicable + "ms");
-            p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("DurationLimits", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("DurationLimits", e.getMessage()); f.incrementAndGet();
         }
 
         try {
             int dist = StringUtil.levenshtein("chest", "chst");
             double sim = StringUtil.similarity("chest", "chest");
             if (dist < 1 || sim <= 0) {
-                BlockProtLogger.fail("StringUtil", "unexpected distance/similarity");
+                BlockProtLogger.failSub("StringUtil", "unexpected distance/similarity");
                 f.incrementAndGet();
-                return;
+            } else {
+                BlockProtLogger.passSub("StringUtil: levenshtein(chest,chst)=" + dist + " similarity=" + sim);
+                p.incrementAndGet();
             }
-            BlockProtLogger.pass("StringUtil: levenshtein(chest,chst)=" + dist + " similarity=" + sim);
-            p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("StringUtil", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("StringUtil", e.getMessage()); f.incrementAndGet();
         }
 
         try {
             String name = BlockUtil.getHumanReadableBlockName(Material.CHEST);
             if (name == null || name.isBlank()) {
-                BlockProtLogger.fail("BlockUtil", "blank readable name for CHEST");
+                BlockProtLogger.failSub("BlockUtil", "blank readable name for CHEST");
                 f.incrementAndGet();
-                return;
+            } else {
+                BlockProtLogger.passSub("BlockUtil: getHumanReadableBlockName(CHEST)=" + name);
+                p.incrementAndGet();
             }
-            BlockProtLogger.pass("BlockUtil: getHumanReadableBlockName(CHEST)=" + name);
-            p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("BlockUtil", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("BlockUtil", e.getMessage()); f.incrementAndGet();
         }
 
         try {
             AsyncGuard.assertSync("debug utility group");
-            BlockProtLogger.pass("AsyncGuard: assertSync accepted (running on main thread)");
+            BlockProtLogger.passSub("AsyncGuard: assertSync accepted (running on main thread)");
             p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("AsyncGuard", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("AsyncGuard", e.getMessage()); f.incrementAndGet();
         }
 
         try {
             Set<String> candidates = PlayerNameResolver.getNameCandidates(player.getName());
             if (candidates == null || candidates.isEmpty()) {
-                BlockProtLogger.fail("PlayerNameResolver", "no candidates for own name");
+                BlockProtLogger.failSub("PlayerNameResolver", "no candidates for own name");
                 f.incrementAndGet();
-                return;
+            } else {
+                BlockProtLogger.passSub("PlayerNameResolver: " + candidates.size() + " candidate(s) for " + player.getName());
+                p.incrementAndGet();
             }
-            BlockProtLogger.pass("PlayerNameResolver: " + candidates.size() + " candidate(s) for " + player.getName());
-            p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("PlayerNameResolver", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("PlayerNameResolver", e.getMessage()); f.incrementAndGet();
         }
 
         try {
             TemporaryActionBar.show(player, "debug", 1L);
             TemporaryActionBar.cancel(player.getUniqueId());
-            BlockProtLogger.pass("TemporaryActionBar: show+cancel OK");
+            BlockProtLogger.passSub("TemporaryActionBar: show+cancel OK");
             p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("TemporaryActionBar", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("TemporaryActionBar", e.getMessage()); f.incrementAndGet();
         }
 
         try {
             String stripped = BpDialogStyles.stripColor("&a&lTest");
             if (stripped == null || stripped.contains("&")) {
-                BlockProtLogger.fail("BpDialogStyles", "stripColor left a code: '" + stripped + "'");
+                BlockProtLogger.failSub("BpDialogStyles", "stripColor left a code: '" + stripped + "'");
                 f.incrementAndGet();
-                return;
+            } else {
+                BlockProtLogger.passSub("BpDialogStyles: stripColor(&a&lTest)=" + stripped
+                    + " palette=" + BpDialogStyles.SOFT_GRAY + "," + BpDialogStyles.PASTEL_MINT + ","
+                    + BpDialogStyles.PASTEL_CORAL + "," + BpDialogStyles.PASTEL_GOLD + ","
+                    + BpDialogStyles.SOFT_BLUE + "," + BpDialogStyles.PASTEL_PURPLE);
+                p.incrementAndGet();
             }
-            BlockProtLogger.pass("BpDialogStyles: stripColor(&a&lTest)=" + stripped
-                + " palette=" + BpDialogStyles.SOFT_GRAY + "," + BpDialogStyles.PASTEL_MINT + ","
-                + BpDialogStyles.PASTEL_CORAL + "," + BpDialogStyles.PASTEL_GOLD + ","
-                + BpDialogStyles.SOFT_BLUE + "," + BpDialogStyles.PASTEL_PURPLE);
-            p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("BpDialogStyles", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("BpDialogStyles", e.getMessage()); f.incrementAndGet();
         }
 
         try {
             DialogButton back = DialogNavigation.backButton(DialogOrigin.NONE, null);
             DialogButton backAdmin = DialogNavigation.backButton(DialogOrigin.ADMIN_MENU, null);
             if (back == null || backAdmin == null) {
-                BlockProtLogger.fail("DialogNavigation", "backButton returned null");
+                BlockProtLogger.failSub("DialogNavigation", "backButton returned null");
                 f.incrementAndGet();
-                return;
+            } else {
+                BlockProtLogger.passSub("DialogNavigation: backButton(NONE) id=" + back.id()
+                    + " backButton(ADMIN_MENU) id=" + backAdmin.id());
+                p.incrementAndGet();
             }
-            BlockProtLogger.pass("DialogNavigation: backButton(NONE) id=" + back.id()
-                + " backButton(ADMIN_MENU) id=" + backAdmin.id());
-            p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("DialogNavigation", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("DialogNavigation", e.getMessage()); f.incrementAndGet();
         }
 
         try {
             DialogState.push(player, ignored -> {});
             boolean popped = DialogState.pop(player);
             DialogState.clear(player);
-            BlockProtLogger.pass("DialogState: push/pop=" + popped + " clear OK");
+            BlockProtLogger.passSub("DialogState: push/pop=" + popped + " clear OK");
             p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("DialogState", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("DialogState", e.getMessage()); f.incrementAndGet();
         }
 
         try {
@@ -1809,22 +1849,22 @@ public class DebugCommand implements CommandExecutor {
             java.util.List<ReloadReport.ChangeDiff> diffs =
                 ReloadReport.compareSnapshots(snap1, snap2);
             if (diffs == null || diffs.isEmpty()) {
-                BlockProtLogger.fail("ReloadReport", "expected a diff between old/new snapshots");
+                BlockProtLogger.failSub("ReloadReport", "expected a diff between old/new snapshots");
                 f.incrementAndGet();
-                return;
+            } else {
+                BlockProtLogger.passSub("ReloadReport: capture/compare produced " + diffs.size() + " diff(s)");
+                p.incrementAndGet();
             }
-            BlockProtLogger.pass("ReloadReport: capture/compare produced " + diffs.size() + " diff(s)");
-            p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("ReloadReport", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("ReloadReport", e.getMessage()); f.incrementAndGet();
         }
 
         try {
             boolean integrationFlag = IntegrationConfig.getBoolean("debug.integration_test", true);
-            BlockProtLogger.pass("IntegrationConfig: getBoolean(default)=" + integrationFlag);
+            BlockProtLogger.passSub("IntegrationConfig: getBoolean(default)=" + integrationFlag);
             p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("IntegrationConfig", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("IntegrationConfig", e.getMessage()); f.incrementAndGet();
         }
 
         try {
@@ -1857,15 +1897,15 @@ public class DebugCommand implements CommandExecutor {
             boolean baseOk = hotfix.baseVersion().equals(curVer)
                 && bedev.baseVersion().equals(curVer);
             if (!ranksOk || !orderOk || !baseOk) {
-                BlockProtLogger.fail("SemanticVersion",
+                BlockProtLogger.failSub("SemanticVersion",
                     "ranks=" + ranksOk + " order=" + orderOk + " base=" + baseOk);
                 f.incrementAndGet();
-                return;
+            } else {
+                BlockProtLogger.passSub("SemanticVersion: ranks, order, and baseVersion verified (" + curVer + ")");
+                p.incrementAndGet();
             }
-            BlockProtLogger.pass("SemanticVersion: ranks, order, and baseVersion verified (" + curVer + ")");
-            p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("SemanticVersion", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("SemanticVersion", e.getMessage()); f.incrementAndGet();
         }
 
         DialogBridgeFactory.setTestBridge(new NoopDialogBridge());
@@ -1873,16 +1913,17 @@ public class DebugCommand implements CommandExecutor {
             touchScreen(DIALOG_PACKAGE, "AdminConfigValueDialog");
             AdminConfigValueDialog.openInt(player, "debug.test", "hint", 0, v -> {}, () -> {});
             AdminConfigValueDialog.openText(player, "debug.test", "hint", "value", s -> null, v -> {}, () -> {});
-            BlockProtLogger.pass("AdminConfigValueDialog: openInt/openText routed through test bridge");
+            BlockProtLogger.passSub("AdminConfigValueDialog: openInt/openText routed through test bridge");
             p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("AdminConfigValueDialog", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("AdminConfigValueDialog", e.getMessage()); f.incrementAndGet();
         } finally {
             DialogBridgeFactory.setTestBridge(null);
         }
     }
 
     private void checkNbtSubHandlers(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
+        BlockProtLogger.subGroup("NBT sub-handlers (8 handlers):");
         try {
             var loc   = player.getLocation().clone();
             var world = player.getWorld();
@@ -1895,25 +1936,25 @@ public class DebugCommand implements CommandExecutor {
                 boolean hasFriend = h.containsFriend("069a79f4-44e9-4726-a5be-fca90e38aaf5");
                 java.util.List<FriendHandler> friends = h.getFriends();
                 if (!hasFriend || friends.isEmpty()) {
-                    BlockProtLogger.fail("FriendSupportingHandler", "addFriend/containsFriend mismatch");
+                    BlockProtLogger.failSub("FriendSupportingHandler", "addFriend/containsFriend mismatch");
                     f.incrementAndGet();
-                    return;
+                } else {
+                    FriendHandler first = friends.get(0);
+                    boolean canRead = first.canRead();
+                    boolean isManager = first.isManager();
+                    EnumSet<BlockAccessFlag> flags = BlockAccessFlag.parseFlags(0);
+                    java.util.List<String> lore = BlockAccessFlag.accumulateAccessFlagLore(flags);
+                    h.removeFriend("069a79f4-44e9-4726-a5be-fca90e38aaf5");
+                    BlockProtLogger.passSub("FriendSupportingHandler/FriendHandler: contains=" + hasFriend
+                        + " friends=" + friends.size() + " canRead=" + canRead + " isManager=" + isManager
+                        + " flags=" + flags.size() + " loreLines=" + lore.size());
+                    p.incrementAndGet();
                 }
-                FriendHandler first = friends.get(0);
-                boolean canRead = first.canRead();
-                boolean isManager = first.isManager();
-                EnumSet<BlockAccessFlag> flags = BlockAccessFlag.parseFlags(0);
-                java.util.List<String> lore = BlockAccessFlag.accumulateAccessFlagLore(flags);
-                h.removeFriend("069a79f4-44e9-4726-a5be-fca90e38aaf5");
-                BlockProtLogger.pass("FriendSupportingHandler/FriendHandler: contains=" + hasFriend
-                    + " friends=" + friends.size() + " canRead=" + canRead + " isManager=" + isManager
-                    + " flags=" + flags.size() + " loreLines=" + lore.size());
-                p.incrementAndGet();
             } finally {
                 world.setType(loc, orig);
             }
         } catch (Exception e) {
-            BlockProtLogger.fail("FriendSupportingHandler", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("FriendSupportingHandler", e.getMessage()); f.incrementAndGet();
         }
 
         try {
@@ -1930,14 +1971,14 @@ public class DebugCommand implements CommandExecutor {
                 boolean hopper = rs.getHopperProtection();
                 boolean current = rs.getCurrentProtection();
                 rs.reset();
-                BlockProtLogger.pass("RedstoneSettingsHandler: piston=" + piston + " hopper=" + hopper
+                BlockProtLogger.passSub("RedstoneSettingsHandler: piston=" + piston + " hopper=" + hopper
                     + " current=" + current + " reset OK");
                 p.incrementAndGet();
             } finally {
                 world.setType(loc, orig);
             }
         } catch (Exception e) {
-            BlockProtLogger.fail("RedstoneSettingsHandler", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("RedstoneSettingsHandler", e.getMessage()); f.incrementAndGet();
         }
 
         try {
@@ -1947,15 +1988,15 @@ public class DebugCommand implements CommandExecutor {
             stat.increment();
             int value = stat.get();
             if (value < 0) {
-                BlockProtLogger.fail("BlockCountStatistic", "negative value after increment");
+                BlockProtLogger.failSub("BlockCountStatistic", "negative value after increment");
                 f.incrementAndGet();
-                return;
+            } else {
+                BlockProtLogger.passSub("BlockCountStatistic: key=" + stat.getKey() + " type=" + stat.getType()
+                    + " item=" + stat.getItemType() + " value=" + value);
+                p.incrementAndGet();
             }
-            BlockProtLogger.pass("BlockCountStatistic: key=" + stat.getKey() + " type=" + stat.getType()
-                + " item=" + stat.getItemType() + " value=" + value);
-            p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("BlockCountStatistic", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("BlockCountStatistic", e.getMessage()); f.incrementAndGet();
         }
 
         try {
@@ -1969,32 +2010,32 @@ public class DebugCommand implements CommandExecutor {
                 h.setOwner(NOTCH_UUID);
                 EffectGeometry geometry = EffectGeometry.createForBlock(block);
                 if (geometry.getBoundingBox() == null || geometry.getUnionCenter() == null) {
-                    BlockProtLogger.fail("EffectGeometry", "null bounding box or union center");
+                    BlockProtLogger.failSub("EffectGeometry", "null bounding box or union center");
                     f.incrementAndGet();
-                    return;
+                } else {
+                    int perimeter = geometry.getPerimeterPoints(0.5).size();
+                    BlockProtLogger.passSub("EffectGeometry: box=" + geometry.getBoundingBox().getVolume()
+                        + " center=" + geometry.getUnionCenter() + " perimeterPoints=" + perimeter);
+                    p.incrementAndGet();
                 }
-                int perimeter = geometry.getPerimeterPoints(0.5).size();
-                BlockProtLogger.pass("EffectGeometry: box=" + geometry.getBoundingBox().getVolume()
-                    + " center=" + geometry.getUnionCenter() + " perimeterPoints=" + perimeter);
-                p.incrementAndGet();
 
                 ProtectedBlockCache.unmark(block);
                 ProtectedBlockCache.mark(block);
                 boolean cachedProtected = ProtectedBlockCache.isProtected(block);
                 ProtectedBlockCache.unmark(block);
                 if (!cachedProtected) {
-                    BlockProtLogger.fail("ProtectedBlockCache", "mark() did not make block protected");
+                    BlockProtLogger.failSub("ProtectedBlockCache", "mark() did not make block protected");
                     f.incrementAndGet();
-                    return;
+                } else {
+                    BlockProtLogger.passSub("ProtectedBlockCache: mark/isProtected/unmark roundtrip OK, size="
+                        + ProtectedBlockCache.size());
+                    p.incrementAndGet();
                 }
-                BlockProtLogger.pass("ProtectedBlockCache: mark/isProtected/unmark roundtrip OK, size="
-                    + ProtectedBlockCache.size());
-                p.incrementAndGet();
             } finally {
                 world.setType(loc, orig);
             }
         } catch (Exception e) {
-            BlockProtLogger.fail("EffectGeometry/ProtectedBlockCache", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("EffectGeometry/ProtectedBlockCache", e.getMessage()); f.incrementAndGet();
         }
 
         try {
@@ -2007,36 +2048,36 @@ public class DebugCommand implements CommandExecutor {
             });
             try {
                 if (!EntityProtectionHandler.isSupportedEntity(ent)) {
-                    BlockProtLogger.pass("EntityProtectionHandler: ArmorStand not supported, structural check only");
+                    BlockProtLogger.passSub("EntityProtectionHandler: ArmorStand not supported, structural check only");
                     p.incrementAndGet();
-                    return;
+                } else {
+                    var handler = EntityProtectionHandler.forEntityOrNull(ent);
+                    if (handler == null) {
+                        BlockProtLogger.passSub("EntityProtectionHandler: forEntityOrNull=null for ArmorStand (expected)");
+                        p.incrementAndGet();
+                    } else {
+                        handler.enable(java.util.UUID.fromString(NOTCH_UUID));
+                        handler.setNoDamage(false);
+                        handler.setNoLeash(false);
+                        boolean ok = handler.getOwner().equals(java.util.UUID.fromString(NOTCH_UUID))
+                            && handler.isProtected()
+                            && !handler.isNoDamage()
+                            && !handler.isNoLeash();
+                        handler.clear();
+                        if (!ok) {
+                            BlockProtLogger.failSub("EntityProtectionHandler", "owner/flags mismatch after enable()");
+                            f.incrementAndGet();
+                        } else {
+                            BlockProtLogger.passSub("EntityProtectionHandler: enable/owner/flags/clear roundtrip OK");
+                            p.incrementAndGet();
+                        }
+                    }
                 }
-                var handler = EntityProtectionHandler.forEntityOrNull(ent);
-                if (handler == null) {
-                    BlockProtLogger.pass("EntityProtectionHandler: forEntityOrNull=null for ArmorStand (expected)");
-                    p.incrementAndGet();
-                    return;
-                }
-                handler.enable(java.util.UUID.fromString(NOTCH_UUID));
-                handler.setNoDamage(false);
-                handler.setNoLeash(false);
-                boolean ok = handler.getOwner().equals(java.util.UUID.fromString(NOTCH_UUID))
-                    && handler.isProtected()
-                    && !handler.isNoDamage()
-                    && !handler.isNoLeash();
-                handler.clear();
-                if (!ok) {
-                    BlockProtLogger.fail("EntityProtectionHandler", "owner/flags mismatch after enable()");
-                    f.incrementAndGet();
-                    return;
-                }
-                BlockProtLogger.pass("EntityProtectionHandler: enable/owner/flags/clear roundtrip OK");
-                p.incrementAndGet();
             } finally {
                 ent.remove();
             }
         } catch (Exception e) {
-            BlockProtLogger.fail("EntityProtectionHandler", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("EntityProtectionHandler", e.getMessage()); f.incrementAndGet();
         }
 
         try {
@@ -2049,13 +2090,13 @@ public class DebugCommand implements CommandExecutor {
                 h.setOwner(NOTCH_UUID);
                 LocationListEntry entry = new LocationListEntry(loc);
                 if (entry.getBlock() == null || entry.getItemType() == null || entry.getTitle() == null) {
-                    BlockProtLogger.fail("LocationListEntry", "null field for constructed entry");
+                    BlockProtLogger.failSub("LocationListEntry", "null field for constructed entry");
                     f.incrementAndGet();
-                    return;
+                } else {
+                    BlockProtLogger.passSub("LocationListEntry: block=" + entry.getBlock().getType()
+                        + " item=" + entry.getItemType() + " title=" + entry.getTitle());
+                    p.incrementAndGet();
                 }
-                BlockProtLogger.pass("LocationListEntry: block=" + entry.getBlock().getType()
-                    + " item=" + entry.getItemType() + " title=" + entry.getTitle());
-                p.incrementAndGet();
 
                 java.util.UUID clipboardOwner = java.util.UUID.fromString(NOTCH_UUID);
                 PlayerInventoryClipboard.remove(clipboardOwner.toString());
@@ -2064,17 +2105,17 @@ public class DebugCommand implements CommandExecutor {
                 boolean hasClipboard = PlayerInventoryClipboard.contains(clipboardOwner.toString());
                 PlayerInventoryClipboard.remove(clipboardOwner.toString());
                 if (!hasClipboard) {
-                    BlockProtLogger.fail("PlayerInventoryClipboard", "set() did not register clipboard");
+                    BlockProtLogger.failSub("PlayerInventoryClipboard", "set() did not register clipboard");
                     f.incrementAndGet();
-                    return;
+                } else {
+                    BlockProtLogger.passSub("PlayerInventoryClipboard: set/contains/remove roundtrip OK");
+                    p.incrementAndGet();
                 }
-                BlockProtLogger.pass("PlayerInventoryClipboard: set/contains/remove roundtrip OK");
-                p.incrementAndGet();
             } finally {
                 world.setType(loc, orig);
             }
         } catch (Exception e) {
-            BlockProtLogger.fail("LocationListEntry/PlayerInventoryClipboard", e.getMessage()); f.incrementAndGet();
+            BlockProtLogger.failSub("LocationListEntry/PlayerInventoryClipboard", e.getMessage()); f.incrementAndGet();
         }
     }
 
@@ -2135,15 +2176,19 @@ public class DebugCommand implements CommandExecutor {
                 f.incrementAndGet();
             }
         }
-        BlockProtLogger.pass("Structural classes: " + loaded + "/" + names.length + " loadable"
-            + " (events, gateways, tasks, console, metrics, misc)");
-        p.incrementAndGet();
+        if (loaded == names.length) {
+            BlockProtLogger.pass("Structural classes: " + loaded + "/" + names.length + " loadable"
+                + " (events, gateways, tasks, console, metrics, misc)");
+            p.incrementAndGet();
+        } else {
+            BlockProtLogger.fail("Structural classes", (names.length - loaded) + " class(es) failed to load");
+        }
     }
 
     private void checkEnumeratedCoverage(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         var codeSource = BlockProt.getInstance().getClass().getProtectionDomain().getCodeSource();
         if (codeSource == null) {
-            BlockProtLogger.log("Class coverage: not running from a jar, enumeration skipped (dev workspace)");
+            BlockProtLogger.pass("Class coverage: not running from a jar, enumeration skipped (dev workspace)");
             p.incrementAndGet();
             return;
         }
@@ -2204,10 +2249,10 @@ public class DebugCommand implements CommandExecutor {
         try {
             touchScreen(DIALOG_PACKAGE, name);
             body.run();
-            BlockProtLogger.pass("Dialog OK: " + name);
+            BlockProtLogger.passSub(name);
             p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("Dialog FAIL: " + name,
+            BlockProtLogger.failSub(name,
                 e.getClass().getSimpleName() + ": " + e.getMessage());
             f.incrementAndGet();
         }
@@ -2220,13 +2265,13 @@ public class DebugCommand implements CommandExecutor {
             touchScreen(INVENTORY_PACKAGE, name);
             Inventory result = supplier.call();
             if (result != null) {
-                BlockProtLogger.pass("Inventory OK: " + name + " (size=" + result.getSize() + ")");
+                BlockProtLogger.passSub(name + " (size=" + result.getSize() + ")");
             } else {
-                BlockProtLogger.log("Inventory null/skipped: " + name + " (null is intentional for some paths)");
+                BlockProtLogger.skipSub(name, "returned null (intentional for some paths)");
             }
             p.incrementAndGet();
         } catch (Exception e) {
-            BlockProtLogger.fail("Inventory FAIL: " + name,
+            BlockProtLogger.failSub(name,
                 e.getClass().getSimpleName() + ": " + e.getMessage());
             f.incrementAndGet();
         }

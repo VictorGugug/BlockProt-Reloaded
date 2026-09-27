@@ -180,11 +180,27 @@ public final class BlockProtLogger {
     }
 
     public static void pass(@NotNull String check) {
-        log("PASS: " + check);
+        log("  PASS: " + check);
     }
 
     public static void fail(@NotNull String check, @Nullable String reason) {
-        log("FAIL: " + check + (reason != null ? " - " + reason : ""));
+        log("  FAIL: " + check + (reason != null ? " - " + reason : ""));
+    }
+
+    public static void subGroup(@NotNull String title) {
+        log("  " + title);
+    }
+
+    public static void passSub(@NotNull String check) {
+        log("    PASS: " + check);
+    }
+
+    public static void failSub(@NotNull String check, @Nullable String reason) {
+        log("    FAIL: " + check + (reason != null ? " - " + reason : ""));
+    }
+
+    public static void skipSub(@NotNull String check, @Nullable String reason) {
+        log("    SKIP: " + check + (reason != null ? " - " + reason : ""));
     }
 
     public static void warn(@NotNull String message) {
@@ -226,6 +242,13 @@ public final class BlockProtLogger {
     }
 
     public static void separator() {
+        if (reportWriter != null) {
+            reportWriter.println();
+            reportWriter.flush();
+        } else if (writer != null) {
+            writer.println();
+            writer.flush();
+        }
     }
 
     @Nullable
