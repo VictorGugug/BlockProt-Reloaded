@@ -62,7 +62,17 @@ public class InteractEventListener implements Listener {
         if (!BlockProt.getDefaultConfig().isLockable(event.getClickedBlock().getType(),
             event.getClickedBlock().getWorld())) return;
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
-        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return;
+        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) {
+            Player offHandPlayer = event.getPlayer();
+            var offHandItem = event.getItem();
+            if (event.getHand() == org.bukkit.inventory.EquipmentSlot.OFF_HAND
+                    && offHandPlayer.isSneaking()
+                    && offHandPlayer.getInventory().getItemInMainHand().getType().isAir()
+                    && (offHandItem == null || !offHandItem.getType().isBlock())) {
+                event.setUseInteractedBlock(org.bukkit.event.Event.Result.DENY);
+            }
+            return;
+        }
 
         // Dragon Egg teleports on ANY click (left or right) and bypasses cancel in some Paper versions.
         // Force-cancel both PHYSICAL and RIGHT_CLICK_BLOCK to prevent the teleport.
