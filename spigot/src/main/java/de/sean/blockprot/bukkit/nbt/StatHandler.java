@@ -155,13 +155,16 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
     @SuppressWarnings("deprecation")
     public static void saveFile() throws IOException {
         if (!dirty) return;
-        dirty = false;
         if (nbtFile == null || backupFile == null || temporarySwapFile == null) return;
 
         synchronized (StatHandler.class) {
+            dirty = false;
             // Step 1: write current in-memory NBT to the temp file (never touches the live file)
             try (OutputStream out = Files.newOutputStream(temporarySwapFile.toPath())) {
                 nbtFile.writeCompound(out);
+            } catch (IOException e) {
+                dirty = true;
+                throw e;
             }
 
             // Step 2: validate the temp file before committing
@@ -212,12 +215,12 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
      * Removes given block from the player's statistic by UUID, while also decrementing
      * the global block count. Works for both online and offline players.
      *
-     * <p>Must be called from the main server thread.
+     * <p>Safe to call from any thread; guarded by the class monitor shared with {@link #saveFile()}.
      *
      * @param uuid  the owner UUID (online or offline)
      * @param block the location to remove
      */
-    public static void removeContainerByUuid(@NotNull final UUID uuid, @NotNull final Location block) {
+    public static synchronized void removeContainerByUuid(@NotNull final UUID uuid, @NotNull final Location block) {
         PlayerBlocksStatistic containersStatistic = new PlayerBlocksStatistic();
         getStatsForPlayer(uuid.toString()).ifPresent(h -> h.updateStatistic(containersStatistic));
         containersStatistic.remove(block);
@@ -231,12 +234,12 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
      * Adds given block to given player's block statistic by UUID, while also incrementing the
      * global block count. Works for both online and offline players.
      *
-     * <p>Must be called from the main server thread.
+     * <p>Safe to call from any thread; guarded by the class monitor shared with {@link #saveFile()}.
      *
      * @param uuid  the owner UUID (online or offline)
      * @param block the location to register
      */
-    public static void addBlockByUuid(@NotNull final UUID uuid, @NotNull final Location block) {
+    public static synchronized void addBlockByUuid(@NotNull final UUID uuid, @NotNull final Location block) {
         BlockCountStatistic countStatistic = new BlockCountStatistic();
         PlayerBlocksStatistic containersStatistic = new PlayerBlocksStatistic();
         // Populate the global count statistic from the server NBT compound.
@@ -253,7 +256,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
      * Adds given block to given player's block statistic, while also incrementing the
      * global block count.
      */
-    public static void addBlock(@NotNull final Player player, @NotNull final Location block) {
+    public static synchronized void addBlock(@NotNull final Player player, @NotNull final Location block) {
         BlockCountStatistic countStatistic = new BlockCountStatistic();
         PlayerBlocksStatistic containersStatistic = new PlayerBlocksStatistic();
         StatHandler.getStatistic(countStatistic);
@@ -268,7 +271,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
      * the global block count.
      */
     @Deprecated
-    public static void removeContainer(@NotNull final Player player, @NotNull final Location block) {
+    public static synchronized void removeContainer(@NotNull final Player player, @NotNull final Location block) {
         BlockCountStatistic countStatistic = new BlockCountStatistic();
         PlayerBlocksStatistic containersStatistic = new PlayerBlocksStatistic();
         StatHandler.getStatistic(countStatistic);
@@ -283,7 +286,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
      * the global block count. Also takes care of special blocks, like doors.
      * @since 1.0.3
      */
-    public static void removeContainer(@NotNull final Player player, @NotNull final Block block) {
+    public static synchronized void removeContainer(@NotNull final Player player, @NotNull final Block block) {
         /* Remove the other half of the door from the statistics as well */
         if (BlockProt.getDefaultConfig().isLockableDoor(block.getType())) {
             final Block otherDoor = BlockUtil.getOtherDoorHalf(block.getState());
@@ -314,7 +317,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
         getStatistic(statistic, null);
     }
 
-    public static void getStatistic(@NotNull BukkitStatistic<?> statistic, @Nullable Player player) {
+    public static synchronized void getStatistic(@NotNull BukkitStatistic<?> statistic, @Nullable Player player) {
         switch (statistic.getType()) {
             case ALL:
             case PLAYER:
@@ -352,7 +355,7 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
      * @param statistic the statistic to populate (must be {@link StatisticType#PLAYER})
      * @param uuid      the player UUID
      */
-    public static void getStatisticByUuid(@NotNull BukkitStatistic<?> statistic,
+    public static synchronized void getStatisticByUuid(@NotNull BukkitStatistic<?> statistic,
                                            @NotNull java.util.UUID uuid) {
         if (statistic.getType() != StatisticType.PLAYER
                 && statistic.getType() != StatisticType.ALL) return;
@@ -433,12 +436,14 @@ public final class StatHandler extends NBTHandler<NBTCompound> {
                 if (!world.isChunkLoaded(loc.getBlockX() >> 4, loc.getBlockZ() >> 4)) {
                     continue; // chunk not loaded: skip this cycle, revisit later
                 }
+                if (!BlockProt.getFoliaLib().getScheduler().isOwnedByCurrentRegion(loc)) {
+                    continue; // owned by another region (Folia) or called off the main thread
+                }
                 if (loc.getBlock().getType() == org.bukkit.Material.AIR) {
                     pbs.remove(loc);
                     removed++;
                 }
             } catch (Exception ignored) {
-                removed++;
             }
         }
         if (removed > 0) {
