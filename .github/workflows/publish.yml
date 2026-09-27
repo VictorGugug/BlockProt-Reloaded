@@ -77,21 +77,29 @@ jobs:
           fi
 
           MC_LINE=$(grep -E '^[[:space:]]*#[[:space:]]*Supported on blockProtVersion' "$PROPS" | head -1)
-          MC_LIST=$(echo "$MC_LINE" | cut -d':' -f2 | tr -d ' ')
+          RAW_MC=$(echo "$MC_LINE" | cut -d':' -f2 | tr -d '\r\n')
+          MC_LIST=$(echo "$RAW_MC" | tr -d ' ')
           FIRST_MC=$(echo "$MC_LIST" | awk -F',' '{print $1}')
           LATEST_MC=$(echo "$MC_LIST" | awk -F',' '{print $NF}')
           MC_RANGE="${FIRST_MC} - ${LATEST_MC}"
+
+          # Format game versions for mc-publish (newline-delimited)
+          MC_NEWLINES=$(echo "$RAW_MC" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '\r' | grep -v '^$')
 
           PLATFORMS=$(grep -E '^[[:space:]]*supportedPlatforms=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
           LEGACY=$(grep -E '^[[:space:]]*legacyPlatforms=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
           UNSUPPORTED_PLATFORMS=$(grep -E '^[[:space:]]*unsupportedPlatforms=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
           UNSUPPORTED_VERSIONS=$(grep -E '^[[:space:]]*unsupportedVersions=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
-          LOADERS=$(echo "$PLATFORMS" | tr '[:upper:]' '[:lower:]' | tr ',' '\n' | sed 's/^[[:space:]]*//' | tr '\n' ' ')
+          LOADERS=$(echo "$PLATFORMS" | tr '[:upper:]' '[:lower:]' | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '\r' | grep -v '^$' | tr '\n' ' ')
 
           echo "plugin_version=${PLUGIN_VER}" >> "$GITHUB_OUTPUT"
           echo "mc_range=${MC_RANGE}" >> "$GITHUB_OUTPUT"
           echo "latest_mc=${LATEST_MC}" >> "$GITHUB_OUTPUT"
-          echo "game_versions=${MC_LIST}" >> "$GITHUB_OUTPUT"
+          {
+            echo "game_versions<<EOF"
+            echo "$MC_NEWLINES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
           echo "supported_platforms=${PLATFORMS}" >> "$GITHUB_OUTPUT"
           echo "legacy_platforms=${LEGACY}" >> "$GITHUB_OUTPUT"
           echo "unsupported_platforms=${UNSUPPORTED_PLATFORMS}" >> "$GITHUB_OUTPUT"
@@ -333,6 +341,7 @@ jobs:
           version-type: ${{ needs.inspect-and-build.outputs.jar_channel }}
           changelog-file: ${{ steps.staged.outputs.notes_path }}
           game-versions: ${{ needs.inspect-and-build.outputs.game_versions }}
+          game-version-filter: none
           loaders: ${{ needs.inspect-and-build.outputs.loaders }}
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
