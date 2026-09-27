@@ -1,7 +1,7 @@
 <img src="https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BlockProtReloaded.png" alt="BlockProt Reloaded" />
 
 ---
-BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper, Purpur, Spigot, and Folia servers (Minecraft 1.20.5 through 26.2). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
+BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper, Purpur, Spigot, and Folia servers (Minecraft 1.20.5 through 26.3). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
 
 
 ## What it does
@@ -99,9 +99,9 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 | `/bp lockables` | `blockprot.user.admin` | Paged GUI listing all blocks and entities with active/inactive status |
 | `/bp tiers` | `blockprot.user.admin.owner` | Staff roles GUI and custom permissions manager |
 | `/bp info <player>` | `blockprot.user.admin` | All blocks owned by a player with teleport links |
-| `/bp unlock <player>` | `blockprot.user.admin` | Inspect or remove any player's protections |
+| `/bp unlock <player>` | `blockprot.user.admin` | Inspect or remove any player's protections (console: lists them) |
 | `/bp reload` | op | Reload all config files and merge missing keys |
-| `/bp debug run` | `blockprot.debug` | Run internal diagnostics |
+| `/bp debug run` | `blockprot.debug` | Run internal diagnostics (also from the console) |
 | `/bp transferall <player>` | `blockprot.user` | Transfer ownership of all your protected blocks to another player |
 
 
@@ -125,7 +125,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 
 | | |
 |---|---|
-| Minecraft | 1.20.5 - 26.2 (detected numerically at runtime) |
+| Minecraft | 1.20.5 - 26.3 (detected numerically at runtime) |
 | Server software | Paper, Spigot, Purpur, Folia |
 | Java | 21+ required (JDK 25 toolchain) |
 | MySQL | MySQL 8+, MariaDB 10.5+ (optional) |
@@ -139,7 +139,7 @@ Towny, WorldGuard, Lands, ClaimChunk, GriefPrevention, Residence, PlaceholderAPI
 
 ## Install
 
-Place the JAR in `plugins/` and restart. Requires Java 21+ and Paper, Purpur, Spigot, or Folia 1.20.5 - 26.2. On upgrade, config keys are migrated automatically: no manual edits required.
+Place the JAR in `plugins/` and restart. Requires Java 21+ and Paper, Purpur, Spigot, or Folia 1.20.5 - 26.3. On upgrade, config keys are migrated automatically: no manual edits required.
 
 
 ## Documentation

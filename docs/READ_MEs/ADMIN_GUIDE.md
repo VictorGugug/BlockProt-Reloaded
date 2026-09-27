@@ -599,13 +599,13 @@ Run `/bp integrations` to list which are active on your server.
 | `/bp admin` | OP or `blockprot.user.admin` | Admin menu hub: lockables, config editor, reload, update, integrations, stats, debug, info, about, world expiry, world protection deletion. Auto-Drop lives under `/bp lockables` -> Auto Drop, not the admin hub. |
 | `/bp tiers [setrole] [player] [tier]` | OP or `blockprot.user.admin.owner` | Staff roles menu (chest inventory or dialog). Without arguments, opens the staff management GUI. With arguments, assigns an admin tier (`t1`, `t2`, `t3`, `owner`, `custom`, `none`) to a player when `admin_tiers.enabled: true`. |
 | `/bp lockables` | OP or `blockprot.user.admin` | Browse and toggle which blocks are lockable (the GUI writes `blocks.yml`). This is the only in-game way to add lockable blocks; regular players cannot use it. |
-| `/bp info <player>` | OP or `blockprot.user.admin` | Opens a player's block list. |
-| `/bp unlock <player>` | OP or `blockprot.user.admin` | Opens a GUI to unlock/remove protections for a player. |
-| `/bp protdel [world]` | OP or `blockprot.user.admin` | Delete all protections in a world (with confirmation). |
+| `/bp info <player>` | OP or `blockprot.user.admin` | Opens a player's block list. From the console, prints the owned blocks. |
+| `/bp unlock <player>` | OP or `blockprot.user.admin` | Opens a GUI to unlock/remove protections for a player. From the console, lists the player's locked blocks. |
+| `/bp protdel [world]` | OP or `blockprot.user.admin` | Delete all protections in a world (with confirmation). From the console: `/bp protdel <world> confirm`, and `/bp protdel undo` to restore the last deletion. |
 | `/bp reload` | OP or `blockprot.user.admin.owner` | Reload configuration (always creates a backup first). |
 | `/bp update` | OP or `blockprot.user.admin.owner` | Check for updates. |
 | `/bp integrations` | OP or `blockprot.user.admin.owner` | List active integrations. |
-| `/bp debug` | OP or `blockprot.debug` | Developer diagnostics. |
+| `/bp debug` | OP or `blockprot.debug` | Developer diagnostics. From the console it runs at world spawn; player-only screens are reported as SKIP. |
 | `/bp recommended blocks` / `config` / `all` | OP (`blockprot.user.admin.owner`) or Console | Apply the recommended `blocks.yml`, `config.yml`, or both (section 5). |
 
 > In menu mode (`use_menus: true`), player-facing subcommands are hidden from

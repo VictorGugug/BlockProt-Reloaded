@@ -11,9 +11,9 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](LICENSE)
 [![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
 [![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
-[![Paper](https://img.shields.io/badge/Paper-1.20.5%20--%2026.2-white?style=flat-square)](https://papermc.io/)
+[![Paper](https://img.shields.io/badge/Paper-1.20.5%20--%2026.3-white?style=flat-square)](https://papermc.io/)
 
-Java 21 bytecode (JDK 25 toolchain), Paper 1.20.5 through 26.2, Folia support, Native Paper Dialogs, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
+Java 21 bytecode (JDK 25 toolchain), Paper 1.20.5 through 26.3, Folia support, Native Paper Dialogs, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
 
 </div>
 
@@ -88,7 +88,7 @@ Admin inspection tool to view all blocks owned by any player, including offline 
 
 ## Installing
 
-Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` directory. Requires **Java 21+** (JDK 25 toolchain) and **Paper, Purpur, Spigot, or Folia 1.20.5 - 26.2**.
+Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` directory. Requires **Java 21+** (JDK 25 toolchain) and **Paper, Purpur, Spigot, or Folia 1.20.5 - 26.3**.
 
 ### Build from Source
 
@@ -204,15 +204,15 @@ Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus
 
 | Command | Permission | Description |
 |---|---|---|
-| `/bp info <player>` | `blockprot.user.admin` | Inspect all blocks owned by a player (online or offline) |
-| `/bp unlock <player>` | `blockprot.user.admin` | Inspect or unlock protections owned by a player |
+| `/bp info <player>` | `blockprot.user.admin` | Inspect all blocks owned by a player (online or offline); prints the list when run from the console |
+| `/bp unlock <player>` | `blockprot.user.admin` | Inspect or unlock protections owned by a player; lists their locked blocks when run from the console |
 | `/bp lockables` | `blockprot.user.admin` | Interactive browser for all known materials with toggleable active status |
 | `/bp tiers [setrole] <player> <role>` | op or `blockprot.user.admin.owner` | Manage staff admin tiers (t1, t2, t3, owner, none) and admins.yml |
-| `/bp protdel` | op or `blockprot.user.admin` | Bulk delete protections in the current world with undo support |
+| `/bp protdel` | op or `blockprot.user.admin` | Bulk delete protections in a world with undo support; from the console use `/bp protdel <world> confirm` and `/bp protdel undo` |
 | `/bp reload` | op or `blockprot.user.admin.owner` | Create safety backup and reload configs, blocks, and translations |
 | `/bp update` | op or `blockprot.user.admin.owner` | Check GitHub releases for updates with intelligent channel detection |
 | `/bp integrations` | op or `blockprot.user.admin.owner` | Inspect status of all third-party integrations |
-| `/bp debug <subcommand>` | `blockprot.debug` | Run structural diagnostic checks and class coverage scans |
+| `/bp debug <subcommand>` | `blockprot.debug` | Run the full diagnostic suite and class coverage scans; also runs from the console at world spawn |
 | `/bp recommended <blocks|config|all>` | op or console | Apply recommended production configuration profiles |
 
 ## Permissions
@@ -234,7 +234,7 @@ Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus
 ## Key Features
 
 ### Modern Minecraft Compatibility
-Compatible across Java 21 through Java 25. Supports Minecraft versions from 1.20.5 through 26.2 and future drops. Version detection evaluates numbers dynamically, ensuring immediate compatibility when new patch releases drop without requiring hardcoded updates.
+Compatible across Java 21 through Java 25. Supports Minecraft versions from 1.20.5 through 26.3 and future drops. Version detection evaluates numbers dynamically, ensuring immediate compatibility when new patch releases drop without requiring hardcoded updates.
 
 ### Native Paper Dialogs Parity
 Full support for modern Paper modal dialogs (`use_dialogs: true`). Dialog menus render directly on client viewports with styled pastel themes (`PASTEL_MINT`, `PASTEL_CORAL`, `PASTEL_GOLD`, `SOFT_BLUE`, `PASTEL_PURPLE`), eliminating inventory clicking glitches and container desynchronization.
