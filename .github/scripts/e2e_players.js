@@ -1,7 +1,9 @@
 const mineflayer = require('mineflayer');
 const { Vec3 } = require('vec3');
 
-const [port, version] = process.argv.slice(2);
+const [port, requestedVersion] = process.argv.slice(2);
+// 1.19.1 and 1.19.2 share protocol 760 and minecraft-data names it after 1.19.2
+const version = requestedVersion === '1.19.1' ? '1.19.2' : requestedVersion;
 const failures = [];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -68,6 +70,9 @@ async function main() {
   await sleep(3000);
   owner.chat('/gamemode creative');
   await sleep(1000);
+  owner.chat('/fill ~-4 ~-1 ~-4 ~4 ~-1 ~4 stone');
+  owner.chat('/fill ~-4 ~ ~-4 ~4 ~3 ~4 air');
+  await sleep(1500);
   owner.chat('/give BPOwner chest 1');
   const item = await waitFor(() => owner.inventory.items().find((i) => i.name === 'chest'), 8000);
   check('owner receives a chest', Boolean(item));
