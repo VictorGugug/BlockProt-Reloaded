@@ -20,6 +20,7 @@
 
 package de.sean.blockprot.bukkit.inventories;
 
+import de.sean.blockprot.bukkit.BukkitCompat;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.admin.AdminAction;
@@ -29,7 +30,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -222,7 +222,7 @@ public final class AdminCustomFlagsInventory extends BlockProtInventory {
         ComponentMessages.lore(meta, lore);
 
         if (enabled) {
-            meta.addEnchant(Enchantment.UNBREAKING, 1, true);
+            meta.addEnchant(BukkitCompat.GLOW_ENCHANT, 1, true);
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
 
