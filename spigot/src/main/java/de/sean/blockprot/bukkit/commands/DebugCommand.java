@@ -195,7 +195,7 @@ public class DebugCommand implements CommandExecutor {
 
     private static void logEnvironmentInfo(@NotNull Player player) {
         BlockProtLogger.log("Session: " + java.time.LocalDateTime.now()
-            + " | Plugin: BlockProt Reloaded " + BlockProt.getPluginVersion()
+            + " | Plugin: " + Edition.current().displayName() + " " + BlockProt.getPluginVersion()
             + " | Player: " + player.getName() + " (" + player.getUniqueId() + ")");
         BlockProtLogger.log("Edition: " + Edition.current().displayName() + " " + BlockProt.getPluginVersion());
         BlockProtLogger.log("Server: " + org.bukkit.Bukkit.getVersion()
@@ -2646,7 +2646,7 @@ public class DebugCommand implements CommandExecutor {
         BlockProtLogger.startDebugReport();
 
         BlockProtLogger.log("Session: " + java.time.LocalDateTime.now()
-            + " | Plugin: BlockProt Reloaded " + BlockProt.getPluginVersion()
+            + " | Plugin: " + Edition.current().displayName() + " " + BlockProt.getPluginVersion()
             + " | Sender: " + sender.getName() + " (Console/Headless)");
         BlockProtLogger.log("Server: " + Bukkit.getVersion()
             + " | API: " + Bukkit.getBukkitVersion()

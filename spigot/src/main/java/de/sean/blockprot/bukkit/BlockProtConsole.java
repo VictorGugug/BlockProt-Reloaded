@@ -57,7 +57,10 @@ public final class BlockProtConsole {
     private static final String LABEL_GRAY = "§7";
     private static final String INACTIVE_GRAY = "§8";
 
-    private static final String PREFIX = "§8[§rBlockProt Reloaded§8] §r";
+    private static String prefix() {
+        return "§8[§r" + Edition.current().displayName() + "§8] §r";
+    }
+
     private static final String WARN_TAG = "§e[WARN]§r ";
     private static final String ERROR_TAG = "§c[ERROR]§r ";
 
@@ -97,7 +100,7 @@ public final class BlockProtConsole {
         if (guideBuffer != null) {
             guideBuffer.add(message);
         } else if (pluginLogger != null) {
-            raw(PREFIX + message);
+            raw(prefix() + message);
         }
     }
 
@@ -124,7 +127,7 @@ public final class BlockProtConsole {
         }
 
         if (lines.isEmpty()) {
-            raw(PREFIX + "  No startup messages.");
+            raw(prefix() + "  No startup messages.");
             raw("");
             return;
         }
@@ -137,7 +140,7 @@ public final class BlockProtConsole {
                 separatorPrinted = true;
             }
             String tag = line.isWarning() ? WARN_TAG : "";
-            raw(PREFIX + tag + line.message());
+            raw(prefix() + tag + line.message());
             previousWasWarning = line.isWarning();
         }
         raw("");
@@ -146,7 +149,7 @@ public final class BlockProtConsole {
     /**
      * Sends a line straight through {@link Bukkit#getConsoleSender()} with no
      * additional prefixing, used for pre-formatted lines (the banner art, and
-     * lines that already carry {@link #PREFIX} themselves).
+     * lines that already carry {@link #prefix()} themselves).
      */
     private static void raw(@NotNull String message) {
         ComponentMessages.sendLegacy(Bukkit.getConsoleSender(), message);
@@ -217,7 +220,7 @@ public final class BlockProtConsole {
         if (startupBuffer != null) {
             startupBuffer.add(new StartupLine(prefixed, true));
         } else {
-            raw(PREFIX + WARN_TAG + prefixed);
+            raw(prefix() + WARN_TAG + prefixed);
         }
     }
 
@@ -226,7 +229,7 @@ public final class BlockProtConsole {
         if (startupBuffer != null) {
             startupBuffer.add(new StartupLine(prefixed, true));
         } else {
-            raw(PREFIX + ERROR_TAG + prefixed);
+            raw(prefix() + ERROR_TAG + prefixed);
         }
     }
 
@@ -238,7 +241,7 @@ public final class BlockProtConsole {
         if (startupBuffer != null) {
             startupBuffer.add(new StartupLine(message, false));
         } else {
-            raw(PREFIX + message);
+            raw(prefix() + message);
         }
     }
 }
