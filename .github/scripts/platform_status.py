@@ -6,12 +6,14 @@ import sys
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import edition as editions  # noqa: E402
 
 REPO = os.environ.get("GITHUB_REPOSITORY", "VictorGugug/BlockProt-Reloaded")
-MODRINTH_ID = os.environ.get("MODRINTH_PROJECT_ID") or "blockprot-reloaded"
-CURSEFORGE_ID = os.environ.get("CURSEFORGE_PROJECT_ID") or "1565977"
-HANGAR_SLUG = "BlockProt-Reloaded"
 PLATFORMS = ("github", "modrinth", "curseforge", "hangar")
+NAMES = {"github": "GitHub Releases", "modrinth": "Modrinth", "curseforge": "CurseForge", "hangar": "Hangar"}
 
 
 def request(url, token=None):
@@ -25,23 +27,50 @@ def request(url, token=None):
         return error.code, None
 
 
-def latest_stable_release(token):
-    status, releases = request(f"https://api.github.com/repos/{REPO}/releases?per_page=30", token)
+def belongs_to(tag, config):
+    prefix = config["tagPrefix"]
+    if prefix:
+        return tag.startswith(prefix)
+    return not any(other["tagPrefix"] and tag.startswith(other["tagPrefix"])
+                   for other in editions.load_all().values())
+
+
+def latest_stable_release(token, config):
+    status, releases = request(f"https://api.github.com/repos/{REPO}/releases?per_page=100", token)
     if status != 200:
         raise SystemExit(f"GitHub releases request failed with HTTP {status}")
-    stable = [r for r in releases if not r["prerelease"] and not r["draft"]]
+    stable = [r for r in releases
+              if not r["prerelease"] and not r["draft"] and belongs_to(r["tag_name"], config)]
     if not stable:
-        raise SystemExit("No stable GitHub release found")
-    return stable[0]
+        return None
+    release = dict(stable[0])
+    release["tag"] = release["tag_name"]
+    release["version"] = release["tag_name"][len(config["tagPrefix"]):]
+    return release
 
 
-def check(version, token):
-    github = request(f"https://api.github.com/repos/{REPO}/releases/tags/{version}", token)[0] == 200
-    modrinth = request(f"https://api.modrinth.com/v2/project/{MODRINTH_ID}/version/{version}")[0] == 200
-    _, cf = request(f"https://api.cfwidget.com/{CURSEFORGE_ID}")
-    curseforge = bool(cf) and any(f.get("name") == f"BlockProtReloaded-{version}.jar" for f in cf.get("files", []))
-    hangar = request(f"https://hangar.papermc.io/api/v1/projects/{HANGAR_SLUG}/versions/{version}")[0] == 200
-    return {"github": github, "modrinth": modrinth, "curseforge": curseforge, "hangar": hangar}
+def enabled_platforms(config):
+    return ["github"] + [p for p in PLATFORMS[1:] if config["platforms"][p]["enabled"]]
+
+
+def check(version, token, config):
+    platforms = config["platforms"]
+    enabled = enabled_platforms(config)
+    status = {p: None for p in PLATFORMS}
+    tag = config["tagPrefix"] + version
+    status["github"] = request(f"https://api.github.com/repos/{REPO}/releases/tags/{tag}", token)[0] == 200
+    if "modrinth" in enabled:
+        url = f"https://api.modrinth.com/v2/project/{platforms['modrinth']['id']}/version/{version}"
+        status["modrinth"] = request(url)[0] == 200
+    if "curseforge" in enabled:
+        _, cf = request(f"https://api.cfwidget.com/{platforms['curseforge']['id']}")
+        wanted = f"{config['jarBase']}-{version}.jar"
+        status["curseforge"] = bool(cf) and any(f.get("name") == wanted for f in cf.get("files", []))
+    if "hangar" in enabled:
+        hangar = platforms["hangar"]
+        url = f"https://hangar.papermc.io/api/v1/projects/{hangar['slug']}/versions/{version}"
+        status["hangar"] = request(url)[0] == 200
+    return status
 
 
 def write_outputs(values):
@@ -53,15 +82,18 @@ def write_outputs(values):
             out.write(f"{key}={value}\n")
 
 
+def mark(value):
+    return "[-]" if value is None else "[v]" if value else "[x]"
+
+
 def write_summary(title, version, status, note=""):
     path = os.environ.get("GITHUB_STEP_SUMMARY")
     if not path:
         return
-    names = {"github": "GitHub Releases", "modrinth": "Modrinth", "curseforge": "CurseForge", "hangar": "Hangar"}
     with open(path, "a", encoding="utf-8") as out:
         out.write(f"## {title}: `{version}`\n\n| Platform | Published |\n| :--- | :---: |\n")
         for platform in PLATFORMS:
-            out.write(f"| {names[platform]} | {'[v]' if status[platform] else '[x]'} |\n")
+            out.write(f"| {NAMES[platform]} | {mark(status[platform])} |\n")
         if note:
             out.write(f"\n> {note}\n")
         out.write("\n")
@@ -69,7 +101,8 @@ def write_summary(title, version, status, note=""):
 
 def main():
     parser = argparse.ArgumentParser(description="Check a BlockProt version on GitHub, Modrinth, CurseForge and Hangar.")
-    parser.add_argument("--version", default="", help="Version to check; defaults to the latest stable GitHub release")
+    parser.add_argument("--edition", default="bpr", help="Edition id from .github/editions.json")
+    parser.add_argument("--version", default="", help="Version to check without tag prefix; defaults to the latest stable release")
     parser.add_argument("--title", default="Platform publication status")
     parser.add_argument("--min-age-hours", type=float, default=0,
                         help="Minimum release age before a missing platform is reported as needing a publish")
@@ -77,17 +110,23 @@ def main():
                         help="Minimum release age for CurseForge, whose new files wait for manual review")
     args = parser.parse_args()
     token = os.environ.get("GITHUB_TOKEN")
+    config = editions.load_edition(args.edition)
 
     version = args.version
     age_hours = None
     if not version:
-        release = latest_stable_release(token)
-        version = release["tag_name"]
+        release = latest_stable_release(token, config)
+        if release is None:
+            print(json.dumps({"edition": args.edition, "version": "", "tag": "", "status": {},
+                              "missing": [], "targets": [], "needed": False}))
+            write_outputs({"version": "", "tag": "", "missing": "", "targets": "", "needed": "false"})
+            return
+        version = release["version"]
         published = datetime.fromisoformat(release["published_at"].replace("Z", "+00:00"))
         age_hours = (datetime.now(timezone.utc) - published).total_seconds() / 3600
 
-    status = check(version, token)
-    missing = [p for p in PLATFORMS if not status[p]]
+    status = check(version, token, config)
+    missing = [p for p in PLATFORMS if status[p] is False]
 
     def old_enough(platform):
         limit = args.curseforge_min_age_hours if platform == "curseforge" else args.min_age_hours
@@ -100,9 +139,11 @@ def main():
         note = (f"Release is {age_hours:.1f} h old. Not republished yet: {', '.join(waiting)} "
                 "(CurseForge files wait for manual review before they are listed).")
     needed = bool(targets)
-    print(json.dumps({"version": version, "status": status, "missing": missing, "targets": targets, "needed": needed}))
-    write_outputs({"version": version, "missing": ",".join(missing), "targets": ",".join(targets),
-                   "needed": str(needed).lower()})
+    tag = config["tagPrefix"] + version
+    print(json.dumps({"edition": args.edition, "version": version, "tag": tag, "status": status,
+                      "missing": missing, "targets": targets, "needed": needed}))
+    write_outputs({"version": version, "tag": tag, "missing": ",".join(missing),
+                   "targets": ",".join(targets), "needed": str(needed).lower()})
     write_summary(args.title, version, status, note)
 
 
