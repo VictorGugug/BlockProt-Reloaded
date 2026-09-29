@@ -62,6 +62,11 @@ import java.util.stream.Collectors;
  */
 public final class BpUnlockInventory extends BlockProtInventory {
 
+    private static final int PAGE_SIZE = 45;
+    private static final int SLOT_PREV = 48;
+    private static final int SLOT_NEXT = 50;
+    private static final int SLOT_BACK = 53;
+
     private @NotNull  String                targetName = "?";
     private @Nullable PlayerBlocksStatistic statistic;
 
@@ -85,7 +90,6 @@ public final class BpUnlockInventory extends BlockProtInventory {
         ItemStack item = event.getCurrentItem();
         if (item == null || item.getType() == Material.AIR) return;
 
-        int max = getSize() - 3;
 
         switch (item.getType()) {
             case CYAN_STAINED_GLASS_PANE -> {
@@ -106,16 +110,16 @@ public final class BpUnlockInventory extends BlockProtInventory {
                     closeAndOpen(player, null);
                 }
             }
-            default -> handleBlockClick(event, player, state, max);
+            default -> handleBlockClick(event, player, state);
         }
     }
 
     private void handleBlockClick(@NotNull InventoryClickEvent event,
                                    @NotNull Player player,
-                                   @NotNull InventoryState state,
-                                   int max) {
+                                   @NotNull InventoryState state) {
         List<LocationListEntry> list = filteredList();
-        int offset = max * state.currentPageIndex;
+        if (event.getSlot() >= PAGE_SIZE) return;
+        int offset = PAGE_SIZE * state.currentPageIndex;
         int idx    = offset + event.getSlot();
         if (idx < 0 || idx >= list.size()) return;
 
@@ -206,8 +210,7 @@ public final class BpUnlockInventory extends BlockProtInventory {
         inventory.clear();
 
         List<LocationListEntry> list = filteredList();
-        final int max    = getSize() - 3;
-        final int offset = max * state.currentPageIndex;
+        final int offset = PAGE_SIZE * state.currentPageIndex;
 
         String leftHint  = Translator.get(TranslationKey.INVENTORIES__BP_UNLOCK__LEFT_CLICK_HINT);
         String rightHint = Translator.get(TranslationKey.INVENTORIES__BP_UNLOCK__RIGHT_CLICK_HINT);
@@ -224,20 +227,20 @@ public final class BpUnlockInventory extends BlockProtInventory {
             }
             inventory.setItem(22, paper);
         } else {
-            for (int i = 0; i < Math.min(list.size() - offset, max); i++) {
+            for (int i = 0; i < Math.min(list.size() - offset, PAGE_SIZE); i++) {
                 renderEntry(i, list.get(offset + i), leftHint, rightHint);
             }
         }
 
         if (state.currentPageIndex > 0) {
-            setItemStack(max,     Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
+            setItemStack(SLOT_PREV, Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
         }
-        if (list.size() - offset > max) {
-            setItemStack(max + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
+        if (list.size() - offset > PAGE_SIZE) {
+            setItemStack(SLOT_NEXT, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         }
 
         boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
-        setItemStack(max + 2, Material.BARRIER, hasParent ? TranslationKey.INVENTORIES__BACK : TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        setItemStack(SLOT_BACK, Material.BARRIER, hasParent ? TranslationKey.INVENTORIES__BACK : TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
         return inventory;
     }
 

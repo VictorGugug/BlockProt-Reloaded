@@ -68,8 +68,8 @@ public final class PlayerListInventory extends BlockProtInventory {
     }
 
     private static final int PLAYER_SLOTS = 45;
-    private static final int SLOT_PREV    = 45;
-    private static final int SLOT_NEXT    = 46;
+    private static final int SLOT_PREV    = 48;
+    private static final int SLOT_NEXT    = 50;
     private static final int SLOT_SORT    = 49;
     private static final int SLOT_BACK    = 53;
 

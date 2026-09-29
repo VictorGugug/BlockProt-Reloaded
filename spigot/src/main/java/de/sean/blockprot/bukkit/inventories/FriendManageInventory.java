@@ -179,26 +179,26 @@ public final class FriendManageInventory extends BlockProtInventory {
         }
 
         setItemStack(
-            maxSkulls,
+            48,
             Material.CYAN_STAINED_GLASS_PANE,
             TranslationKey.INVENTORIES__LAST_PAGE);
         setItemStack(
-            maxSkulls + 1,
+            50,
             Material.BLUE_STAINED_GLASS_PANE,
             TranslationKey.INVENTORIES__NEXT_PAGE);
 
         if (!hasAddedPublic) {
             setItemStack(
-                getSize() - 4,
+                51,
                 Material.WITHER_SKELETON_SKULL,
                 TranslationKey.INVENTORIES__FRIENDS__MAKE_PUBLIC);
         }
         setItemStack(
-            getSize() - 3,
+            52,
             Material.BOOK,
             TranslationKey.INVENTORIES__FRIENDS__SEARCH_HISTORY);
         setItemStack(
-            getSize() - 2,
+            49,
             Material.MAP,
             TranslationKey.INVENTORIES__FRIENDS__SEARCH);
         boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty()

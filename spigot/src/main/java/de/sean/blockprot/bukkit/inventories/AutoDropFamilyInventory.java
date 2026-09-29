@@ -48,8 +48,8 @@ public final class AutoDropFamilyInventory extends BlockProtInventory {
     private static final TextColor PASTEL_AQUA  = TextColor.color(0xA8E2E2);
 
     private static final int CONTENT_SLOTS = 45;
-    private static final int SLOT_PREV = 47;
-    private static final int SLOT_NEXT = 49;
+    private static final int SLOT_PREV = 48;
+    private static final int SLOT_NEXT = 50;
     private static final int SLOT_BACK = 53;
 
     private record Entry(@Nullable Material material, boolean active, @Nullable String sectionLabel) {

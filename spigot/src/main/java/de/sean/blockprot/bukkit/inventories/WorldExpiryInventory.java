@@ -47,8 +47,8 @@ import java.util.function.Consumer;
 public final class WorldExpiryInventory extends BlockProtInventory {
 
     private static final int CONTENT_START = 0;
-    private static final int SLOT_PREV = 47;
-    private static final int SLOT_NEXT = 49;
+    private static final int SLOT_PREV = 48;
+    private static final int SLOT_NEXT = 50;
     private static final int SLOT_BACK = 53;
 
     private int cachedPage = 0;

@@ -142,9 +142,9 @@ public final class EntityFriendManageInventory extends BlockProtInventory {
             state.friendResultCache.add(UUID.fromString(uuid));
         }
 
-        setItemStack(maxSkulls,     Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
-        setItemStack(maxSkulls + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
-        setItemStack(getSize() - 2, Material.MAP,  TranslationKey.INVENTORIES__FRIENDS__SEARCH);
+        setItemStack(48, Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
+        setItemStack(49, Material.MAP, TranslationKey.INVENTORIES__FRIENDS__SEARCH);
+        setItemStack(50, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         setBackButton();
 
         final List<UUID> uuidSnapshot = new ArrayList<>(state.friendResultCache);

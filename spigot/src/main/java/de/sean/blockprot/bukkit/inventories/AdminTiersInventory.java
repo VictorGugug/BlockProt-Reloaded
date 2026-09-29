@@ -47,9 +47,9 @@ import java.util.UUID;
 public final class AdminTiersInventory extends BlockProtInventory {
 
     private static final int SLOT_SET_OFFLINE = 4;
-    private static final int SLOT_PREV        = 45;
-    private static final int SLOT_BACK        = 49;
-    private static final int SLOT_NEXT        = 53;
+    private static final int SLOT_PREV        = 48;
+    private static final int SLOT_BACK        = 53;
+    private static final int SLOT_NEXT        = 50;
 
     private static final int[] PLAYER_SLOTS = {
         10, 11, 12, 13, 14, 15, 16,
@@ -64,7 +64,7 @@ public final class AdminTiersInventory extends BlockProtInventory {
         18, 26,
         27, 35,
         36, 44,
-        46, 47, 48, 50, 51, 52
+        45, 46, 47, 49, 51, 52
     };
 
     private record PlayerEntry(@NotNull String name, @NotNull UUID uuid, @NotNull AdminTier tier, boolean isOp) {}

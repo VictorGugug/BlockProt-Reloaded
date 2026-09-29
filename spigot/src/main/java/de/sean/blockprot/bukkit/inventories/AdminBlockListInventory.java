@@ -51,6 +51,11 @@ import java.util.List;
  */
 public final class AdminBlockListInventory extends BlockProtInventory {
 
+    private static final int PAGE_SIZE = 45;
+    private static final int SLOT_PREV = 48;
+    private static final int SLOT_NEXT = 50;
+    private static final int SLOT_BACK = 53;
+
     private @Nullable PlayerBlocksStatistic statistic;
     private @NotNull  String targetName = "?";
 
@@ -99,8 +104,8 @@ public final class AdminBlockListInventory extends BlockProtInventory {
                                  @NotNull Player admin,
                                  @NotNull InventoryState state) {
         List<LocationListEntry> list = filteredList();
-        int max    = getSize() - 3;
-        int offset = max * state.currentPageIndex;
+        if (event.getSlot() >= PAGE_SIZE) return;
+        int offset = PAGE_SIZE * state.currentPageIndex;
         int idx    = offset + event.getSlot();
         if (idx < 0 || idx >= list.size()) return;
 
@@ -133,8 +138,7 @@ public final class AdminBlockListInventory extends BlockProtInventory {
         if (state == null) return inventory;
 
         List<LocationListEntry> list   = filteredList();
-        final int               max    = getSize() - 3;
-        int                     offset = max * state.currentPageIndex;
+        int                     offset = PAGE_SIZE * state.currentPageIndex;
 
         boolean canTp  = admin.hasPermission(Permissions.BLOCKS_TP.key());
         String  loreTp = Translator.get(canTp
@@ -153,20 +157,20 @@ public final class AdminBlockListInventory extends BlockProtInventory {
             }
             inventory.setItem(22, paper);
         } else {
-            for (int i = 0; i < Math.min(list.size() - offset, max); i++) {
+            for (int i = 0; i < Math.min(list.size() - offset, PAGE_SIZE); i++) {
                 renderEntry(i, list.get(offset + i), loreTp);
             }
         }
 
         if (state.currentPageIndex > 0) {
-            setItemStack(max,     Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
+            setItemStack(SLOT_PREV, Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
         }
-        if (list.size() - offset > max) {
-            setItemStack(max + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
+        if (list.size() - offset > PAGE_SIZE) {
+            setItemStack(SLOT_NEXT, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         }
 
         boolean hasParent = state.origin != InventoryState.MenuOrigin.NONE || !state.originStack.isEmpty();
-        setItemStack(max + 2, Material.BARRIER, hasParent ? TranslationKey.INVENTORIES__BACK : TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
+        setItemStack(SLOT_BACK, Material.BARRIER, hasParent ? TranslationKey.INVENTORIES__BACK : TranslationKey.INVENTORIES__ADMIN_MENU__CLOSE);
         return inventory;
     }
 

@@ -56,7 +56,7 @@ public final class EntityInfoInventory extends BlockProtInventory {
     private Entity entity;
     private EntityNBTHandler handler;
 
-    private final int maxSkulls = getSize() - InventoryConstants.lineLength;
+    private final int maxSkulls = getSize() - 2 * InventoryConstants.lineLength;
 
     public EntityInfoInventory() { super(true); }
 
@@ -91,7 +91,7 @@ public final class EntityInfoInventory extends BlockProtInventory {
                 }
             }
             case BLUE_STAINED_GLASS_PANE -> {
-                ItemStack last = event.getInventory().getItem(maxSkulls - 1);
+                ItemStack last = event.getInventory().getItem(InventoryConstants.lineLength + maxSkulls - 1);
                 if (last != null && last.getAmount() != 0) {
                     state.currentPageIndex++;
                     closeAndOpen(player, fill(player, entity, handler));
@@ -175,8 +175,8 @@ public final class EntityInfoInventory extends BlockProtInventory {
             state.friendResultCache.add(UUID.fromString(uuid));
         }
 
-        setItemStack(maxSkulls,     Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
-        setItemStack(maxSkulls + 1, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
+        setItemStack(48, Material.CYAN_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__LAST_PAGE);
+        setItemStack(50, Material.BLUE_STAINED_GLASS_PANE, TranslationKey.INVENTORIES__NEXT_PAGE);
         setBackButton();
 
         final List<UUID> uuidSnapshot = new ArrayList<>(state.friendResultCache);

@@ -59,8 +59,8 @@ public final class AutoDropSearchInventory extends BlockProtInventory {
     private static final TextColor PASTEL_MINT  = TextColor.color(0x8FE3B0);
 
     private static final int CONTENT_SLOTS = 45;
-    private static final int SLOT_PREV = 47;
-    private static final int SLOT_NEXT = 49;
+    private static final int SLOT_PREV = 48;
+    private static final int SLOT_NEXT = 50;
     private static final int SLOT_BACK = 53;
 
     private String currentQuery = "";
