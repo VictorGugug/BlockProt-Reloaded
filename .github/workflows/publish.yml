@@ -1,6 +1,6 @@
 name: Publish Multi-Platform Release
 
-run-name: "Publish [${{ inputs.mode }}]: ${{ inputs.tag || 'auto-detected from gradle.properties' }}"
+run-name: "Publish [${{ inputs.mode }}]: ${{ inputs.tag || 'auto-detected from gradle.properties' }} [${{ inputs.suffix }}]"
 
 on:
   workflow_dispatch:
@@ -9,6 +9,14 @@ on:
         description: "Release version or tag to process (leave blank to auto-detect from gradle.properties)"
         required: false
         default: ""
+      suffix:
+        description: "Version suffix: keep the one in gradle.properties, publish the next numbered BEDev build, or release as stable"
+        type: choice
+        options:
+          - "From gradle.properties"
+          - "BEDev (next numbered build)"
+          - "Stable (remove suffix and update gradle.properties)"
+        default: "From gradle.properties"
       mode:
         description: "Execution mode: Preview, Publish, or Cancel"
         type: choice
@@ -31,6 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       plugin_version: ${{ steps.meta.outputs.plugin_version }}
+      version_suffix: ${{ steps.meta.outputs.version_suffix }}
+      stable_promotion: ${{ steps.meta.outputs.stable_promotion }}
       game_versions: ${{ steps.meta.outputs.game_versions }}
       supported_platforms: ${{ steps.meta.outputs.supported_platforms }}
       legacy_platforms: ${{ steps.meta.outputs.legacy_platforms }}
@@ -71,6 +81,27 @@ jobs:
           PROPS="gradle.properties"
           BASE_VER=$(grep -E '^[[:space:]]*blockProtVersion=' "$PROPS" | cut -d'=' -f2 | tr -d '[:space:]')
           SUFFIX=$(grep -E '^[[:space:]]*versionSuffix=' "$PROPS" | cut -d'=' -f2 | tr -d '[:space:]')
+          PROPS_SUFFIX="$SUFFIX"
+          case "${{ github.event.inputs.suffix }}" in
+            BEDev*) SUFFIX="BEDev" ;;
+            Stable*) SUFFIX="" ;;
+          esac
+          if echo "$SUFFIX" | grep -qiE '^(bedev|bdev)(\.[0-9]+)?$'; then
+            LAST=0
+            for T in $(git tag -l "${BASE_VER}-BEDev.*"); do
+              N="${T##*-BEDev.}"
+              if echo "$N" | grep -qE '^[0-9]+$' && [ "$N" -gt "$LAST" ]; then LAST="$N"; fi
+            done
+            SUFFIX="BEDev.$((LAST + 1))"
+          fi
+          if [ -z "$SUFFIX" ] && [ -n "$PROPS_SUFFIX" ]; then
+            STABLE_PROMOTION="true"
+          else
+            STABLE_PROMOTION="false"
+          fi
+          echo "version_suffix=${SUFFIX}" >> "$GITHUB_OUTPUT"
+          echo "props_suffix=${PROPS_SUFFIX}" >> "$GITHUB_OUTPUT"
+          echo "stable_promotion=${STABLE_PROMOTION}" >> "$GITHUB_OUTPUT"
           if [ -n "$SUFFIX" ]; then
             PLUGIN_VER="${BASE_VER}-${SUFFIX}"
           else
@@ -163,7 +194,7 @@ jobs:
 
       - name: Build complete project artifacts
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
-        run: ./gradlew build :blockprot-spigot:shadowJar --no-daemon
+        run: ./gradlew build :blockprot-spigot:shadowJar --no-daemon "-PversionSuffix=${{ steps.meta.outputs.version_suffix }}"
 
       - name: Inspect compiled JAR, hash, and metadata
         if: github.event.inputs.mode != 'Cancel (Abort without action)'
@@ -257,6 +288,10 @@ jobs:
           | :--- | :--- | :--- |
           EOF
           echo "| **Active Version** | \`${{ steps.meta.outputs.plugin_version }}\` | \`gradle.properties\` (\`blockProtVersion\`) |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| **Version Suffix** | \`${{ steps.meta.outputs.version_suffix || '(none, stable)' }}\` | Selected: ${{ github.event.inputs.suffix }} (gradle.properties: \`${{ steps.meta.outputs.props_suffix || 'blank' }}\`) |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.meta.outputs.stable_promotion }}" = "true" ]; then
+            echo "| **gradle.properties Update** | \`versionSuffix\` will be cleared and committed on Publish | Stable promotion |" >> "$GITHUB_STEP_SUMMARY"
+          fi
           echo "| **Target Minecraft Range** | \`${{ steps.meta.outputs.mc_range }}\` | \`gradle.properties\` (\`Supported on...\`) |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Supported Server Software** | \`${{ steps.meta.outputs.supported_platforms }}\` | \`gradle.properties\` (\`supportedPlatforms\`) |" >> "$GITHUB_STEP_SUMMARY"
           if [ -n "${{ steps.meta.outputs.legacy_platforms }}" ]; then
@@ -367,11 +402,26 @@ jobs:
           echo "Staged GitHub Releases suite:"
           ls -la build/staged/github
 
+      - name: Promote gradle.properties to stable
+        id: promote
+        if: needs.inspect-and-build.outputs.stable_promotion == 'true'
+        env:
+          VERSION: ${{ needs.inspect-and-build.outputs.plugin_version }}
+        run: |
+          sed -i -E 's/^([[:space:]]*versionSuffix=).*/\1/' gradle.properties
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add gradle.properties
+          git commit -m "BPR:${{ github.ref_name }}(chore): Release ${VERSION}"
+          git push origin "HEAD:${{ github.ref_name }}"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Publish to GitHub Releases
         id: gh_release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.inspect-and-build.outputs.plugin_version }}
+          target_commitish: ${{ steps.promote.outputs.sha || github.sha }}
           name: "BlockProt Reloaded ${{ needs.inspect-and-build.outputs.plugin_version }}"
           body_path: ${{ steps.staged.outputs.github_notes }}
           files: |
