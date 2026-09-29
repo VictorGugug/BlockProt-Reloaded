@@ -12,14 +12,14 @@ This fork extends the original NBT core with stability fixes and additional feat
 
 ---
 
-> **BlockProt Reloaded Legacy** is the edition for Minecraft 1.20.5 to 1.21.6. Looking for another Minecraft version? See the [version guide](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/READ_MEs/VERSION_GUIDE.md).
+> **BlockProt Legacy** is the edition for Minecraft 1.18.2 to 1.20.4. Looking for another Minecraft version? See the [version guide](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/READ_MEs/VERSION_GUIDE.md).
 
 ---
 
 ## Requirements
 
-- Java 21+
-- Paper, Purpur, or Folia 1.20.5 through 1.21.6
+- Java 17+
+- Paper, Purpur, or Folia 1.18.2 through 1.20.4 (Folia from 1.19.4)
 
 ---
 

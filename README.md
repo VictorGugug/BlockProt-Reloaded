@@ -7,14 +7,14 @@
 [![Release](https://img.shields.io/github/v/release/VictorGugug/BlockProt-Reloaded?style=flat-square&color=brightgreen&label=Release)](https://github.com/VictorGugug/BlockProt-Reloaded/releases)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](LICENSE)
 [![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
-[![Java](https://img.shields.io/badge/Java-21+-orange?style=flat-square)](https://openjdk.org/projects/jdk/21/)
-[![Paper](https://img.shields.io/badge/Paper-1.20.5%20--%201.21.6-white?style=flat-square)](https://papermc.io/)
+[![Java](https://img.shields.io/badge/Java-17+-orange?style=flat-square)](https://openjdk.org/projects/jdk/17/)
+[![Paper](https://img.shields.io/badge/Paper-1.18.2%20--%201.20.4-white?style=flat-square)](https://papermc.io/)
 
-Java 21, Paper 1.20.5 through 1.21.6, Folia support, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
+Java 17, Paper 1.18.2 through 1.20.4, Folia support, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
 
 </div>
 
-> **BlockProt Reloaded Legacy** is the edition for Minecraft 1.20.5 to 1.21.6. For Minecraft 1.21.7 and newer download BlockProt Reloaded. Looking for another Minecraft version? See the [version guide](docs/READ_MEs/VERSION_GUIDE.md).
+> **BlockProt Legacy** is the edition for Minecraft 1.18.2 to 1.20.4. For Minecraft 1.20.5 and newer download BlockProt Reloaded Legacy or BlockProt Reloaded. Looking for another Minecraft version? See the [version guide](docs/READ_MEs/VERSION_GUIDE.md).
 
 Block protection plugin for Paper, Purpur, and Folia servers. Players protect chests, furnaces, barrels, doors, trapdoors, item frames, vehicles, and workstations through an intuitive chest GUI - no complex commands required. This fork extends the original NBT core with enterprise stability, thread-safe asynchronous architecture, and rich modern features.
 
@@ -89,7 +89,7 @@ Admin inspection tool to view all blocks owned by any player, including offline 
 
 ## Installing
 
-Download the latest `BlockProtReloadedLegacy` JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) (tags start with `bprl-`) and place it in your `plugins/` directory. Requires **Java 21+** and **Paper, Purpur, or Folia 1.20.5 - 1.21.6**. The Modrinth, CurseForge and Hangar pages come with the first release.
+Download the latest `BlockProtLegacy` JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) (tags start with `bpl-`) and place it in your `plugins/` directory. Requires **Java 17+** and **Paper, Purpur, or Folia 1.18.2 - 1.20.4** (Folia from 1.19.4). The Modrinth, CurseForge and Hangar pages come with the first release.
 
 ### Build from Source
 
@@ -235,7 +235,7 @@ Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus
 ## Key Features
 
 ### Modern Minecraft Compatibility
-Compatible with Java 21. Supports Minecraft versions from 1.20.5 through 1.21.6. On a newer Minecraft version the plugin keeps running and warns once that another edition exists; on an older one it disables itself and points to the version guide.
+Compatible with Java 17 and newer. Supports Minecraft versions from 1.18.2 through 1.20.4. On a newer Minecraft version the plugin keeps running and warns once that another edition exists; on an older one it disables itself and points to the version guide.
 
 ### Native Paper Dialogs Parity
 Not available in this edition. Every menu opens as a chest inventory.
@@ -300,7 +300,7 @@ Configurable automated cleanup (`inactivity_cleanup_days`) that unregisters prot
 | Floodgate / Geyser | Resolves Bedrock names and skins; native Bedrock touch forms (Cumulus) |
 | ImageFrame | Automatically protects image frame multi-map displays for creators |
 | ViaVersion | Client protocol version detection in the `/bp lockables` interface |
-| Folia | Asynchronous chunk handling and region scheduler compatibility |
+| Folia | Asynchronous chunk handling and region scheduler compatibility (Minecraft 1.19.4 and newer) |
 
 ## Developer API
 
