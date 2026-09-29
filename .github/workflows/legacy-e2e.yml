@@ -127,6 +127,11 @@ jobs:
           done
           exit 1
 
+      - name: Check the console names the edition
+        run: |
+          NAME=$(python3 -c "import json;print(json.load(open('.github/editions.json'))[open('.github/EDITION').read().strip()]['displayName'])")
+          sed 's/\x1b\[[0-9;]*m//g' build/e2e-server/console.log | grep -F "[$NAME]" > /dev/null
+
       - name: Upload server log
         if: always()
         uses: actions/upload-artifact@v7
