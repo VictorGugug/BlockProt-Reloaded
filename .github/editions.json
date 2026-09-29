@@ -68,7 +68,7 @@
       "title": "BlockProt Legacy (Minecraft 1.18.2 - 1.20.4)",
       "range": "1.18.2 - 1.20.4",
       "java": "Java 17+",
-      "servers": ["Paper", "Purpur"]
+      "servers": ["Paper", "Purpur", "Folia"]
     }
   }
 }

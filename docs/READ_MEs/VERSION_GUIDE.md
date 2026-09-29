@@ -31,7 +31,7 @@ Spigot and CraftBukkit are not supported by any edition. Use Paper, Purpur or Fo
 | Public developer API | yes | yes | yes |
 | Console diagnostics (`/bp debug`) | yes | yes | yes |
 | Paper and Purpur | yes | yes | yes |
-| Folia | yes | yes | not declared |
+| Folia (Minecraft 1.19.4 and newer) | yes | yes | yes |
 | New features | yes | no | no |
 
 Native dialogs need the Paper 1.21.7 API, so they only exist in BlockProt Reloaded. In the legacy editions `use_dialogs` has no effect and every menu opens as a chest inventory. The setting is kept in `config.yml` so a later move to BlockProt Reloaded activates it.

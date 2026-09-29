@@ -19,11 +19,16 @@ class Render(unittest.TestCase):
         self.assertNotIn("1.21.7 through 26.3", text)
         self.assertNotIn("use_dialogs: true", text)
 
-    def test_bp_legacy_drops_folia_and_uses_java_17(self):
+    def test_bp_legacy_uses_java_17(self):
         text = self.rendered("bp-legacy")
-        self.assertIn("| Server software | Paper, Purpur |", text)
+        self.assertIn("| Server software | Paper, Purpur, Folia |", text)
+        self.assertIn("Requires Java 17+ and Paper, Purpur, or Folia 1.18.2 - 1.20.4.", text)
+
+    def test_an_edition_without_folia_drops_the_folia_line(self):
+        config = edition.load_edition("bp-legacy")
+        config["description"]["servers"] = ["Paper", "Purpur"]
+        text = render.render(render.read(render.TEMPLATE), config)
         self.assertIn("Folia: not declared for this edition.", text)
-        self.assertIn("Requires Java 17+ and Paper or Purpur 1.18.2 - 1.20.4.", text)
 
     def test_every_generated_file_is_up_to_date(self):
         for path, content in render.outputs():

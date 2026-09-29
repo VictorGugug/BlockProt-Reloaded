@@ -3,7 +3,7 @@
 ---
 > **BlockProt Legacy (Minecraft 1.18.2 - 1.20.4)**. Looking for another Minecraft version? See the [version guide](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/READ_MEs/VERSION_GUIDE.md).
 
-BlockProt Legacy is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper and Purpur servers (Minecraft 1.18.2 - 1.20.4). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
+BlockProt Legacy is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper, Purpur, and Folia servers (Minecraft 1.18.2 - 1.20.4). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
 
 
 ## What it does
@@ -92,7 +92,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 - Inactivity cleanup: removes protections owned by long-inactive players (`inactivity_cleanup_days`, disabled by default).
 - WorldEdit paste auto-lock (disabled by default).
 - PlaceholderAPI placeholders: `%blockprot_global_block_count%`, `%blockprot_own_block_count%`, `%blockprot_default_friends%`.
-- Folia: not declared for this edition.
+- Folia compatibility via FoliaLib.
 - ViaVersion, ViaBackwards, and ViaRewind detection.
 
 
@@ -130,7 +130,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 | | |
 |---|---|
 | Minecraft | 1.18.2 - 1.20.4 |
-| Server software | Paper, Purpur |
+| Server software | Paper, Purpur, Folia |
 | Java | Java 17+ required |
 | MySQL | MySQL 8+, MariaDB 10.5+ (optional) |
 | Languages | 25 languages on [GitLocalize](https://gitlocalize.com/repo/10833): AR, CS, DE, EN, ES, FI, FR, HE, HU, ID, IT, JA, KO, NL, PL, PT-BR, RO, RU, SK, SV, TH, TR, UK, ZH-CN, ZH-TW |
@@ -143,7 +143,7 @@ Towny, WorldGuard, Lands, ClaimChunk, GriefPrevention, Residence, PlaceholderAPI
 
 ## Install
 
-Place the JAR in `plugins/` and restart. Requires Java 17+ and Paper or Purpur 1.18.2 - 1.20.4. On upgrade, config keys are migrated automatically: no manual edits required.
+Place the JAR in `plugins/` and restart. Requires Java 17+ and Paper, Purpur, or Folia 1.18.2 - 1.20.4. On upgrade, config keys are migrated automatically: no manual edits required.
 
 
 ## Documentation
