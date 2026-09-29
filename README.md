@@ -5,21 +5,18 @@
 ---
 [![CI](https://img.shields.io/github/actions/workflow/status/VictorGugug/BlockProt-Reloaded/blockprot.yml?branch=main&style=flat-square&label=CI)](https://github.com/VictorGugug/BlockProt-Reloaded/actions/workflows/blockprot.yml)
 [![Release](https://img.shields.io/github/v/release/VictorGugug/BlockProt-Reloaded?style=flat-square&color=brightgreen&label=Release)](https://github.com/VictorGugug/BlockProt-Reloaded/releases)
-[![Modrinth](https://img.shields.io/modrinth/dt/C2ZYTu62?style=flat-square&color=00AF5C&logo=modrinth&label=Modrinth)](https://modrinth.com/plugin/blockprot-reloaded)
-[![CurseForge](https://img.shields.io/curseforge/dt/1565977?style=flat-square&color=FF6E1A&logo=curseforge&label=CurseForge)](https://www.curseforge.com/minecraft/bukkit-plugins/blockprot-reloaded)
-[![Hangar](https://img.shields.io/hangar/dt/BlockProt-Reloaded?style=flat-square&color=00D4A2&logo=papermc&label=Hangar)](https://hangar.papermc.io/VictorGugug/BlockProt-Reloaded/versions?channel=Release&platform=PAPER)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](LICENSE)
 [![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
-[![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
-[![Paper](https://img.shields.io/badge/Paper-1.21.7%20--%2026.3-white?style=flat-square)](https://papermc.io/)
+[![Java](https://img.shields.io/badge/Java-21+-orange?style=flat-square)](https://openjdk.org/projects/jdk/21/)
+[![Paper](https://img.shields.io/badge/Paper-1.20.5%20--%201.21.6-white?style=flat-square)](https://papermc.io/)
 
-Java 21 bytecode (JDK 25 toolchain), Paper 1.21.7 through 26.3, Folia support, Native Paper Dialogs, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
+Java 21, Paper 1.20.5 through 1.21.6, Folia support, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
 
 </div>
 
-> **Looking for another Minecraft version?** See the [version guide](docs/READ_MEs/VERSION_GUIDE.md).
+> **BlockProt Reloaded Legacy** is the edition for Minecraft 1.20.5 to 1.21.6. For Minecraft 1.21.7 and newer download BlockProt Reloaded. Looking for another Minecraft version? See the [version guide](docs/READ_MEs/VERSION_GUIDE.md).
 
-Block protection plugin for Paper, Purpur, and Folia servers. Players protect chests, furnaces, barrels, doors, trapdoors, item frames, vehicles, and workstations through an intuitive GUI or native Paper Dialogs - no complex commands required. This fork extends the original NBT core with enterprise stability, thread-safe asynchronous architecture, and rich modern features.
+Block protection plugin for Paper, Purpur, and Folia servers. Players protect chests, furnaces, barrels, doors, trapdoors, item frames, vehicles, and workstations through an intuitive chest GUI - no complex commands required. This fork extends the original NBT core with enterprise stability, thread-safe asynchronous architecture, and rich modern features.
 
 ## Philosophy
 
@@ -92,7 +89,7 @@ Admin inspection tool to view all blocks owned by any player, including offline 
 
 ## Installing
 
-Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` directory. Requires **Java 21+** (JDK 25 toolchain) and **Paper, Purpur, or Folia 1.21.7 - 26.3**.
+Download the latest `BlockProtReloadedLegacy` JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) (tags start with `bprl-`) and place it in your `plugins/` directory. Requires **Java 21+** and **Paper, Purpur, or Folia 1.20.5 - 1.21.6**. The Modrinth, CurseForge and Hangar pages come with the first release.
 
 ### Build from Source
 
@@ -146,7 +143,7 @@ plugins/BlockProtReloaded/
 BlockProt Reloaded provides complete interface parity across three display engines:
 
 1. **Chest Inventory GUIs:** Classic inventory screens with click protection and pagination.
-2. **Native Paper Dialogs:** Seamless modal dialogs on modern Paper servers (`use_dialogs: true`), featuring an established pastel palette (`PASTEL_MINT`, `PASTEL_CORAL`, `PASTEL_GOLD`, `SOFT_BLUE`, `PASTEL_PURPLE`) without occupying the inventory.
+2. **Native Paper Dialogs:** not available in this edition. Every menu opens as a chest inventory. The `use_dialogs` setting is inert here and kept so a later move to BlockProt Reloaded activates it.
 3. **Bedrock Forms (Cumulus API):** Native touch-friendly modal forms for players connecting via Geyser and Floodgate.
 
 ### Block Lock Menu
@@ -187,8 +184,8 @@ Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus
 
 | Command | Permission | Description |
 |---|---|---|
-| `/bp user` | `blockprot.user` | Open personal user menu or dialog |
-| `/bp admin` | `blockprot.user.admin` | Open administrative control menu or dialog |
+| `/bp user` | `blockprot.user` | Open personal user menu |
+| `/bp admin` | `blockprot.user.admin` | Open administrative control menu |
 
 **Player Commands:**
 
@@ -227,7 +224,7 @@ Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus
 | `blockprot.user.admin` | op | Full administrator privileges and GUI inspection |
 | `blockprot.user.admin.t1` | op | Staff Tier 1 (Moderator): read-only block info, teleport, audit inspect |
 | `blockprot.user.admin.t2` | op | Staff Tier 2 (Helper): T1 plus block unlock, break protected, lockables GUI |
-| `blockprot.user.admin.t3` | op | Staff Tier 3 (Admin): T2 plus world protection deletion, full config dialogs |
+| `blockprot.user.admin.t3` | op | Staff Tier 3 (Admin): T2 plus world protection deletion, full config menus |
 | `blockprot.user.admin.owner` | op | Staff Tier 4 (Owner): full control, reload, update, staff role assignments |
 | `blockprot.user.admin.custom` | false | Custom staff role evaluating granular action flags from admins.yml |
 | `blockprot.lockmax` | false | Exemption from the `player_max_locked_block_count` limit |
@@ -238,16 +235,16 @@ Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus
 ## Key Features
 
 ### Modern Minecraft Compatibility
-Compatible across Java 21 through Java 25. Supports Minecraft versions from 1.21.7 through 26.3 and future drops. Version detection evaluates numbers dynamically, ensuring immediate compatibility when new patch releases drop without requiring hardcoded updates.
+Compatible with Java 21. Supports Minecraft versions from 1.20.5 through 1.21.6. On a newer Minecraft version the plugin keeps running and warns once that another edition exists; on an older one it disables itself and points to the version guide.
 
 ### Native Paper Dialogs Parity
-Full support for modern Paper modal dialogs (`use_dialogs: true`). Dialog menus render directly on client viewports with styled pastel themes (`PASTEL_MINT`, `PASTEL_CORAL`, `PASTEL_GOLD`, `SOFT_BLUE`, `PASTEL_PURPLE`), eliminating inventory clicking glitches and container desynchronization.
+Not available in this edition. Every menu opens as a chest inventory.
 
 ### Four-Tier Staff Hierarchy (`admins.yml`)
 Configurable four-tier staff management system (`admin_tiers.enabled: true`):
 - **Tier 1 (Moderator):** Non-destructive inspection, audit review, and teleportation.
 - **Tier 2 (Helper):** Container unlock and break authorization.
-- **Tier 3 (Admin):** World-wide protection administration and configuration dialogs.
+- **Tier 3 (Admin):** World-wide protection administration and configuration menus.
 - **Tier 4 (Owner):** System reloads, updates, recommended profiles, and staff assignments.
 - Custom roles can also be declared with granular action flags.
 
@@ -399,7 +396,7 @@ respect_spawn_protection: true
 block_lock_effects: true
 block_lock_sounds: true
 use_menus: false                   # route commands into /bp user and /bp admin
-use_dialogs: false                 # native Paper Dialog modals (Paper 1.21.7+)
+use_dialogs: false                 # native Paper Dialog modals (not available in this edition, no effect)
 timed_access_max_duration_days: 90
 action_bar:
   duration_seconds: 6              # duration in seconds alerts persist
