@@ -23,6 +23,7 @@ package de.sean.blockprot.bukkit.tasks;
 import com.google.gson.annotations.SerializedName;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.Edition;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
@@ -43,6 +44,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -67,9 +69,12 @@ public final class UpdateChecker implements Runnable {
     private static final String GITHUB_API_URL =
         "https://api.github.com/repos/VictorGugug/BlockProt-Reloaded/releases";
 
-    /** Fallback release page when the release's own page is unknown. */
-    private static final String RELEASE_URL =
-        "https://github.com/VictorGugug/BlockProt-Reloaded/releases/latest";
+    private static final String RELEASES_URL =
+        "https://github.com/VictorGugug/BlockProt-Reloaded/releases";
+
+    private static String releaseUrl() {
+        return Edition.current().tagPrefix().isEmpty() ? RELEASES_URL + "/latest" : RELEASES_URL;
+    }
 
     /**
      * Cached result of the last successful GitHub API call.
@@ -150,23 +155,9 @@ public final class UpdateChecker implements Runnable {
             GitHubRelease[] releases = new com.google.gson.Gson().fromJson(
                 response.body(), GitHubRelease[].class);
 
-            SemanticVersion best = null;
-            GitHubRelease bestRelease = null;
-            for (GitHubRelease rel : releases) {
-                if (rel.draft) continue;
-                SemanticVersion v = rel.asSemantic();
-                if (v.isExperimental()) continue;
-                // Stable-channel servers (clean release or hotfix) only see
-                // stable-channel candidates; pre-release servers see all.
-                if (!currentVersion.isPreRelease()
-                    && (rel.prerelease || v.isPreRelease())) continue;
-                if (best == null || v.compareTo(best) > 0) {
-                    best = v;
-                    bestRelease = rel;
-                }
-            }
-
-            if (best == null) return;
+            GitHubRelease bestRelease = selectBest(Arrays.asList(releases), currentVersion, Edition.current());
+            if (bestRelease == null) return;
+            SemanticVersion best = bestRelease.asSemantic(Edition.current());
             UpdateChecker.latestVersion = best;
             UpdateChecker.latestRelease = bestRelease;
             this.sendMessage(currentVersion, best, bestRelease);
@@ -174,12 +165,34 @@ public final class UpdateChecker implements Runnable {
         } catch (Exception ignored) { }
     }
 
+    /**
+     * Picks the highest release of {@code edition} the running version should be offered: stable-channel
+     * servers only see stable candidates, pre-release servers see everything of their own edition.
+     */
+    static @Nullable GitHubRelease selectBest(@NotNull List<GitHubRelease> releases,
+                                              @NotNull SemanticVersion current,
+                                              @NotNull Edition edition) {
+        SemanticVersion best = null;
+        GitHubRelease bestRelease = null;
+        for (GitHubRelease rel : releases) {
+            if (rel.draft || !rel.belongsTo(edition)) continue;
+            SemanticVersion v = rel.asSemantic(edition);
+            if (v.isExperimental()) continue;
+            if (!current.isPreRelease() && (rel.prerelease || v.isPreRelease())) continue;
+            if (best == null || v.compareTo(best) > 0) {
+                best = v;
+                bestRelease = rel;
+            }
+        }
+        return bestRelease;
+    }
+
     private void sendMessage(SemanticVersion currentVersion, SemanticVersion latestVersion,
                              @Nullable GitHubRelease release) {
         boolean isOutdated = latestVersion.compareTo(currentVersion) > 0;
         String releaseUrl = release != null && release.htmlUrl != null && !release.htmlUrl.isBlank()
             ? release.htmlUrl
-            : RELEASE_URL;
+            : releaseUrl();
 
         if (this.recipients != null && !this.recipients.isEmpty()) {
             String message;
@@ -282,13 +295,28 @@ public final class UpdateChecker implements Runnable {
         @SerializedName("draft")
         boolean draft;
 
-        @Contract(" -> new")
-        public @NotNull SemanticVersion asSemantic() {
+        boolean belongsTo(@NotNull Edition edition) {
+            if (tagName == null) return false;
+            return edition.tagPrefix().isEmpty()
+                ? !Edition.isEditionTag(tagName)
+                : tagName.startsWith(edition.tagPrefix());
+        }
+
+        @Contract("_ -> new")
+        public @NotNull SemanticVersion asSemantic(@NotNull Edition edition) {
             String version = tagName != null ? tagName : "0.0.0";
+            if (version.startsWith(edition.tagPrefix())) {
+                version = version.substring(edition.tagPrefix().length());
+            }
             if (version.startsWith("v") || version.startsWith("V")) {
                 version = version.substring(1);
             }
             return new SemanticVersion(version);
+        }
+
+        @Contract(" -> new")
+        public @NotNull SemanticVersion asSemantic() {
+            return asSemantic(Edition.current());
         }
 
         @Nullable
