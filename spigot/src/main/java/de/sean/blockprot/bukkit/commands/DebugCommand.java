@@ -793,7 +793,7 @@ public class DebugCommand implements CommandExecutor {
         base.origin = InventoryState.MenuOrigin.NONE;
         InventoryState.set(player.getUniqueId(), base);
 
-        BlockProtLogger.subGroup("Inventories (28 screens):");
+        BlockProtLogger.subGroup("Inventories:");
 
         inv(p, f, "UserMenuInventory",    () -> new UserMenuInventory().fill(player));
         inv(p, f, "AdminMenuInventory",   () -> new AdminMenuInventory().fill(player));
@@ -1320,7 +1320,7 @@ public class DebugCommand implements CommandExecutor {
     private void checkAllDialogs(@NotNull Player player, AtomicInteger p, AtomicInteger f) {
         DialogBridgeFactory.setTestBridge(new NoopDialogBridge());
         try {
-            BlockProtLogger.subGroup("Dialogs (28 screens):");
+            BlockProtLogger.subGroup("Dialogs:");
             dlg(p, f, "AboutDialog", () -> AboutDialog.show(player));
             dlg(p, f, "AdminMenuDialog", () -> AdminMenuDialog.show(player));
             dlg(p, f, "AdminConfigDialog", () -> AdminConfigDialog.show(player));
