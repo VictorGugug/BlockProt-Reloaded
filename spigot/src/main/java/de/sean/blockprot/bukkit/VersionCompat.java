@@ -89,15 +89,6 @@ public final class VersionCompat {
         return NEW_SCHEME;
     }
 
-    /**
-     * Returns true if the server is on Paper 1.21.4 or later.
-     * This is relevant because 1.21.4 is when Paper hard-forked from Spigot
-     * and introduced typed inventory views ({@code InventoryView} became an interface).
-     */
-    public static boolean hasTypedInventoryViews() {
-        return isAtLeast(1, 21, 4);
-    }
-
     public static boolean isPaper() {
         try {
             Class.forName("io.papermc.paper.event.player.AsyncChatEvent");

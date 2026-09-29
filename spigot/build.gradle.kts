@@ -41,30 +41,11 @@ repositories {
     }
 }
 
-// --- dialogs source set: compiles against Paper 1.21.7+ for the dialog API ---
-sourceSets {
-    val dialogs = create("dialogs") {
-        java {
-            srcDir("src/dialogs/java")
-        }
-        compileClasspath += sourceSets.main.get().output
-        runtimeClasspath += sourceSets.main.get().output
-    }
-}
-
-configurations.named("dialogsCompileOnly") {
-    extendsFrom(configurations.compileOnly.get())
-}
-
 dependencies {
     implementation(project(":common"))
 
-    // Compile against Paper 1.21.1, the oldest version the plugin actively supports.
-    // 1.20.x users receive bug fixes only (legacy support, no new features).
-    // Primary targets: current Paper/Purpur 26.x line and 1.21.1+.
-    // APIs introduced after 1.21.1 are accessed via VersionCompat checks and
-    // reflection at runtime, never directly imported.
-    compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    // Compiled against the oldest supported version so newer-only APIs cannot slip in.
+    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
     testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("org.apache.commons:commons-lang3:3.17.0")
     implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
@@ -107,8 +88,6 @@ dependencies {
     compileOnly("com.github.GriefPrevention:GriefPrevention:16.18.7") { isTransitive = false }
     compileOnly("org.geysermc.floodgate:api:2.2.3-SNAPSHOT")
     compileOnly("org.geysermc.cumulus:cumulus:1.1.2")
-
-    add("dialogsCompileOnly", "io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
 }
 
 val targetJavaVersion = project.property("targetJavaVersion") as String
@@ -181,14 +160,12 @@ tasks.shadowJar {
     val jarVersion = project.version as String
     val jarSuffix  = if (isMaster) "" else "-$branch"
     archiveFileName.set("BlockProtReloaded-${jarVersion}${jarSuffix}.jar")
-    from(sourceSets["dialogs"].output)
     exclude("META-INF/*.kotlin_module")
 }
 
 tasks.build {
     dependsOn(tasks["javadocJar"])
     dependsOn(tasks.shadowJar)
-    dependsOn(tasks.named("compileDialogsJava"))
 }
 
 tasks.test {
@@ -226,7 +203,7 @@ hangarPublish {
         platforms {
             paper {
                 jar.set(tasks.shadowJar.flatMap { it.archiveFile })
-                platformVersions.set(listOf("1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1", "26.2", "26.3"))
+                platformVersions.set(listOf("1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1", "26.2", "26.3"))
             }
         }
     }

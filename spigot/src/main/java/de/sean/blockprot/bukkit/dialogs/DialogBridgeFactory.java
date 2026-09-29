@@ -22,6 +22,7 @@ package de.sean.blockprot.bukkit.dialogs;
 
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.VersionCompat;
+import de.sean.blockprot.bukkit.dialogs.impl.PaperDialogBridge;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -52,14 +53,7 @@ public final class DialogBridgeFactory {
             }
             return null;
         }
-        try {
-            Class<?> clazz = Class.forName("de.sean.blockprot.bukkit.dialogs.impl.PaperDialogBridge");
-            bridge = (DialogBridge) clazz.getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            BlockProt.getInstance().getLogger().severe(
-                "Failed to load PaperDialogBridge: " + e.getMessage());
-            bridge = null;
-        }
+        bridge = new PaperDialogBridge();
         return bridge;
     }
 

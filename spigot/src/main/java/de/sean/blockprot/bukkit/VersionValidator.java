@@ -46,7 +46,6 @@ public final class VersionValidator {
         String javaVersion = System.getProperty("java.version");
         int javaMajor = extractMajorVersion(javaVersion);
         boolean isPaper = VersionCompat.isPaper();
-        boolean hasTypedViews = VersionCompat.hasTypedInventoryViews();
 
         String software = VersionCompat.getServerSoftwareName();
         if (!VersionCompat.isPaperFamily()) {
@@ -66,13 +65,8 @@ public final class VersionValidator {
             warn(Translator.get(TranslationKey.CONSOLE__NOT_PAPER));
         }
 
-        if (!hasTypedViews && !VersionCompat.is26Family()) {
-            warn(Translator.get(TranslationKey.CONSOLE__TYPED_VIEWS_FALLBACK));
-        }
-
-        if (javaMajor >= 21 && isPaper && hasTypedViews) {
-            BlockProtLogger.log("startup-checks",
-                "Java " + javaVersion + " OK | Paper OK | TypedViews " + (hasTypedViews ? "OK" : "N/A"));
+        if (javaMajor >= 21 && isPaper) {
+            BlockProtLogger.log("startup-checks", "Java " + javaVersion + " OK | Paper OK");
         }
     }
 

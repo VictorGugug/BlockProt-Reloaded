@@ -189,7 +189,7 @@ public final class BlockProt extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        boolean unsupportedVersion = !VersionCompat.isAtLeast(1, 21, 1);
+        boolean unsupportedVersion = !VersionCompat.isAtLeast(1, 21, 7);
         if (isRunningCraftBukkit() || unsupportedVersion) {
             this.saveDefaultConfig();
             this.reloadConfig();

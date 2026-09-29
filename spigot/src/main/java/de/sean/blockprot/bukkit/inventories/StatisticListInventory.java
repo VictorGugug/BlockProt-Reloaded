@@ -281,11 +281,6 @@ public final class StatisticListInventory extends BlockProtInventory {
                 Material m = Material.valueOf(typeName);
                 if (m != Material.AIR) return m;
             } catch (IllegalArgumentException ignored) {}
-            if (value instanceof org.bukkit.entity.ChestBoat boat) {
-                String wood = boat.getBoatType().name();
-                if (wood.equals("BAMBOO")) return Material.valueOf("BAMBOO_CHEST_RAFT");
-                try { return Material.valueOf(wood + "_CHEST_BOAT"); } catch (IllegalArgumentException ignored) {}
-            }
             return Material.OAK_CHEST_BOAT;
         }
 
@@ -294,11 +289,6 @@ public final class StatisticListInventory extends BlockProtInventory {
             Location loc = value.getLocation();
             String coords = "[" + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ() + "]";
             String typeName = value.getType().name();
-            if (value instanceof org.bukkit.entity.ChestBoat boat) {
-                String wood = boat.getBoatType().name();
-                if (wood.equals("BAMBOO")) typeName = "BAMBOO_CHEST_RAFT";
-                else typeName = wood + "_CHEST_BOAT";
-            }
             String type = typeName.replace('_', ' ');
             StringBuilder sb = new StringBuilder("\u00a77");
             boolean cap = true;
