@@ -113,9 +113,9 @@ The version suffix is controlled by `versionSuffix` in `gradle.properties`:
 
 | Value | Output |
 |---|---|
-| *(blank)* | `BlockProtReloaded-1.3.6.jar` - stable release |
-| `BEDev` | `BlockProtReloaded-1.3.6-BEDev.jar` - experimental pre-release |
-| `hotfix` | `BlockProtReloaded-1.3.6-hotfix.jar` - targeted bugfix release |
+| *(blank)* | `BlockProtReloaded-1.3.9.jar` - stable release |
+| `BEDev` | `BlockProtReloaded-1.3.9-BEDev.jar` - experimental pre-release |
+| `hotfix` | `BlockProtReloaded-1.3.9-hotfix.jar` - targeted bugfix release |
 
 ## File Layout
 
@@ -307,7 +307,7 @@ Configurable automated cleanup (`inactivity_cleanup_days`) that unregisters prot
 
 ## Developer API
 
-Other plugins can query and react to BlockProt protections. The API is published through [JitPack](https://jitpack.io/#VictorGugug/BlockProt-Reloaded); use a release tag (for example `1.3.8`) as the version.
+Other plugins can query and react to BlockProt protections. The API is published through [JitPack](https://jitpack.io/#VictorGugug/BlockProt-Reloaded); use a release tag (for example `1.3.9`) as the version.
 
 Gradle (Kotlin DSL):
 
@@ -317,8 +317,8 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.github.VictorGugug.BlockProt-Reloaded:blockprot-spigot:1.3.8") { isTransitive = false }
-    compileOnly("com.github.VictorGugug.BlockProt-Reloaded:common:1.3.8")
+    compileOnly("com.github.VictorGugug.BlockProt-Reloaded:blockprot-spigot:1.3.9") { isTransitive = false }
+    compileOnly("com.github.VictorGugug.BlockProt-Reloaded:common:1.3.9")
 }
 ```
 
@@ -333,7 +333,7 @@ Maven:
 <dependency>
     <groupId>com.github.VictorGugug.BlockProt-Reloaded</groupId>
     <artifactId>blockprot-spigot</artifactId>
-    <version>1.3.8</version>
+    <version>1.3.9</version>
     <scope>provided</scope>
 </dependency>
 ```
