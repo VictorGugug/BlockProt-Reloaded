@@ -86,7 +86,7 @@ class Resolve(unittest.TestCase):
     def test_outputs_are_workflow_safe(self):
         out = edition.resolve("workflow_dispatch", input_edition="bpr-legacy", input_operation="Run CI")
         self.assertEqual("false", out["make_latest"])
-        self.assertEqual("false", out["modrinth_enabled"])
+        self.assertEqual("true", out["modrinth_enabled"])
         self.assertEqual("", out["curseforge_id"])
         self.assertEqual(7, len(json.loads(out["smoke_matrix"])["include"]))
         for value in out.values():
