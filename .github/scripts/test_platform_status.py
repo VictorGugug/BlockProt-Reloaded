@@ -52,8 +52,8 @@ class Check(unittest.TestCase):
 
         with mock.patch.object(platform_status, "request", side_effect=fake):
             status = platform_status.check("1.3.9.1", None, edition.load_edition("bpr-legacy"))
-        self.assertEqual({"github": True, "modrinth": None, "curseforge": None, "hangar": None}, status)
-        self.assertEqual(1, len(calls))
+        self.assertEqual({"github": True, "modrinth": True, "curseforge": None, "hangar": None}, status)
+        self.assertEqual(2, len(calls))
         self.assertTrue(calls[0].endswith("/releases/tags/bprl-1.3.9.1"))
 
     def test_main_checks_every_platform_with_its_own_ids(self):
@@ -75,7 +75,7 @@ class Check(unittest.TestCase):
         config["platforms"]["hangar"]["enabled"] = True
         with mock.patch.object(platform_status, "request", return_value=(404, None)):
             status = platform_status.check("1.3.9.1", None, config)
-        self.assertEqual({"github": False, "modrinth": None, "curseforge": None, "hangar": False}, status)
+        self.assertEqual({"github": False, "modrinth": False, "curseforge": None, "hangar": False}, status)
 
     def test_mark_renders_disabled_as_dash(self):
         self.assertEqual(("[-]", "[v]", "[x]"),

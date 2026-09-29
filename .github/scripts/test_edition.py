@@ -24,8 +24,8 @@ class ConfigShape(unittest.TestCase):
         self.assertTrue(editions["bpr"]["makeLatest"])
         for edition_id in ("bpr-legacy", "bp-legacy"):
             self.assertFalse(editions[edition_id]["makeLatest"])
-            for platform in editions[edition_id]["platforms"].values():
-                self.assertFalse(platform["enabled"])
+            for name, platform in editions[edition_id]["platforms"].items():
+                self.assertEqual(name == "modrinth", platform["enabled"])
 
     def test_tag_prefixes_are_unique_and_never_numeric(self):
         prefixes = [c["tagPrefix"] for c in edition.load_all().values() if c["tagPrefix"]]
@@ -86,7 +86,7 @@ class Resolve(unittest.TestCase):
     def test_outputs_are_workflow_safe(self):
         out = edition.resolve("workflow_dispatch", input_edition="bpr-legacy", input_operation="Run CI")
         self.assertEqual("false", out["make_latest"])
-        self.assertEqual("false", out["modrinth_enabled"])
+        self.assertEqual("true", out["modrinth_enabled"])
         self.assertEqual("", out["curseforge_id"])
         self.assertEqual(7, len(json.loads(out["smoke_matrix"])["include"]))
         for value in out.values():
