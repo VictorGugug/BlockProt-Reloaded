@@ -16,6 +16,8 @@ Java 17, Paper 1.18.2 through 1.20.4, Folia support, Bedrock Forms, Admin Tiers,
 
 > **BlockProt Legacy** is the edition for Minecraft 1.18.2 to 1.20.4. For Minecraft 1.20.5 and newer download BlockProt Reloaded Legacy or BlockProt Reloaded. Looking for another Minecraft version? See the [version guide](docs/READ_MEs/VERSION_GUIDE.md).
 
+> **Maintenance notice:** the maintainer is taking a break to focus on other projects. Issues and pull requests are welcome for any change and are reviewed as time allows. Read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+
 Block protection plugin for Paper, Purpur, and Folia servers. Players protect chests, furnaces, barrels, doors, trapdoors, item frames, vehicles, and workstations through an intuitive chest GUI - no complex commands required. This fork extends the original NBT core with enterprise stability, thread-safe asynchronous architecture, and rich modern features.
 
 ## Philosophy
