@@ -224,7 +224,7 @@ public final class BlockLockDialog {
             ));
         }
 
-        if (isOwnerOrAdmin) {
+        if (!isNotProtected && isOwnerOrAdmin) {
             actions.add(actionBtn(
                 stripColor(Translator.get(TranslationKey.INVENTORIES__TRANSFER__BUTTON)),
                 PASTEL_CORAL,
