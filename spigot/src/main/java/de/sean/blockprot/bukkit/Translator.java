@@ -89,8 +89,8 @@ public final class Translator {
 
     private static final MiniMessage MINI_MESSAGE = MiniMessage.miniMessage();
 
-    private static final LegacyComponentSerializer LEGACY_SERIALIZER =
-        LegacyComponentSerializer.legacySection();
+    private static final LegacyComponentSerializer LEGACY_SERIALIZER = LegacyComponentSerializer.builder()
+        .character('§').hexColors().useUnusualXRepeatedCharacterHexFormat().build();
 
     /**
      * Whitelist of known MiniMessage tag names (lowercase).
@@ -115,6 +115,8 @@ public final class Translator {
      * Group 1 is the name, stripped of leading slash and trailing content after colon/space.
      */
     private static final Pattern TAG_NAME_PATTERN = Pattern.compile("</?([a-zA-Z_][a-zA-Z0-9_]*)");
+
+    private static final Pattern HEX_TAG_PATTERN = Pattern.compile("</?#[0-9a-fA-F]{6}>");
 
     private Translator() {}
 
@@ -205,6 +207,7 @@ public final class Translator {
     private static boolean containsMiniMessage(@NotNull String text) {
         if (text.indexOf('\u00A7') >= 0) return false;
 
+        if (HEX_TAG_PATTERN.matcher(text).find()) return true;
         var matcher = TAG_NAME_PATTERN.matcher(text);
         while (matcher.find()) {
             String tagName = matcher.group(1).toLowerCase(Locale.ROOT);

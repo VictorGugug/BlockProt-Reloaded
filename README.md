@@ -31,6 +31,8 @@ Translations are managed through **[GitLocalize](https://gitlocalize.com/repo/10
 
 The English file `translations_en.yml` is the primary reference. Missing keys fall back to English automatically without server errors.
 
+Translations use [MiniMessage](https://docs.advntr.dev/minimessage/format.html) formatting (`<gold>`, `<bold>`, `<#a3c6eb>`, `<gradient:red:blue>`). Legacy `&` and `§` color codes are still accepted, so older translation files keep working. Write `\<player>` when a literal `<` must be shown.
+
 ### Languages on GitLocalize
 
 These 25 languages are bundled in `lang/` and actively accepting contributions:
