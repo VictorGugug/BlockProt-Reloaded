@@ -1,5 +1,7 @@
 # Contributing to BlockProt Reloaded
 
+The maintainer is taking a break to focus on other projects. Anyone can open issues and pull requests for any change, and they are reviewed as time allows. The process below still applies.
+
 ## Before Contributing
 
 Read [README.md](README.md), [SCOPE.md](SCOPE.md), and [LICENSE](LICENSE) before opening an issue or pull request. Contributions must remain consistent with the project scope, roadmap, and license.
