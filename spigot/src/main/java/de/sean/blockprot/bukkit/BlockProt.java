@@ -68,7 +68,7 @@ import java.util.Objects;
 
 public final class BlockProt extends JavaPlugin {
 
-    public static final int pluginId = 31548; // BlockProt Reloaded on bStats
+    public static final int pluginId = 34386; // BlockProt Legacy on bStats
     public static final String defaultLanguageFile = "translations_en.yml";
 
     @Nullable private static BlockProt instance;
