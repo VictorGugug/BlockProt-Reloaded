@@ -54,7 +54,7 @@ Rules that keep the data safe:
 - Moving down is not supported. The plugin detects it, creates a backup and warns that settings written by the newer edition may be ignored.
 - Two BlockProt JARs in `plugins/` fail with a plugin name conflict, because all editions share the plugin name `BlockProtReloaded`. Remove the JAR you do not need.
 
-When the server runs a Minecraft version below the range of the installed edition, the plugin disables itself and the console names the edition to download. On a Minecraft version above the range of a legacy edition, the plugin keeps running and warns once that a newer edition exists.
+When the server runs a Minecraft version below the range of the installed edition, the plugin disables itself and the console tells you to read this guide and names the edition to download. This works on any Minecraft version from 1.18.2 up, because the plugin declares the oldest possible `api-version`. If the console shows `UnsupportedClassVersionError` instead, your Java is older than the edition requires: check the Java column of the table above. On a Minecraft version above the range of a legacy edition, the plugin keeps running and warns once that a newer edition exists.
 
 ## Support policy
 
