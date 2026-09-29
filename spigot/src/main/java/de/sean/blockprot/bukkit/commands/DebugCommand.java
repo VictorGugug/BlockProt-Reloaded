@@ -638,7 +638,7 @@ public class DebugCommand implements CommandExecutor {
                     org.bukkit.plugin.Plugin plugin = integration.getPlugin();
                     String ver = "unknown";
                     if (plugin != null) {
-                        try { ver = plugin.getPluginMeta().getVersion(); }
+                        try { ver = plugin.getDescription().getVersion(); }
                         catch (NoSuchMethodError err) {
                             @SuppressWarnings("deprecation")
                             String fallback = plugin.getDescription().getVersion();
@@ -701,7 +701,7 @@ public class DebugCommand implements CommandExecutor {
             BlockProtLogger.pass("SkinsRestorer: installed but disabled");
         } else {
             String ver;
-            try { ver = plugin.getPluginMeta().getVersion(); }
+            try { ver = plugin.getDescription().getVersion(); }
             catch (NoSuchMethodError e) {
                 @SuppressWarnings("deprecation")
                 String fallback = plugin.getDescription().getVersion();

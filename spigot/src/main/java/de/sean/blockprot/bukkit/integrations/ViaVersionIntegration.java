@@ -75,7 +75,7 @@ public final class ViaVersionIntegration extends PluginIntegration {
             Class.forName(VIA_API_CLASS);
             enabled = true;
 
-            String viaVer = via.getPluginMeta().getVersion();
+            String viaVer = via.getDescription().getVersion();
             BlockProtLogger.log("integration",
                 Translator.get(TranslationKey.CONSOLE__VIAVERSION_DETECTED)
                     .replace("{version}", viaVer));
@@ -99,7 +99,7 @@ public final class ViaVersionIntegration extends PluginIntegration {
         if (plugin == null || !plugin.isEnabled()) return;
         String ver;
         try {
-            ver = plugin.getPluginMeta().getVersion();
+            ver = plugin.getDescription().getVersion();
         } catch (NoSuchMethodError e) {
             @SuppressWarnings("deprecation")
             String fallback = plugin.getDescription().getVersion();
@@ -179,7 +179,7 @@ public final class ViaVersionIntegration extends PluginIntegration {
         StringBuilder sb = new StringBuilder("ViaVersion");
         Plugin via = getPlugin();
         if (via != null) {
-            try { sb.append(" v").append(via.getPluginMeta().getVersion()); }
+            try { sb.append(" v").append(via.getDescription().getVersion()); }
             catch (NoSuchMethodError e) {
                 @SuppressWarnings("deprecation")
                 String fallback = via.getDescription().getVersion();
@@ -195,7 +195,7 @@ public final class ViaVersionIntegration extends PluginIntegration {
         Plugin p = BlockProt.getInstance().getPlugin(name);
         if (p == null || !p.isEnabled()) return;
         sb.append(" + ").append(name);
-        try { sb.append(" v").append(p.getPluginMeta().getVersion()); }
+        try { sb.append(" v").append(p.getDescription().getVersion()); }
         catch (NoSuchMethodError e) {
             @SuppressWarnings("deprecation")
             String fallback = p.getDescription().getVersion();
