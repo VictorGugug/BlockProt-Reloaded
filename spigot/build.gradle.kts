@@ -45,7 +45,7 @@ dependencies {
     implementation(project(":common"))
 
     // Compiled against the oldest supported version so newer-only APIs cannot slip in.
-    compileOnly("io.papermc.paper:paper-api:${project.findProperty("paperApiVersion") ?: "1.20.4-R0.1-SNAPSHOT"}")
+    compileOnly("io.papermc.paper:paper-api:${project.findProperty("paperApiVersion") ?: "1.18.2-R0.1-SNAPSHOT"}")
     testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("org.apache.commons:commons-lang3:3.20.0")
     implementation("com.github.ben-manes.caffeine:caffeine:3.3.0")
