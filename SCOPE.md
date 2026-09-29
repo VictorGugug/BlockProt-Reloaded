@@ -31,8 +31,8 @@ BlockProt is published as three editions from this repository. Each edition has 
 | Edition | Branch | Minecraft | Java | Tag prefix |
 | --- | --- | --- | --- | --- |
 | BlockProt Reloaded | `main` | 1.21.7 and newer | 21 | none |
-| BlockProt Reloaded Legacy | `legacy/bpr` | 1.20.5 to 1.21.6 | 21 | `bprl-` |
-| BlockProt Legacy | `legacy/bp` | 1.18.2 to 1.20.4 | 17 | `bpl-` |
+| BlockProt Reloaded Legacy | `BlockProt-Reloaded-Legacy` | 1.20.5 to 1.21.6 | 21 | `bprl-` |
+| BlockProt Legacy | `BlockProt-Legacy` | 1.18.2 to 1.20.4 | 17 | `bpl-` |
 
 Legacy maintenance boundaries:
 
@@ -47,7 +47,7 @@ The user-facing summary is [docs/READ_MEs/VERSION_GUIDE.md](docs/READ_MEs/VERSIO
 
 ### Runtime and Build Toolchain
 
-- **Minimum Java runtime**: Java 21 LTS on `main` and `legacy/bpr`, Java 17 on `legacy/bp` (enforced by the bytecode target of each branch).
+- **Minimum Java runtime**: Java 21 LTS on `main` and `BlockProt-Reloaded-Legacy`, Java 17 on `BlockProt-Legacy` (enforced by the bytecode target of each branch).
 - **Build toolchain**: JDK 25.
 - **Compilation target**: Pinned to an established Paper API baseline so that every compiled method exists across all supported servers. Newer platform APIs are accessed safely through runtime feature detection (`VersionCompat`) or reflection bridges rather than direct compilation.
 

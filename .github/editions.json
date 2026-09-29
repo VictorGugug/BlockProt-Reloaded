@@ -19,7 +19,7 @@
   },
   "bpr-legacy": {
     "displayName": "BlockProt Reloaded Legacy",
-    "branch": "legacy/bpr",
+    "branch": "BlockProt-Reloaded-Legacy",
     "commitBranch": "legacy-bpr",
     "tagPrefix": "bprl-",
     "jarBase": "BlockProtReloadedLegacy",
@@ -47,7 +47,7 @@
   },
   "bp-legacy": {
     "displayName": "BlockProt Legacy",
-    "branch": "legacy/bp",
+    "branch": "BlockProt-Legacy",
     "commitBranch": "legacy-bp",
     "tagPrefix": "bpl-",
     "jarBase": "BlockProtLegacy",
