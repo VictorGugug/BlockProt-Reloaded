@@ -55,6 +55,9 @@ Pull requests are the required path for submitting code changes that fit within 
     - `BPR:main(fix): Resolve duplicate interact event on off-hand click`
     - `BPR:main(add): Introduce protectable entities configuration in blocks.yml`
     - `BPR:main(docs): Add contributing guidelines and agent specifications`
+- Legacy editions live on the long-lived branches `legacy/bpr` (BlockProt Reloaded Legacy) and `legacy/bp` (BlockProt Legacy). Their commit branch slot is `legacy-bpr` and `legacy-bp` because the slot allows only letters, digits, `_`, `.` and `-`. Example: `BPR:legacy-bpr(fix): Resolve duplicate interact event on off-hand click`.
+- A change targets `main` unless it only concerns a legacy edition. Fixes land in `main` first, then are carried with `git cherry-pick -x <sha>` into `legacy/bpr` and then into `legacy/bp`. Files that differ by design between branches (version fields, JAR base name, `plugin.yml` `api-version`, `edition.properties`, `.github/EDITION`, dialog sources, the Paper API target) keep the branch value when a cherry-pick conflicts. `.github/` is refreshed on a legacy branch with `.github/scripts/sync_legacy_workflows.sh <branch>` whenever it changes on `main`.
+- Legacy branches accept bug fixes, security fixes, and compatibility with new Minecraft releases inside their range. Features are not backported.
 - Keep commit history clean and linear. Avoid unnecessary merge commits in your pull request branch; rebase on current `main` when updates are needed.
 
 ### Description and Context
@@ -86,7 +89,7 @@ Every pull request must be verified on a live server environment before submissi
 
 ## Code Standards and Architecture
 
-- **Java baseline**: Java 21 LTS bytecode, built with the JDK 25 toolchain.
+- **Java baseline**: Java 21 LTS bytecode, built with the JDK 25 toolchain. `legacy/bp` targets Java 17 bytecode.
 - **Configuration preservation**: Configuration files (`config.yml`, `blocks.yml`, `worlds.yml`) must never be overwritten on plugin update. Code must only merge missing default keys, preserving existing administrator settings.
 - **Menu and dialog parity**: Where applicable, user-facing interfaces should support both traditional inventory menus and native Paper Dialogs (`use_dialogs`), maintaining the pastel color palette used throughout the plugin.
 - **Thread safety**: Respect server thread models. Asynchronous tasks and region threads must not access Bukkit world state without proper scheduling.

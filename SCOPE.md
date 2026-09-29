@@ -22,11 +22,32 @@ To ensure clarity across all development discussions, two distinct version layer
 - **Targeted Minecraft Baselines**: Each plugin release milestone declares and certifies a specific range of supported Minecraft server versions, documented directly in `gradle.properties` to ensure transparent alignment and eliminate version ambiguity.
 - **Mid-Cycle Upstream Releases**: When a new Minecraft update is released while a plugin version is actively in development, compatibility work for that newly released Minecraft version is not rushed into the in-flight plugin milestone. The active plugin release concludes against its declared baseline, and official compatibility for the new Minecraft release is scheduled for the subsequent plugin release cycle.
 - **No Unplanned Compatibility Guarantees**: BlockProt Reloaded does not guarantee full functionality on Minecraft versions released mid-cycle that were not formally accounted for or supported in the active plugin release.
-- **Legacy Version Separation**: Minecraft server versions requiring legacy runtimes (such as Java 17 and pre-component item NBT handling) are isolated in the dedicated `BlockProt-Legacy` branch rather than compromising the modern Java 21 LTS baseline on `main`.
+- **Legacy Version Separation**: Minecraft server versions requiring older runtimes (such as Java 17 and pre-component item NBT handling) are served by the legacy editions on their own branches rather than compromising the modern Java 21 LTS baseline on `main`. See [Editions](#editions).
+
+### Editions
+
+BlockProt is published as three editions from this repository. Each edition has its own branch, tag prefix, JAR name, and download pages, and declares its own Minecraft range in `gradle.properties`:
+
+| Edition | Branch | Minecraft | Java | Tag prefix |
+| --- | --- | --- | --- | --- |
+| BlockProt Reloaded | `main` | 1.21.7 and newer | 21 | none |
+| BlockProt Reloaded Legacy | `legacy/bpr` | 1.20.5 to 1.21.6 | 21 | `bprl-` |
+| BlockProt Legacy | `legacy/bp` | 1.18.2 to 1.20.4 | 17 | `bpl-` |
+
+Legacy maintenance boundaries:
+
+- Legacy editions receive bug fixes, security fixes, and compatibility with new Minecraft releases inside their range. They receive no new features.
+- Fixes land in `main` first and are carried to the legacy branches by cherry-pick.
+- Legacy editions never change the data format. Only `main` may add configuration or data keys; legacy editions ignore unknown keys and never rewrite or reset them.
+- Native Paper Dialogs exist only in BlockProt Reloaded. Legacy editions use chest inventory menus.
+- Extending a legacy range below 1.18.2 is outside the current scope and needs an issue discussion first.
+- Every edition keeps the plugin name `BlockProtReloaded`, so all editions share one data folder and permission set.
+
+The user-facing summary is [docs/READ_MEs/VERSION_GUIDE.md](docs/READ_MEs/VERSION_GUIDE.md).
 
 ### Runtime and Build Toolchain
 
-- **Minimum Java runtime**: Java 21 LTS (enforced by Java 21 bytecode target).
+- **Minimum Java runtime**: Java 21 LTS on `main` and `legacy/bpr`, Java 17 on `legacy/bp` (enforced by the bytecode target of each branch).
 - **Build toolchain**: JDK 25.
 - **Compilation target**: Pinned to an established Paper API baseline so that every compiled method exists across all supported servers. Newer platform APIs are accessed safely through runtime feature detection (`VersionCompat`) or reflection bridges rather than direct compilation.
 
