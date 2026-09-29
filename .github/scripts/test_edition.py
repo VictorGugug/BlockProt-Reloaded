@@ -24,8 +24,8 @@ class ConfigShape(unittest.TestCase):
         self.assertTrue(editions["bpr"]["makeLatest"])
         for edition_id in ("bpr-legacy", "bp-legacy"):
             self.assertFalse(editions[edition_id]["makeLatest"])
-            for platform in editions[edition_id]["platforms"].values():
-                self.assertFalse(platform["enabled"])
+            for name, platform in editions[edition_id]["platforms"].items():
+                self.assertEqual(name == "modrinth", platform["enabled"])
 
     def test_tag_prefixes_are_unique_and_never_numeric(self):
         prefixes = [c["tagPrefix"] for c in edition.load_all().values() if c["tagPrefix"]]
