@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.dialogs;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.Edition;
 import de.sean.blockprot.bukkit.VersionCompat;
 import de.sean.blockprot.bukkit.dialogs.impl.PaperDialogBridge;
 import org.jetbrains.annotations.NotNull;
@@ -45,6 +46,7 @@ public final class DialogBridgeFactory {
     public static DialogBridge getBridge() {
         if (testBridge != null) return testBridge;
         if (bridge != null) return bridge;
+        if (!Edition.current().supportsDialogs()) return null;
         if (!VersionCompat.hasDialogApi()) {
             if (!loggedNoApi) {
                 BlockProt.getInstance().getLogger().warning(
