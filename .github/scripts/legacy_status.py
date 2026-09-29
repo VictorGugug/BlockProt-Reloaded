@@ -3,7 +3,7 @@ import argparse
 import subprocess
 import sys
 
-LEGACY_BRANCHES = ("legacy/bpr", "legacy/bp")
+LEGACY_BRANCHES = ("BlockProt-Reloaded-Legacy", "BlockProt-Legacy")
 
 
 def git(*args, cwd=None):
