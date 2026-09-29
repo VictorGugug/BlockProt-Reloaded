@@ -37,6 +37,12 @@
       "modrinth": {"enabled": false, "id": "blockprot-reloaded-legacy"},
       "curseforge": {"enabled": false, "id": null, "slug": "blockprot-reloaded-legacy"},
       "hangar": {"enabled": false, "slug": "BlockProt-Reloaded-Legacy", "owner": "VictorGugug"}
+    },
+    "description": {
+      "title": "BlockProt Reloaded Legacy (Minecraft 1.20.5 - 1.21.6)",
+      "range": "1.20.5 - 1.21.6",
+      "java": "Java 21+",
+      "servers": ["Paper", "Purpur", "Folia"]
     }
   },
   "bp-legacy": {
@@ -57,6 +63,12 @@
       "modrinth": {"enabled": false, "id": "blockprot-legacy"},
       "curseforge": {"enabled": false, "id": null, "slug": "blockprot-legacy"},
       "hangar": {"enabled": false, "slug": "BlockProt-Legacy", "owner": "VictorGugug"}
+    },
+    "description": {
+      "title": "BlockProt Legacy (Minecraft 1.18.2 - 1.20.4)",
+      "range": "1.18.2 - 1.20.4",
+      "java": "Java 17+",
+      "servers": ["Paper", "Purpur"]
     }
   }
 }
