@@ -20,18 +20,12 @@
 
 package de.sean.blockprot.bukkit.dialogs;
 
-import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.Edition;
-import de.sean.blockprot.bukkit.VersionCompat;
-import de.sean.blockprot.bukkit.dialogs.impl.PaperDialogBridge;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class DialogBridgeFactory {
 
-    private static @Nullable DialogBridge bridge;
     private static @Nullable DialogBridge testBridge;
-    private static boolean loggedNoApi = false;
 
     private DialogBridgeFactory() {}
 
@@ -44,19 +38,7 @@ public final class DialogBridgeFactory {
 
     @Nullable
     public static DialogBridge getBridge() {
-        if (testBridge != null) return testBridge;
-        if (bridge != null) return bridge;
-        if (!Edition.current().supportsDialogs()) return null;
-        if (!VersionCompat.hasDialogApi()) {
-            if (!loggedNoApi) {
-                BlockProt.getInstance().getLogger().warning(
-                    "Dialog API not found (requires Paper 1.21.7+). Falling back to inventories. Set use_dialogs: false in config.yml to suppress this warning, or the plugin will auto-disable it on next reload.");
-                loggedNoApi = true;
-            }
-            return null;
-        }
-        bridge = new PaperDialogBridge();
-        return bridge;
+        return testBridge;
     }
 
     /**

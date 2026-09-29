@@ -20,34 +20,17 @@
 
 package de.sean.blockprot.bukkit.dialogs;
 
-import de.sean.blockprot.bukkit.VersionCompat;
-import de.sean.blockprot.bukkit.dialogs.impl.PaperDialogBridge;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import de.sean.blockprot.bukkit.Edition;
 import org.junit.jupiter.api.Test;
-import org.mockbukkit.mockbukkit.MockBukkit;
 
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class DialogBridgeFactoryTest {
 
-    @BeforeAll
-    static void initServer() {
-        MockBukkit.mock();
-    }
-
-    @AfterAll
-    static void tearDown() {
-        MockBukkit.unmock();
-    }
-
     @Test
-    void createsThePaperBridgeDirectly() {
-        assertTrue(VersionCompat.hasDialogApi());
-        DialogBridge bridge = DialogBridgeFactory.getBridge();
-        assertInstanceOf(PaperDialogBridge.class, bridge);
-        assertSame(bridge, DialogBridgeFactory.getBridge());
+    void legacyEditionHasNoDialogBridge() {
+        assertFalse(Edition.current().supportsDialogs());
+        assertNull(DialogBridgeFactory.getBridge());
     }
 }
