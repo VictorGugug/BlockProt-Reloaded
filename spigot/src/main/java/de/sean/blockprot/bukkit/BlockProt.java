@@ -162,6 +162,7 @@ public final class BlockProt extends JavaPlugin {
         instance = this;
         pluginVersion = this.getDescription().getVersion();
         pluginAuthors = this.getDescription().getAuthors();
+        if (isUnsupportedMinecraft()) return;
         try {
             // Store the usercache inside the plugin data folder: not next to server.jar.
             File cacheFile = new File(this.getDataFolder(), "blockprot_usercache.sqlite");
@@ -185,6 +186,12 @@ public final class BlockProt extends JavaPlugin {
             try { integration.load(); } catch (NoClassDefFoundError ignored) {}
         }
         integrationsLoaded = true;
+    }
+
+    private static boolean isUnsupportedMinecraft() {
+        Edition edition = Edition.current();
+        return !edition.isNewerThanRange(VersionCompat.MAJOR, VersionCompat.MINOR, VersionCompat.PATCH)
+            && !edition.supports(VersionCompat.MAJOR, VersionCompat.MINOR, VersionCompat.PATCH);
     }
 
     private static @NotNull String unsupportedMinecraftMessage(@NotNull Edition edition) {
@@ -211,8 +218,7 @@ public final class BlockProt extends JavaPlugin {
     public void onEnable() {
         final Edition edition = Edition.current();
         boolean newerThanRange = edition.isNewerThanRange(VersionCompat.MAJOR, VersionCompat.MINOR, VersionCompat.PATCH);
-        boolean unsupportedVersion = !newerThanRange
-            && !edition.supports(VersionCompat.MAJOR, VersionCompat.MINOR, VersionCompat.PATCH);
+        boolean unsupportedVersion = isUnsupportedMinecraft();
         if (isRunningCraftBukkit() || unsupportedVersion) {
             this.saveDefaultConfig();
             this.reloadConfig();
@@ -536,6 +542,10 @@ public final class BlockProt extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (isUnsupportedMinecraft()) {
+            super.onDisable();
+            return;
+        }
         if (!isRunningCraftBukkit()) {
             BlockProtConsole.info(Translator.get(TranslationKey.CONSOLE__SAVING_STATISTICS));
             StatHandler.disable();

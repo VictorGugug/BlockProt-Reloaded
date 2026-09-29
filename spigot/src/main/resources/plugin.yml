@@ -1,7 +1,7 @@
 name: BlockProtReloaded
 version: ${version}
 main: de.sean.blockprot.bukkit.BlockProt
-api-version: '1.21'
+api-version: '1.13'
 authors: [ Zar ]
 description: Block protection plugin, BlockProt Reloaded
 prefix: BlockProt Reloaded
