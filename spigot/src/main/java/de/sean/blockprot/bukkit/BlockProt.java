@@ -210,6 +210,7 @@ public final class BlockProt extends JavaPlugin {
             .replace("{mc}", VersionCompat.getVersionString())
             .replace("{recommended}", recommended.displayName())
             .replace("{range}", recommended.rangeLabel())
+            .replace("{edition_range}", edition.rangeLabel())
             .replace("{url}", recommended.downloadUrl())
             .replace("{guide}", Edition.guideUrl());
     }

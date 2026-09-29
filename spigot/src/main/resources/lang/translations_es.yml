@@ -531,7 +531,7 @@ console:
   java_too_old: "Versión de Java demasiado antigua: {version} (BlockProt Reloaded requiere Java 25+)"
   minecraft_unsupported: "{edition} {version} no es compatible con Minecraft {mc}. Lee la guía de versiones para elegir el BlockProt correcto: {guide} . Para tu versión descarga {recommended} ({range}): {url}"
   minecraft_unsupported_none: "Ninguna edición de BlockProt es compatible con Minecraft {mc}. Lee la guía de versiones para ver qué versiones de Minecraft cubre: {guide}"
-  minecraft_newer_available: "Minecraft {mc} es más reciente que el rango de {edition} ({range}). Lee la guía de versiones: {guide} . La edición para tu versión es {recommended}: {url}"
+  minecraft_newer_available: "Minecraft {mc} es más reciente que el rango de {edition} ({edition_range}). Lee la guía de versiones: {guide} . La edición para tu versión es {recommended}: {url}"
   edition_migration: "Migración detectada: {from} a {to}. Copia de seguridad: {path}"
   edition_downgrade: "{to} es anterior a {from}. Los datos escritos por la edición más nueva pueden contener ajustes que esta versión ignora. No se admite volver a una versión anterior; se creó una copia de seguridad: {path}"
   about_edition: "{edition} {version} (Minecraft {range})"
