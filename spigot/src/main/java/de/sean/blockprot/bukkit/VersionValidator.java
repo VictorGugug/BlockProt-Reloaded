@@ -56,7 +56,8 @@ public final class VersionValidator {
                 "Server software: " + software + " (Paper family)");
         }
 
-        if (javaMajor < 21) {
+        int requiredJava = Edition.current() == Edition.BP_LEGACY ? 17 : 21;
+        if (javaMajor < requiredJava) {
             warn(Translator.get(TranslationKey.CONSOLE__JAVA_TOO_OLD)
                 .replace("{version}", javaVersion));
         }
@@ -65,7 +66,7 @@ public final class VersionValidator {
             warn(Translator.get(TranslationKey.CONSOLE__NOT_PAPER));
         }
 
-        if (javaMajor >= 21 && isPaper) {
+        if (javaMajor >= requiredJava && isPaper) {
             BlockProtLogger.log("startup-checks", "Java " + javaVersion + " OK | Paper OK");
         }
     }
