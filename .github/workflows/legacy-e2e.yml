@@ -1,0 +1,115 @@
+name: Legacy Player Tests
+
+run-name: "Legacy player tests: ${{ github.ref_name }}"
+
+on:
+  push:
+    branches: [ 'legacy/**' ]
+    paths:
+      - '.github/workflows/legacy-e2e.yml'
+      - '.github/scripts/e2e_*'
+      - '.github/scripts/server_smoke_test.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    name: Plan (${{ github.ref_name }})
+    if: startsWith(github.ref_name, 'legacy/')
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      jar_base: ${{ steps.matrix.outputs.jar_base }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Build the version matrix from gradle.properties
+        id: matrix
+        run: |
+          echo "matrix=$(python3 .github/scripts/e2e_matrix.py)" >> "$GITHUB_OUTPUT"
+          echo "jar_base=$(python3 -c "import json;print(json.load(open('.github/editions.json'))[open('.github/EDITION').read().strip()]['jarBase'])")" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build JAR
+    needs: [plan]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - run: chmod +x gradlew
+
+      - run: ./gradlew :blockprot-spigot:shadowJar --no-daemon
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: e2e-jar
+          path: spigot/build/libs/${{ needs.plan.outputs.jar_base }}-*.jar
+          retention-days: 7
+
+  players:
+    name: ${{ matrix.project }} ${{ matrix.version }} with two players
+    needs: [plan, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: e2e-jar
+          path: build/e2e-jar
+
+      - name: Install the player bot
+        run: npm install --prefix build/e2e-deps mineflayer
+
+      - name: Boot the server, run diagnostics and play
+        env:
+          NODE_PATH: ${{ github.workspace }}/build/e2e-deps/node_modules
+        run: |
+          {
+            echo "## Server with two simulated players"
+            echo ""
+            echo "| Server | Result | Diagnostics |"
+            echo "| :--- | :---: | :--- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          JAR=$(find build/e2e-jar -name "*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" | head -1)
+          python3 .github/scripts/server_smoke_test.py --jar "$JAR" --project "${{ matrix.project }}" --version "${{ matrix.version }}" --java "$JAVA_HOME/bin/java" --workdir build/e2e-server --players .github/scripts/e2e_players.js --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload server log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-${{ matrix.project }}-${{ matrix.version }}
+          path: |
+            build/e2e-server/console.log
+            build/e2e-server/plugins/BlockProtReloaded/logs/
+          retention-days: 7
