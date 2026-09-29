@@ -18,3 +18,4 @@ spigot/run/
 fabric/run/
 
 /images/RELEASE TITLES/MODELS
+__pycache__/
