@@ -17,7 +17,7 @@ Java 21 bytecode (JDK 25 toolchain), Paper 1.21.1 through 26.3, Folia support, N
 
 </div>
 
-Block protection plugin for Paper, Purpur, Spigot, and Folia servers. Players protect chests, furnaces, barrels, doors, trapdoors, item frames, vehicles, and workstations through an intuitive GUI or native Paper Dialogs - no complex commands required. This fork extends the original NBT core with enterprise stability, thread-safe asynchronous architecture, and rich modern features.
+Block protection plugin for Paper, Purpur, and Folia servers. Players protect chests, furnaces, barrels, doors, trapdoors, item frames, vehicles, and workstations through an intuitive GUI or native Paper Dialogs - no complex commands required. This fork extends the original NBT core with enterprise stability, thread-safe asynchronous architecture, and rich modern features.
 
 ## Philosophy
 
@@ -90,7 +90,7 @@ Admin inspection tool to view all blocks owned by any player, including offline 
 
 ## Installing
 
-Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` directory. Requires **Java 21+** (JDK 25 toolchain) and **Paper, Purpur, Spigot, or Folia 1.21.1 - 26.3**.
+Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` directory. Requires **Java 21+** (JDK 25 toolchain) and **Paper, Purpur, or Folia 1.21.1 - 26.3**.
 
 ### Build from Source
 

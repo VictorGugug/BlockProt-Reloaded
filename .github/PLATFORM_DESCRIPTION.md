@@ -14,8 +14,8 @@ This fork extends the original NBT core with stability fixes and additional feat
 
 ## Requirements
 
-- Java 25+
-- Paper or Spigot 1.21 / 1.21.1 / 1.21.4 / 26.x
+- Java 21+ (Java 25 for Minecraft 26.x)
+- Paper, Purpur, or Folia 1.21.1 through 26.3
 
 ---
 
