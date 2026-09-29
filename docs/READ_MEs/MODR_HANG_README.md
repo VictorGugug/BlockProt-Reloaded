@@ -1,6 +1,8 @@
 <img src="https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BlockProtReloaded.png" alt="BlockProt Reloaded" />
 
 ---
+> **Looking for another Minecraft version?** See the [version guide](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/READ_MEs/VERSION_GUIDE.md).
+
 BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper, Purpur, and Folia servers (Minecraft 1.21.7 through 26.3). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
 
 

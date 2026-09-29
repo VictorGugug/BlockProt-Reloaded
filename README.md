@@ -17,6 +17,8 @@ Java 21 bytecode (JDK 25 toolchain), Paper 1.21.7 through 26.3, Folia support, N
 
 </div>
 
+> **Looking for another Minecraft version?** See the [version guide](docs/READ_MEs/VERSION_GUIDE.md).
+
 Block protection plugin for Paper, Purpur, and Folia servers. Players protect chests, furnaces, barrels, doors, trapdoors, item frames, vehicles, and workstations through an intuitive GUI or native Paper Dialogs - no complex commands required. This fork extends the original NBT core with enterprise stability, thread-safe asynchronous architecture, and rich modern features.
 
 ## Philosophy

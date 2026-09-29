@@ -12,6 +12,10 @@ This fork extends the original NBT core with stability fixes and additional feat
 
 ---
 
+> **Looking for another Minecraft version?** See the [version guide](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/READ_MEs/VERSION_GUIDE.md).
+
+---
+
 ## Requirements
 
 - Java 21+ (Java 25 for Minecraft 26.x)
