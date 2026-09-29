@@ -1,9 +1,9 @@
 <img src="https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/RELEASE%20TITLES/BlockProtReloaded.png" alt="BlockProt Reloaded" />
 
 ---
-> **Looking for another Minecraft version?** See the [version guide](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/READ_MEs/VERSION_GUIDE.md).
+> **BlockProt Reloaded Legacy (Minecraft 1.20.5 - 1.21.6)**. Looking for another Minecraft version? See the [version guide](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/READ_MEs/VERSION_GUIDE.md).
 
-BlockProt Reloaded is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper, Purpur, and Folia servers (Minecraft 1.21.7 through 26.3). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
+BlockProt Reloaded Legacy is a maintained fork of [BlockProt](https://github.com/spnda/BlockProt) for Paper, Purpur, and Folia servers (Minecraft 1.20.5 - 1.21.6). It preserves the original NBT-based protection core while adding stability fixes, performance improvements, and new features not present upstream.
 
 
 ## What it does
@@ -14,6 +14,8 @@ Admins get a separate toolset: a paged block browser (`/bp lockables`), per-play
 
 
 ## What is protected
+
+Only blocks and entities that exist on your Minecraft version can be locked; the lists below name the complete set across editions.
 
 **Tile entities (storage):** all chest variants, all 17 shulker box colors, all 12 shelf variants (1.21.9+), furnace, smoker, blast furnace, hopper, dispenser, dropper, barrel, brewing stand, decorated pot, chiseled bookshelf, crafter, jukebox, lectern, beehive, bee nest.
 
@@ -79,7 +81,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 
 ### Other additions
 - Multi-tier staff permissions (`admin_tiers.enabled`) and standalone `admins.yml` hierarchy.
-- Native Paper Dialogs (`use_dialogs: true`) with pastel color palettes.
+- Native Paper Dialogs: not available in this edition. Every menu opens as a chest inventory.
 - Bedrock touch forms (Cumulus API via Geyser and Floodgate).
 - Ownership transfer: `/bp transferall <player>` moves ownership of all your blocks to another player.
 - Per-world configuration via `worlds.yml` (`per_worlds_config: true`).
@@ -127,9 +129,9 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 
 | | |
 |---|---|
-| Minecraft | 1.21.7 - 26.3 (detected numerically at runtime) |
+| Minecraft | 1.20.5 - 1.21.6 |
 | Server software | Paper, Purpur, Folia |
-| Java | 21+ required (JDK 25 toolchain) |
+| Java | Java 21+ required |
 | MySQL | MySQL 8+, MariaDB 10.5+ (optional) |
 | Languages | 25 languages on [GitLocalize](https://gitlocalize.com/repo/10833): AR, CS, DE, EN, ES, FI, FR, HE, HU, ID, IT, JA, KO, NL, PL, PT-BR, RO, RU, SK, SV, TH, TR, UK, ZH-CN, ZH-TW |
 
@@ -141,7 +143,7 @@ Towny, WorldGuard, Lands, ClaimChunk, GriefPrevention, Residence, PlaceholderAPI
 
 ## Install
 
-Place the JAR in `plugins/` and restart. Requires Java 21+ and Paper, Purpur, or Folia 1.21.7 - 26.3. On upgrade, config keys are migrated automatically: no manual edits required.
+Place the JAR in `plugins/` and restart. Requires Java 21+ and Paper, Purpur, or Folia 1.20.5 - 1.21.6. On upgrade, config keys are migrated automatically: no manual edits required.
 
 
 ## Documentation
