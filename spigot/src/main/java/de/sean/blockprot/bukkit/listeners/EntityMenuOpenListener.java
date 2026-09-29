@@ -87,6 +87,12 @@ public final class EntityMenuOpenListener implements Listener {
         InventoryState state = InventoryState.getOrCreate(player.getUniqueId());
         state.setEntityProtectionId(clicked.getUniqueId());
 
+        if (BlockProt.getDefaultConfig().shouldUseDialogs(player)) {
+            event.setCancelled(true);
+            de.sean.blockprot.bukkit.dialogs.EntitySettingsDialog.show(player, clicked);
+            return;
+        }
+
         Inventory inv = new EntitySettingsInventory().fill(player, clicked);
         if (inv != null) {
             event.setCancelled(true); // prevent vanilla interaction (sitting toggle, etc.)

@@ -1426,6 +1426,17 @@ public class DebugCommand implements CommandExecutor {
                     ent.remove();
                 }
             });
+            dlg(p, f, "EntitySettingsDialog", () -> {
+                var ent = player.getWorld().spawn(player.getLocation().clone(), org.bukkit.entity.Wolf.class, wolf -> {
+                    wolf.setAI(false);
+                    wolf.setSilent(true);
+                });
+                try {
+                    EntitySettingsDialog.show(player, ent);
+                } finally {
+                    ent.remove();
+                }
+            });
             dlg(p, f, "EntityFriendManageDialog", () -> {
                 var loc = player.getLocation().clone();
                 var world = player.getWorld();
