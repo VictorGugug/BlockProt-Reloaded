@@ -80,7 +80,7 @@ def run(args):
     server_jar = prepare_server(workdir, jar, url, args.port)
     log_path = workdir / "console.log"
     with open(log_path, "w", encoding="utf-8") as log:
-        process = subprocess.Popen(["java", "-Xmx2G", "-jar", server_jar.name, "--nogui"], cwd=workdir,
+        process = subprocess.Popen([args.java, "-Xmx2G", "-jar", server_jar.name, "--nogui"], cwd=workdir,
                                    stdin=subprocess.PIPE, stdout=log, stderr=subprocess.STDOUT, text=True)
         try:
             text = wait_for(log_path, lambda t: "Done (" in t or process.poll() is not None, args.boot_timeout)
@@ -120,13 +120,16 @@ def main():
     parser.add_argument("--boot-timeout", type=int, default=420)
     parser.add_argument("--debug-timeout", type=int, default=180)
     parser.add_argument("--summary", default="", help="Markdown file to append the result to")
+    parser.add_argument("--java", default="java", help="Java executable used to run the server")
+    parser.add_argument("--summary-title", default="", help="Label used in the summary row instead of the project name")
     args = parser.parse_args()
     code, version, result = run(args)
     if args.summary:
         status = "PASS" if code == 0 else "FAIL"
         detail = f"{result[0]} passed, {result[1]} failed ({result[2]} total)" if result else "no diagnostics summary"
         with open(args.summary, "a", encoding="utf-8") as out:
-            out.write(f"| {args.project.capitalize()} {version} | {status} | {detail} |\n")
+            label = args.summary_title or args.project.capitalize()
+            out.write(f"| {label} {version} | {status} | {detail} |\n")
     sys.exit(code)
 
 
