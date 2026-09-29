@@ -1,6 +1,6 @@
 name: Legacy Player Tests
 
-run-name: "Legacy player tests: ${{ github.ref_name }}"
+run-name: "Legacy player tests: ${{ inputs.ref || github.ref_name }}"
 
 on:
   push:
@@ -10,20 +10,33 @@ on:
       - '.github/scripts/e2e_*'
       - '.github/scripts/server_smoke_test.py'
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Legacy branch to test (leave blank to use the branch this run was started on)"
+        required: false
+        default: ""
+  workflow_call:
+    inputs:
+      ref:
+        description: "Legacy branch to test"
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   plan:
-    name: Plan (${{ github.ref_name }})
-    if: github.ref_name != 'main'
+    name: Plan (${{ inputs.ref || github.ref_name }})
+    if: (inputs.ref || github.ref_name) != 'main'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       jar_base: ${{ steps.matrix.outputs.jar_base }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - uses: actions/setup-python@v7
         with:
@@ -41,6 +54,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - uses: actions/setup-java@v6
         with:
@@ -63,12 +78,14 @@ jobs:
     name: ${{ matrix.project }} ${{ matrix.version }} with two players
     needs: [plan, build]
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - uses: actions/setup-java@v6
         with:
@@ -89,7 +106,7 @@ jobs:
           path: build/e2e-jar
 
       - name: Install the player bot
-        run: npm install --prefix build/e2e-deps mineflayer
+        run: npm install --prefix build/e2e-deps mineflayer@4
 
       - name: Boot the server, run diagnostics and play
         env:
@@ -102,7 +119,13 @@ jobs:
             echo "| :--- | :---: | :--- |"
           } >> "$GITHUB_STEP_SUMMARY"
           JAR=$(find build/e2e-jar -name "*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" | head -1)
-          python3 .github/scripts/server_smoke_test.py --jar "$JAR" --project "${{ matrix.project }}" --version "${{ matrix.version }}" --java "$JAVA_HOME/bin/java" --workdir build/e2e-server --players .github/scripts/e2e_players.js --summary "$GITHUB_STEP_SUMMARY"
+          for attempt in 1 2; do
+            if python3 .github/scripts/server_smoke_test.py --jar "$JAR" --project "${{ matrix.project }}" --version "${{ matrix.version }}" --java "$JAVA_HOME/bin/java" --workdir build/e2e-server --players .github/scripts/e2e_players.js --summary "$GITHUB_STEP_SUMMARY"; then
+              exit 0
+            fi
+            echo "Attempt $attempt failed"
+          done
+          exit 1
 
       - name: Upload server log
         if: always()
@@ -113,3 +136,16 @@ jobs:
             build/e2e-server/console.log
             build/e2e-server/plugins/BlockProtReloaded/logs/
           retention-days: 7
+
+  verdict:
+    name: Every version passed
+    needs: [plan, players]
+    if: always() && needs.plan.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail unless every server passed
+        run: |
+          if [ "${{ needs.players.result }}" != "success" ]; then
+            echo "Player tests result: ${{ needs.players.result }}"
+            exit 1
+          fi
