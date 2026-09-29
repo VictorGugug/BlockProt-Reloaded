@@ -4,13 +4,13 @@ run-name: "${{ github.event_name == 'workflow_dispatch' && format('{0}: {1} [{2}
 
 on:
   push:
-    branches: [ main, 'legacy/**' ]
+    branches: [ main, BlockProt-Reloaded-Legacy, BlockProt-Legacy ]
     paths-ignore:
       - '**.md'
       - 'images/**'
       - '.gitignore'
   pull_request:
-    branches: [ main, 'legacy/**' ]
+    branches: [ main, BlockProt-Reloaded-Legacy, BlockProt-Legacy ]
     paths-ignore:
       - '**.md'
       - 'images/**'

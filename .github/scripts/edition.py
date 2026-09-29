@@ -48,7 +48,8 @@ def load_edition(edition_id, repo_root=REPO_ROOT):
 def edition_from_ref(ref_name, repo_root):
     if ref_name == "main":
         return "bpr"
-    if ref_name.startswith("legacy/"):
+    legacy_branches = {c["branch"] for key, c in load_all(repo_root).items() if key != "bpr"}
+    if ref_name in legacy_branches:
         marker = Path(repo_root) / ".github" / "EDITION"
         if not marker.is_file():
             raise SystemExit(f"Branch {ref_name} has no .github/EDITION file")

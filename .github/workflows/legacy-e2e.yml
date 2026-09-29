@@ -4,7 +4,7 @@ run-name: "Legacy player tests: ${{ github.ref_name }}"
 
 on:
   push:
-    branches: [ 'legacy/**' ]
+    branches: [ BlockProt-Reloaded-Legacy, BlockProt-Legacy ]
     paths:
       - '.github/workflows/legacy-e2e.yml'
       - '.github/scripts/e2e_*'
@@ -17,7 +17,7 @@ permissions:
 jobs:
   plan:
     name: Plan (${{ github.ref_name }})
-    if: startsWith(github.ref_name, 'legacy/')
+    if: github.ref_name != 'main'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}

@@ -49,7 +49,7 @@ class Resolve(unittest.TestCase):
             github.mkdir()
             (github / "editions.json").write_text(json.dumps(edition.load_all()), encoding="utf-8")
             (github / "EDITION").write_text("bp-legacy\n", encoding="utf-8")
-            out = edition.resolve("push", ref_name="legacy/bp", repo_root=tmp)
+            out = edition.resolve("push", ref_name="BlockProt-Legacy", repo_root=tmp)
         self.assertEqual(("bp-legacy", "ci", "legacy-bp", "bpl-"),
                          (out["edition"], out["operation"], out["commit_branch"], out["tag_prefix"]))
 
