@@ -24,16 +24,49 @@ import org.bukkit.Particle;
 import org.bukkit.enchantments.Enchantment;
 import org.jetbrains.annotations.NotNull;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
+
 /**
  * Central references to particle and enchantment constants used for lock effects.
+ * Constants renamed between Minecraft releases are resolved by name at class load,
+ * so the class compiles and runs against every supported Paper API.
  */
 public final class BukkitCompat {
 
-    public static final Particle PARTICLE_DUST = Particle.DUST;
-    public static final Particle PARTICLE_DUST_COLOR_TRANSITION = Particle.DUST_COLOR_TRANSITION;
-    public static final Enchantment GLOW_ENCHANT = Enchantment.INFINITY;
+    public static final Particle PARTICLE_DUST = particle(null, "DUST", "REDSTONE");
+    public static final Particle PARTICLE_DUST_COLOR_TRANSITION =
+        particle(PARTICLE_DUST, "DUST_COLOR_TRANSITION", "REDSTONE_TRANSITION");
+    public static final Enchantment GLOW_ENCHANT =
+        enchantment("INFINITY", "ARROW_INFINITE", "UNBREAKING", "DURABILITY");
 
     private BukkitCompat() {}
+
+    private static Particle particle(Particle fallback, String... names) {
+        for (String name : names) {
+            for (Particle particle : Particle.values()) {
+                if (particle.name().equals(name)) return particle;
+            }
+        }
+        if (fallback == null) {
+            throw new IllegalStateException("No particle constant found among " + Arrays.toString(names));
+        }
+        return fallback;
+    }
+
+    private static Enchantment enchantment(String... names) {
+        for (String name : names) {
+            for (Field field : Enchantment.class.getFields()) {
+                if (!field.getName().equals(name)) continue;
+                try {
+                    return (Enchantment) field.get(null);
+                } catch (IllegalAccessException e) {
+                    throw new IllegalStateException("Enchantment constant not readable: " + name, e);
+                }
+            }
+        }
+        throw new IllegalStateException("No enchantment constant found among " + Arrays.toString(names));
+    }
 
     public static boolean hasNewParticleNames() {
         return PARTICLE_DUST.name().equals("DUST");
