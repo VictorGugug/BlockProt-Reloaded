@@ -458,6 +458,13 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
         // Remove the new owner from the friend list if present (they are now the owner).
         if (containsFriend(newOwnerUuid)) removeFriend(newOwnerUuid);
         applyToOtherContainer();
+        UUID newOwner = UUID.fromString(newOwnerUuid);
+        StatHandler.removeContainerByUuid(UUID.fromString(currentOwnerUuid), block.getLocation());
+        StatHandler.addBlockByUuid(newOwner, block.getLocation());
+        HybridDatabase hybridDatabase = BlockProt.getHybridDatabase();
+        if (hybridDatabase != null) {
+            hybridDatabase.upsertBlockIndex(newOwner, block.getLocation(), block.getType().name());
+        }
         return new LockReturnValue(true, null);
     }
 

@@ -24,10 +24,8 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
-import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.util.StringUtil;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
@@ -177,12 +175,6 @@ public final class TransferSearchInventory extends BlockProtInventory {
         );
 
         if (result.success) {
-            Player onlineTarget = Bukkit.getPlayer(target.getUniqueId());
-            if (onlineTarget != null) {
-                StatHandler.addBlock(onlineTarget, block.getLocation());
-            } else {
-                StatHandler.addBlockByUuid(target.getUniqueId(), block.getLocation());
-            }
             String name = target.getName() != null ? target.getName() : target.getUniqueId().toString().substring(0, 8);
             ComponentMessages.sendLegacyActionBar(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_SUCCESS).replace("{player}", name));
             player.closeInventory();

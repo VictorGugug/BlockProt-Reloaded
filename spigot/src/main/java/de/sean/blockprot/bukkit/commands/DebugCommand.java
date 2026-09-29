@@ -259,6 +259,7 @@ public class DebugCommand implements CommandExecutor {
                 checkPlayerSettings(player, passed, failed);
                 checkNbtSubHandlers(player.getLocation(), passed, failed);
                 checkPublicApi(player.getLocation(), passed, failed);
+                checkTransferStatistics(player.getLocation(), passed, failed);
 
                 // Domain 6: Commands, Permissions & Integrations
                 runDomain("6/10", "COMMANDS, PERMISSIONS & INTEGRATIONS");
@@ -1991,6 +1992,47 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
+    private void checkTransferStatistics(@NotNull Location origin, AtomicInteger p, AtomicInteger f) {
+        var loc = origin.clone();
+        var world = origin.getWorld();
+        var orig = world.getBlockAt(loc).getType();
+        world.setType(loc, Material.CHEST);
+        UUID from = UUID.randomUUID();
+        UUID to = UUID.randomUUID();
+        try {
+            var block = world.getBlockAt(loc);
+            var handler = new BlockNBTHandler(block);
+            handler.setOwner(from.toString());
+            StatHandler.addBlockByUuid(from, block.getLocation());
+            var countBefore = new BlockCountStatistic();
+            StatHandler.getStatistic(countBefore);
+            int before = countBefore.get();
+            boolean transferred = handler.transferOwner(from.toString(), to.toString()).success;
+            var fromStat = new PlayerBlocksStatistic();
+            StatHandler.getStatisticByUuid(fromStat, from);
+            var toStat = new PlayerBlocksStatistic();
+            StatHandler.getStatisticByUuid(toStat, to);
+            var countAfter = new BlockCountStatistic();
+            StatHandler.getStatistic(countAfter);
+            boolean moved = fromStat.get().isEmpty() && toStat.get().size() == 1;
+            if (transferred && moved && countAfter.get() == before) {
+                BlockProtLogger.pass("Transfer statistics: block moved from old to new owner, global count unchanged (" + before + ")");
+                p.incrementAndGet();
+            } else {
+                BlockProtLogger.fail("Transfer statistics", "transferred=" + transferred + " oldOwnerBlocks=" + fromStat.get().size()
+                    + " newOwnerBlocks=" + toStat.get().size() + " count " + before + " -> " + countAfter.get());
+                f.incrementAndGet();
+            }
+            StatHandler.removeContainerByUuid(to, block.getLocation());
+            handler.clear();
+        } catch (Exception e) {
+            BlockProtLogger.fail("Transfer statistics", e.getClass().getSimpleName() + ": " + e.getMessage());
+            f.incrementAndGet();
+        } finally {
+            world.setType(loc, orig);
+        }
+    }
+
     private void checkPublicApi(@NotNull Location origin, AtomicInteger p, AtomicInteger f) {
         var api = de.sean.blockprot.bukkit.BlockProtAPI.getInstance();
         if (api == null) {
@@ -2645,6 +2687,7 @@ public class DebugCommand implements CommandExecutor {
                 BlockProtLogger.skipSub("PlayerSettings", "requires an online player");
                 checkNbtSubHandlers(origin, passed, failed);
                 checkPublicApi(origin, passed, failed);
+                checkTransferStatistics(origin, passed, failed);
 
                 runDomain("6/10", "COMMANDS, PERMISSIONS & INTEGRATIONS");
                 checkIntegrations(null, passed, failed);

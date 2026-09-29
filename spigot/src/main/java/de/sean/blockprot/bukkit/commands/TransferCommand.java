@@ -115,14 +115,6 @@ public final class TransferCommand implements CommandExecutor {
                 );
                 return result.success ? loc : null;
             }).thenAccept(transferred -> RegionTasks.runFor(player, () -> {
-                Player onlineTarget = Bukkit.getPlayer(finalNewOwner.getUniqueId());
-                for (Location loc : transferred) {
-                    if (onlineTarget != null) {
-                        StatHandler.addBlock(onlineTarget, loc);
-                    } else {
-                        StatHandler.addBlockByUuid(finalNewOwner.getUniqueId(), loc);
-                    }
-                }
                 String name = finalNewOwner.getName() != null ? finalNewOwner.getName() : targetName;
                 ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_ALL_SUCCESS)
                     .replace("{count}", String.valueOf(transferred.size()))

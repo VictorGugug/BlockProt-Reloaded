@@ -26,7 +26,6 @@ import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.bedrock.BedrockBridge;
 import de.sean.blockprot.bukkit.commands.TransferCommand;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
-import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.util.PlayerNameResolver;
 import org.bukkit.Bukkit;
@@ -112,12 +111,6 @@ public final class BedrockTransferForm {
 
                     var result = handler.transferOwner(player.getUniqueId().toString(), finalTarget.getUniqueId().toString());
                     if (result.success) {
-                        Player online = Bukkit.getPlayer(finalTarget.getUniqueId());
-                        if (online != null) {
-                            StatHandler.addBlock(online, block.getLocation());
-                        } else {
-                            StatHandler.addBlockByUuid(finalTarget.getUniqueId(), block.getLocation());
-                        }
                         String name = finalTarget.getName() != null ? finalTarget.getName() : targetName;
                         ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__TRANSFER_SUCCESS).replace("{player}", name));
                     } else {
