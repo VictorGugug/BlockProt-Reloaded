@@ -129,34 +129,39 @@ public final class EntitySettingsInventory extends BlockProtInventory {
 
         switch (event.getSlot()) {
             case SLOT_PROTECT -> {
-                protect = !protect;
-                renderToggle(SLOT_PROTECT, Material.BONE,
-                    TranslationKey.INVENTORIES__ENTITY_SETTINGS__PROTECT, protect);
-                if (!protect) overrideAll(false);
+                if (protect) {
+                    overrideAll(false);
+                } else {
+                    applyDefaults();
+                }
                 save(player, state);
             }
             case SLOT_NO_DAMAGE -> {
-                noDamage = !noDamage;
-                renderToggle(SLOT_NO_DAMAGE, Material.SHIELD,
-                    TranslationKey.INVENTORIES__ENTITY_SETTINGS__NO_DAMAGE, noDamage);
+                boolean target = !noDamage;
+                if (!protect) applyDefaults();
+                noDamage = target;
+                renderAll();
                 save(player, state);
             }
             case SLOT_NO_INTERACT -> {
-                noInteract = !noInteract;
-                renderToggle(SLOT_NO_INTERACT, Material.BARRIER,
-                    TranslationKey.INVENTORIES__ENTITY_SETTINGS__NO_INTERACT, noInteract);
+                boolean target = !noInteract;
+                if (!protect) applyDefaults();
+                noInteract = target;
+                renderAll();
                 save(player, state);
             }
             case SLOT_NO_LEASH -> {
-                noLeash = !noLeash;
-                renderToggle(SLOT_NO_LEASH, Material.STRING,
-                    TranslationKey.INVENTORIES__ENTITY_SETTINGS__NO_LEASH, noLeash);
+                boolean target = !noLeash;
+                if (!protect) applyDefaults();
+                noLeash = target;
+                renderAll();
                 save(player, state);
             }
             case SLOT_NO_PICKUP -> {
-                noPickup = !noPickup;
-                renderToggle(SLOT_NO_PICKUP, Material.FEATHER,
-                    TranslationKey.INVENTORIES__ENTITY_SETTINGS__NO_PICKUP, noPickup);
+                boolean target = !noPickup;
+                if (!protect) applyDefaults();
+                noPickup = target;
+                renderAll();
                 save(player, state);
             }
             case SLOT_ENABLE_ALL  -> { overrideAll(true);  save(player, state); }
@@ -184,6 +189,15 @@ public final class EntitySettingsInventory extends BlockProtInventory {
 
     private void renderToggle(int slot, Material mat, TranslationKey key, boolean value) {
         setEnchantedOptionItemStack(slot, mat, key, value);
+    }
+
+    private void applyDefaults() {
+        protect    = true;
+        noDamage   = true;
+        noInteract = false;
+        noLeash    = true;
+        noPickup   = false;
+        renderAll();
     }
 
     private void overrideAll(boolean value) {

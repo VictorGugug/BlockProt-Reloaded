@@ -155,4 +155,79 @@ class EntityProtectionTest {
         new EntityProtectionListener().onInteract(ownerTradeEvent);
         assertFalse(ownerTradeEvent.isCancelled());
     }
+
+    private static void clickSlot(EntitySettingsInventory inv, PlayerMock player, InventoryState state, int slot) {
+        inv.onClick(new InventoryClickEvent(player.getOpenInventory(), org.bukkit.event.inventory.InventoryType.SlotType.CONTAINER,
+            slot, org.bukkit.event.inventory.ClickType.LEFT, org.bukkit.event.inventory.InventoryAction.PICKUP_ALL), state);
+    }
+
+    @SuppressWarnings("removal")
+    private boolean strangerDamageCancelled(Wolf wolf) {
+        var damageEvent = new EntityDamageByEntityEvent(stranger, wolf, EntityDamageEvent.DamageCause.ENTITY_ATTACK, 5.0);
+        new EntityProtectionListener().onEntityDamage(damageEvent);
+        return damageEvent.isCancelled();
+    }
+
+    @Test
+    @SuppressWarnings("removal")
+    void testEnableAllAndDisableAllChangeEveryFlag() {
+        Wolf wolf = world.spawn(owner.getLocation(), Wolf.class);
+        wolf.setOwner(owner);
+        InventoryState state = InventoryState.getOrCreate(owner.getUniqueId());
+        state.setEntityProtectionId(wolf.getUniqueId());
+        EntitySettingsInventory inv = new EntitySettingsInventory();
+        var opened = inv.fill(owner, wolf);
+        assertNotNull(opened);
+        owner.openInventory(opened);
+        EntityProtectionHandler handler = EntityProtectionHandler.forEntityOrNull(wolf);
+        assertNotNull(handler);
+
+        clickSlot(inv, owner, state, 15);
+        assertTrue(handler.isProtected());
+        assertTrue(handler.isNoDamage());
+        assertTrue(handler.isNoInteract());
+        assertTrue(handler.isNoLeash());
+        assertTrue(handler.isNoPickup());
+        assertTrue(strangerDamageCancelled(wolf));
+
+        clickSlot(inv, owner, state, 16);
+        assertFalse(handler.isProtected());
+        assertFalse(handler.isNoDamage());
+        assertFalse(handler.isNoInteract());
+        assertFalse(handler.isNoLeash());
+        assertFalse(handler.isNoPickup());
+        assertFalse(strangerDamageCancelled(wolf));
+
+        EntitySettingsInventory reopened = new EntitySettingsInventory();
+        assertNotNull(reopened.fill(owner, wolf));
+        assertFalse(handler.isNoDamage());
+        assertFalse(handler.isNoLeash());
+    }
+
+    @Test
+    @SuppressWarnings("removal")
+    void testFlagToggleOnUnprotectedEntityEnablesProtection() {
+        Wolf wolf = world.spawn(owner.getLocation(), Wolf.class);
+        wolf.setOwner(owner);
+        InventoryState state = InventoryState.getOrCreate(owner.getUniqueId());
+        state.setEntityProtectionId(wolf.getUniqueId());
+        EntitySettingsInventory inv = new EntitySettingsInventory();
+        var opened = inv.fill(owner, wolf);
+        assertNotNull(opened);
+        owner.openInventory(opened);
+        EntityProtectionHandler handler = EntityProtectionHandler.forEntityOrNull(wolf);
+        assertNotNull(handler);
+
+        clickSlot(inv, owner, state, 4);
+        assertTrue(handler.isProtected());
+        assertTrue(handler.isNoPickup());
+        assertTrue(handler.isNoDamage());
+        assertTrue(handler.isNoLeash());
+        assertFalse(handler.isNoInteract());
+
+        clickSlot(inv, owner, state, 1);
+        assertTrue(handler.isProtected());
+        assertFalse(handler.isNoDamage());
+        assertFalse(strangerDamageCancelled(wolf));
+    }
 }

@@ -47,9 +47,20 @@ import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.stripColor;
 public final class EntitySettingsDialog {
 
     private record Flags(boolean protect, boolean noDamage, boolean noInteract, boolean noLeash, boolean noPickup) {
+        static final Flags DEFAULTS = new Flags(true, true, false, true, false);
+
         static Flags all(boolean value) {
             return new Flags(value, value, value, value, value);
         }
+
+        Flags base() {
+            return protect ? this : DEFAULTS;
+        }
+
+        Flags withNoDamage(boolean v)   { return new Flags(protect, v, noInteract, noLeash, noPickup); }
+        Flags withNoInteract(boolean v) { return new Flags(protect, noDamage, v, noLeash, noPickup); }
+        Flags withNoLeash(boolean v)    { return new Flags(protect, noDamage, noInteract, v, noPickup); }
+        Flags withNoPickup(boolean v)   { return new Flags(protect, noDamage, noInteract, noLeash, v); }
     }
 
     private EntitySettingsDialog() {}
@@ -72,16 +83,15 @@ public final class EntitySettingsDialog {
 
         List<DialogButton> actions = new ArrayList<>();
         actions.add(toggleBtn("protect", TranslationKey.INVENTORIES__ENTITY_SETTINGS__PROTECT, current.protect(), colorblind,
-            p -> apply(p, entity, current.protect() ? Flags.all(false)
-                : new Flags(true, current.noDamage(), current.noInteract(), current.noLeash(), current.noPickup()))));
+            p -> apply(p, entity, current.protect() ? Flags.all(false) : Flags.DEFAULTS)));
         actions.add(toggleBtn("no_damage", TranslationKey.INVENTORIES__ENTITY_SETTINGS__NO_DAMAGE, current.noDamage(), colorblind,
-            p -> apply(p, entity, new Flags(current.protect(), !current.noDamage(), current.noInteract(), current.noLeash(), current.noPickup()))));
+            p -> apply(p, entity, current.base().withNoDamage(!current.noDamage()))));
         actions.add(toggleBtn("no_interact", TranslationKey.INVENTORIES__ENTITY_SETTINGS__NO_INTERACT, current.noInteract(), colorblind,
-            p -> apply(p, entity, new Flags(current.protect(), current.noDamage(), !current.noInteract(), current.noLeash(), current.noPickup()))));
+            p -> apply(p, entity, current.base().withNoInteract(!current.noInteract()))));
         actions.add(toggleBtn("no_leash", TranslationKey.INVENTORIES__ENTITY_SETTINGS__NO_LEASH, current.noLeash(), colorblind,
-            p -> apply(p, entity, new Flags(current.protect(), current.noDamage(), current.noInteract(), !current.noLeash(), current.noPickup()))));
+            p -> apply(p, entity, current.base().withNoLeash(!current.noLeash()))));
         actions.add(toggleBtn("no_pickup", TranslationKey.INVENTORIES__ENTITY_SETTINGS__NO_PICKUP, current.noPickup(), colorblind,
-            p -> apply(p, entity, new Flags(current.protect(), current.noDamage(), current.noInteract(), current.noLeash(), !current.noPickup()))));
+            p -> apply(p, entity, current.base().withNoPickup(!current.noPickup()))));
         BpDialogStyles.padToRowEnd(actions, 3);
         actions.add(cmdBtn("enable_all", stripColor(Translator.get(TranslationKey.INVENTORIES__REDSTONE__ENABLE_ALL)),
             PASTEL_MINT, p -> apply(p, entity, Flags.all(true))));

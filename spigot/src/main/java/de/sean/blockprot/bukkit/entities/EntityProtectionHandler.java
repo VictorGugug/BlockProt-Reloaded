@@ -143,10 +143,10 @@ public final class EntityProtectionHandler {
         pdc.set(keyProtected, PersistentDataType.BYTE, v ? (byte) 1 : (byte) 0);
     }
 
-    public boolean isNoDamage()   { return getBool(keyNoDamage,   true);  }
-    public boolean isNoInteract() { return getBool(keyNoInteract, false); }
-    public boolean isNoLeash()    { return getBool(keyNoLeash,    true);  }
-    public boolean isNoPickup()   { return getBool(keyNoPickup,   false); }
+    public boolean isNoDamage()   { return isProtected() && getBool(keyNoDamage,   true);  }
+    public boolean isNoInteract() { return isProtected() && getBool(keyNoInteract, false); }
+    public boolean isNoLeash()    { return isProtected() && getBool(keyNoLeash,    true);  }
+    public boolean isNoPickup()   { return isProtected() && getBool(keyNoPickup,   false); }
 
     public void setNoDamage(boolean v)   { setBool(keyNoDamage,   v); }
     public void setNoInteract(boolean v) { setBool(keyNoInteract, v); }
