@@ -22,6 +22,10 @@ package de.sean.blockprot.bukkit;
 
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -81,7 +85,11 @@ class EditionTest {
     }
 
     @Test
-    void currentReadsTheBundledResource() {
-        assertEquals(Edition.BPR, Edition.current());
+    void currentReadsTheBundledResource() throws IOException {
+        Properties properties = new Properties();
+        try (InputStream in = EditionTest.class.getResourceAsStream("/edition.properties")) {
+            properties.load(in);
+        }
+        assertEquals(properties.getProperty("id"), Edition.current().id());
     }
 }
