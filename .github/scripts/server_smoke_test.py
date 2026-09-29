@@ -10,6 +10,7 @@ import urllib.request
 from pathlib import Path
 
 FILL_API = "https://fill.papermc.io/v3/projects"
+PURPUR_API = "https://api.purpurmc.org/v2/purpur"
 SUMMARY_RE = re.compile(r"Console diagnostics finished: (\d+) passed, (\d+) failed \((\d+) total\)")
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
@@ -27,7 +28,20 @@ def declared_versions(repo_root):
     return []
 
 
+def purpur_versions():
+    return fetch_json(PURPUR_API)["versions"]
+
+
+def resolve_purpur(requested):
+    if requested not in purpur_versions():
+        raise SystemExit(f"No purpur build found for {requested}")
+    build = fetch_json(f"{PURPUR_API}/{requested}/latest")["build"]
+    return requested, build, f"{PURPUR_API}/{requested}/{build}/download"
+
+
 def resolve_build(project, requested, repo_root):
+    if project == "purpur":
+        return resolve_purpur(requested)
     available = fetch_json(f"{FILL_API}/{project}")["versions"]
     flat = [v for group in available.values() for v in group]
     candidates = [requested] if requested else list(reversed(declared_versions(repo_root)))
@@ -149,7 +163,7 @@ def run(args):
 def main():
     parser = argparse.ArgumentParser(description="Boot a real Paper or Folia server with the plugin and run console diagnostics.")
     parser.add_argument("--jar", required=True)
-    parser.add_argument("--project", choices=["paper", "folia"], default="paper")
+    parser.add_argument("--project", choices=["paper", "folia", "purpur"], default="paper")
     parser.add_argument("--version", default="", help="Minecraft version; defaults to the newest declared version available")
     parser.add_argument("--workdir", default="build/smoke-server")
     parser.add_argument("--port", type=int, default=25599)

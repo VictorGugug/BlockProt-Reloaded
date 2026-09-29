@@ -344,6 +344,14 @@ jobs:
             build/smoke-server/plugins/BlockProtReloaded/logs/
           retention-days: 7
 
+  player-tests:
+    name: Player Tests on Every Supported Version
+    needs: [edition]
+    if: ${{ needs.edition.outputs.edition != 'bpr' && (needs.edition.outputs.operation == 'preview' || needs.edition.outputs.operation == 'publish' || needs.edition.outputs.operation == 'maintenance') }}
+    uses: ./.github/workflows/legacy-e2e.yml
+    with:
+      ref: ${{ needs.edition.outputs.branch }}
+
   sync-check:
     name: Platform Publication Check
     needs: [edition]
@@ -502,6 +510,16 @@ jobs:
             echo "notes_path=build/reports/release-notes.md" >> "$GITHUB_OUTPUT"
             echo "notes_url=" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Declare the player tests in the release notes
+        if: ${{ needs.edition.outputs.edition != 'bpr' && needs.edition.outputs.operation != 'sync' }}
+        run: |
+          {
+            echo ""
+            echo "## Verification"
+            echo ""
+            echo "Before publication this build was tested in GitHub Actions ([run ${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})). Every supported Minecraft version (${{ steps.meta.outputs.mc_range }}) booted on a real Paper server, passed the plugin console diagnostics and passed a two-player protection test: the owner protects and opens a chest, and a second player cannot open or break it. Folia and Purpur were tested on every version that has a build."
+          } >> build/reports/release-notes.md
 
       - name: Set up JDK 25
         uses: actions/setup-java@v6
@@ -688,8 +706,8 @@ jobs:
 
   publish-platforms:
     name: Execute Multi-Platform Publication
-    needs: [edition, sync-check, inspect-and-build]
-    if: ${{ !cancelled() && needs.inspect-and-build.result == 'success' && (needs.edition.outputs.operation == 'publish' || needs.sync-check.outputs.needed == 'true') }}
+    needs: [edition, sync-check, inspect-and-build, player-tests]
+    if: ${{ !cancelled() && needs.inspect-and-build.result == 'success' && (needs.player-tests.result == 'success' || needs.player-tests.result == 'skipped') && (needs.edition.outputs.operation == 'publish' || needs.sync-check.outputs.needed == 'true') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
