@@ -9,6 +9,17 @@ body:
           label: Discord Username (Optional)
           description: Your Discord tag so I can identify you and give you credit.
           placeholder: e.g. vicplaying
+    - type: dropdown
+      id: edition
+      attributes:
+          label: Edition
+          description: The BlockProt edition you are using. If unsure, read docs/READ_MEs/VERSION_GUIDE.md in the repository.
+          options:
+              - BlockProt Reloaded
+              - BlockProt Reloaded Legacy
+              - BlockProt Legacy
+      validations:
+          required: true
     - type: input
       id: version
       attributes:
