@@ -679,7 +679,7 @@ jobs:
       - name: Publish to GitHub Releases
         id: gh_release
         if: needs.sync-check.outputs.needed != 'true' || contains(needs.sync-check.outputs.targets, 'github')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ needs.inspect-and-build.outputs.plugin_version }}
           target_commitish: ${{ steps.promote.outputs.sha || github.sha }}
