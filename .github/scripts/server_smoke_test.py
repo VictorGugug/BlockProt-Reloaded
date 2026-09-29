@@ -88,7 +88,21 @@ def plugin_error_lines(text):
     return errors
 
 
+def run_players(args, version):
+    script = Path(args.players).resolve()
+    try:
+        result = subprocess.run(["node", str(script), str(args.port), version], capture_output=True, text=True,
+                                timeout=args.players_timeout, cwd=script.parent)
+    except subprocess.TimeoutExpired:
+        print("Simulated players timed out")
+        return False
+    print(result.stdout)
+    print(result.stderr)
+    return result.returncode == 0
+
+
 def run(args):
+    players_ok = True
     repo_root = Path(__file__).resolve().parents[2]
     jar = Path(args.jar).resolve()
     workdir = Path(args.workdir).resolve()
@@ -107,6 +121,12 @@ def run(args):
             process.stdin.write("bp debug\n")
             process.stdin.flush()
             text = wait_for(log_path, lambda t: SUMMARY_RE.search(t) is not None, args.debug_timeout)
+            if args.players:
+                for command in ("op BPOwner", "bp recommended blocks force", "bp reload"):
+                    process.stdin.write(command + "\n")
+                    process.stdin.flush()
+                    time.sleep(4)
+                players_ok = run_players(args, version)
             process.stdin.write("stop\n")
             process.stdin.flush()
             process.wait(timeout=120)
@@ -123,7 +143,7 @@ def run(args):
         return 1, version, None
     passed, failed, total = (int(g) for g in match.groups())
     print(f"{args.project} {version}: {passed} passed, {failed} failed ({total} total)")
-    return (0 if failed == 0 and not plugin_errors else 1), version, (passed, failed, total)
+    return (0 if failed == 0 and not plugin_errors and players_ok else 1), version, (passed, failed, total)
 
 
 def main():
@@ -135,6 +155,8 @@ def main():
     parser.add_argument("--port", type=int, default=25599)
     parser.add_argument("--boot-timeout", type=int, default=420)
     parser.add_argument("--debug-timeout", type=int, default=180)
+    parser.add_argument("--players", default="", help="Node script that joins simulated players once diagnostics finish")
+    parser.add_argument("--players-timeout", type=int, default=240)
     parser.add_argument("--summary", default="", help="Markdown file to append the result to")
     parser.add_argument("--java", default="java", help="Java executable used to run the server")
     parser.add_argument("--summary-title", default="", help="Label used in the summary row instead of the project name")
