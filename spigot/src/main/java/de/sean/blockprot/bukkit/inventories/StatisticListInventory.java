@@ -22,6 +22,7 @@ package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
+import de.sean.blockprot.bukkit.BukkitCompat;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.nbt.EntityNBTHandler;
@@ -287,7 +288,7 @@ public final class StatisticListInventory extends BlockProtInventory {
                 Material m = Material.valueOf(typeName);
                 if (m != Material.AIR) return m;
             } catch (IllegalArgumentException ignored) {}
-            return Material.OAK_CHEST_BOAT;
+            return BukkitCompat.material("OAK_CHEST_BOAT", Material.OAK_BOAT);
         }
 
         @Override

@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BukkitCompat;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
@@ -236,7 +237,7 @@ public final class AutoDropSearchInventory extends BlockProtInventory {
         }
         if (name.endsWith("_WALL_HANGING_SIGN")) {
             Material m = Material.matchMaterial(name.replace("_WALL_HANGING_SIGN", "_HANGING_SIGN"));
-            return m != null ? m : Material.OAK_HANGING_SIGN;
+            return m != null ? m : BukkitCompat.material("OAK_HANGING_SIGN", Material.OAK_SIGN);
         }
         return mat;
     }

@@ -22,6 +22,7 @@ package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.BukkitCompat;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
 import de.sean.blockprot.bukkit.VersionCompat;
@@ -501,7 +502,7 @@ public final class LockablesInventory extends BlockProtInventory {
         }
         if (name.endsWith("_WALL_HANGING_SIGN")) {
             Material m = Material.matchMaterial(name.replace("_WALL_HANGING_SIGN", "_HANGING_SIGN"));
-            return m != null ? m : Material.OAK_HANGING_SIGN;
+            return m != null ? m : BukkitCompat.material("OAK_HANGING_SIGN", Material.OAK_SIGN);
         }
         if (name.equals("WATER_CAULDRON") || name.equals("LAVA_CAULDRON")
                 || name.equals("POWDER_SNOW_CAULDRON")) {

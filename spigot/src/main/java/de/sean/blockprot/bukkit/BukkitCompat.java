@@ -20,6 +20,7 @@
 
 package de.sean.blockprot.bukkit;
 
+import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.enchantments.Enchantment;
 import org.jetbrains.annotations.NotNull;
@@ -41,6 +42,11 @@ public final class BukkitCompat {
         enchantment("INFINITY", "ARROW_INFINITE", "UNBREAKING", "DURABILITY");
 
     private BukkitCompat() {}
+
+    public static Material material(String name, Material fallback) {
+        Material found = Material.matchMaterial(name);
+        return found != null ? found : fallback;
+    }
 
     private static Particle particle(Particle fallback, String... names) {
         for (String name : names) {
