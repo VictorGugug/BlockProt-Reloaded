@@ -64,7 +64,7 @@ public final class BackupTask implements Runnable {
 
     private static final SimpleDateFormat DATE_FMT  = new SimpleDateFormat("yyyy-MM-dd_HH-mm");
     private static final int              MAX_BACKUPS = 10;
-    private static final String           MARKER_FILE = ".edition";
+    public static final String        MARKER_FILE = ".edition";
 
     public record Transition(boolean migration, boolean downgrade, @Nullable String fromEdition,
                              @Nullable String fromVersion, @Nullable String fromMinecraft) {

@@ -127,6 +127,13 @@ public enum Edition {
         return false;
     }
 
+    public @NotNull String aboutLine(@NotNull String pluginVersion) {
+        return Translator.get(TranslationKey.CONSOLE__ABOUT_EDITION)
+            .replace("{edition}", displayName)
+            .replace("{version}", pluginVersion)
+            .replace("{range}", rangeLabel());
+    }
+
     public boolean supportsDialogs() {
         return this == BPR;
     }

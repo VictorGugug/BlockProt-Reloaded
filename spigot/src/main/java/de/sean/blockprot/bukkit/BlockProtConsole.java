@@ -115,8 +115,9 @@ public final class BlockProtConsole {
         raw(PASTEL_COFFEE + "  ██╔══██╗██╔═══╝ ██╔══██╗");
         raw(PASTEL_COFFEE + "  ██████╔╝██║     ██║  ██║");
         raw(PASTEL_COFFEE + "  ╚═════╝ ╚═╝     ╚═╝  ╚═╝");
-        raw("§r        " + PASTEL_MINT + "BlockProt Reloaded");
+        raw("§r        " + PASTEL_MINT + Edition.current().displayName());
         raw("§r            " + PASTEL_GOLD + "v" + version);
+        raw("§r  " + PASTEL_GOLD + Edition.current().aboutLine(version));
 
         for (String guideLine : guideLines) {
             raw(guideLine);

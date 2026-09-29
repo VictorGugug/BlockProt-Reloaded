@@ -23,6 +23,7 @@ package de.sean.blockprot.bukkit.commands;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtConsole;
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.Edition;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
@@ -90,6 +91,7 @@ public class AboutCommand implements CommandExecutor {
         String version = BlockProt.getPluginVersion();
         String issuesUrl = "https://github.com/VictorGugug/BlockProt-Reloaded/issues";
         BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__VERSION_LABEL) + BlockProtConsole.PASTEL_GOLD + version);
+        BlockProtConsole.info(Edition.current().aboutLine(version));
         BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__AUTHOR_LABEL));
         BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__MAINTAINER_LABEL));
         BlockProtConsole.info(Translator.get(TranslationKey.DIALOGS__ABOUT__REPORT_ISSUES) + " " + BlockProtConsole.SOFT_BLUE + issuesUrl);
@@ -103,6 +105,7 @@ public class AboutCommand implements CommandExecutor {
             .append(Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__VERSION_LABEL), SOFT_GRAY))
             .append(Component.text(version, PASTEL_GOLD))
             .build());
+        ComponentMessages.send(player, Component.text(Edition.current().aboutLine(version), SOFT_GRAY));
         ComponentMessages.send(player, Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__AUTHOR_LABEL), PASTEL_MINT));
         ComponentMessages.send(player, Component.text(Translator.get(TranslationKey.DIALOGS__ABOUT__MAINTAINER_LABEL), PASTEL_MINT));
         ComponentMessages.send(player, Component.text()

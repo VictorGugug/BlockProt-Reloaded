@@ -29,7 +29,10 @@ import de.sean.blockprot.bukkit.admin.AdminTier;
 import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.Edition;
 import de.sean.blockprot.bukkit.VersionCompat;
+import de.sean.blockprot.bukkit.tasks.BackupTask;
+import java.io.File;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.config.DefaultConfig;
 import de.sean.blockprot.bukkit.config.IntegrationConfig;
@@ -194,6 +197,7 @@ public class DebugCommand implements CommandExecutor {
         BlockProtLogger.log("Session: " + java.time.LocalDateTime.now()
             + " | Plugin: BlockProt Reloaded " + BlockProt.getPluginVersion()
             + " | Player: " + player.getName() + " (" + player.getUniqueId() + ")");
+        BlockProtLogger.log("Edition: " + Edition.current().displayName() + " " + BlockProt.getPluginVersion());
         BlockProtLogger.log("Server: " + org.bukkit.Bukkit.getVersion()
             + " | API: " + org.bukkit.Bukkit.getBukkitVersion()
             + " | Java: " + System.getProperty("java.version"));
@@ -220,6 +224,7 @@ public class DebugCommand implements CommandExecutor {
         checkConfig(player, passed, failed);
         checkBukkitCompat(player, passed, failed);
         checkFoliaLib(player, passed, failed);
+        checkEdition(player, passed, failed);
 
         // Domain 2: Configuration & Block Families
         runDomain("2/10", "CONFIGURATION & BLOCK FAMILIES");
@@ -353,6 +358,20 @@ public class DebugCommand implements CommandExecutor {
             p.incrementAndGet();
         } catch (Exception e) {
             BlockProtLogger.fail("BukkitCompat", e.getMessage()); f.incrementAndGet();
+        }
+    }
+
+    private void checkEdition(@Nullable Player player, AtomicInteger p, AtomicInteger f) {
+        Edition edition = Edition.current();
+        boolean notOlder = edition.supports(VersionCompat.MAJOR, VersionCompat.MINOR, VersionCompat.PATCH)
+            || edition.isNewerThanRange(VersionCompat.MAJOR, VersionCompat.MINOR, VersionCompat.PATCH);
+        boolean marker = new File(BlockProt.getInstance().getDataFolder(), BackupTask.MARKER_FILE).isFile();
+        if (notOlder && marker) {
+            BlockProtLogger.pass("Edition: " + edition.id() + " range=" + edition.rangeLabel() + " marker=present");
+            p.incrementAndGet();
+        } else {
+            BlockProtLogger.fail("Edition", "id=" + edition.id() + " minecraftInRange=" + notOlder + " marker=" + marker);
+            f.incrementAndGet();
         }
     }
 
@@ -2645,6 +2664,7 @@ public class DebugCommand implements CommandExecutor {
         checkConfig(null, passed, failed);
         checkBukkitCompat(null, passed, failed);
         checkFoliaLib(null, passed, failed);
+        checkEdition(null, passed, failed);
 
         // Domain 2: Configuration & Block Families
         runDomain("2/10", "CONFIGURATION & BLOCK FAMILIES");
