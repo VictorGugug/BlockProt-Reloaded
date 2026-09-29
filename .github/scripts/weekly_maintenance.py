@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import re
+import subprocess
+import sys
+import urllib.request
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS = REPO_ROOT / ".github" / "scripts"
+STABLE_VERSION = re.compile(r"^\d+(\.\d+){1,2}$")
+
+
+def fetch_json(url):
+    request = urllib.request.Request(url, headers={"User-Agent": "BlockProt-Reloaded-CI"})
+    with urllib.request.urlopen(request, timeout=60) as response:
+        return json.load(response)
+
+
+def version_key(version):
+    return tuple(int(part) for part in version.split("."))
+
+
+def declared_latest():
+    for line in (REPO_ROOT / "gradle.properties").read_text(encoding="utf-8").splitlines():
+        if line.strip().startswith("# Supported on blockProtVersion"):
+            versions = [v.strip() for v in line.split(":", 1)[1].split(",") if v.strip()]
+            return max(versions, key=version_key)
+    raise SystemExit("Supported version list not found in gradle.properties")
+
+
+def upstream_versions(project):
+    if project == "purpur":
+        return fetch_json("https://api.purpurmc.org/v2/purpur")["versions"]
+    groups = fetch_json(f"https://fill.papermc.io/v3/projects/{project}")["versions"]
+    return [v for group in groups.values() for v in group]
+
+
+def newer_versions(project, latest):
+    stable = [v for v in upstream_versions(project) if STABLE_VERSION.match(v)]
+    return sorted({v for v in stable if version_key(v) > version_key(latest)}, key=version_key)
+
+
+def smoke_test(jar, project, version, workdir):
+    result = subprocess.run(
+        [sys.executable, str(SCRIPTS / "server_smoke_test.py"), "--jar", jar, "--project", project,
+         "--version", version, "--workdir", workdir],
+        capture_output=True, text=True)
+    lines = [line for line in result.stdout.splitlines() if line.strip()]
+    return result.returncode == 0, lines[-1] if lines else "no output"
+
+
+def dependency_findings(json_path):
+    subprocess.run([sys.executable, str(SCRIPTS / "audit_dependencies.py"), "--json-output", json_path,
+                    "--no-summary"], capture_output=True, text=True)
+    data = json.loads(Path(json_path).read_text(encoding="utf-8"))
+    return [d for d in data.get("dependency_results", []) if not d.get("up_to_date")]
+
+
+def build_report(args):
+    latest = declared_latest()
+    sections = []
+    upstream_rows = []
+    smoke_rows = []
+    for project in ("paper", "folia", "purpur"):
+        for version in newer_versions(project, latest):
+            upstream_rows.append(f"| {project.capitalize()} | {version} |")
+            if project != "purpur" and args.jar:
+                ok, detail = smoke_test(args.jar, project, version, f"build/weekly-{project}-{version}")
+                smoke_rows.append(f"| {project.capitalize()} {version} | {'PASS' if ok else 'FAIL'} | {detail} |")
+    if upstream_rows:
+        sections.append("## New server versions\n\nNewer than the latest declared version "
+                        f"`{latest}` in `gradle.properties`.\n\n| Software | Version |\n| :--- | :--- |\n"
+                        + "\n".join(upstream_rows))
+    if smoke_rows:
+        sections.append("## Real server diagnostics on new versions\n\n| Server | Result | Detail |\n"
+                        "| :--- | :---: | :--- |\n" + "\n".join(smoke_rows))
+    outdated = dependency_findings(args.audit_json)
+    if outdated:
+        rows = [f"| {d['name']} | {d['category']} | `{d['current']}` | `{d['latest']}` |" for d in outdated]
+        sections.append("## Outdated dependencies\n\n| Dependency | Category | Current | Latest |\n"
+                        "| :--- | :--- | :--- | :--- |\n" + "\n".join(rows))
+    return sections
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Weekly upstream, compatibility and dependency check.")
+    parser.add_argument("--jar", default="", help="Plugin JAR used for real server tests on new versions")
+    parser.add_argument("--audit-json", default="build/reports/weekly-dependency-audit.json")
+    parser.add_argument("--output", default="build/reports/weekly-maintenance.md")
+    args = parser.parse_args()
+    Path(args.output).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.audit_json).parent.mkdir(parents=True, exist_ok=True)
+    sections = build_report(args)
+    body = ("# Weekly maintenance report\n\n" + "\n\n".join(sections) + "\n") if sections else ""
+    Path(args.output).write_text(body, encoding="utf-8")
+    print(body if body else "No findings.")
+
+
+if __name__ == "__main__":
+    main()
