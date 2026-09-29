@@ -304,7 +304,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
           CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
-        run: python3 .github/scripts/platform_status.py --title "Latest stable release" --min-age-hours 1
+        run: python3 .github/scripts/platform_status.py --title "Latest stable release" --min-age-hours ${{ github.event_name == 'workflow_dispatch' && '0' || '1' }}
 
   inspect-and-build:
     name: Pre-Flight Inspection & Artifact Verification
