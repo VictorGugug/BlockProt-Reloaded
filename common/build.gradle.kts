@@ -1,5 +1,6 @@
 plugins {
     id("org.gradle.java-library")
+    id("maven-publish")
 }
 
 dependencies {
@@ -9,4 +10,16 @@ dependencies {
 tasks.compileJava {
     java.sourceCompatibility = JavaVersion.VERSION_1_8
     java.targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+java {
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+        }
+    }
 }

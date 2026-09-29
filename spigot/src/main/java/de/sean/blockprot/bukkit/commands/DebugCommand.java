@@ -258,6 +258,7 @@ public class DebugCommand implements CommandExecutor {
                 checkEntityNbt(player.getLocation(), passed, failed);
                 checkPlayerSettings(player, passed, failed);
                 checkNbtSubHandlers(player.getLocation(), passed, failed);
+                checkPublicApi(player.getLocation(), passed, failed);
 
                 // Domain 6: Commands, Permissions & Integrations
                 runDomain("6/10", "COMMANDS, PERMISSIONS & INTEGRATIONS");
@@ -1990,6 +1991,46 @@ public class DebugCommand implements CommandExecutor {
         }
     }
 
+    private void checkPublicApi(@NotNull Location origin, AtomicInteger p, AtomicInteger f) {
+        var api = de.sean.blockprot.bukkit.BlockProtAPI.getInstance();
+        if (api == null) {
+            BlockProtLogger.fail("BlockProtAPI", "getInstance() returned null");
+            f.incrementAndGet();
+            return;
+        }
+        var loc = origin.clone();
+        var world = origin.getWorld();
+        var orig = world.getBlockAt(loc).getType();
+        world.setType(loc, Material.CHEST);
+        try {
+            var block = world.getBlockAt(loc);
+            UUID owner = UUID.fromString(NOTCH_UUID);
+            UUID friend = UUID.randomUUID();
+            UUID stranger = UUID.randomUUID();
+            boolean unprotected = !api.isProtected(block) && api.getOwner(block) == null
+                && api.canAccess(block, stranger) && api.isLockable(block);
+            var handler = new BlockNBTHandler(block);
+            handler.setOwner(NOTCH_UUID);
+            handler.addFriend(friend.toString());
+            boolean owned = api.isProtected(block) && owner.equals(api.getOwner(block))
+                && api.canAccess(block, owner) && api.canAccess(block, friend) && !api.canAccess(block, stranger)
+                && api.getFriends(block).equals(List.of(friend)) && !api.isPublic(block);
+            if (unprotected && owned) {
+                BlockProtLogger.pass("BlockProtAPI: isProtected/getOwner/canAccess/getFriends/isPublic/isLockable OK");
+                p.incrementAndGet();
+            } else {
+                BlockProtLogger.fail("BlockProtAPI", "unprotected=" + unprotected + " owned=" + owned
+                    + " friends=" + api.getFriends(block));
+                f.incrementAndGet();
+            }
+        } catch (Exception e) {
+            BlockProtLogger.fail("BlockProtAPI", e.getClass().getSimpleName() + ": " + e.getMessage());
+            f.incrementAndGet();
+        } finally {
+            world.setType(loc, orig);
+        }
+    }
+
     private void checkNbtSubHandlers(@NotNull Location origin, AtomicInteger p, AtomicInteger f) {
         BlockProtLogger.subGroup("NBT sub-handlers (8 handlers):");
         try {
@@ -2603,6 +2644,7 @@ public class DebugCommand implements CommandExecutor {
                 checkEntityNbt(origin, passed, failed);
                 BlockProtLogger.skipSub("PlayerSettings", "requires an online player");
                 checkNbtSubHandlers(origin, passed, failed);
+                checkPublicApi(origin, passed, failed);
 
                 runDomain("6/10", "COMMANDS, PERMISSIONS & INTEGRATIONS");
                 checkIntegrations(null, passed, failed);

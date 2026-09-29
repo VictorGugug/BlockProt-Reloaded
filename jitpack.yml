@@ -1,3 +1,5 @@
 before_install:
-  - sdk install java 18.0.1.1-open
-  - sdk use java 18.0.1.1-open
+  - sdk install java 25.0.4-tem
+  - sdk use java 25.0.4-tem
+install:
+  - ./gradlew publishToMavenLocal -x test --no-daemon

@@ -27,12 +27,14 @@ import de.sean.blockprot.bukkit.integrations.PluginIntegration;
 import de.sean.blockprot.bukkit.inventories.BlockLockInventory;
 import de.sean.blockprot.bukkit.inventories.InventoryState;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
+import de.sean.blockprot.bukkit.entities.EntityProtectionHandler;
 import de.sean.blockprot.bukkit.nbt.FriendHandler;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 import de.sean.blockprot.nbt.LockReturnValue;
 import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
@@ -40,9 +42,14 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * BlockProt's class for external API methods.
+ *
+ * <p>Obtain it with {@link #getInstance()} once BlockProt is enabled. Methods that read or write
+ * a block or an entity must run on the thread that owns it: the main thread on Paper, or the owning
+ * region thread on Folia.
  *
  * @author spnda
  * @since 0.4.7
@@ -61,6 +68,91 @@ public final class BlockProtAPI {
     @Nullable
     public static BlockProtAPI getInstance() {
         return instance;
+    }
+
+    /**
+     * @return true if the block has an owner.
+     * @since 1.3.8
+     */
+    public boolean isProtected(@NotNull final Block block) {
+        return new BlockNBTHandler(block).isProtected();
+    }
+
+    /**
+     * @return the owner of the block, or null if the block is not protected.
+     * @since 1.3.8
+     */
+    @Nullable
+    public UUID getOwner(@NotNull final Block block) {
+        return parseUuid(new BlockNBTHandler(block).getOwner());
+    }
+
+    /**
+     * @return true if the player may open or use the block: it is unprotected, owned by the player,
+     *     shared with the player as a friend, or made public.
+     * @since 1.3.8
+     */
+    public boolean canAccess(@NotNull final Block block, @NotNull final UUID player) {
+        BlockNBTHandler handler = new BlockNBTHandler(block);
+        return handler.isNotProtected() || handler.canAccess(player.toString());
+    }
+
+    /**
+     * @return the players added as friends of the block, excluding the public entry.
+     * @since 1.3.8
+     */
+    @NotNull
+    public List<UUID> getFriends(@NotNull final Block block) {
+        return new BlockNBTHandler(block).getFriends().stream()
+            .filter(friend -> !friend.doesRepresentPublic())
+            .map(friend -> parseUuid(friend.getName()))
+            .filter(java.util.Objects::nonNull)
+            .toList();
+    }
+
+    /**
+     * @return true if the block has been made public, so every player can access it.
+     * @since 1.3.8
+     */
+    public boolean isPublic(@NotNull final Block block) {
+        return new BlockNBTHandler(block).getFriends().stream().anyMatch(FriendHandler::doesRepresentPublic);
+    }
+
+    /**
+     * @return true if the block type can be locked in its world with the current configuration.
+     * @since 1.3.8
+     */
+    public boolean isLockable(@NotNull final Block block) {
+        return BlockProt.getDefaultConfig().isLockable(block.getType(), block.getWorld());
+    }
+
+    /**
+     * @return true if the entity is protected by BlockProt's entity protection.
+     * @since 1.3.8
+     */
+    public boolean isEntityProtected(@NotNull final Entity entity) {
+        EntityProtectionHandler handler = EntityProtectionHandler.forEntityOrNull(entity);
+        return handler != null && handler.isProtected();
+    }
+
+    /**
+     * @return the owner of a protected entity, or null if the entity is not protected.
+     * @since 1.3.8
+     */
+    @Nullable
+    public UUID getEntityOwner(@NotNull final Entity entity) {
+        EntityProtectionHandler handler = EntityProtectionHandler.forEntityOrNull(entity);
+        return handler != null && handler.isProtected() ? handler.getOwner() : null;
+    }
+
+    @Nullable
+    private static UUID parseUuid(@Nullable final String raw) {
+        if (raw == null || raw.isEmpty()) return null;
+        try {
+            return UUID.fromString(raw);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     public void registerIntegration(@NotNull final PluginIntegration integration) {

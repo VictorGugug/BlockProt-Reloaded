@@ -50,8 +50,8 @@ val fullVersion: String = computeFullVersion()
 allprojects {
     apply(plugin = "org.gradle.java-library")
 
-    group = "de.sean.blockprot"
-    version = fullVersion
+    group = if (System.getenv("JITPACK") == "true") "${System.getenv("GROUP")}.${System.getenv("ARTIFACT")}" else "de.sean.blockprot"
+    version = if (System.getenv("JITPACK") == "true") System.getenv("VERSION") else fullVersion
 
     repositories {
         mavenLocal()

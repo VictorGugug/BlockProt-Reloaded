@@ -301,6 +301,64 @@ Configurable automated cleanup (`inactivity_cleanup_days`) that unregisters prot
 | ViaVersion | Client protocol version detection in the `/bp lockables` interface |
 | Folia | Asynchronous chunk handling and region scheduler compatibility |
 
+## Developer API
+
+Other plugins can query and react to BlockProt protections. The API is published through [JitPack](https://jitpack.io/#VictorGugug/BlockProt-Reloaded); use a release tag (for example `1.3.8`) as the version.
+
+Gradle (Kotlin DSL):
+
+```kotlin
+repositories {
+    maven("https://jitpack.io")
+}
+
+dependencies {
+    compileOnly("com.github.VictorGugug.BlockProt-Reloaded:blockprot-spigot:1.3.8") { isTransitive = false }
+    compileOnly("com.github.VictorGugug.BlockProt-Reloaded:common:1.3.8")
+}
+```
+
+Maven:
+
+```xml
+<repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+</repository>
+
+<dependency>
+    <groupId>com.github.VictorGugug.BlockProt-Reloaded</groupId>
+    <artifactId>blockprot-spigot</artifactId>
+    <version>1.3.8</version>
+    <scope>provided</scope>
+</dependency>
+```
+
+Add `softdepend: [BlockProtReloaded]` (or `depend`) to your `plugin.yml`, then:
+
+```java
+BlockProtAPI api = BlockProtAPI.getInstance();
+if (api != null && api.isProtected(block)) {
+    UUID owner = api.getOwner(block);
+    boolean allowed = api.canAccess(block, player.getUniqueId());
+    List<UUID> friends = api.getFriends(block);
+}
+```
+
+| Method | Description |
+|---|---|
+| `isProtected(Block)` / `getOwner(Block)` | Whether a block is locked and who owns it |
+| `canAccess(Block, UUID)` | Whether a player may use the block (owner, friend, public, or unprotected) |
+| `getFriends(Block)` / `isPublic(Block)` | Players the block is shared with, and whether it is public |
+| `isLockable(Block)` | Whether the block type can be locked in its world |
+| `isEntityProtected(Entity)` / `getEntityOwner(Entity)` | Entity protection state and owner |
+| `lockBlock(Block, Player)` / `unlockBlock(Block, Player)` | Lock or unlock through the regular events |
+| `registerIntegration(PluginIntegration)` | Add your own protection rules (claims, regions) |
+
+Events in `de.sean.blockprot.bukkit.events`: `BlockProtLockEvent`, `BlockProtUnlockEvent`, `BlockAccessEvent`, `BlockAccessMenuEvent`, and `BlockLockOnPlaceEvent`. All five events are cancellable.
+
+Call block and entity methods on the thread that owns them: the main thread on Paper, or the owning region thread on Folia.
+
 ## Configuration Overview
 
 ```yaml
