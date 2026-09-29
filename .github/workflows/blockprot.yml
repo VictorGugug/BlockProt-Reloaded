@@ -1,25 +1,37 @@
 name: BlockProt Reloaded
 
-run-name: "${{ github.event_name == 'workflow_dispatch' && format('{0}: {1} [{2}]', inputs.operation, inputs.tag || 'version from gradle.properties', inputs.suffix) || github.event_name == 'schedule' && 'Scheduled platform sync and maintenance' || format('CI: {0}', github.event.head_commit.message || github.ref_name) }}"
+run-name: "${{ github.event_name == 'workflow_dispatch' && format('{0}: {1} [{2}] [{3}]', inputs.operation, inputs.tag || 'version from gradle.properties', inputs.suffix, inputs.edition) || github.event_name == 'schedule' && 'Scheduled platform sync and maintenance' || format('CI: {0}', github.event.head_commit.message || github.ref_name) }}"
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, 'legacy/**' ]
     paths-ignore:
       - '**.md'
       - 'images/**'
       - '.gitignore'
   pull_request:
-    branches: [ main ]
+    branches: [ main, 'legacy/**' ]
     paths-ignore:
       - '**.md'
       - 'images/**'
       - '.gitignore'
   schedule:
     - cron: '0 6 * * *'
+    - cron: '20 6 * * *'
+    - cron: '40 6 * * *'
     - cron: '0 7 * * 1'
+    - cron: '10 7 * * 1'
+    - cron: '20 7 * * 1'
   workflow_dispatch:
     inputs:
+      edition:
+        description: "Which edition to run"
+        type: choice
+        options:
+          - "bpr"
+          - "bpr-legacy"
+          - "bp-legacy"
+        default: "bpr"
       operation:
         description: "What to run"
         type: choice
@@ -44,16 +56,58 @@ on:
         default: ""
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}-${{ inputs.operation }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}-${{ github.event.schedule }}-${{ inputs.edition }}-${{ inputs.operation }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
 
 jobs:
+  edition:
+    name: Resolve Edition
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      edition: ${{ steps.resolve.outputs.edition }}
+      operation: ${{ steps.resolve.outputs.operation }}
+      branch: ${{ steps.resolve.outputs.branch }}
+      commit_branch: ${{ steps.resolve.outputs.commit_branch }}
+      tag_prefix: ${{ steps.resolve.outputs.tag_prefix }}
+      jar_base: ${{ steps.resolve.outputs.jar_base }}
+      title: ${{ steps.resolve.outputs.title }}
+      make_latest: ${{ steps.resolve.outputs.make_latest }}
+      smoke_matrix: ${{ steps.resolve.outputs.smoke_matrix }}
+      modrinth_enabled: ${{ steps.resolve.outputs.modrinth_enabled }}
+      modrinth_id: ${{ steps.resolve.outputs.modrinth_id }}
+      curseforge_enabled: ${{ steps.resolve.outputs.curseforge_enabled }}
+      curseforge_id: ${{ steps.resolve.outputs.curseforge_id }}
+      curseforge_slug: ${{ steps.resolve.outputs.curseforge_slug }}
+      hangar_enabled: ${{ steps.resolve.outputs.hangar_enabled }}
+      hangar_slug: ${{ steps.resolve.outputs.hangar_slug }}
+      hangar_owner: ${{ steps.resolve.outputs.hangar_owner }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Resolve edition and operation
+        id: resolve
+        env:
+          MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
+          CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+        run: |
+          python3 .github/scripts/edition.py resolve \
+            --event "${{ github.event_name }}" \
+            --schedule "${{ github.event.schedule }}" \
+            --input-edition "${{ inputs.edition }}" \
+            --input-operation "${{ inputs.operation }}" \
+            --ref-name "${{ github.base_ref || github.ref_name }}"
+
   ci:
     name: Build, Verify & Audit
-    if: github.event_name == 'push' || github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.operation == 'Run CI')
+    needs: [edition]
+    if: needs.edition.outputs.operation == 'ci'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -64,6 +118,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          ref: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && needs.edition.outputs.branch || '' }}
 
       - name: Set up JDK 25
         uses: actions/setup-java@v6
@@ -173,6 +228,9 @@ jobs:
           fi
           echo ":common architectural boundary verified with 0 Bukkit imports."
 
+      - name: Run automation script tests
+        run: python3 -m unittest discover -s .github/scripts -p "test_*.py"
+
       - name: Run project file integrity audit
         run: |
           python3 .github/scripts/verify_project_integrity.py --report-path build/reports/integrity-report.md --summary
@@ -209,7 +267,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: BlockProtReloaded-build-artifacts
-          path: spigot/build/libs/BlockProtReloaded-*.jar
+          path: spigot/build/libs/${{ needs.edition.outputs.jar_base }}-*.jar
           retention-days: 7
 
       - name: Upload CI verification and audit reports
@@ -235,22 +293,23 @@ jobs:
           retention-days: 7
 
   server-smoke:
-    name: Real Server Diagnostics (${{ matrix.project }})
-    needs: ci
+    name: Real Server Diagnostics (${{ matrix.project }} ${{ matrix.version }})
+    needs: [edition, ci]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      matrix:
-        project: [ paper, folia ]
+      matrix: ${{ fromJSON(needs.edition.outputs.smoke_matrix) }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ (github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && needs.edition.outputs.branch || '' }}
 
-      - name: Set up JDK 25
+      - name: Set up JDK ${{ matrix.java }}
         uses: actions/setup-java@v6
         with:
-          java-version: '25'
+          java-version: ${{ matrix.java }}
           distribution: 'temurin'
 
       - name: Set up Python
@@ -266,20 +325,20 @@ jobs:
 
       - name: Boot server and run console diagnostics
         run: |
-          JAR=$(find build/ci-jar -name "BlockProtReloaded-*.jar" | head -1)
+          JAR=$(find build/ci-jar -name "${{ needs.edition.outputs.jar_base }}-*.jar" | head -1)
           {
             echo "## Real Server Diagnostics"
             echo ""
             echo "| Server | Result | Diagnostics |"
             echo "| :--- | :---: | :--- |"
           } >> "$GITHUB_STEP_SUMMARY"
-          python3 .github/scripts/server_smoke_test.py --jar "$JAR" --project "${{ matrix.project }}"             --workdir build/smoke-server --summary "$GITHUB_STEP_SUMMARY"
+          python3 .github/scripts/server_smoke_test.py --jar "$JAR" --project "${{ matrix.project }}" --version "${{ matrix.version }}" --java "$JAVA_HOME/bin/java" --workdir build/smoke-server --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Upload server log and debug report
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: smoke-${{ matrix.project }}
+          name: smoke-${{ needs.edition.outputs.edition }}-${{ matrix.project }}-${{ matrix.version }}
           path: |
             build/smoke-server/console.log
             build/smoke-server/plugins/BlockProtReloaded/logs/
@@ -287,10 +346,12 @@ jobs:
 
   sync-check:
     name: Platform Publication Check
-    if: github.event.schedule == '0 6 * * *' || (github.event_name == 'workflow_dispatch' && inputs.operation == 'Sync platforms (publish the latest stable release where missing)')
+    needs: [edition]
+    if: needs.edition.outputs.operation == 'sync'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.status.outputs.version }}
+      tag: ${{ steps.status.outputs.tag }}
       targets: ${{ steps.status.outputs.targets }}
       needed: ${{ steps.status.outputs.needed }}
 
@@ -304,17 +365,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
           CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
-        run: python3 .github/scripts/platform_status.py --title "Latest stable release" --min-age-hours ${{ github.event_name == 'workflow_dispatch' && '0' || '1' }}
+        run: python3 .github/scripts/platform_status.py --edition "${{ needs.edition.outputs.edition }}" --title "Latest stable release" --min-age-hours ${{ github.event_name == 'workflow_dispatch' && '0' || '1' }}
 
   inspect-and-build:
     name: Pre-Flight Inspection & Artifact Verification
-    needs: [sync-check]
-    if: ${{ !cancelled() && (needs.sync-check.outputs.needed == 'true' || (github.event_name == 'workflow_dispatch' && (inputs.operation == 'Preview release (dry run)' || inputs.operation == 'Publish release'))) }}
+    needs: [edition, sync-check]
+    if: ${{ !cancelled() && needs.edition.result == 'success' && (needs.sync-check.outputs.needed == 'true' || needs.edition.outputs.operation == 'preview' || needs.edition.outputs.operation == 'publish') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
       plugin_version: ${{ steps.meta.outputs.plugin_version }}
+      release_tag: ${{ steps.meta.outputs.release_tag }}
       version_suffix: ${{ steps.meta.outputs.version_suffix }}
       stable_promotion: ${{ steps.meta.outputs.stable_promotion }}
       game_versions: ${{ steps.meta.outputs.game_versions }}
@@ -337,7 +399,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: ${{ needs.sync-check.outputs.version || github.ref }}
+          ref: ${{ needs.sync-check.outputs.tag || needs.edition.outputs.branch }}
 
       - name: Resolve metadata and server platforms from gradle.properties
         id: meta
@@ -352,7 +414,7 @@ jobs:
           esac
           if echo "$SUFFIX" | grep -qiE '^(bedev|bdev)(\.[0-9]+)?$'; then
             LAST=0
-            for T in $(git tag -l "${BASE_VER}-BEDev.*"); do
+            for T in $(git tag -l "${{ needs.edition.outputs.tag_prefix }}${BASE_VER}-BEDev.*"); do
               N="${T##*-BEDev.}"
               if echo "$N" | grep -qE '^[0-9]+$' && [ "$N" -gt "$LAST" ]; then LAST="$N"; fi
             done
@@ -389,6 +451,7 @@ jobs:
           LOADERS=$(echo "$PLATFORMS" | tr '[:upper:]' '[:lower:]' | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '\r' | grep -v '^$' | tr '\n' ' ')
 
           echo "plugin_version=${PLUGIN_VER}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=${{ needs.edition.outputs.tag_prefix }}${PLUGIN_VER}" >> "$GITHUB_OUTPUT"
           echo "mc_range=${MC_RANGE}" >> "$GITHUB_OUTPUT"
           echo "latest_mc=${LATEST_MC}" >> "$GITHUB_OUTPUT"
           {
@@ -428,7 +491,7 @@ jobs:
             echo "Loading curated release notes from: $NOTES_SRC"
             cp "$NOTES_SRC" build/reports/release-notes.md
             REPO_URL="${{ github.repository }}"
-            REF="${{ github.ref_name }}"
+            REF="${{ needs.edition.outputs.branch }}"
             echo "notes_source=curated" >> "$GITHUB_OUTPUT"
             echo "notes_path=$NOTES_SRC" >> "$GITHUB_OUTPUT"
             echo "notes_url=https://github.com/${REPO_URL}/blob/${REF}/${NOTES_SRC}" >> "$GITHUB_OUTPUT"
@@ -458,10 +521,11 @@ jobs:
       - name: Inspect compiled JAR, hash, and metadata
         id: jar
         run: |
-          JAR=$(find spigot/build/libs -name "BlockProtReloaded-*.jar" \
+          JAR_BASE="${{ needs.edition.outputs.jar_base }}"
+          JAR=$(find spigot/build/libs -name "${JAR_BASE}-*.jar" \
                 ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
           JAR_NAME=$(basename "$JAR")
-          VERSION=$(basename "$JAR" .jar | sed 's/^BlockProtReloaded-//')
+          VERSION=$(basename "$JAR" .jar | sed "s/^${JAR_BASE}-//")
 
           if echo "$VERSION" | grep -qiE 'snapshot|alpha|dev|nightly|wip|bedev'; then
             CHANNEL="alpha"
@@ -499,16 +563,17 @@ jobs:
 
           # 2. Complete build suite for GitHub Releases (binary, sources, javadocs, common, checksums)
           VERSION="${{ steps.jar.outputs.version }}"
+          JAR_BASE="${{ needs.edition.outputs.jar_base }}"
           cp "${{ steps.jar.outputs.path }}" build/staged-upload/github/
 
           SRC_JAR=$(find spigot/build/libs -name "*-sources.jar" | head -1)
           if [ -n "$SRC_JAR" ] && [ -f "$SRC_JAR" ]; then
-            cp "$SRC_JAR" "build/staged-upload/github/BlockProtReloaded-${VERSION}-sources.jar"
+            cp "$SRC_JAR" "build/staged-upload/github/${JAR_BASE}-${VERSION}-sources.jar"
           fi
 
           DOC_JAR=$(find spigot/build/libs -name "*-javadoc.jar" | head -1)
           if [ -n "$DOC_JAR" ] && [ -f "$DOC_JAR" ]; then
-            cp "$DOC_JAR" "build/staged-upload/github/BlockProtReloaded-${VERSION}-javadoc.jar"
+            cp "$DOC_JAR" "build/staged-upload/github/${JAR_BASE}-${VERSION}-javadoc.jar"
           fi
 
           COMMON_JAR=$(find common/build/libs -name "common-*.jar" ! -name "*-sources*" ! -name "*-javadoc*" | head -1)
@@ -542,6 +607,7 @@ jobs:
           | Metric / Property | Evaluated Value | Source Location |
           | :--- | :--- | :--- |
           EOF
+          echo "| **Edition** | \`${{ needs.edition.outputs.title }}\` (\`${{ needs.edition.outputs.edition }}\`) | \`.github/editions.json\` |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Active Version** | \`${{ steps.meta.outputs.plugin_version }}\` | \`gradle.properties\` (\`blockProtVersion\`) |" >> "$GITHUB_STEP_SUMMARY"
           echo "| **Version Suffix** | \`${{ steps.meta.outputs.version_suffix || '(none, stable)' }}\` | Selected: ${{ github.event.inputs.suffix }} (gradle.properties: \`${{ steps.meta.outputs.props_suffix || 'blank' }}\`) |" >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ steps.meta.outputs.stable_promotion }}" = "true" ]; then
@@ -560,7 +626,7 @@ jobs:
           if [ "${{ steps.jar.outputs.github_only }}" = "true" ]; then
             echo "| **Distribution Scope** | GitHub Releases only (pre-release) | Development build suffix detected in version |" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "| **Distribution Scope** | GitHub, Modrinth, CurseForge, Hangar | Stable or hotfix version |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| **Distribution Scope** | GitHub and every enabled platform of the edition | Stable or hotfix version |" >> "$GITHUB_STEP_SUMMARY"
           fi
           if [ "${{ steps.changelog.outputs.notes_source }}" = "curated" ]; then
             echo "| **Release Notes File** | [\`${{ steps.changelog.outputs.notes_path }}\`](${{ steps.changelog.outputs.notes_url }}) | Curated Project Release Documentation |" >> "$GITHUB_STEP_SUMMARY"
@@ -576,23 +642,29 @@ jobs:
           | :--- | :---: | :--- |
           | **GitHub Releases** | [v] Ready | Complete Build Assets (Shadow JAR, Sources, Javadoc, Common, SHA-256) |
           EOF
-          if [ -n "${{ secrets.MODRINTH_TOKEN }}" ]; then
-            echo "| **Modrinth** | [v] Ready | \`${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ needs.edition.outputs.modrinth_enabled }}" != "true" ]; then
+            echo "| **Modrinth** | [-] Not enabled | Edition \`${{ needs.edition.outputs.edition }}\` has no Modrinth page enabled |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "${{ secrets.MODRINTH_TOKEN }}" ]; then
+            echo "| **Modrinth** | [v] Ready | \`${{ needs.edition.outputs.modrinth_id }}\` |" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "| **Modrinth** | [x] Missing Token | Secret \`MODRINTH_TOKEN\` not configured |" >> "$GITHUB_STEP_SUMMARY"
           fi
-          if [ -n "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
-            echo "| **CurseForge** | [v] Ready | Project ID \`${{ vars.CURSEFORGE_PROJECT_ID }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ needs.edition.outputs.curseforge_enabled }}" != "true" ]; then
+            echo "| **CurseForge** | [-] Not enabled | Edition \`${{ needs.edition.outputs.edition }}\` has no CurseForge page enabled |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
+            echo "| **CurseForge** | [v] Ready | Project ID \`${{ needs.edition.outputs.curseforge_id }}\` |" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "| **CurseForge** | [x] Missing Token | Secret \`CURSEFORGE_TOKEN\` not configured |" >> "$GITHUB_STEP_SUMMARY"
           fi
-          if [ -n "${{ secrets.HANGAR_API_TOKEN }}" ]; then
-            echo "| **Hangar** | [v] Ready | \`BlockProt-Reloaded\` |" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ needs.edition.outputs.hangar_enabled }}" != "true" ]; then
+            echo "| **Hangar** | [-] Not enabled | Edition \`${{ needs.edition.outputs.edition }}\` has no Hangar page enabled |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "${{ secrets.HANGAR_API_TOKEN }}" ]; then
+            echo "| **Hangar** | [v] Ready | \`${{ needs.edition.outputs.hangar_slug }}\` |" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "| **Hangar** | [x] Missing Token | Secret \`HANGAR_API_TOKEN\` not configured |" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-          if [ "${{ inputs.operation }}" = "Publish release" ] || [ "${{ needs.sync-check.outputs.needed }}" = "true" ]; then
+          if [ "${{ needs.edition.outputs.operation }}" = "publish" ] || [ "${{ needs.sync-check.outputs.needed }}" = "true" ]; then
             cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
 
           > [!NOTE]
@@ -616,8 +688,8 @@ jobs:
 
   publish-platforms:
     name: Execute Multi-Platform Publication
-    needs: [sync-check, inspect-and-build]
-    if: ${{ !cancelled() && needs.inspect-and-build.result == 'success' && (inputs.operation == 'Publish release' || needs.sync-check.outputs.needed == 'true') }}
+    needs: [edition, sync-check, inspect-and-build]
+    if: ${{ !cancelled() && needs.inspect-and-build.result == 'success' && (needs.edition.outputs.operation == 'publish' || needs.sync-check.outputs.needed == 'true') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -629,7 +701,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: ${{ needs.sync-check.outputs.version || github.ref }}
+          ref: ${{ needs.sync-check.outputs.tag || needs.edition.outputs.branch }}
 
       - name: Download staged release artifacts
         uses: actions/download-artifact@v8
@@ -640,7 +712,7 @@ jobs:
       - name: Locate staged artifacts and release notes
         id: staged
         run: |
-          CLEAN_JAR=$(find build/staged/clean -name "BlockProtReloaded-*.jar" ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
+          CLEAN_JAR=$(find build/staged/clean -name "${{ needs.edition.outputs.jar_base }}-*.jar" ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
           CLEAN_NOTES=$(find build/staged/clean -name "release-notes.md" -o -name "*.md" | head -1)
           GITHUB_NOTES=$(find build/staged/github -name "release-notes.md" -o -name "*.md" | head -1)
 
@@ -662,6 +734,10 @@ jobs:
           echo "Staged GitHub Releases suite:"
           ls -la build/staged/github
 
+      - name: Resolve release commit
+        id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Promote gradle.properties to stable
         id: promote
         if: needs.inspect-and-build.outputs.stable_promotion == 'true'
@@ -672,8 +748,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add gradle.properties
-          git commit -m "BPR:${{ github.ref_name }}(chore): Release ${VERSION}"
-          git push origin "HEAD:${{ github.ref_name }}"
+          git commit -m "BPR:${{ needs.edition.outputs.commit_branch }}(chore): Release ${VERSION}"
+          git push origin "HEAD:${{ needs.edition.outputs.branch }}"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Publish to GitHub Releases
@@ -681,15 +757,16 @@ jobs:
         if: needs.sync-check.outputs.needed != 'true' || contains(needs.sync-check.outputs.targets, 'github')
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ needs.inspect-and-build.outputs.plugin_version }}
-          target_commitish: ${{ steps.promote.outputs.sha || github.sha }}
-          name: "BlockProt Reloaded ${{ needs.inspect-and-build.outputs.plugin_version }}"
+          tag_name: ${{ needs.inspect-and-build.outputs.release_tag }}
+          target_commitish: ${{ steps.promote.outputs.sha || steps.head.outputs.sha }}
+          name: "${{ needs.edition.outputs.title }} ${{ needs.inspect-and-build.outputs.plugin_version }}"
           body_path: ${{ steps.staged.outputs.github_notes }}
           files: |
-            build/staged/github/BlockProtReloaded-*.jar
+            build/staged/github/${{ needs.edition.outputs.jar_base }}-*.jar
             build/staged/github/common-*.jar
             build/staged/github/checksums.sha256
           draft: false
+          make_latest: ${{ needs.edition.outputs.make_latest }}
           prerelease: ${{ contains(needs.inspect-and-build.outputs.plugin_version, 'SNAPSHOT') || contains(needs.inspect-and-build.outputs.plugin_version, 'BEDev') || contains(needs.inspect-and-build.outputs.plugin_version, 'dev') || contains(needs.inspect-and-build.outputs.plugin_version, 'alpha') || contains(needs.inspect-and-build.outputs.plugin_version, 'beta') || contains(needs.inspect-and-build.outputs.plugin_version, 'rc') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -699,11 +776,13 @@ jobs:
         if: needs.inspect-and-build.outputs.github_only != 'true'
         run: |
           VERSION="${{ needs.inspect-and-build.outputs.plugin_version }}"
-          MODRINTH_ID="${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}"
-          CF_ID="${{ vars.CURSEFORGE_PROJECT_ID || '1565977' }}"
+          MODRINTH_ID="${{ needs.edition.outputs.modrinth_id }}"
+          CF_ID="${{ needs.edition.outputs.curseforge_id }}"
+          HANGAR_SLUG="${{ needs.edition.outputs.hangar_slug }}"
+          JAR_BASE="${{ needs.edition.outputs.jar_base }}"
 
           # 1. Modrinth duplicate check
-          if curl -s "https://api.modrinth.com/v2/project/${MODRINTH_ID}/version" | grep -q "\"version_number\":\"${VERSION}\""; then
+          if [ "${{ needs.edition.outputs.modrinth_enabled }}" = "true" ] && curl -s "https://api.modrinth.com/v2/project/${MODRINTH_ID}/version" | grep -q "\"version_number\":\"${VERSION}\""; then
             echo "Modrinth already has version ${VERSION}. Will skip Modrinth upload to avoid duplicate conflict."
             echo "modrinth_skip=true" >> "$GITHUB_OUTPUT"
           else
@@ -711,7 +790,7 @@ jobs:
           fi
 
           # 2. CurseForge duplicate check
-          if curl -s "https://api.cfwidget.com/${CF_ID}" | grep -qF "\"name\":\"BlockProtReloaded-${VERSION}.jar\""; then
+          if [ "${{ needs.edition.outputs.curseforge_enabled }}" = "true" ] && curl -s "https://api.cfwidget.com/${CF_ID}" | grep -qF "\"name\":\"${JAR_BASE}-${VERSION}.jar\""; then
             echo "CurseForge already has version ${VERSION}. Will skip CurseForge upload to avoid duplicate conflict."
             echo "curseforge_skip=true" >> "$GITHUB_OUTPUT"
           else
@@ -719,14 +798,19 @@ jobs:
           fi
 
           # 3. Hangar duplicate check
-          if curl -s "https://hangar.papermc.io/api/v1/projects/BlockProt-Reloaded/versions?limit=10" | grep -q "\"name\":\"${VERSION}\""; then
+          if [ "${{ needs.edition.outputs.hangar_enabled }}" = "true" ] && curl -s "https://hangar.papermc.io/api/v1/projects/${HANGAR_SLUG}/versions?limit=10" | grep -q "\"name\":\"${VERSION}\""; then
             echo "Hangar already has version ${VERSION}. Will skip Hangar upload to avoid duplicate conflict."
             echo "hangar_skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "hangar_skip=false" >> "$GITHUB_OUTPUT"
           fi
 
-          # 4. Scheduled sync: only publish to the platforms reported as missing
+          # 4. Platforms not enabled for this edition are never published
+          [ "${{ needs.edition.outputs.modrinth_enabled }}" = "true" ] || echo "modrinth_skip=true" >> "$GITHUB_OUTPUT"
+          [ "${{ needs.edition.outputs.curseforge_enabled }}" = "true" ] || echo "curseforge_skip=true" >> "$GITHUB_OUTPUT"
+          [ "${{ needs.edition.outputs.hangar_enabled }}" = "true" ] || echo "hangar_skip=true" >> "$GITHUB_OUTPUT"
+
+          # 5. Scheduled sync: only publish to the platforms reported as missing
           if [ "${{ needs.sync-check.outputs.needed }}" = "true" ]; then
             TARGETS=",${{ needs.sync-check.outputs.targets }},"
             for P in modrinth curseforge hangar; do
@@ -741,13 +825,13 @@ jobs:
         if: needs.inspect-and-build.outputs.github_only != 'true' && ((env.MODRINTH_TOKEN != '' && steps.detect.outputs.modrinth_skip != 'true') || (env.CURSEFORGE_TOKEN != '' && steps.detect.outputs.curseforge_skip != 'true'))
         uses: Kir-Antipov/mc-publish@v3.3.1
         with:
-          modrinth-id: ${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}
+          modrinth-id: ${{ needs.edition.outputs.modrinth_id }}
           modrinth-token: ${{ steps.detect.outputs.modrinth_skip != 'true' && secrets.MODRINTH_TOKEN || '' }}
           modrinth-unfeature-mode: none
-          curseforge-id: ${{ vars.CURSEFORGE_PROJECT_ID || '1565977' }}
+          curseforge-id: ${{ needs.edition.outputs.curseforge_id }}
           curseforge-token: ${{ steps.detect.outputs.curseforge_skip != 'true' && secrets.CURSEFORGE_TOKEN || '' }}
           files: ${{ steps.staged.outputs.clean_jar }}
-          name: "BlockProt Reloaded ${{ needs.inspect-and-build.outputs.plugin_version }}"
+          name: "${{ needs.edition.outputs.title }} ${{ needs.inspect-and-build.outputs.plugin_version }}"
           version: ${{ needs.inspect-and-build.outputs.plugin_version }}
           version-type: ${{ needs.inspect-and-build.outputs.jar_channel }}
           changelog-file: ${{ steps.staged.outputs.clean_notes }}
@@ -797,9 +881,9 @@ jobs:
           | :--- | :---: | :--- |
           EOF
           if [ "${{ steps.gh_release.outcome }}" = "skipped" ]; then
-            echo "| **GitHub Releases** | [v] Already Live | Release \`${{ needs.inspect-and-build.outputs.plugin_version }}\` already exists |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| **GitHub Releases** | [v] Already Live | Release \`${{ needs.inspect-and-build.outputs.release_tag }}\` already exists |" >> "$GITHUB_STEP_SUMMARY"
           elif [ "${{ steps.gh_release.outcome }}" = "success" ]; then
-            echo "| **GitHub Releases** | [v] Published | Tag \`${{ needs.inspect-and-build.outputs.plugin_version }}\` (Complete Build Assets Attached) |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| **GitHub Releases** | [v] Published | Tag \`${{ needs.inspect-and-build.outputs.release_tag }}\` (Complete Build Assets Attached) |" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "| **GitHub Releases** | [x] Failed | Could not create GitHub Release |" >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -807,25 +891,31 @@ jobs:
             echo "| **Modrinth / CurseForge / Hangar** | [-] Not applicable | Development build: published on GitHub Releases only |" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          if [ "${{ steps.detect.outputs.modrinth_skip }}" = "true" ]; then
+          if [ "${{ needs.edition.outputs.modrinth_enabled }}" != "true" ]; then
+            echo "| **Modrinth** | [-] Not enabled | No Modrinth page enabled for this edition |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ steps.detect.outputs.modrinth_skip }}" = "true" ]; then
             echo "| **Modrinth** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on Modrinth (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
           elif [ -n "${{ secrets.MODRINTH_TOKEN }}" ]; then
-            echo "| **Modrinth** | [v] Published | Project \`${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| **Modrinth** | [v] Published | Project \`${{ needs.edition.outputs.modrinth_id }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "| **Modrinth** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
           fi
-          if [ "${{ steps.detect.outputs.curseforge_skip }}" = "true" ]; then
+          if [ "${{ needs.edition.outputs.curseforge_enabled }}" != "true" ]; then
+            echo "| **CurseForge** | [-] Not enabled | No CurseForge page enabled for this edition |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ steps.detect.outputs.curseforge_skip }}" = "true" ]; then
             echo "| **CurseForge** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on CurseForge (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
           elif [ -n "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
-            echo "| **CurseForge** | [v] Published | Project ID \`${{ vars.CURSEFORGE_PROJECT_ID || '1565977' }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| **CurseForge** | [v] Published | Project ID \`${{ needs.edition.outputs.curseforge_id }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "| **CurseForge** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
           fi
-          if [ "${{ steps.detect.outputs.hangar_skip }}" = "true" ]; then
+          if [ "${{ needs.edition.outputs.hangar_enabled }}" != "true" ]; then
+            echo "| **Hangar** | [-] Not enabled | No Hangar page enabled for this edition |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ steps.detect.outputs.hangar_skip }}" = "true" ]; then
             echo "| **Hangar** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on Hangar (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
           elif [ -n "${{ secrets.HANGAR_API_TOKEN }}" ]; then
             if [ "${{ steps.hangar.outcome }}" = "success" ]; then
-              echo "| **Hangar** | [v] Published | Project \`BlockProt-Reloaded\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
+              echo "| **Hangar** | [v] Published | Project \`${{ needs.edition.outputs.hangar_slug }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
             else
               echo "| **Hangar** | [!] Issue | Check Hangar API key format (must be 73 characters <UUID>.<token>) |" >> "$GITHUB_STEP_SUMMARY"
             fi
@@ -837,11 +927,25 @@ jobs:
         if: always() && steps.gh_release.outcome == 'success'
         env:
           VERSION: ${{ needs.inspect-and-build.outputs.plugin_version }}
+          RELEASE_TAG: ${{ needs.inspect-and-build.outputs.release_tag }}
+          EDITION_ID: ${{ needs.edition.outputs.edition }}
+          EDITION_TITLE: ${{ needs.edition.outputs.title }}
           GITHUB_ONLY: ${{ needs.inspect-and-build.outputs.github_only }}
           REPO: ${{ github.repository }}
-          MODRINTH_ID: ${{ vars.MODRINTH_PROJECT_ID || 'blockprot-reloaded' }}
+          MODRINTH_ENABLED: ${{ needs.edition.outputs.modrinth_enabled }}
+          MODRINTH_ID: ${{ needs.edition.outputs.modrinth_id }}
+          CURSEFORGE_ENABLED: ${{ needs.edition.outputs.curseforge_enabled }}
+          CURSEFORGE_SLUG: ${{ needs.edition.outputs.curseforge_slug }}
+          HANGAR_ENABLED: ${{ needs.edition.outputs.hangar_enabled }}
+          HANGAR_OWNER: ${{ needs.edition.outputs.hangar_owner }}
+          HANGAR_SLUG: ${{ needs.edition.outputs.hangar_slug }}
         run: |
           FENCE='```'
+          if [ "$EDITION_ID" = "bpr" ]; then
+            TITLE_PREFIX=""
+          else
+            TITLE_PREFIX="${EDITION_TITLE} "
+          fi
           {
             echo ""
             echo "## Discord Announcement"
@@ -850,7 +954,7 @@ jobs:
             echo ""
             echo "**Post title**"
             echo "${FENCE}"
-            echo "${VERSION} RELEASE"
+            echo "${TITLE_PREFIX}${VERSION} RELEASE"
             echo "${FENCE}"
             echo "**Tag**"
             echo "${FENCE}"
@@ -858,26 +962,32 @@ jobs:
             echo "${FENCE}"
             echo "**Message 1: GitHub release**"
             echo "${FENCE}"
-            echo "https://github.com/${REPO}/releases/tag/${VERSION}"
+            echo "https://github.com/${REPO}/releases/tag/${RELEASE_TAG}"
             echo "${FENCE}"
             if [ "$GITHUB_ONLY" = "true" ]; then
               echo "Development build: GitHub Releases only, no platform links."
             else
-            echo "**Message 2: Download platforms**"
-            echo "${FENCE}"
-            echo "**MODRINTH:**"
-            echo "https://modrinth.com/plugin/${MODRINTH_ID}/version/${VERSION}"
-            echo "**CURSEFORGE:**"
-            echo "https://www.curseforge.com/minecraft/bukkit-plugins/blockprot-reloaded"
-            echo "**HANGAR:**"
-            echo "https://hangar.papermc.io/VictorGugug/BlockProt-Reloaded/versions/${VERSION}"
-            echo "${FENCE}"
+              echo "**Message 2: Download platforms**"
+              echo "${FENCE}"
+              if [ "$MODRINTH_ENABLED" = "true" ]; then
+                echo "**MODRINTH:**"
+                echo "https://modrinth.com/plugin/${MODRINTH_ID}/version/${VERSION}"
+              fi
+              if [ "$CURSEFORGE_ENABLED" = "true" ]; then
+                echo "**CURSEFORGE:**"
+                echo "https://www.curseforge.com/minecraft/bukkit-plugins/${CURSEFORGE_SLUG}"
+              fi
+              if [ "$HANGAR_ENABLED" = "true" ]; then
+                echo "**HANGAR:**"
+                echo "https://hangar.papermc.io/${HANGAR_OWNER}/${HANGAR_SLUG}/versions/${VERSION}"
+              fi
+              echo "${FENCE}"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
   verify-publication:
     name: Verify Publication on Every Platform
-    needs: [inspect-and-build, publish-platforms]
+    needs: [edition, inspect-and-build, publish-platforms]
     if: ${{ !cancelled() && needs.publish-platforms.result == 'success' }}
     runs-on: ubuntu-latest
 
@@ -890,16 +1000,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MODRINTH_PROJECT_ID: ${{ vars.MODRINTH_PROJECT_ID }}
           CURSEFORGE_PROJECT_ID: ${{ vars.CURSEFORGE_PROJECT_ID }}
+          EDITION_ID: ${{ needs.edition.outputs.edition }}
+          MODRINTH_ENABLED: ${{ needs.edition.outputs.modrinth_enabled }}
+          HANGAR_ENABLED: ${{ needs.edition.outputs.hangar_enabled }}
           VERSION: ${{ needs.inspect-and-build.outputs.plugin_version }}
           GITHUB_ONLY: ${{ needs.inspect-and-build.outputs.github_only }}
         run: |
-          if [ "$GITHUB_ONLY" = "true" ]; then
-            REQUIRED="github"
-          else
-            REQUIRED="github modrinth hangar"
+          REQUIRED="github"
+          if [ "$GITHUB_ONLY" != "true" ]; then
+            [ "$MODRINTH_ENABLED" = "true" ] && REQUIRED="$REQUIRED modrinth"
+            [ "$HANGAR_ENABLED" = "true" ] && REQUIRED="$REQUIRED hangar"
           fi
           for ATTEMPT in 1 2 3 4 5; do
-            MISSING=$(python3 .github/scripts/platform_status.py --version "$VERSION" | python3 -c "import json,sys; print(' '.join(json.load(sys.stdin)['missing']))")
+            MISSING=$(python3 .github/scripts/platform_status.py --edition "$EDITION_ID" --version "$VERSION" | python3 -c "import json,sys; print(' '.join(json.load(sys.stdin)['missing']))")
             FAILED=""
             for P in $REQUIRED; do
               case " $MISSING " in *" $P "*) FAILED="$FAILED $P" ;; esac
@@ -908,7 +1021,7 @@ jobs:
             echo "Attempt $ATTEMPT: not visible yet on:$FAILED"
             sleep 60
           done
-          GITHUB_STEP_SUMMARY="$GITHUB_STEP_SUMMARY" python3 .github/scripts/platform_status.py --version "$VERSION" --title "Publication check" > /dev/null
+          GITHUB_STEP_SUMMARY="$GITHUB_STEP_SUMMARY" python3 .github/scripts/platform_status.py --edition "$EDITION_ID" --version "$VERSION" --title "Publication check" > /dev/null
           if [ "$GITHUB_ONLY" != "true" ]; then
             case " $MISSING " in
               *" curseforge "*) echo "::notice::CurseForge lists new files only after manual review; the daily platform sync republishes it if it is still missing after 72 hours." ;;
@@ -921,7 +1034,8 @@ jobs:
 
   maintenance:
     name: Upstream, Compatibility & Dependency Check
-    if: github.event.schedule == '0 7 * * 1' || (github.event_name == 'workflow_dispatch' && inputs.operation == 'Maintenance report')
+    needs: [edition]
+    if: needs.edition.outputs.operation == 'maintenance'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -930,6 +1044,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.edition.outputs.branch }}
 
       - name: Set up JDK 25
         uses: actions/setup-java@v6
@@ -957,8 +1073,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          JAR=$(find spigot/build/libs -name "BlockProtReloaded-*.jar" | head -1)
-          python3 .github/scripts/weekly_maintenance.py --jar "$JAR" --output build/reports/weekly-maintenance.md
+          JAR=$(find spigot/build/libs -name "${{ needs.edition.outputs.jar_base }}-*.jar" ! -name "*-javadoc*" ! -name "*-sources*" | head -1)
+          python3 .github/scripts/weekly_maintenance.py --edition "${{ needs.edition.outputs.edition }}" --jar "$JAR" --output build/reports/weekly-maintenance.md
           if [ -s build/reports/weekly-maintenance.md ]; then
             cat build/reports/weekly-maintenance.md >> "$GITHUB_STEP_SUMMARY"
           else
@@ -968,7 +1084,7 @@ jobs:
       - name: Create, update, or close the maintenance issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TITLE: "Weekly maintenance report"
+          TITLE: ${{ needs.edition.outputs.edition == 'bpr' && 'Weekly maintenance report' || format('Weekly maintenance report [{0}]', needs.edition.outputs.edition) }}
         run: |
           REPORT=build/reports/weekly-maintenance.md
           EXISTING=$(gh issue list --state open --search "\"$TITLE\" in:title" --json number,title \
