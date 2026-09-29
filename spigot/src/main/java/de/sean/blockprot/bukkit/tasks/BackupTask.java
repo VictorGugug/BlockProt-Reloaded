@@ -23,19 +23,25 @@ package de.sean.blockprot.bukkit.tasks;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtConsole;
 import de.sean.blockprot.bukkit.BlockProtLogger;
+import de.sean.blockprot.bukkit.Edition;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.VersionCompat;
+import de.sean.blockprot.util.SemanticVersion;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.Instant;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -58,6 +64,16 @@ public final class BackupTask implements Runnable {
 
     private static final SimpleDateFormat DATE_FMT  = new SimpleDateFormat("yyyy-MM-dd_HH-mm");
     private static final int              MAX_BACKUPS = 10;
+    private static final String           MARKER_FILE = ".edition";
+
+    public record Transition(boolean migration, boolean downgrade, @Nullable String fromEdition,
+                             @Nullable String fromVersion, @Nullable String fromMinecraft) {
+        static final Transition NONE = new Transition(false, false, null, null, null);
+
+        public boolean changed() {
+            return migration || downgrade;
+        }
+    }
 
     /** Files whose presence signals that the server has pre-existing plugin data. */
     private static final String[] DATA_SENTINELS = {
@@ -110,13 +126,25 @@ public final class BackupTask implements Runnable {
         String timestamp = DATE_FMT.format(new Date());
         String suffix = version.isBlank() ? "" : "_v" + version.replaceAll("\\s+", "_");
 
+        Edition edition = Edition.current();
+        Transition transition = currentTransition(dataFolder);
+        if (transition.migration()) {
+            suffix = "_" + transition.fromEdition() + "-" + transition.fromVersion().replace(' ', '_')
+                + "_to_" + edition.id() + "-" + version.replace(' ', '_');
+        }
+
         File zipFile = new File(backupDir, timestamp + suffix + ".zip");
 
         try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFile))) {
             addDirectory(dataFolder, dataFolder.getName(), zos, backupDir);
 
             // Write minimal metadata: no network calls on the main thread.
-            String meta = "plugin: BlockProt\nversion: " + version + "\n";
+            String meta = "plugin: " + edition.displayName() + "\nversion: " + version + "\n"
+                + "edition: " + edition.id() + "\nminecraft: " + VersionCompat.getVersionString() + "\n";
+            if (transition.migration()) {
+                meta += "from_edition: " + transition.fromEdition() + "\nfrom_version: " + transition.fromVersion()
+                    + "\nfrom_minecraft: " + transition.fromMinecraft() + "\n";
+            }
 
             // Use the cached latest-version result from UpdateChecker if available,
             // to avoid a redundant HTTP request at startup.
@@ -133,6 +161,20 @@ public final class BackupTask implements Runnable {
             zos.closeEntry();
 
             BlockProtLogger.log("backup", "Backup created: " + zipFile.getName());
+            if (transition.changed()) {
+                TranslationKey key = transition.downgrade()
+                    ? TranslationKey.CONSOLE__EDITION_DOWNGRADE
+                    : TranslationKey.CONSOLE__EDITION_MIGRATION;
+                String message = Translator.get(key)
+                    .replace("{from}", transition.fromEdition() + " " + transition.fromVersion())
+                    .replace("{to}", edition.id() + " " + version)
+                    .replace("{path}", zipFile.getAbsolutePath());
+                if (transition.downgrade()) {
+                    BlockProtConsole.warn(message);
+                } else {
+                    BlockProtConsole.info(message);
+                }
+            }
             if (!forced) {
                 BlockProtLogger.log("backup", Translator.get(TranslationKey.CONSOLE__BACKUP_REVIEW_CONFIG));
             }
@@ -140,6 +182,67 @@ public final class BackupTask implements Runnable {
             BlockProt.getInstance().getLogger().warning(
                 Translator.get(TranslationKey.CONSOLE__BACKUP_FAILED)
                     .replace("{error}", e.getMessage()));
+        }
+    }
+
+    public static @NotNull Transition currentTransition(@NotNull File dataFolder) {
+        return decide(readMarker(dataFolder), Edition.current(), BlockProt.getPluginVersion(),
+            VersionCompat.getVersionString());
+    }
+
+    public static void recordCurrentEdition(@NotNull File dataFolder) {
+        writeMarker(dataFolder, Edition.current(), BlockProt.getPluginVersion(), VersionCompat.getVersionString());
+    }
+
+    static @NotNull Transition decide(@Nullable Properties marker, @NotNull Edition to,
+                                      @NotNull String version, @NotNull String minecraft) {
+        if (marker == null) return Transition.NONE;
+        String fromId = marker.getProperty("edition");
+        Edition from = null;
+        for (Edition candidate : Edition.values()) {
+            if (candidate.id().equals(fromId)) from = candidate;
+        }
+        if (from == null) return Transition.NONE;
+        String fromVersion = marker.getProperty("version", "");
+        String fromMinecraft = marker.getProperty("minecraft", "");
+        boolean downgrade = from.rank() > to.rank()
+            || (from == to && new SemanticVersion(version).compareTo(new SemanticVersion(fromVersion)) < 0);
+        boolean migration = from != to
+            || !majorMinor(minecraft).equals(majorMinor(fromMinecraft))
+            || !majorMinor(version).equals(majorMinor(fromVersion));
+        return new Transition(migration, downgrade, from.id(), fromVersion, fromMinecraft);
+    }
+
+    private static String majorMinor(@NotNull String version) {
+        String[] parts = version.split("[.-]");
+        return parts.length < 2 ? version : parts[0] + "." + parts[1];
+    }
+
+    static @Nullable Properties readMarker(@NotNull File dataFolder) {
+        File file = new File(dataFolder, MARKER_FILE);
+        if (!file.isFile()) return null;
+        try (FileInputStream in = new FileInputStream(file)) {
+            Properties properties = new Properties();
+            properties.load(in);
+            return properties;
+        } catch (IOException | IllegalArgumentException e) {
+            BlockProtLogger.log("backup", "Edition marker unreadable: " + e.getMessage());
+            return null;
+        }
+    }
+
+    static void writeMarker(@NotNull File dataFolder, @NotNull Edition edition,
+                            @NotNull String version, @NotNull String minecraft) {
+        Properties properties = new Properties();
+        properties.setProperty("edition", edition.id());
+        properties.setProperty("version", version);
+        properties.setProperty("minecraft", minecraft);
+        properties.setProperty("written", Instant.now().toString());
+        if (!dataFolder.isDirectory() && !dataFolder.mkdirs()) return;
+        try (FileOutputStream out = new FileOutputStream(new File(dataFolder, MARKER_FILE))) {
+            properties.store(out, null);
+        } catch (IOException e) {
+            BlockProtLogger.log("backup", "Edition marker not written: " + e.getMessage());
         }
     }
 

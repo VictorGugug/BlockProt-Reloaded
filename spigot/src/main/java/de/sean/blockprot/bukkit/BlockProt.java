@@ -278,9 +278,11 @@ public final class BlockProt extends JavaPlugin {
         // storage code may not have been battle-tested yet.
         boolean experimentalBuild = false;
         try { experimentalBuild = new SemanticVersion(version).isPreRelease(); } catch (Exception ignored) {}
-        if ((isMigrationPerformed || experimentalBuild) && defaultConfig.isBackupsEnabled()) {
+        boolean editionChanged = BackupTask.currentTransition(this.getDataFolder()).changed();
+        if ((isMigrationPerformed || experimentalBuild || editionChanged) && defaultConfig.isBackupsEnabled()) {
             new BackupTask(this.getDataFolder()).run();
         }
+        BackupTask.recordCurrentEdition(this.getDataFolder());
         saveResourceSilent("worlds.yml", false);
         if (defaultConfig.isPerWorldsConfigEnabled()) {
             File worldsFile = new File(this.getDataFolder(), "worlds.yml");
