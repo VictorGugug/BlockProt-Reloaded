@@ -1,6 +1,6 @@
 name: Release
 
-run-name: "Release [${{ inputs.mode }}]: ${{ inputs.version || '1.3.6' }}"
+run-name: "Release [${{ inputs.mode }}]: ${{ inputs.version || 'auto-detected from gradle.properties' }}"
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
       version:
         description: "Release version or tag to process (leave blank to auto-detect from gradle.properties)"
         required: false
-        default: "1.3.6"
+        default: ""
       mode:
         description: "Execution mode: Preview, Release, or Cancel"
         type: choice
@@ -80,6 +80,8 @@ jobs:
             NOTES_SRC="docs/RELEASE_NOTES/${TARGET_VER}.RELEASE_NOTES.md"
           elif [ -f "docs/RELEASE_NOTES/${CLEAN_VER}.RELEASE_NOTES.md" ]; then
             NOTES_SRC="docs/RELEASE_NOTES/${CLEAN_VER}.RELEASE_NOTES.md"
+          elif echo "$CLEAN_VER" | grep -qiE -- '-(bedev|bdev|snapshot|exp)' && [ -f "docs/RELEASE_NOTES/${CLEAN_VER%%-*}.RELEASE_NOTES.md" ]; then
+            NOTES_SRC="docs/RELEASE_NOTES/${CLEAN_VER%%-*}.RELEASE_NOTES.md"
           else
             NOTES_SRC=""
           fi

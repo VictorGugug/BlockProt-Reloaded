@@ -1,6 +1,6 @@
 name: Publish Multi-Platform Release
 
-run-name: "Publish [${{ inputs.mode }}]: ${{ inputs.tag || '1.3.6' }}"
+run-name: "Publish [${{ inputs.mode }}]: ${{ inputs.tag || 'auto-detected from gradle.properties' }}"
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
       tag:
         description: "Release version or tag to process (leave blank to auto-detect from gradle.properties)"
         required: false
-        default: "1.3.6"
+        default: ""
       mode:
         description: "Execution mode: Preview, Publish, or Cancel"
         type: choice
@@ -122,6 +122,8 @@ jobs:
             NOTES_SRC="docs/RELEASE_NOTES/${TARGET_TAG}.RELEASE_NOTES.md"
           elif [ -f "docs/RELEASE_NOTES/${CLEAN_TAG}.RELEASE_NOTES.md" ]; then
             NOTES_SRC="docs/RELEASE_NOTES/${CLEAN_TAG}.RELEASE_NOTES.md"
+          elif echo "$CLEAN_TAG" | grep -qiE -- '-(bedev|bdev|snapshot|exp)' && [ -f "docs/RELEASE_NOTES/${CLEAN_TAG%%-*}.RELEASE_NOTES.md" ]; then
+            NOTES_SRC="docs/RELEASE_NOTES/${CLEAN_TAG%%-*}.RELEASE_NOTES.md"
           elif [ -f "docs/RELEASE_NOTES/${{ steps.meta.outputs.plugin_version }}.RELEASE_NOTES.md" ]; then
             NOTES_SRC="docs/RELEASE_NOTES/${{ steps.meta.outputs.plugin_version }}.RELEASE_NOTES.md"
           else
