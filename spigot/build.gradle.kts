@@ -45,7 +45,7 @@ dependencies {
     implementation(project(":common"))
 
     // Compiled against the oldest supported version so newer-only APIs cannot slip in.
-    compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:${project.findProperty("paperApiVersion") ?: "1.21.7-R0.1-SNAPSHOT"}")
     testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
     compileOnly("org.apache.commons:commons-lang3:3.20.0")
     implementation("com.github.ben-manes.caffeine:caffeine:3.3.0")
@@ -154,12 +154,7 @@ tasks.shadowJar {
         this.include(dependency("net.kyori:examination-string"))
     }
 
-    // Output: BlockProtReloaded-1.3.0.jar  /  BlockProtReloaded-1.3.0-SNAPSHOT.jar
-    val branch = ext["gitBranchName"] as String
-    val isMaster = branch == "master" || branch == "HEAD" || branch == "main"
-    val jarVersion = project.version as String
-    val jarSuffix  = if (isMaster) "" else "-$branch"
-    archiveFileName.set("BlockProtReloaded-${jarVersion}${jarSuffix}.jar")
+    archiveFileName.set("${project.property("jarBaseName")}-${project.version}.jar")
     exclude("META-INF/*.kotlin_module")
 }
 
@@ -194,6 +189,13 @@ publishing {
     }
 }
 
+val supportedMinecraftVersions: List<String> = rootProject.file("gradle.properties").readLines()
+    .first { it.startsWith("# Supported on blockProtVersion") }
+    .substringAfter(":")
+    .split(",")
+    .map { it.trim() }
+    .filter { it.isNotEmpty() }
+
 hangarPublish {
     publications.register("plugin") {
         version.set(project.version.toString())
@@ -203,7 +205,7 @@ hangarPublish {
         platforms {
             paper {
                 jar.set(tasks.shadowJar.flatMap { it.archiveFile })
-                platformVersions.set(listOf("1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11", "26.1", "26.2", "26.3"))
+                platformVersions.set(supportedMinecraftVersions)
             }
         }
     }
