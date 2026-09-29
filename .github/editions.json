@@ -34,7 +34,7 @@
       {"project": "folia", "version": "1.21.6", "java": 21}
     ],
     "platforms": {
-      "modrinth": {"enabled": false, "id": "blockprot-reloaded-legacy"},
+      "modrinth": {"enabled": true, "id": "blockprot-reloaded-legacy"},
       "curseforge": {"enabled": false, "id": null, "slug": "blockprot-reloaded-legacy"},
       "hangar": {"enabled": false, "slug": "BlockProt-Reloaded-Legacy", "owner": "VictorGugug"}
     },
@@ -60,7 +60,7 @@
       {"project": "folia", "version": "1.19.4", "java": 17}
     ],
     "platforms": {
-      "modrinth": {"enabled": false, "id": "blockprot-legacy"},
+      "modrinth": {"enabled": true, "id": "blockprot-legacy"},
       "curseforge": {"enabled": false, "id": null, "slug": "blockprot-legacy"},
       "hangar": {"enabled": false, "slug": "BlockProt-Legacy", "owner": "VictorGugug"}
     },
