@@ -71,6 +71,23 @@ def wait_for(path, predicate, timeout):
     return read_log(path)
 
 
+WATCHDOG_MARKER = "DO NOT REPORT THIS TO PAPER"
+
+
+def plugin_error_lines(text):
+    errors = []
+    in_dump = False
+    for line in text.splitlines():
+        if WATCHDOG_MARKER in line:
+            in_dump = not in_dump
+            continue
+        if in_dump:
+            continue
+        if ("ERROR" in line or "Exception" in line) and ("BlockProt" in line or "de.sean.blockprot" in line):
+            errors.append(line)
+    return errors
+
+
 def run(args):
     repo_root = Path(__file__).resolve().parents[2]
     jar = Path(args.jar).resolve()
@@ -98,8 +115,7 @@ def run(args):
                 process.kill()
     text = read_log(log_path)
     match = SUMMARY_RE.search(text)
-    plugin_errors = [line for line in text.splitlines()
-                     if ("ERROR" in line or "Exception" in line) and ("BlockProt" in line or "de.sean.blockprot" in line)]
+    plugin_errors = plugin_error_lines(text)
     for line in plugin_errors:
         print(f"plugin error: {line}")
     if match is None:
