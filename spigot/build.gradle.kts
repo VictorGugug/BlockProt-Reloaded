@@ -47,8 +47,8 @@ dependencies {
     // Compiled against the oldest supported version so newer-only APIs cannot slip in.
     compileOnly("io.papermc.paper:paper-api:1.21.7-R0.1-SNAPSHOT")
     testImplementation("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
-    compileOnly("org.apache.commons:commons-lang3:3.17.0")
-    implementation("com.github.ben-manes.caffeine:caffeine:3.2.4")
+    compileOnly("org.apache.commons:commons-lang3:3.20.0")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.3.0")
 
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
@@ -86,7 +86,7 @@ dependencies {
     compileOnly("com.cjburkey.claimchunk:claimchunk:0.0.25-FIX3")
     compileOnly("com.github.Zrips:Residence:6.0.2.3") { isTransitive = false }
     compileOnly("com.github.GriefPrevention:GriefPrevention:16.18.7") { isTransitive = false }
-    compileOnly("org.geysermc.floodgate:api:2.2.3-SNAPSHOT")
+    compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
     compileOnly("org.geysermc.cumulus:cumulus:1.1.2")
 }
 
