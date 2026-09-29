@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -9,6 +10,9 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = REPO_ROOT / ".github" / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+import edition as editions  # noqa: E402
+
 STABLE_VERSION = re.compile(r"^\d+(\.\d+){1,2}$")
 
 
@@ -42,10 +46,15 @@ def newer_versions(project, latest):
     return sorted({v for v in stable if version_key(v) > version_key(latest)}, key=version_key)
 
 
-def smoke_test(jar, project, version, workdir):
+def java_for(leg):
+    home = os.environ.get(f"JAVA_HOME_{leg['java']}_X64")
+    return str(Path(home) / "bin" / "java") if home else "java"
+
+
+def smoke_test(jar, project, version, workdir, java="java"):
     result = subprocess.run(
         [sys.executable, str(SCRIPTS / "server_smoke_test.py"), "--jar", jar, "--project", project,
-         "--version", version, "--workdir", workdir],
+         "--version", version, "--workdir", workdir, "--java", java],
         capture_output=True, text=True)
     lines = [line for line in result.stdout.splitlines() if line.strip()]
     return result.returncode == 0, lines[-1] if lines else "no output"
@@ -58,7 +67,7 @@ def dependency_findings(json_path):
     return [d for d in data.get("dependency_results", []) if not d.get("up_to_date")]
 
 
-def build_report(args):
+def main_edition_sections(args):
     latest = declared_latest()
     sections = []
     upstream_rows = []
@@ -84,16 +93,42 @@ def build_report(args):
     return sections
 
 
+def legacy_edition_sections(args, config):
+    rows = []
+    if args.jar:
+        for leg in config["smoke"]:
+            ok, detail = smoke_test(args.jar, leg["project"], leg["version"],
+                                    f"build/weekly-{leg['project']}-{leg['version']}", java_for(leg))
+            if not ok:
+                rows.append(f"| {leg['project'].capitalize()} {leg['version']} | FAIL | {detail} |")
+    if not rows:
+        return []
+    return ["## Real server diagnostics on the supported range\n\n| Server | Result | Detail |\n"
+            "| :--- | :---: | :--- |\n" + "\n".join(rows)]
+
+
+def build_report(args):
+    config = editions.load_edition(args.edition)
+    if args.edition == "bpr":
+        return main_edition_sections(args)
+    return legacy_edition_sections(args, config)
+
+
+def report_title(edition_id):
+    return "# Weekly maintenance report" if edition_id == "bpr" else f"# Weekly maintenance report [{edition_id}]"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Weekly upstream, compatibility and dependency check.")
-    parser.add_argument("--jar", default="", help="Plugin JAR used for real server tests on new versions")
+    parser.add_argument("--edition", default="bpr", help="Edition id from .github/editions.json")
+    parser.add_argument("--jar", default="", help="Plugin JAR used for real server tests")
     parser.add_argument("--audit-json", default="build/reports/weekly-dependency-audit.json")
     parser.add_argument("--output", default="build/reports/weekly-maintenance.md")
     args = parser.parse_args()
     Path(args.output).parent.mkdir(parents=True, exist_ok=True)
     Path(args.audit_json).parent.mkdir(parents=True, exist_ok=True)
     sections = build_report(args)
-    body = ("# Weekly maintenance report\n\n" + "\n\n".join(sections) + "\n") if sections else ""
+    body = (report_title(args.edition) + "\n\n" + "\n\n".join(sections) + "\n") if sections else ""
     Path(args.output).write_text(body, encoding="utf-8")
     print(body if body else "No findings.")
 
