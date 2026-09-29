@@ -11,9 +11,9 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](LICENSE)
 [![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
 [![Java](https://img.shields.io/badge/Java-25+-orange?style=flat-square)](https://openjdk.org/projects/jdk/25/)
-[![Paper](https://img.shields.io/badge/Paper-1.20.5%20--%2026.3-white?style=flat-square)](https://papermc.io/)
+[![Paper](https://img.shields.io/badge/Paper-1.21.1%20--%2026.3-white?style=flat-square)](https://papermc.io/)
 
-Java 21 bytecode (JDK 25 toolchain), Paper 1.20.5 through 26.3, Folia support, Native Paper Dialogs, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
+Java 21 bytecode (JDK 25 toolchain), Paper 1.21.1 through 26.3, Folia support, Native Paper Dialogs, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
 
 </div>
 
@@ -88,7 +88,7 @@ Admin inspection tool to view all blocks owned by any player, including offline 
 
 ## Installing
 
-Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` directory. Requires **Java 21+** (JDK 25 toolchain) and **Paper, Purpur, Spigot, or Folia 1.20.5 - 26.3**.
+Download the latest JAR from [Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases) or [Modrinth](https://modrinth.com/plugin/blockprot-reloaded) and place it in your `plugins/` directory. Requires **Java 21+** (JDK 25 toolchain) and **Paper, Purpur, Spigot, or Folia 1.21.1 - 26.3**.
 
 ### Build from Source
 
@@ -234,7 +234,7 @@ Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus
 ## Key Features
 
 ### Modern Minecraft Compatibility
-Compatible across Java 21 through Java 25. Supports Minecraft versions from 1.20.5 through 26.3 and future drops. Version detection evaluates numbers dynamically, ensuring immediate compatibility when new patch releases drop without requiring hardcoded updates.
+Compatible across Java 21 through Java 25. Supports Minecraft versions from 1.21.1 through 26.3 and future drops. Version detection evaluates numbers dynamically, ensuring immediate compatibility when new patch releases drop without requiring hardcoded updates.
 
 ### Native Paper Dialogs Parity
 Full support for modern Paper modal dialogs (`use_dialogs: true`). Dialog menus render directly on client viewports with styled pastel themes (`PASTEL_MINT`, `PASTEL_CORAL`, `PASTEL_GOLD`, `SOFT_BLUE`, `PASTEL_PURPLE`), eliminating inventory clicking glitches and container desynchronization.

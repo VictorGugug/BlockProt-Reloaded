@@ -25,59 +25,13 @@ import org.bukkit.enchantments.Enchantment;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Runtime compatibility shims for Bukkit API fields that were renamed
- * between MC 1.20 and 26.x.
- *
- * Particle.DUST : added in 1.20.6; older servers use Particle.REDSTONE.
- * Enchantment.INFINITY: added/renamed in 1.20.6; older servers use ARROW_INFINITE.
- *
- * All fields are resolved once at class-load via Enum.valueOf so there is
- * zero overhead after the first access.
+ * Central references to particle and enchantment constants used for lock effects.
  */
 public final class BukkitCompat {
 
-    public static final Particle PARTICLE_DUST;
-    public static final Particle PARTICLE_DUST_COLOR_TRANSITION;
-    public static final Enchantment GLOW_ENCHANT;
-
-    static {
-        // 1.20.6+ -> "DUST"   |   1.20.x -> "REDSTONE"
-        Particle dust;
-        try {
-            dust = Particle.valueOf("DUST");
-        } catch (IllegalArgumentException e) {
-            dust = Particle.valueOf("REDSTONE");
-        }
-        PARTICLE_DUST = dust;
-
-        // 1.20.6+ -> "DUST_COLOR_TRANSITION"  |  1.20.x -> "REDSTONE_TRANSITION" (some builds)
-        Particle dustTransition;
-        try {
-            dustTransition = Particle.valueOf("DUST_COLOR_TRANSITION");
-        } catch (IllegalArgumentException e) {
-            try {
-                dustTransition = Particle.valueOf("REDSTONE_TRANSITION");
-            } catch (IllegalArgumentException e2) {
-                dustTransition = PARTICLE_DUST; // safe fallback
-            }
-        }
-        PARTICLE_DUST_COLOR_TRANSITION = dustTransition;
-
-        // 1.20.6+ -> "INFINITY"   |   1.20.x -> "ARROW_INFINITE"
-        Enchantment glow;
-        try {
-            // Prefer field access (fastest, avoids keyed lookup issues across versions)
-            glow = (Enchantment) Enchantment.class.getField("INFINITY").get(null);
-        } catch (Exception e1) {
-            try {
-                glow = (Enchantment) Enchantment.class.getField("ARROW_INFINITE").get(null);
-            } catch (Exception e2) {
-                // Ultimate fallback: any common enchant works for the glow effect
-                glow = Enchantment.UNBREAKING;
-            }
-        }
-        GLOW_ENCHANT = glow;
-    }
+    public static final Particle PARTICLE_DUST = Particle.DUST;
+    public static final Particle PARTICLE_DUST_COLOR_TRANSITION = Particle.DUST_COLOR_TRANSITION;
+    public static final Enchantment GLOW_ENCHANT = Enchantment.INFINITY;
 
     private BukkitCompat() {}
 

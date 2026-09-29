@@ -66,11 +66,11 @@ public final class VersionValidator {
             warn(Translator.get(TranslationKey.CONSOLE__NOT_PAPER));
         }
 
-        if (!hasTypedViews && VersionCompat.isAtLeast(1, 20, 0) && !VersionCompat.is26Family()) {
+        if (!hasTypedViews && !VersionCompat.is26Family()) {
             warn(Translator.get(TranslationKey.CONSOLE__TYPED_VIEWS_FALLBACK));
         }
 
-        if (javaMajor >= 21 && isPaper && (hasTypedViews || !VersionCompat.isAtLeast(1, 20, 0))) {
+        if (javaMajor >= 21 && isPaper && hasTypedViews) {
             BlockProtLogger.log("startup-checks",
                 "Java " + javaVersion + " OK | Paper OK | TypedViews " + (hasTypedViews ? "OK" : "N/A"));
         }

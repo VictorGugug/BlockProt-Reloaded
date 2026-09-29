@@ -189,7 +189,8 @@ public final class BlockProt extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        if (isRunningCraftBukkit()) {
+        boolean unsupportedVersion = !VersionCompat.isAtLeast(1, 21, 1);
+        if (isRunningCraftBukkit() || unsupportedVersion) {
             this.saveDefaultConfig();
             this.reloadConfig();
             defaultConfig = new DefaultConfig(this.getConfig(), this.getDataFolder());
@@ -202,7 +203,9 @@ public final class BlockProt extends JavaPlugin {
                     Translator.loadFromConfigs(cfg, cfg);
                 }
             } catch (Exception ignored) {}
-            final var message = Translator.get(TranslationKey.CONSOLE__CRAFTBUKKIT_UNSUPPORTED);
+            final var message = unsupportedVersion
+                ? Translator.get(TranslationKey.CONSOLE__MINECRAFT_UNSUPPORTED).replace("{version}", getServer().getBukkitVersion())
+                : Translator.get(TranslationKey.CONSOLE__CRAFTBUKKIT_UNSUPPORTED);
             getLogger().severe(message);
             getServer().getPluginManager().registerEvents(new ErrorEventListener(message), this);
             return;
