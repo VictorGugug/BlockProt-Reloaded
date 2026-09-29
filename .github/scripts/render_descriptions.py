@@ -7,8 +7,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import edition as editions  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-TEMPLATE = REPO_ROOT / "docs" / "READ_MEs" / "MODR_HANG_README.md"
+PLATFORM_README = REPO_ROOT / "docs" / "READ_MEs" / "MODR_HANG_README.md"
 OUTPUT_DIR = REPO_ROOT / "docs" / "READ_MEs" / "editions"
+TEMPLATE = OUTPUT_DIR / "MODR_HANG_README.bpr.md"
+EDITION_FILE = REPO_ROOT / ".github" / "EDITION"
 GUIDE_URL = "https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/READ_MEs/VERSION_GUIDE.md"
 RENDERED = ("bpr-legacy", "bp-legacy")
 
@@ -70,10 +72,12 @@ def outputs():
     for edition_id in RENDERED:
         config = editions.load_edition(edition_id)
         yield OUTPUT_DIR / f"MODR_HANG_README.{edition_id}.md", render(template, config)
+    current = EDITION_FILE.read_text(encoding="utf-8").strip() if EDITION_FILE.is_file() else "bpr"
+    yield PLATFORM_README, template if current == "bpr" else render(template, editions.load_edition(current))
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Render the per-edition platform descriptions from the main one.")
+    parser = argparse.ArgumentParser(description="Render the per-edition platform descriptions from the shared template.")
     parser.add_argument("--check", action="store_true", help="Fail when a generated file differs from the disk")
     args = parser.parse_args()
     stale = []
