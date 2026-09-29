@@ -421,7 +421,8 @@ public final class BlockProt extends JavaPlugin {
         // First-run guide: buffered so it prints directly under the banner, before the boot checklist.
         if (isFirstStart() && !defaultConfig.hasConfiguredBlocks()) {
             String guideHeader = Translator.get(TranslationKey.CONSOLE__FIRST_START__HEADER);
-            String guideTitle  = Translator.get(TranslationKey.CONSOLE__FIRST_START__TITLE);
+            String guideTitle  = Translator.get(TranslationKey.CONSOLE__FIRST_START__TITLE)
+                .replace("BlockProt Reloaded", Edition.current().displayName());
             String guideStep1  = Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP1)
                 .replace("{command}", "/bp lockables");
             String guideStep2  = Translator.get(TranslationKey.CONSOLE__FIRST_START__STEP2)

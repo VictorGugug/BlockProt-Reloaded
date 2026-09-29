@@ -264,7 +264,7 @@ public final class BlockProtLogger {
         try {
             reportWriter = new PrintWriter(new OutputStreamWriter(
                 new FileOutputStream(reportLogFile), StandardCharsets.UTF_8));
-            reportWriter.println("BlockProt Reloaded debug report " + ts);
+            reportWriter.println(Edition.current().displayName() + " debug report " + ts);
         } catch (IOException e) {
             reportWriter = null;
             reportLogFile = null;
