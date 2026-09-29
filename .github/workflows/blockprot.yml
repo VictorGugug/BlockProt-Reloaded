@@ -511,7 +511,7 @@ jobs:
             cp "$DOC_JAR" "build/staged-upload/github/BlockProtReloaded-${VERSION}-javadoc.jar"
           fi
 
-          COMMON_JAR=$(find common/build/libs -name "common-*.jar" | head -1)
+          COMMON_JAR=$(find common/build/libs -name "common-*.jar" ! -name "*-sources*" ! -name "*-javadoc*" | head -1)
           if [ -n "$COMMON_JAR" ] && [ -f "$COMMON_JAR" ]; then
             cp "$COMMON_JAR" build/staged-upload/github/
           fi
