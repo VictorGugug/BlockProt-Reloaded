@@ -1,6 +1,6 @@
 # Contributing to BlockProt Reloaded
 
-The maintainer is taking a break to focus on other projects. Anyone can open issues and pull requests for any change, and they are reviewed as time allows. The process below still applies.
+The maintainer is taking a break to focus on other projects. Anyone can open issues and pull requests for any change, and they are reviewed as time allows. The process below still applies. Open issues that make good starting points are listed in [CONTRIBUTOR_STARTING_POINTS.md](docs/READ_MEs/CONTRIBUTOR_STARTING_POINTS.md).
 
 ## Before Contributing
 
