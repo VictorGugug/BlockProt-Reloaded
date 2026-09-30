@@ -347,8 +347,8 @@ jobs:
   player-tests:
     name: Player Tests on Every Supported Version
     needs: [edition]
-    if: ${{ needs.edition.outputs.edition != 'bpr' && (needs.edition.outputs.operation == 'preview' || needs.edition.outputs.operation == 'publish' || needs.edition.outputs.operation == 'maintenance') }}
-    uses: ./.github/workflows/legacy-e2e.yml
+    if: ${{ (needs.edition.outputs.operation == 'preview' || needs.edition.outputs.operation == 'publish' || needs.edition.outputs.operation == 'maintenance') }}
+    uses: ./.github/workflows/player-tests.yml
     with:
       ref: ${{ needs.edition.outputs.branch }}
 
@@ -512,13 +512,13 @@ jobs:
           fi
 
       - name: Declare the player tests in the release notes
-        if: ${{ needs.edition.outputs.edition != 'bpr' && needs.edition.outputs.operation != 'sync' }}
+        if: ${{ needs.edition.outputs.operation != 'sync' }}
         run: |
           {
             echo ""
             echo "## Verification"
             echo ""
-            echo "Before publication this build was tested in GitHub Actions ([run ${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})). Every supported Minecraft version (${{ steps.meta.outputs.mc_range }}) booted on a real Paper server, passed the plugin console diagnostics and passed a two-player protection test: the owner protects and opens a chest, and a second player cannot open or break it. Folia and Purpur were tested on every version that has a build."
+            echo "Before publication this build was tested in GitHub Actions ([run ${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})). Every supported Minecraft version (${{ steps.meta.outputs.mc_range }}) booted on real Paper, Folia and Purpur servers wherever that software publishes a build, and passed the plugin console diagnostics. On every version the test client supports, a two-player protection test also passed: the owner protects and opens a chest, and a second player can neither open nor break it."
           } >> build/reports/release-notes.md
 
       - name: Set up JDK 25

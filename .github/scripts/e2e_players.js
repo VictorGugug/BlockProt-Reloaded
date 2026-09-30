@@ -2,8 +2,13 @@ const mineflayer = require('mineflayer');
 const { Vec3 } = require('vec3');
 
 const [port, requestedVersion] = process.argv.slice(2);
-// 1.19.1 and 1.19.2 share protocol 760 and minecraft-data names it after 1.19.2
-const version = requestedVersion === '1.19.1' ? '1.19.2' : requestedVersion;
+// versions that share a protocol with the release minecraft-data names them after
+const version = { '1.19.1': '1.19.2', '1.21.7': '1.21.8' }[requestedVersion] || requestedVersion;
+
+if (!require('minecraft-data')(version)) {
+  console.log(`E2E SKIP: the player library has no protocol data for ${requestedVersion}`);
+  process.exit(2);
+}
 const failures = [];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
