@@ -12,6 +12,7 @@ from pathlib import Path
 FILL_API = "https://fill.papermc.io/v3/projects"
 PURPUR_API = "https://api.purpurmc.org/v2/purpur"
 SUMMARY_RE = re.compile(r"Console diagnostics finished: (\d+) passed, (\d+) failed \((\d+) total\)")
+PLAYERS_SKIPPED = 2
 ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 
 
@@ -112,6 +113,8 @@ def run_players(args, version):
         return False
     print(result.stdout)
     print(result.stderr)
+    if result.returncode == PLAYERS_SKIPPED:
+        return None
     return result.returncode == 0
 
 
@@ -131,7 +134,7 @@ def run(args):
             text = wait_for(log_path, lambda t: "Done (" in t or process.poll() is not None, args.boot_timeout)
             if "Done (" not in text:
                 print(text[-4000:])
-                return 1, version, None
+                return 1, version, None, None
             process.stdin.write("bp debug\n")
             process.stdin.flush()
             text = wait_for(log_path, lambda t: SUMMARY_RE.search(t) is not None, args.debug_timeout)
@@ -154,10 +157,10 @@ def run(args):
         print(f"plugin error: {line}")
     if match is None:
         print("Diagnostics summary not found")
-        return 1, version, None
+        return 1, version, None, None
     passed, failed, total = (int(g) for g in match.groups())
     print(f"{args.project} {version}: {passed} passed, {failed} failed ({total} total)")
-    return (0 if failed == 0 and not plugin_errors and players_ok else 1), version, (passed, failed, total)
+    return (0 if failed == 0 and not plugin_errors and players_ok is not False else 1), version, (passed, failed, total), players_ok
 
 
 def main():
@@ -175,10 +178,14 @@ def main():
     parser.add_argument("--java", default="java", help="Java executable used to run the server")
     parser.add_argument("--summary-title", default="", help="Label used in the summary row instead of the project name")
     args = parser.parse_args()
-    code, version, result = run(args)
+    code, version, result, players = run(args)
     if args.summary:
         status = "PASS" if code == 0 else "FAIL"
         detail = f"{result[0]} passed, {result[1]} failed ({result[2]} total)" if result else "no diagnostics summary"
+        if args.players and players is None and result:
+            detail += ", two-player test skipped (no client protocol data)"
+        elif args.players and players:
+            detail += ", two-player test passed"
         with open(args.summary, "a", encoding="utf-8") as out:
             label = args.summary_title or args.project.capitalize()
             out.write(f"| {label} {version} | {status} | {detail} |\n")

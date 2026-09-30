@@ -1,24 +1,28 @@
-name: Legacy Player Tests
+name: Player Tests
 
-run-name: "Legacy player tests: ${{ inputs.ref || github.ref_name }}"
+run-name: "Player tests: ${{ inputs.ref || github.ref_name }}"
 
 on:
   push:
-    branches: [ BlockProt-Reloaded-Legacy, BlockProt-Legacy ]
+    branches: [ main, BlockProt-Reloaded-Legacy, BlockProt-Legacy ]
     paths:
-      - '.github/workflows/legacy-e2e.yml'
+      - 'spigot/**'
+      - 'common/**'
+      - 'build.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/player-tests.yml'
       - '.github/scripts/e2e_*'
       - '.github/scripts/server_smoke_test.py'
   workflow_dispatch:
     inputs:
       ref:
-        description: "Legacy branch to test (leave blank to use the branch this run was started on)"
+        description: "Branch to test (leave blank to use the branch this run was started on)"
         required: false
         default: ""
   workflow_call:
     inputs:
       ref:
-        description: "Legacy branch to test"
+        description: "Branch to test"
         required: true
         type: string
 
@@ -28,7 +32,6 @@ permissions:
 jobs:
   plan:
     name: Plan (${{ inputs.ref || github.ref_name }})
-    if: (inputs.ref || github.ref_name) != 'main'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
