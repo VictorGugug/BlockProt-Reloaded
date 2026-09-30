@@ -1,11 +1,12 @@
 # BlockProt: MySQL / Storage
 # BlockProt Reloaded (BPR)
-# When disabled, BlockProt uses NBT/PDC stored on the blocks
-# themselves. Enable MySQL to use a shared relational database.
+# Protection data always lives in NBT/PDC on the blocks themselves.
+# Enable MySQL to mirror block locations and trust lists into a shared
+# database index for searching and auditing on large servers.
 # Run /bp reload to apply changes without restarting.
 
 mysql:
-  # Switch to MySQL as the storage backend.
+  # Mirror protection data into the MySQL index.
   enabled: false
 
   # Database host address.

@@ -27,20 +27,12 @@ def request(url, token=None):
         return error.code, None
 
 
-def belongs_to(tag, config):
-    prefix = config["tagPrefix"]
-    if prefix:
-        return tag.startswith(prefix)
-    return not any(other["tagPrefix"] and tag.startswith(other["tagPrefix"])
-                   for other in editions.load_all().values())
-
-
 def latest_stable_release(token, config):
     status, releases = request(f"https://api.github.com/repos/{REPO}/releases?per_page=100", token)
     if status != 200:
         raise SystemExit(f"GitHub releases request failed with HTTP {status}")
     stable = [r for r in releases
-              if not r["prerelease"] and not r["draft"] and belongs_to(r["tag_name"], config)]
+              if not r["prerelease"] and not r["draft"] and editions.belongs_to(r["tag_name"], config)]
     if not stable:
         return None
     release = dict(stable[0])

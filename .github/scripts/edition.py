@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -43,6 +44,38 @@ def load_edition(edition_id, repo_root=REPO_ROOT):
         if curseforge:
             edition["platforms"]["curseforge"]["id"] = curseforge
     return edition
+
+
+def current_id(repo_root=REPO_ROOT):
+    marker = Path(repo_root) / ".github" / "EDITION"
+    return marker.read_text(encoding="utf-8").strip() if marker.is_file() else "bpr"
+
+
+def belongs_to(tag, config, repo_root=REPO_ROOT):
+    prefix = config["tagPrefix"]
+    if prefix:
+        return tag.startswith(prefix)
+    return not any(other["tagPrefix"] and tag.startswith(other["tagPrefix"])
+                   for other in load_all(repo_root).values())
+
+
+def github_only(version):
+    return re.search(r"bedev|bdev|snapshot|(^|-)exp", version, re.IGNORECASE) is not None
+
+
+def download_links(config, version, repo):
+    platforms = config["platforms"]
+    links = [("GitHub", f"https://github.com/{repo}/releases/tag/{config['tagPrefix']}{version}")]
+    if github_only(version):
+        return links
+    if platforms["modrinth"]["enabled"]:
+        links.append(("Modrinth", f"https://modrinth.com/plugin/{platforms['modrinth']['id']}/version/{version}"))
+    if platforms["curseforge"]["enabled"]:
+        links.append(("CurseForge", f"https://www.curseforge.com/minecraft/bukkit-plugins/{platforms['curseforge']['slug']}"))
+    if platforms["hangar"]["enabled"]:
+        hangar = platforms["hangar"]
+        links.append(("Hangar", f"https://hangar.papermc.io/{hangar['owner']}/{hangar['slug']}/versions/{version}"))
+    return links
 
 
 def edition_from_ref(ref_name, repo_root):

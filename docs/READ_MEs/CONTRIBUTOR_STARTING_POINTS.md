@@ -1,6 +1,6 @@
 # Contributor Starting Points
 
-The maintainer is away for an indefinite time. BlockProt Reloaded 1.4.0 and the two legacy editions are released, everything is tested automatically in GitHub Actions, and the repository is ready for anyone who wants to keep improving it.
+The maintainer is away for an indefinite time. BlockProt Reloaded 1.4.0 is released. The two legacy editions are built and tested but not published yet. Everything is tested automatically in GitHub Actions, and the repository is ready for anyone who wants to keep improving it.
 
 The open issues below were written as starting points. Any of them can be taken by anyone: comment on the issue to say you are working on it, then follow [CONTRIBUTING.md](../../CONTRIBUTING.md). Issues and pull requests are welcome for any other change too, and are reviewed as time allows.
 
@@ -26,7 +26,7 @@ The open issues below were written as starting points. Any of them can be taken 
 
 - `./gradlew build` runs the unit tests.
 - `python -m unittest discover -s .github/scripts -p "test_*.py"` runs the automation script tests.
-- The `Player Tests` workflow boots a real Paper, Folia and Purpur server for every supported Minecraft version, runs the 65 console diagnostics and, where the test client supports the version, plays with two simulated players (an owner and an intruder). It runs on every push that touches code, once a week, and before any publication. A pull request should keep it green.
+- The `Player Tests` workflow boots a real Paper, Folia and Purpur server for every supported Minecraft version (a version without a server build of its own runs on its newest hotfix, such as 26.1 on 26.1.2), runs the 65 console diagnostics and, where the test client supports the version, plays with two simulated players (an owner and an intruder). It runs on every push that touches code, once a week, and before any publication. Pull requests do not run it; they run the build, the script tests and the console diagnostics on the edition's smoke servers, so run the player test locally for changes that affect gameplay.
 - To run it locally: `npm install mineflayer@4`, set `NODE_PATH` to its `node_modules`, then `python .github/scripts/server_smoke_test.py --jar <jar> --project paper --version <minecraft version> --workdir build/e2e --players .github/scripts/e2e_players.js`.
 
 ## Releasing

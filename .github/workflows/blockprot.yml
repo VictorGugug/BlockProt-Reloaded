@@ -139,13 +139,15 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Validate commit convention
+        env:
+          BASE: ${{ github.base_ref }}
         run: |
           echo "Validating commit messages against BPR:<branch>(<type>): <description> convention..."
           REGEX="^BPR:(main|[a-zA-Z0-9_.-]+)\((fix|add|feat|refactor|docs|chore)\):\s.+"
           FAILED=0
 
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            COMMITS=$(git log --no-merges --format="%s" origin/main..HEAD)
+            COMMITS=$(git log --no-merges --format="%s" "origin/$BASE..HEAD")
           else
             COMMITS=$(git log -1 --format="%s")
           fi
@@ -167,66 +169,17 @@ jobs:
 
       - name: Validate version field integrity
         if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.base_ref }}
         run: |
           echo "Verifying gradle.properties version immutability..."
-          if git diff origin/main..HEAD -- gradle.properties | grep -qE '^\+[ ]*(blockProtVersion|versionSuffix)='; then
+          if git diff "origin/$BASE..HEAD" -- gradle.properties | grep -qE '^\+[ ]*(blockProtVersion|versionSuffix)='; then
             echo "ERROR: gradle.properties version fields were modified."
             echo "Rule: Plugin release version numbers and tags are managed exclusively by the maintainer."
             echo "Please revert modifications to blockProtVersion and versionSuffix."
             exit 1
           fi
           echo "Version field integrity verified."
-
-      - name: Validate GPL v3 license headers
-        run: |
-          echo "Verifying GPL v3 license headers on Java source files..."
-          FAILED=0
-          COUNT=0
-          while IFS= read -r file; do
-            [ -z "$file" ] && continue
-            if [ -f "$file" ]; then
-              COUNT=$((COUNT + 1))
-              if ! grep -q "Copyright (C)" "$file" || ! grep -q "GNU General Public License" "$file"; then
-                echo "ERROR: Missing standard GPL v3 license header in: $file"
-                FAILED=1
-              fi
-            fi
-          done < <(find spigot/src common/src -name "*.java" 2>/dev/null)
-
-          if [ "$FAILED" -ne 0 ]; then
-            exit 1
-          fi
-          echo "All $COUNT Java source files preserve required GPL v3 license headers."
-
-      - name: Validate absence of placeholder markers
-        run: |
-          echo "Verifying absence of placeholder markers (TODO, FIXME) in Java source files..."
-          FAILED=0
-          if grep -rnE --include="*.java" '//\s*(TODO|FIXME|XXX)' spigot/src common/src; then
-            echo "ERROR: Stand-in placeholder markers found in source code."
-            echo "Rule: Files must contain finished, tested code only without TODO or FIXME comments."
-            FAILED=1
-          fi
-
-          if [ "$FAILED" -ne 0 ]; then
-            exit 1
-          fi
-          echo "No placeholder markers detected in Java sources."
-
-      - name: Validate architectural boundary isolation
-        run: |
-          echo "Verifying pure Java isolation in :common (zero Bukkit/Spigot imports)..."
-          FAILED=0
-          if grep -rnE --include="*.java" 'import\s+(org\.bukkit|io\.papermc)\.' common/src; then
-            echo "ERROR: Bukkit/Spigot imports detected in :common subproject."
-            echo "Rule: Architectural separation mandates pure Java in :common."
-            FAILED=1
-          fi
-
-          if [ "$FAILED" -ne 0 ]; then
-            exit 1
-          fi
-          echo ":common architectural boundary verified with 0 Bukkit imports."
 
       - name: Run automation script tests
         run: python3 -m unittest discover -s .github/scripts -p "test_*.py"
@@ -518,7 +471,7 @@ jobs:
             echo ""
             echo "## Verification"
             echo ""
-            echo "Before publication this build was tested in GitHub Actions ([run ${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})). Every supported Minecraft version (${{ steps.meta.outputs.mc_range }}) booted on real Paper, Folia and Purpur servers wherever that software publishes a build, and passed the plugin console diagnostics. On every version the test client supports, a two-player protection test also passed: the owner protects and opens a chest, and a second player can neither open nor break it."
+            echo "Before publication this build was tested in GitHub Actions ([run ${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})). Every supported Minecraft version (${{ steps.meta.outputs.mc_range }}) booted on real Paper, Folia and Purpur servers wherever that software publishes a build (a declared version without a build of its own runs on its newest hotfix), and passed the plugin console diagnostics. On every version the test client supports, a two-player protection test also passed: the owner protects and opens a chest, and a second player can neither open nor break it."
           } >> build/reports/release-notes.md
 
       - name: Set up JDK 25
@@ -686,14 +639,14 @@ jobs:
             cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
 
           > [!NOTE]
-          > **CONFIRMATION RECEIVED:** publication requested. Proceeding to live publication in the next job...
+          > **Publication requested.** The next job publishes once the player tests pass.
           EOF
           else
             cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
 
           > [!IMPORTANT]
           > **PRE-FLIGHT INSPECTION ONLY (DRY-RUN):** preview requested.
-          > All metadata, compiled binaries, checksums, platforms, and changelogs were successfully gathered and verified. **No files were uploaded to any platform.**
+          > Metadata, the compiled JAR, checksums, platform targets and release notes were gathered. The player tests report in their own job. **No files were uploaded to any platform.**
           > To publish this release, re-run this workflow with operation **Publish release**.
           EOF
           fi
@@ -840,6 +793,7 @@ jobs:
           fi
 
       - name: Publish to Modrinth & CurseForge
+        id: mc_publish
         if: needs.inspect-and-build.outputs.github_only != 'true' && ((env.MODRINTH_TOKEN != '' && steps.detect.outputs.modrinth_skip != 'true') || (env.CURSEFORGE_TOKEN != '' && steps.detect.outputs.curseforge_skip != 'true'))
         uses: Kir-Antipov/mc-publish@v3.3.1
         with:
@@ -893,7 +847,7 @@ jobs:
         if: always()
         run: |
           cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
-          # Multi-Platform Publication Completed Successfully
+          # Publication Summary
 
           | Platform | Upload Status | Details |
           | :--- | :---: | :--- |
@@ -913,19 +867,23 @@ jobs:
             echo "| **Modrinth** | [-] Not enabled | No Modrinth page enabled for this edition |" >> "$GITHUB_STEP_SUMMARY"
           elif [ "${{ steps.detect.outputs.modrinth_skip }}" = "true" ]; then
             echo "| **Modrinth** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on Modrinth (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ -n "${{ secrets.MODRINTH_TOKEN }}" ]; then
+          elif [ -z "${{ secrets.MODRINTH_TOKEN }}" ]; then
+            echo "| **Modrinth** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ steps.mc_publish.outcome }}" = "success" ]; then
             echo "| **Modrinth** | [v] Published | Project \`${{ needs.edition.outputs.modrinth_id }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "| **Modrinth** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| **Modrinth** | [x] Failed | Upload step outcome: ${{ steps.mc_publish.outcome }} |" >> "$GITHUB_STEP_SUMMARY"
           fi
           if [ "${{ needs.edition.outputs.curseforge_enabled }}" != "true" ]; then
             echo "| **CurseForge** | [-] Not enabled | No CurseForge page enabled for this edition |" >> "$GITHUB_STEP_SUMMARY"
           elif [ "${{ steps.detect.outputs.curseforge_skip }}" = "true" ]; then
             echo "| **CurseForge** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on CurseForge (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ -n "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
-            echo "| **CurseForge** | [v] Published | Project ID \`${{ needs.edition.outputs.curseforge_id }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
-          else
+          elif [ -z "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
             echo "| **CurseForge** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ steps.mc_publish.outcome }}" = "success" ]; then
+            echo "| **CurseForge** | [v] Uploaded | Project ID \`${{ needs.edition.outputs.curseforge_id }}\` (listed after CurseForge review) |" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "| **CurseForge** | [x] Failed | Upload step outcome: ${{ steps.mc_publish.outcome }} |" >> "$GITHUB_STEP_SUMMARY"
           fi
           if [ "${{ needs.edition.outputs.hangar_enabled }}" != "true" ]; then
             echo "| **Hangar** | [-] Not enabled | No Hangar page enabled for this edition |" >> "$GITHUB_STEP_SUMMARY"

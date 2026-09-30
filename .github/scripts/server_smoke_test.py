@@ -164,7 +164,7 @@ def run(args):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Boot a real Paper or Folia server with the plugin and run console diagnostics.")
+    parser = argparse.ArgumentParser(description="Boot a real Paper, Folia or Purpur server with the plugin and run console diagnostics.")
     parser.add_argument("--jar", required=True)
     parser.add_argument("--project", choices=["paper", "folia", "purpur"], default="paper")
     parser.add_argument("--version", default="", help="Minecraft version; defaults to the newest declared version available")

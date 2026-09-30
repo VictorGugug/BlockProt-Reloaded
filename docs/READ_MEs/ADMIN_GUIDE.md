@@ -19,7 +19,8 @@ of friends.
 - **Everyone else** is blocked with a "You don't have permission" message, a sound,
   and particle effects (all configurable). The denial is recorded in the audit log.
 - Protection survives chunk unloads, server restarts, and explosions. The owner
-  data is stored either on the block itself (NBT/PDC) or in a MySQL database.
+  data is stored on the block itself (NBT/PDC); the optional MySQL index only
+  mirrors it (section 11).
 
 ## 2. Installation and first start
 
@@ -30,7 +31,7 @@ of friends.
    2. Or edit `blocks.yml` manually in the plugin folder.
    3. See the docs (this repository).
    4. Run `/bp recommended` in the console for a recommended configuration
-      (section 4).
+      (section 5).
 3. When a player right-clicks a protected block they have access to for the first
    time (before they have opened any BlockProt menu), they see a chat hint:
    *"You can protect your blocks by crouching and right-clicking your chests,
@@ -54,17 +55,17 @@ The plugin data folder is `plugins/BlockProtReloaded/` (named after the plugin).
 
 | File | Purpose |
 |---|---|
-| `config.yml` | Main configuration (section 8). |
-| `blocks.yml` | Which blocks are lockable (section 5). |
+| `config.yml` | Main configuration (section 10). |
+| `blocks.yml` | Which blocks are lockable (section 6). |
 | `worlds.yml` | Per-world lockable lists (used with `per_worlds_config: true`). |
 | `lang/lang.yml` | Language enable/disable and completion percentages. |
 | `lang/translations_*.yml` | Translation files (English and Spanish are maintained). |
-| `mysql/mysql.yml` | Optional MySQL storage (section 9). |
-| `integrations.yml` | Settings for supported third-party plugins (section 11). |
-| `mysql/blockprot_audit.sqlite` | Local SQLite audit log, stored in the `mysql/` subfolder (section 7). |
+| `mysql/mysql.yml` | Optional MySQL index (section 11). |
+| `integrations.yml` | Settings for supported third-party plugins (section 13). |
+| `mysql/blockprot_audit.sqlite` | Local SQLite audit log, stored in the `mysql/` subfolder (section 14). |
 | `admins.yml` | Standalone admin roles and custom action permissions without LuckPerms (section 16). |
 | `logs/blockprot-*.log` | Activity log written by the plugin. |
-| `backups/` | Automatic ZIP backups (section 12). |
+| `backups/` | Automatic ZIP backups (section 14). |
 
 ## 4. Two interface modes: menus vs. dialogs
 
@@ -258,9 +259,10 @@ The same confirmation appears when item frames and vehicles are auto-protected.
 
 | Action | Owner | Friend | Everyone else |
 |---|---|---|---|
-| Open / use the block | Yes | Depends on friend permissions | Blocked |
-| Take items / place items | Yes | Depends on friend permissions | Blocked |
-| Manage friends / settings | Yes | No | No |
+| Open / use the block | Yes | Yes | Blocked |
+| Take items / place items | Yes | Yes | Blocked |
+| Open the lock menu, change settings and name | Yes | Operator level and above | No |
+| Manage friends | Yes | Full Manager level | No |
 | Break the block | Yes (protection clears) | No | No (unless `allow_break_protected_blocks: true`) |
 | See the owner | No | Yes (name shown in action bar) | No |
 
@@ -310,7 +312,7 @@ reload before your players can use it.
 2. Hold the **menu item** (`entity_protection.menu_item`, default `STICK`) and
    right-click the tamed animal.
 3. Only the entity's **owner** (the player who tamed it, matched against
-   `Tameable#getOwnerUniqueId()`) or an admin (`blockprot.admin`) may open this
+   `Tameable#getOwnerUniqueId()`) or an admin (`blockprot.user.admin`) may open this
    menu; everyone else gets the "no permission" message and the interaction is
    cancelled.
 4. The **Entity Settings** menu opens with four independent toggles:
@@ -338,7 +340,7 @@ friends system but backed by `EntityNBTHandler` instead of block NBT.
   types, with `VILLAGER` configured as the currently supported and compatible type.
   Players can right-click an unowned villager with the menu item (stick) to claim,
   protect, and manage it, preventing unauthorized trades and interactions from others.
-- **Bypass:** the entity's owner and any player with `blockprot.admin` always
+- **Bypass:** the entity's owner and any player with `blockprot.user.admin` always
   bypass every protection toggle on that entity.
 - **Villager workstations** (`villager_workstation_protection`, enabled by
   default independently of `entity_protection.enabled`): when a villager is
@@ -500,7 +502,10 @@ channel the running build is: stable, hotfix, or experimental BEDev.
 - **Default (no setup needed):** protection data is stored in the block's own
   NBT/PDC tags. It survives restarts and chunk reloads and lives on the server
   where the block is.
-- **MySQL (shared / multi-server):** edit `mysql/mysql.yml`:
+- **MySQL index (optional):** mirrors block locations and player trust lists in
+  MySQL / MariaDB so large servers can search and audit them without scanning
+  region files. NBT stays the source of truth; the index does not replace it.
+  Edit `mysql/mysql.yml`:
 
 ```yaml
 mysql:
@@ -560,7 +565,7 @@ Run `/bp integrations` to list which are active on your server.
 
 ## 14. Reloading, backups, and logs
 
-- **`/bp reload`** (OP only): creates a backup first, then reloads config,
+- **`/bp reload`** (who may run it: section 15): creates a backup first, then reloads config,
   translations, and block lists in one atomic quiet-period reload. Per-key change
   diffs go to the session log; the console prints "Reload completed."
 - **Auto-reload:** when `auto_reload_configs: true`, editing any config file with a
@@ -594,19 +599,24 @@ Run `/bp integrations` to list which are active on your server.
 
 ### Admin commands
 
-| Command | Access | What it does |
-|---|---|---|
-| `/bp admin` | OP or `blockprot.user.admin` | Admin menu hub: lockables, config editor, reload, update, integrations, stats, debug, info, about, world expiry, world protection deletion. Auto-Drop lives under `/bp lockables` -> Auto Drop, not the admin hub. |
-| `/bp tiers [setrole] [player] [tier]` | OP or `blockprot.user.admin.owner` | Staff roles menu (chest inventory or dialog). Without arguments, opens the staff management GUI. With arguments, assigns an admin tier (`t1`, `t2`, `t3`, `owner`, `custom`, `none`) to a player when `admin_tiers.enabled: true`. |
-| `/bp lockables` | OP or `blockprot.user.admin` | Browse and toggle which blocks are lockable (the GUI writes `blocks.yml`). This is the only in-game way to add lockable blocks; regular players cannot use it. |
-| `/bp info <player>` | OP or `blockprot.user.admin` | Opens a player's block list. From the console, prints the owned blocks. |
-| `/bp unlock <player>` | OP or `blockprot.user.admin` | Opens a GUI to unlock/remove protections for a player. From the console, lists the player's locked blocks. |
-| `/bp protdel [world]` | OP or `blockprot.user.admin` | Delete all protections in a world (with confirmation). From the console: `/bp protdel <world> confirm`, and `/bp protdel undo` to restore the last deletion. |
-| `/bp reload` | OP or `blockprot.user.admin.owner` | Reload configuration (always creates a backup first). |
-| `/bp update` | OP or `blockprot.user.admin.owner` | Check for updates. |
-| `/bp integrations` | OP or `blockprot.user.admin.owner` | List active integrations. |
-| `/bp debug` | OP or `blockprot.debug` | Developer diagnostics. From the console it runs at world spawn; player-only screens are reported as SKIP. |
-| `/bp recommended blocks` / `config` / `all` | OP (`blockprot.user.admin.owner`) or Console | Apply the recommended `blocks.yml`, `config.yml`, or both (section 5). |
+"Admin" means OP or `blockprot.user.admin`. That is the rule with
+`admin_tiers.enabled: false` (the default). With `admin_tiers.enabled: true`
+the Tier column applies instead: that tier or a higher one grants the command,
+OPs count as Owner, and `blockprot.user.admin` alone reaches T2 commands only.
+
+| Command | Access | Tier | What it does |
+|---|---|---|---|
+| `/bp admin` | Admin | any tier | Admin menu hub: lockables, config editor, reload, update, integrations, stats, debug, info, about, world expiry, world protection deletion. Auto-Drop lives under `/bp lockables` -> Auto Drop, not the admin hub. |
+| `/bp tiers [setrole] [player] [tier]` | Admin or `blockprot.user.admin.owner` | Owner | Staff roles menu (chest inventory or dialog). Without arguments, opens the staff management GUI. With arguments, assigns an admin tier (`t1`, `t2`, `t3`, `owner`, `custom`, `none`) to a player when `admin_tiers.enabled: true`. |
+| `/bp lockables` | Admin | T2 | Browse and toggle which blocks are lockable (the GUI writes `blocks.yml`). This is the only in-game way to add lockable blocks; regular players cannot use it. |
+| `/bp info <player>` | Admin | not tier-checked | Opens a player's block list. From the console, prints the owned blocks. |
+| `/bp unlock <player>` | Admin | T2 | Opens a GUI to unlock/remove protections for a player. From the console, lists the player's locked blocks. |
+| `/bp protdel [world]` | Admin | T3 | Delete all protections in a world (with confirmation). From the console: `/bp protdel <world> confirm`, and `/bp protdel undo` to restore the last deletion. |
+| `/bp reload` | Admin | Owner | Reload configuration (always creates a backup first). |
+| `/bp update` | Admin | Owner | Check for updates. |
+| `/bp integrations` | Admin | Owner | List active integrations. |
+| `/bp debug` | Admin or `blockprot.debug` | T3 | Developer diagnostics. From the console it runs at world spawn; player-only screens are reported as SKIP. |
+| `/bp recommended blocks` / `config` / `all` | OP or `blockprot.user.admin.owner` | Owner | Apply the recommended `blocks.yml`, `config.yml`, or both (section 5). |
 
 > In menu mode (`use_menus: true`), player-facing subcommands are hidden from
 > tab-complete and reachable via `/bp user` and `/bp admin`. The console always has
@@ -619,12 +629,11 @@ Run `/bp integrations` to list which are active on your server.
 | Node | Default | Meaning |
 |---|---|---|
 | `blockprot.user` | `true` (everyone) | All standard player features. |
-| `blockprot.user.admin` | `op` | Legacy admin node: full admin features, breaking any protected block (clearing protection); implies `blockprot.user`. Used when `admin_tiers.enabled: false`. |
+| `blockprot.user.admin` | `op` | Admin node: full admin features, breaking any protected block (clearing protection), bypassing entity protection and the inactivity cleanup; implies `blockprot.user`. With `admin_tiers.enabled: true` it reaches T2 actions only. |
 | `blockprot.lockmax` | `false` | Exempt from the per-player block cap (unlimited locked blocks). |
 | `blockprot.locklimit.<N>` | `false` | Override the per-player cap with a specific number (e.g. `blockprot.locklimit.500` = max 500). Highest granted value wins. |
 | `blockprot.blocks.tp` | `op` | Teleport to a protected block from the statistics inventory. |
 | `blockprot.debug` | `op` | Run `/bp debug` diagnostics. |
-| `blockprot.admin` | `op` (Bukkit's fallback default for an undeclared node) | Bypasses entity protection (section 8) and the inactivity cleanup task. |
 
 > `blockprot.locklimit.<N>` is a dynamic node: replace `<N>` with a number (e.g.
 > `blockprot.locklimit.500`). The old `blockprot.max_blocks` node is deprecated
@@ -632,13 +641,13 @@ Run `/bp integrations` to list which are active on your server.
 
 ### Multi-tier admin hierarchy (`admin_tiers.enabled: true`)
 
-Starting in 1.3.6, setting `admin_tiers.enabled: true` in `config.yml` activates a 4-tier role hierarchy plus custom permissions:
+Starting in 1.3.6, setting `admin_tiers.enabled: true` in `config.yml` activates a 4-tier role hierarchy plus custom permissions. The tier nodes default to `false`; grant them with a permissions plugin, `/bp tiers`, or `admins.yml`:
 
 | Node | Tier name | Allowed actions |
 |---|---|---|
-| `blockprot.user.admin.t1` | Low (Moderator) | Inspection only: view player block lists (`/bp info`), statistics teleport (`blockprot.blocks.tp`), and view audit logs. |
+| `blockprot.user.admin.t1` | Low (Moderator) | Opens the `/bp admin` hub. Its inspection actions (block lists, teleport, audit logs) are declared but not checked yet: those screens still need `blockprot.user.admin`, and teleporting needs `blockprot.blocks.tp`. |
 | `blockprot.user.admin.t2` | Medium (Helper) | All T1 actions plus breaking/unlocking protected blocks (`/bp unlock`), bypassing container protection on open, and configuring lockables (`/bp lockables`). |
-| `blockprot.user.admin.t3` | High (Admin) | All T2 actions plus mass world deletion (`/bp protdel`), full `/bp admin` config modification dialogs, and debugging (`/bp debug`). |
+| `blockprot.user.admin.t3` | High (Admin) | All T2 actions plus mass world deletion (`/bp protdel`) and debugging (`/bp debug`). The config action is declared but not checked yet. |
 | `blockprot.user.admin.owner` | Owner | Full control: all T3 actions plus system reload (`/bp reload`), update checking (`/bp update`), integrations (`/bp integrations`), assigning staff roles (`/bp tiers setrole`), and running `/bp recommended` in-game. |
 | `blockprot.user.admin.custom` | Custom | Evaluates granular action flags configured in player NBT or `admins.yml`. |
 

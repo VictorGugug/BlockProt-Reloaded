@@ -45,7 +45,7 @@ villager_workstation_protection:
 ```
 
 ### Item frame protection with automatic block linking
-Item frames and glowing item frames are protected with the same sneak-and-right-click flow. A frame placed on the face of a lockable block is automatically linked to that block: it shares the block's owner, friends, and lock state exactly, and interacting with it opens the block's lock menu directly. Frames not mounted on a lockable block keep the standalone entity-protection flow. ImageFrame plugin creator tags are respected automatically.
+Item frames and glowing item frames are protected with the same sneak-and-right-click flow. A frame placed on the face of a lockable block is automatically linked to that block: it shares the block's owner, friends, and lock state exactly, and interacting with it opens the block's lock menu directly. Frames not mounted on a lockable block keep the standalone entity-protection flow.
 
 ### Storage vehicle protection
 Chest boats, storage minecarts, and hopper minecarts support the same sneak-and-right-click flow. Once protected, non-owners cannot open the inventory, and the vehicle is protected from damage and destruction. Hopper extraction can be toggled per vehicle from the in-menu Redstone button.
@@ -63,7 +63,7 @@ lockable_entities:
 
 Sub-families: `CHEST`, `FURNACE`, `SHELF`, `TRANSPORT`, `MISC`, `SIGN` (tile entities); `SHULKERS`; `ANVIL`, `CAULDRON`, `WORKSTATION`, `TRAPDOOR`, `FENCE_GATE` (blocks); `DOORS`; `CHEST_BOATS`, `CHEST_MINECARTS`, `HOPPER_MINECARTS`, `ITEM_FRAMES` (entities).
 
-Full syntax: [`docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md`](../MODERN%20SYNTAX%20AND%20LEGACY/BLOCK_FAMILY_SYNTAX.md). Full material list: [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](../MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md).
+Full syntax: [`docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md`](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/MODERN%20SYNTAX%20AND%20LEGACY/BLOCK_FAMILY_SYNTAX.md). Full material list: [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md).
 
 ### Config and blocks auto-merge on every reload
 On every startup and `/bp reload`, missing keys are added from JAR defaults and renamed keys are migrated. Existing values: including every family expression already written in `blocks.yml`: are never overwritten or reordered. In legacy flat-list mode, new material entries from a newer JAR are appended automatically so new block types become lockable without manual edits.
@@ -77,7 +77,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 ### Performance
 - Caffeine cache on `HopperEventListener` for O(1) hopper early-exit via `ProtectedBlockCache`.
 - `purgeStalePbsEntries` skips unloaded chunks entirely to prevent main-thread stalls.
-- All SQL and NBT I/O is asynchronous.
+- Audit log writes run asynchronously.
 
 ### Other additions
 - Multi-tier staff permissions (`admin_tiers.enabled`) and standalone `admins.yml` hierarchy.
@@ -101,11 +101,11 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 | Command | Permission | Description |
 |---|---|---|
 | `/bp lockables` | `blockprot.user.admin` | Paged GUI listing all blocks and entities with active/inactive status |
-| `/bp tiers` | `blockprot.user.admin.owner` | Staff roles GUI and custom permissions manager |
+| `/bp tiers` | `blockprot.user.admin` or `blockprot.user.admin.owner` | Staff roles GUI and custom permissions manager |
 | `/bp info <player>` | `blockprot.user.admin` | All blocks owned by a player with teleport links |
 | `/bp unlock <player>` | `blockprot.user.admin` | Inspect or remove any player's protections (console: lists them) |
-| `/bp reload` | op | Reload all config files and merge missing keys |
-| `/bp debug run` | `blockprot.debug` | Run internal diagnostics (also from the console) |
+| `/bp reload` | `blockprot.user.admin` | Reload all config files and merge missing keys |
+| `/bp debug run` | `blockprot.user.admin` or `blockprot.debug` | Run internal diagnostics (also from the console) |
 | `/bp transferall <player>` | `blockprot.user` | Transfer ownership of all your protected blocks to another player |
 
 
@@ -115,14 +115,16 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 |---|---|---|
 | `blockprot.user` | true | All standard player features |
 | `blockprot.user.admin` | op | Admin commands and GUIs |
-| `blockprot.user.admin.t1` | op | Low staff tier (moderator inspection) |
-| `blockprot.user.admin.t2` | op | Medium staff tier (helper unlock/lockables) |
-| `blockprot.user.admin.t3` | op | High staff tier (admin world delete/config) |
+| `blockprot.user.admin.t1` | false | Low staff tier (opens the admin hub) |
+| `blockprot.user.admin.t2` | false | Medium staff tier (unlock, lockables, break protected blocks) |
+| `blockprot.user.admin.t3` | false | High staff tier (world protection deletion, debug) |
 | `blockprot.user.admin.owner` | op | Full owner control and staff role assignment |
 | `blockprot.lockmax` | false | Exempt from the block count limit (unlimited) |
 | `blockprot.locklimit.<N>` | false | Per-player cap override (e.g. `blockprot.locklimit.500`) |
 | `blockprot.blocks.tp` | op | Teleport to blocks from stats and admin GUIs |
 | `blockprot.debug` | op | Access to `/bp debug` |
+
+The staff tier nodes only apply with `admin_tiers.enabled: true`.
 
 
 ## Compatibility
@@ -138,7 +140,7 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 
 ## Integrations
 
-Towny, WorldGuard, Lands, ClaimChunk, GriefPrevention, Residence, PlaceholderAPI, SkinsRestorer, WorldEdit/FAWE, Floodgate/Geyser, ImageFrame, ViaVersion/ViaBackwards/ViaRewind, Folia.
+Towny, WorldGuard, Lands, ClaimChunk, GriefPrevention, Residence, PlaceholderAPI, SkinsRestorer, WorldEdit/FAWE, Floodgate/Geyser, ViaVersion/ViaBackwards/ViaRewind, Folia.
 
 
 ## Install
@@ -148,11 +150,11 @@ Place the JAR in `plugins/` and restart. Requires Java 17+ and Paper, Purpur, or
 
 ## Documentation
 
-- Release history: [`docs/RELEASE_NOTES/`](../RELEASE_NOTES/)
-- Block family syntax: [`docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md`](../MODERN%20SYNTAX%20AND%20LEGACY/BLOCK_FAMILY_SYNTAX.md)
-- Full lockable materials reference: [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](../MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md)
-- Administrator guide: [`docs/READ_MEs/ADMIN_GUIDE.md`](ADMIN_GUIDE.md)
-- Player guide: [`docs/READ_MEs/PLAYER_GUIDE.md`](PLAYER_GUIDE.md)
+- Release history: [`docs/RELEASE_NOTES/`](https://github.com/VictorGugug/BlockProt-Reloaded/tree/main/docs/RELEASE_NOTES)
+- Block family syntax: [`docs/MODERN SYNTAX AND LEGACY/BLOCK_FAMILY_SYNTAX.md`](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/MODERN%20SYNTAX%20AND%20LEGACY/BLOCK_FAMILY_SYNTAX.md)
+- Full lockable materials reference: [`docs/MODERN SYNTAX AND LEGACY/LOCKABLE_BLOCKS_REFERENCE.md`](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/MODERN%20SYNTAX%20AND%20LEGACY/LOCKABLE_BLOCKS_REFERENCE.md)
+- Administrator guide: [`docs/READ_MEs/ADMIN_GUIDE.md`](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/READ_MEs/ADMIN_GUIDE.md)
+- Player guide: [`docs/READ_MEs/PLAYER_GUIDE.md`](https://github.com/VictorGugug/BlockProt-Reloaded/blob/main/docs/READ_MEs/PLAYER_GUIDE.md)
 
 Repository: https://github.com/VictorGugug/BlockProt-Reloaded
 Issues and contributions: https://github.com/VictorGugug/BlockProt-Reloaded/issues
