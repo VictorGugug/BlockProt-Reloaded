@@ -20,6 +20,8 @@
 
 package de.sean.blockprot.bukkit;
 
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.events.BlockAccessMenuEvent;
 import de.sean.blockprot.bukkit.events.BlockProtLockEvent;
 import de.sean.blockprot.bukkit.events.BlockProtUnlockEvent;
@@ -199,10 +201,12 @@ public final class BlockProtAPI {
         final String playerUuid = player.getUniqueId().toString();
 
         final BlockNBTHandler handler = new BlockNBTHandler(block);
-        if (player.isOp() || player.hasPermission(Permissions.USER_ADMIN.key())) {
+        if (AdminTierManager.hasPermission(player, AdminAction.UNLOCK)) {
             event.addPermissions(
                     BlockAccessMenuEvent.MenuPermission.LOCK,
                     BlockAccessMenuEvent.MenuPermission.INFO);
+        } else if (!handler.isNotProtected() && AdminTierManager.hasPermission(player, AdminAction.INFO)) {
+            event.addPermission(BlockAccessMenuEvent.MenuPermission.INFO);
         }
 
         Optional<FriendHandler> friend;

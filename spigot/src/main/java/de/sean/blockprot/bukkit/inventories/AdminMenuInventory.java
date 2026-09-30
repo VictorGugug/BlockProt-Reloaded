@@ -24,6 +24,8 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.BlockProtAPI;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.commands.AboutCommand;
 import de.sean.blockprot.bukkit.commands.DebugCommand;
 import de.sean.blockprot.bukkit.dialogs.AdminConfigDialog;
@@ -71,6 +73,21 @@ public class AdminMenuInventory extends BlockProtInventory {
         18, 25, 26,
         27, 28, 29, 30, 32, 33, 34, 35
     };
+
+    private static final java.util.Map<Integer, AdminAction> SLOT_ACTIONS = java.util.Map.ofEntries(
+        java.util.Map.entry(SLOT_LOCKABLES, AdminAction.LOCKABLES),
+        java.util.Map.entry(SLOT_CONFIG, AdminAction.CONFIG),
+        java.util.Map.entry(SLOT_TIERS, AdminAction.SETROLE),
+        java.util.Map.entry(SLOT_RELOAD, AdminAction.RELOAD),
+        java.util.Map.entry(SLOT_UPDATE, AdminAction.UPDATE),
+        java.util.Map.entry(SLOT_INTEGRATIONS, AdminAction.INTEGRATIONS),
+        java.util.Map.entry(SLOT_STATS, AdminAction.INFO),
+        java.util.Map.entry(SLOT_DEBUG, AdminAction.DEBUG),
+        java.util.Map.entry(SLOT_WORLD_EXPIRY, AdminAction.CONFIG),
+        java.util.Map.entry(SLOT_PROT_DEL, AdminAction.PROTDEL),
+        java.util.Map.entry(SLOT_INFO, AdminAction.INFO),
+        java.util.Map.entry(SLOT_UNLOCK, AdminAction.UNLOCK)
+    );
 
     public AdminMenuInventory() { super(false); }
 
@@ -146,6 +163,8 @@ public class AdminMenuInventory extends BlockProtInventory {
         event.setCancelled(true);
         int slot = event.getRawSlot();
         if (slot < 0 || slot >= getSize()) return;
+        AdminAction required = SLOT_ACTIONS.get(slot);
+        if (required != null && AdminTierManager.deny(player, required)) return;
 
         if (slot == SLOT_LOCKABLES) {
             if (de.sean.blockprot.bukkit.bedrock.BedrockBridge.shouldUseBedrockForms(player)) {

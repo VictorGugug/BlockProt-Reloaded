@@ -6,7 +6,7 @@ This is the authoritative description of what BlockProt Reloaded is meant to be.
 
 BlockProt Reloaded is an advanced block and entity protection plugin for Minecraft Java Edition servers running Bukkit-compatible server software, primarily optimized for the Paper server family. It is a fork of [spnda/BlockProt](https://github.com/spnda/BlockProt) (GPL-3.0), maintained as a solo project by Zar (Vic / VictorGugug).
 
-The plugin provides granular protection for containers, workstations, doors, signs, and entities; access control through friend lists, manager roles, and timed access; owner notifications; world expiry and inactivity cleanup; an SQLite audit log; and administrator diagnostic tools.
+The plugin provides granular protection for containers, workstations, doors, signs, and entities; access control through friend lists and friend permission levels; owner notifications; world expiry and inactivity cleanup; an SQLite audit log; and administrator diagnostic tools.
 
 ## Versioning Model and Platform Targets
 
@@ -53,9 +53,10 @@ The user-facing summary is [docs/READ_MEs/VERSION_GUIDE.md](docs/READ_MEs/VERSIO
 
 ### Server Software Support
 
-- **Fully Supported**: Paper, Purpur, Pufferfish, Folia (region-aware asynchronous scheduling via FoliaLib), Leaf, Leaves, Gale.
-- **Phasing Out**: Plain Spigot (core features only; modern Paper APIs are preferred, and Spigot-specific support is phased out).
-- **Hard-Blocked**: Plain CraftBukkit (the plugin detects CraftBukkit during startup and safely refuses to enable).
+- **Supported and tested**: Paper, Purpur, and Folia (region-aware scheduling via FoliaLib). Every release boots each declared Minecraft version on them in CI.
+- **Recognized, not tested**: Pufferfish, Leaf, Leaves, and Gale. The plugin identifies them as Paper family and starts without a warning, but they are not part of the test matrix.
+- **Not supported**: Plain Spigot. The plugin starts with warnings that the software is unsupported and that Paper is recommended; it is not tested.
+- **Hard-Blocked**: Plain CraftBukkit (the plugin detects CraftBukkit during startup and refuses to enable).
 - **Out of Scope**: Hybrid server software (such as Mohist, Magma, CatServer, or Arclight). Hybrid Forge and Fabric implementations introduce interaction anomalies and non-standard event behavior that the plugin does not support.
 
 ## Core Architecture and Interface Direction

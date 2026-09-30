@@ -536,7 +536,7 @@ console:
   edition_downgrade: "{to} es anterior a {from}. Los datos escritos por la edición más nueva pueden contener ajustes que esta versión ignora. No se admite volver a una versión anterior; se creó una copia de seguridad: {path}"
   about_edition: "{edition} {version} (Minecraft {range})"
   not_paper: "El servidor no esta ejecutando Paper. Spigot independiente ya no es compatible. Los prompts de texto usaran chat en modo legado. Se recomienda encarecidamente Paper o un fork de Paper (Purpur, Folia)."
-  software_unsupported: "Software de servidor no compatible detectado: {software}. BlockProt Reloaded es compatible con Paper y sus forks (Paper, Purpur, Folia, Pufferfish, Leaf, ...). Spigot, CraftBukkit y otros softwares no basados en Paper no se recomiendan y su soporte está planificado a terminar en 1.3.6."
+  software_unsupported: "Software de servidor no compatible detectado: {software}. BlockProt Reloaded es compatible con Paper y sus forks (Paper, Purpur, Folia, Pufferfish, Leaf, ...). Spigot, CraftBukkit y otros softwares no basados en Paper no son compatibles."
   dialogs_unavailable: "use_dialogs está activado pero este servidor no expone la API de diálogos de Paper (requiere Paper 1.21.7+). Se usarán los menús de inventario/chat como alternativa."
   stats_save_failed: "No se pudo guardar el archivo de estadísticas: {error}"
   saving_statistics: "Guardando estadísticas en disco..."

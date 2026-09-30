@@ -79,7 +79,7 @@ BlockProt Reloaded coordinates its release cycles around declared Minecraft vers
 - When an intermediate or major Minecraft version is released in the middle of an active plugin development cycle (for example, while plugin version X is in progress targeting Minecraft version A, and Minecraft version B is released upstream), compatibility work for Minecraft version B is not rushed into plugin version X. Official compatibility for Minecraft version B is scheduled and developed in the subsequent plugin release cycle (plugin version X+1).
 - Pull requests that introduce compatibility for a newly released Minecraft version not officially targeted in the active plugin development cycle will be placed in draft status. They will be reviewed and scheduled once the active plugin release finishes its cycle and the next plugin milestone begins.
 - BlockProt Reloaded does not guarantee full functionality on Minecraft versions released mid-cycle that were not accounted for or officially targeted in the active plugin release.
-- Server software targets are restricted to the Paper family (Paper, Purpur, Pufferfish, Folia). Pull requests introducing support for plain CraftBukkit or hybrid Forge/Fabric/Bukkit servers (such as Mohist, Magma, or CatServer) are out of scope.
+- Server software targets are restricted to the Paper family. Paper, Purpur and Folia are the ones tested in CI (see [SCOPE.md](SCOPE.md)). Pull requests introducing support for plain CraftBukkit or hybrid Forge/Fabric/Bukkit servers (such as Mohist, Magma, or CatServer) are out of scope.
 
 ## Testing and Verification Requirements
 
@@ -113,21 +113,23 @@ Using AI tools to assist in writing contributions is permitted, provided that ev
 ## Pull Request Lifecycle
 
 1. **Submission**: Open a pull request with the required factual description. If the work is still in progress or awaits an upcoming plugin release cycle, mark it as a draft.
-2. **Automated Verification**: Every pull request automatically triggers the GitHub Actions CI and Governance workflows, verifying compilation, automated test passage, commit formatting, and license standards.
+2. **Automated Verification**: Every pull request runs the `BlockProt Reloaded` workflow described below. A failing check has to be fixed before review.
 3. **Review**: The pull request will be reviewed for scope alignment, code cleanliness, test evidence, and adherence to project invariants.
 4. **Revisions**: If changes or tests are requested, push additional commits to the same branch or rebase as appropriate.
 5. **Merge**: Once approved and aligned with the plugin release cycle, the pull request will be merged into `main`.
 
 ## Automated Continuous Integration and Governance
 
-Every pull request and push to `main` triggers automated GitHub Actions workflows:
+Every pull request and every push to `main`, `BlockProt-Reloaded-Legacy`, or `BlockProt-Legacy` (except changes that only touch Markdown, `images/`, or `.gitignore`) runs the `Build, Verify & Audit` job of the `BlockProt Reloaded` workflow (`.github/workflows/blockprot.yml`). It checks:
 
-- **Continuous Integration (`BlockProt Reloaded CI`)**: Compiles the project with JDK 25 and executes the full automated test suite (`./gradlew build`). Pull requests with failing tests or compilation errors cannot be merged.
-- **Governance and Standards (`Governance & Contribution Standards`)**: Automatically validates compliance with repository standards, verifying:
-  - Standardized commit format (`BPR:<branch>(<type>): <description>`).
-  - Version field immutability (ensures `blockProtVersion` and `versionSuffix` in `gradle.properties` are unmodified).
-  - License header preservation on all `.java` files (GNU GPL v3).
-  - Prohibition of stand-in placeholder comments (`// TODO`, `FIXME`).
+- The commit format (`BPR:<branch>(<type>): <description>`): every commit of a pull request, or the pushed commit.
+- On pull requests, that `blockProtVersion` and `versionSuffix` in `gradle.properties` are unchanged against the target branch.
+- The project integrity script (`.github/scripts/verify_project_integrity.py`): GPL v3 headers on every `.java` file, no `TODO`, `FIXME` or `XXX` comments, no Bukkit or Paper imports in `:common`, valid YAML resources, every translation key present in `translations_en.yml` and `translations_es.yml`, and no typographic dashes, curly quotes or arrows in Java sources.
+- The automation script tests (`python -m unittest discover -s .github/scripts -p "test_*.py"`).
+- The build and unit tests (`./gradlew build`).
+- A real server boot with the plugin and its console diagnostics on the servers listed for the edition in `.github/editions.json`.
+
+The `Player Tests` workflow (`.github/workflows/player-tests.yml`) boots every supported Minecraft version on Paper, Folia and Purpur and plays with two simulated players. It runs on pushes that change code, before every release preview or publication, and with the weekly maintenance report. It does not run on pull requests.
 
 ## Communication
 

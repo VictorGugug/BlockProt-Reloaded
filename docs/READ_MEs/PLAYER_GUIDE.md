@@ -145,16 +145,17 @@ matching player names reliably regardless of keyboard accents.
 ### Friend permission levels
 
 Starting in 1.3.6, you can grant four different permission levels when adding or
-editing a friend on a block:
+editing a friend on a block. Every level can open the block and take or deposit
+items; the level decides what else the friend may do:
 
-- **Basic:** The friend can open the container and take items, but cannot deposit
-  items, change block settings, or manage friends.
-- **Operator:** The friend can freely open, take items, and deposit items into
-  the block.
-- **Full Manager:** The friend can open, deposit, take items, and manage friends
-  and block settings (they cannot transfer or delete the protection).
-- **Custom:** Fine-tune individual flags (open, take, deposit, manage settings)
-  in dialogs, inventory menus, or Bedrock forms.
+- **Basic:** Use the block only. The lock menu does not open for them.
+- **Operator:** Also open the lock menu, change block settings and the block
+  name, view the audit log, and inspect the contents.
+- **Full Manager:** Everything Operator can do, plus managing friends. They cannot
+  transfer or delete the protection.
+- **Custom:** Pick the individual flags (open menu, edit settings, edit name,
+  view audit, inspect, manage friends) in dialogs, inventory menus, or Bedrock
+  forms.
 
 ### Public blocks
 

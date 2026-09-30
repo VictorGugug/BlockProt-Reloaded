@@ -23,6 +23,8 @@ package de.sean.blockprot.bukkit.bedrock.forms;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.bedrock.BedrockBridge;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
 import org.bukkit.entity.Player;
@@ -57,6 +59,13 @@ public final class BedrockAdminMenuForm {
             .button(close, FormImage.Type.PATH, "textures/ui/cancel")
             .validResultHandler(response -> {
                 int clicked = response.clickedButtonId();
+                AdminAction required = switch (clicked) {
+                    case 0 -> AdminAction.CONFIG;
+                    case 1, 2 -> AdminAction.LOCKABLES;
+                    case 3 -> AdminAction.RELOAD;
+                    default -> null;
+                };
+                if (required != null && AdminTierManager.deny(player, required)) return;
                 switch (clicked) {
                     case 0 -> BedrockAdminConfigForm.showCategories(player);
                     case 1 -> BedrockLockablesForm.show(player);

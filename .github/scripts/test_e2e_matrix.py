@@ -24,5 +24,21 @@ class BuildMatrix(unittest.TestCase):
         self.assertEqual(17, e2e_matrix.java_for("1.20.4", 17))
 
 
+class ServerVersion(unittest.TestCase):
+    def test_exact_build_wins(self):
+        self.assertEqual("26.1", e2e_matrix.server_version(["26.1", "26.2"], 0, {"26.1", "26.1.2"}))
+
+    def test_newest_hotfix_stands_in_for_a_version_without_its_own_build(self):
+        available = {"26.1.1", "26.1.2", "26.1.2-rc-1", "26.2"}
+        self.assertEqual("26.1.2", e2e_matrix.server_version(["26.1", "26.2"], 0, available))
+
+    def test_hotfix_never_reaches_the_next_declared_version(self):
+        self.assertIsNone(e2e_matrix.server_version(["1.21", "1.21.1"], 0, {"1.21.1", "1.21.11"}))
+
+    def test_versions_without_any_server_are_reported(self):
+        missing = ["paper 26.1", "folia 26.1", "purpur 26.1", "folia 26.2"]
+        self.assertEqual(["26.1"], e2e_matrix.untested(["26.1", "26.2"], missing))
+
+
 if __name__ == "__main__":
     unittest.main()
