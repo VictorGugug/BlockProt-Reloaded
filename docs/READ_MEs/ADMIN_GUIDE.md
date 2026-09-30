@@ -606,10 +606,10 @@ OPs count as Owner, and `blockprot.user.admin` alone reaches T2 commands only.
 
 | Command | Access | Tier | What it does |
 |---|---|---|---|
-| `/bp admin` | Admin | any tier | Admin menu hub: lockables, config editor, reload, update, integrations, stats, debug, info, about, world expiry, world protection deletion. Auto-Drop lives under `/bp lockables` -> Auto Drop, not the admin hub. |
+| `/bp admin` | Admin | any tier; each button checks its own tier | Admin menu hub: lockables, config editor, reload, update, integrations, stats, debug, info, about, world expiry, world protection deletion. Auto-Drop lives under `/bp lockables` -> Auto Drop, not the admin hub. |
 | `/bp tiers [setrole] [player] [tier]` | Admin or `blockprot.user.admin.owner` | Owner | Staff roles menu (chest inventory or dialog). Without arguments, opens the staff management GUI. With arguments, assigns an admin tier (`t1`, `t2`, `t3`, `owner`, `custom`, `none`) to a player when `admin_tiers.enabled: true`. |
 | `/bp lockables` | Admin | T2 | Browse and toggle which blocks are lockable (the GUI writes `blocks.yml`). This is the only in-game way to add lockable blocks; regular players cannot use it. |
-| `/bp info <player>` | Admin | not tier-checked | Opens a player's block list. From the console, prints the owned blocks. |
+| `/bp info <player>` | Admin | T1 | Opens a player's block list. From the console, prints the owned blocks. |
 | `/bp unlock <player>` | Admin | T2 | Opens a GUI to unlock/remove protections for a player. From the console, lists the player's locked blocks. |
 | `/bp protdel [world]` | Admin | T3 | Delete all protections in a world (with confirmation). From the console: `/bp protdel <world> confirm`, and `/bp protdel undo` to restore the last deletion. |
 | `/bp reload` | Admin | Owner | Reload configuration (always creates a backup first). |
@@ -645,9 +645,9 @@ Starting in 1.3.6, setting `admin_tiers.enabled: true` in `config.yml` activates
 
 | Node | Tier name | Allowed actions |
 |---|---|---|
-| `blockprot.user.admin.t1` | Low (Moderator) | Opens the `/bp admin` hub. Its inspection actions (block lists, teleport, audit logs) are declared but not checked yet: those screens still need `blockprot.user.admin`, and teleporting needs `blockprot.blocks.tp`. |
+| `blockprot.user.admin.t1` | Low (Moderator) | Inspection only: player block lists (`/bp info` and the hub), a read-only lock menu on other players' blocks with block info and the audit log, and teleporting from admin block lists and the audit log. |
 | `blockprot.user.admin.t2` | Medium (Helper) | All T1 actions plus breaking/unlocking protected blocks (`/bp unlock`), bypassing container protection on open, and configuring lockables (`/bp lockables`). |
-| `blockprot.user.admin.t3` | High (Admin) | All T2 actions plus mass world deletion (`/bp protdel`) and debugging (`/bp debug`). The config action is declared but not checked yet. |
+| `blockprot.user.admin.t3` | High (Admin) | All T2 actions plus mass world deletion (`/bp protdel`), the configuration editor and world expiry in `/bp admin`, and debugging (`/bp debug`). |
 | `blockprot.user.admin.owner` | Owner | Full control: all T3 actions plus system reload (`/bp reload`), update checking (`/bp update`), integrations (`/bp integrations`), assigning staff roles (`/bp tiers setrole`), and running `/bp recommended` in-game. |
 | `blockprot.user.admin.custom` | Custom | Evaluates granular action flags configured in player NBT or `admins.yml`. |
 

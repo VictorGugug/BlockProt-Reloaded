@@ -82,7 +82,7 @@ public final class BedrockBlockLockForm {
                 }
                 show(player, block, handler);
             });
-        } else if (isOwner || de.sean.blockprot.bukkit.admin.AdminTierManager.hasAnyAdminPermission(player)) {
+        } else if (isOwner || de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.UNLOCK)) {
             String unlockBtn = stripColor(Translator.get(TranslationKey.INVENTORIES__UNLOCK));
             builder.button(unlockBtn, FormImage.Type.PATH, "textures/ui/cancel");
             actions.add(() -> {

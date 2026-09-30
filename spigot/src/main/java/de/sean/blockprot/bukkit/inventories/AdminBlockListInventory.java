@@ -21,9 +21,10 @@
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.nbt.stats.LocationListEntry;
 import de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic;
 import de.sean.blockprot.bukkit.util.ComponentMessages;
@@ -112,7 +113,7 @@ public final class AdminBlockListInventory extends BlockProtInventory {
         Location loc = list.get(idx).get();
         if (loc.getWorld() == null) return;
 
-        if (!admin.hasPermission(Permissions.BLOCKS_TP.key())) {
+        if (!AdminTierManager.canTeleport(admin)) {
             ComponentMessages.sendLegacyActionBar(admin, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION_TP));
             return;
         }
@@ -140,7 +141,7 @@ public final class AdminBlockListInventory extends BlockProtInventory {
         List<LocationListEntry> list   = filteredList();
         int                     offset = PAGE_SIZE * state.currentPageIndex;
 
-        boolean canTp  = admin.hasPermission(Permissions.BLOCKS_TP.key());
+        boolean canTp  = AdminTierManager.canTeleport(admin);
         String  loreTp = Translator.get(canTp
                 ? TranslationKey.INVENTORIES__STATS__LORE_TP
                 : TranslationKey.INVENTORIES__STATS__LORE_NO_TP);

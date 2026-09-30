@@ -24,6 +24,8 @@ import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.events.BlockAccessMenuEvent;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
 import de.sean.blockprot.nbt.LockReturnValue;
@@ -254,10 +256,13 @@ public class BlockLockInventory extends BlockProtInventory {
             return null;
         }
 
-        boolean isAdmin          = player.hasPermission(Permissions.USER_ADMIN.key());
+        boolean isAdmin          = AdminTierManager.hasPermission(player, AdminAction.UNLOCK);
         boolean isStorageBlock   = isStorageType(material);
         boolean isTraversalBlock = isTraversalType(material);
-        boolean isOwnerOrAdmin   = handler.isOwner(player.getUniqueId()) || isAdmin;
+        boolean isOwner          = handler.isOwner(player.getUniqueId());
+        boolean isOwnerOrAdmin   = isOwner || isAdmin;
+        boolean canReadLogs      = isOwnerOrAdmin || AdminTierManager.hasPermission(player, AdminAction.LOGS);
+        boolean canSeeInfo       = isAdmin || AdminTierManager.hasPermission(player, AdminAction.INFO);
         boolean canManage        = !isNotProtected && state.menuPermissions.contains(BlockAccessMenuEvent.MenuPermission.MANAGER);
 
         if (state.menuPermissions.contains(BlockAccessMenuEvent.MenuPermission.LOCK)) {
@@ -294,7 +299,7 @@ public class BlockLockInventory extends BlockProtInventory {
             setItemStack(9, Material.SPYGLASS, TranslationKey.INVENTORIES__INSPECT_CONTENTS);
         }
 
-        if (!isNotProtected && isOwnerOrAdmin && BlockProt.getAuditLogger() != null) {
+        if (!isNotProtected && canReadLogs && BlockProt.getAuditLogger() != null) {
             setItemStack(13, Material.CLOCK, TranslationKey.INVENTORIES__AUDIT__OPEN);
         }
 
@@ -305,7 +310,7 @@ public class BlockLockInventory extends BlockProtInventory {
             setItemStack(15, Material.PAPER, TranslationKey.INVENTORIES__COPY_CONFIGURATION);
         }
 
-        if (canManage || (!isNotProtected && isAdmin)) {
+        if (canManage || (!isNotProtected && canSeeInfo)) {
             setItemStack(16, Material.COMPASS, TranslationKey.INVENTORIES__BLOCK_INFO__TITLE);
         }
 

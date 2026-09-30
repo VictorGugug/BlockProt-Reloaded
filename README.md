@@ -206,7 +206,7 @@ With `admin_tiers.enabled: false` (the default) the Permission column applies, w
 
 | Command | Permission | Tier | Description |
 |---|---|---|---|
-| `/bp info <player>` | Admin | not tier-checked, needs Admin | Inspect all blocks owned by a player (online or offline); prints the list when run from the console |
+| `/bp info <player>` | Admin | T1 | Inspect all blocks owned by a player (online or offline); prints the list when run from the console |
 | `/bp unlock <player>` | Admin | T2 | Inspect or unlock protections owned by a player; lists their locked blocks when run from the console |
 | `/bp lockables` | Admin | T2 | Interactive browser for all known materials with toggleable active status |
 | `/bp protdel` | Admin | T3 | Bulk delete protections in a world with undo support; from the console use `/bp protdel <world> confirm` and `/bp protdel undo` |
@@ -225,9 +225,9 @@ The console can run every command.
 |---|---|---|
 | `blockprot.user` | true | Standard player features: lock, friends, settings, stats, transfer |
 | `blockprot.user.admin` | op | Full administrator privileges and GUI inspection |
-| `blockprot.user.admin.t1` | false | Staff Tier 1 (Moderator); see the note below |
+| `blockprot.user.admin.t1` | false | Staff Tier 1 (Moderator): player block lists, read-only block info and audit logs, teleport from admin lists |
 | `blockprot.user.admin.t2` | false | Staff Tier 2 (Helper): unlock, break protected blocks, container bypass, lockables GUI |
-| `blockprot.user.admin.t3` | false | Staff Tier 3 (Admin): T2 plus world protection deletion and debug |
+| `blockprot.user.admin.t3` | false | Staff Tier 3 (Admin): T2 plus world protection deletion, config editor, and debug |
 | `blockprot.user.admin.owner` | op | Staff Tier 4 (Owner): full control, reload, update, staff role assignments |
 | `blockprot.user.admin.custom` | false | Custom staff role evaluating granular action flags from admins.yml |
 | `blockprot.lockmax` | false | Exemption from the `player_max_locked_block_count` limit |
@@ -235,7 +235,7 @@ The console can run every command.
 | `blockprot.blocks.tp` | op | Allows teleportation to blocks from statistics and admin block lists |
 | `blockprot.debug` | op | Access to `/bp debug` system diagnostics |
 
-The tier nodes only take effect with `admin_tiers.enabled: true`. The Tier 1 actions (block lists, teleport, audit logs) and the config action are listed in the custom-role menu but are not checked yet: block lists and other players' audit logs still need `blockprot.user.admin`, and teleporting needs `blockprot.blocks.tp`.
+The tier nodes only take effect with `admin_tiers.enabled: true`. Every button of the `/bp admin` hub checks the tier of its action, so a staff member only uses what their tier allows.
 
 ## Key Features
 
@@ -247,9 +247,9 @@ Full support for modern Paper modal dialogs (`use_dialogs: true`). Dialog menus 
 
 ### Four-Tier Staff Hierarchy (`admins.yml`)
 Configurable four-tier staff management system (`admin_tiers.enabled: true`):
-- **Tier 1 (Moderator):** Opens the `/bp admin` hub. Its inspection actions are not enforced yet (see Permissions).
+- **Tier 1 (Moderator):** Player block lists (`/bp info`), a read-only lock menu on other players' blocks with block info and the audit log, and teleporting from admin block lists.
 - **Tier 2 (Helper):** Container unlock, container bypass, breaking protected blocks, and the lockables browser.
-- **Tier 3 (Admin):** World-wide protection deletion and diagnostics.
+- **Tier 3 (Admin):** World-wide protection deletion, the configuration editor, world expiry, and diagnostics.
 - **Tier 4 (Owner):** System reloads, updates, integrations, recommended profiles, and staff assignments.
 - Custom roles can also be declared with granular action flags.
 

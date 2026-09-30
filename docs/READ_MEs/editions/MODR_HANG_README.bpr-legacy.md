@@ -115,9 +115,9 @@ Monitors explosions near lockable blocks. Logs the event, alerts the owner via a
 |---|---|---|
 | `blockprot.user` | true | All standard player features |
 | `blockprot.user.admin` | op | Admin commands and GUIs |
-| `blockprot.user.admin.t1` | false | Low staff tier (opens the admin hub) |
+| `blockprot.user.admin.t1` | false | Low staff tier (block lists, read-only block info and audit logs) |
 | `blockprot.user.admin.t2` | false | Medium staff tier (unlock, lockables, break protected blocks) |
-| `blockprot.user.admin.t3` | false | High staff tier (world protection deletion, debug) |
+| `blockprot.user.admin.t3` | false | High staff tier (world protection deletion, config, debug) |
 | `blockprot.user.admin.owner` | op | Full owner control and staff role assignment |
 | `blockprot.lockmax` | false | Exempt from the block count limit (unlimited) |
 | `blockprot.locklimit.<N>` | false | Per-player cap override (e.g. `blockprot.locklimit.500`) |

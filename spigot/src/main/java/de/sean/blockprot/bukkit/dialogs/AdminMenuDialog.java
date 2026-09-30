@@ -23,6 +23,8 @@ package de.sean.blockprot.bukkit.dialogs;
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.config.ReloadCoordinator;
 import de.sean.blockprot.bukkit.config.ReloadReport;
 import static de.sean.blockprot.bukkit.dialogs.BpDialogStyles.PASTEL_CORAL;
@@ -82,37 +84,37 @@ public final class AdminMenuDialog {
         DialogButton lockablesBtn = new DialogButton("lockables",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__LOCKABLES)) + lockables, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__LOCKABLES)), PASTEL_MINT),
-            p -> LockablesDialog.show(p, DialogOrigin.ADMIN_MENU)
+            p -> { if (!AdminTierManager.deny(p, AdminAction.LOCKABLES)) LockablesDialog.show(p, DialogOrigin.ADMIN_MENU); }
         );
 
         DialogButton configBtn = new DialogButton("config",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__CONFIG)) + config, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.DIALOGS__ADMIN_MENU__CONFIG_TOOLTIP)), PASTEL_GOLD),
-            p -> AdminConfigDialog.show(p, DialogOrigin.ADMIN_MENU)
+            p -> { if (!AdminTierManager.deny(p, AdminAction.CONFIG)) AdminConfigDialog.show(p, DialogOrigin.ADMIN_MENU); }
         );
 
         DialogButton tiersBtn = new DialogButton("tiers",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__TIERS)) + tiers, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__TIERS_LORE)), PASTEL_GOLD),
-            p -> AdminTiersDialog.show(p, DialogOrigin.ADMIN_MENU)
+            p -> { if (!AdminTierManager.deny(p, AdminAction.SETROLE)) AdminTiersDialog.show(p, DialogOrigin.ADMIN_MENU); }
         );
 
         DialogButton worldExpiryBtn = new DialogButton("world_expiry",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__WORLD_EXPIRY)) + worldExpiry, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__WORLD_EXPIRY_LORE)), SOFT_BLUE),
-            p -> WorldExpiryDialog.show(p, DialogOrigin.ADMIN_MENU)
+            p -> { if (!AdminTierManager.deny(p, AdminAction.CONFIG)) WorldExpiryDialog.show(p, DialogOrigin.ADMIN_MENU); }
         );
 
         DialogButton protdelBtn = new DialogButton("protdel",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__DISABLE_ALL)) + protdel, NamedTextColor.WHITE),
             tooltip(protdel, PASTEL_CORAL),
-            p -> ProtdelDialog.show(p, null, DialogOrigin.ADMIN_MENU)
+            p -> { if (!AdminTierManager.deny(p, AdminAction.PROTDEL)) ProtdelDialog.show(p, null, DialogOrigin.ADMIN_MENU); }
         );
 
         DialogButton unlockBtn = new DialogButton("unlock",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__UNLOCK)) + unlock, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UNLOCK_LORE)), PASTEL_CORAL),
-            p -> AdminConfigValueDialog.openText(
+            p -> { if (!AdminTierManager.deny(p, AdminAction.UNLOCK)) AdminConfigValueDialog.openText(
                 p,
                 "unlock_player",
                 stripColor(Translator.get(TranslationKey.MESSAGES__BP_UNLOCK_USAGE)),
@@ -125,13 +127,14 @@ public final class AdminMenuDialog {
                 },
                 targetName -> UnlockDialog.show(p, DialogOrigin.ADMIN_MENU, targetName.trim(), 0),
                 () -> show(p, backOrigin)
-            )
+            ); }
         );
 
         DialogButton reloadBtn = new DialogButton("reload",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__RELOAD)) + reload, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__RELOAD)), PASTEL_MINT),
             p -> {
+                if (AdminTierManager.deny(p, AdminAction.RELOAD)) return;
                 ReloadReport report = ReloadCoordinator.commitCommand();
                 p.sendMessage(Component.text(
                     report.isSuccess()
@@ -145,25 +148,26 @@ public final class AdminMenuDialog {
         DialogButton updateBtn = new DialogButton("update",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__SEARCH)) + update, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__UPDATE)), SOFT_BLUE),
-            p -> UpdateDialog.show(p, DialogOrigin.ADMIN_MENU)
+            p -> { if (!AdminTierManager.deny(p, AdminAction.UPDATE)) UpdateDialog.show(p, DialogOrigin.ADMIN_MENU); }
         );
 
         DialogButton integrationsBtn = new DialogButton("integrations",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__INTEGRATIONS)) + integrations, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INTEGRATIONS)), SOFT_BLUE),
-            p -> IntegrationsDialog.show(p, DialogOrigin.ADMIN_MENU)
+            p -> { if (!AdminTierManager.deny(p, AdminAction.INTEGRATIONS)) IntegrationsDialog.show(p, DialogOrigin.ADMIN_MENU); }
         );
 
         DialogButton statsBtn = new DialogButton("stats",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__STATS)) + stats, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__STATS)), PASTEL_PURPLE),
-            p -> StatsDialog.show(p, DialogOrigin.ADMIN_MENU)
+            p -> { if (!AdminTierManager.deny(p, AdminAction.INFO)) StatsDialog.show(p, DialogOrigin.ADMIN_MENU); }
         );
 
         DialogButton debugBtn = new DialogButton("debug",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__DEBUG)) + debug, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__DEBUG)), PASTEL_CORAL),
             p -> {
+                if (AdminTierManager.deny(p, AdminAction.DEBUG)) return;
                 BlockProt.getInstance().getLogger().info("/bp debug run from dialog");
                 p.sendMessage(LegacyComponentSerializer.legacySection().deserialize(
                     Translator.get(TranslationKey.MESSAGES__DEBUG__RUNNING_DIAGNOSTICS)));
@@ -174,7 +178,7 @@ public final class AdminMenuDialog {
         DialogButton infoBtn = new DialogButton("info",
             Component.text(stripColor(Translator.get(TranslationKey.ICON__INFO)) + info, NamedTextColor.WHITE),
             tooltip(stripColor(Translator.get(TranslationKey.INVENTORIES__ADMIN_MENU__INFO)), SOFT_BLUE),
-            p -> InfoDialog.show(p, DialogOrigin.ADMIN_MENU)
+            p -> { if (!AdminTierManager.deny(p, AdminAction.INFO)) InfoDialog.show(p, DialogOrigin.ADMIN_MENU); }
         );
 
         DialogButton aboutBtn = new DialogButton("about",
