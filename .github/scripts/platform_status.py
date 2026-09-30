@@ -52,8 +52,11 @@ def check(version, token, config):
     tag = config["tagPrefix"] + version
     status["github"] = request(f"https://api.github.com/repos/{REPO}/releases/tags/{tag}", token)[0] == 200
     if "modrinth" in enabled:
-        url = f"https://api.modrinth.com/v2/project/{platforms['modrinth']['id']}/version/{version}"
-        status["modrinth"] = request(url)[0] == 200
+        project = f"https://api.modrinth.com/v2/project/{platforms['modrinth']['id']}"
+        if request(f"{project}/version/{version}")[0] == 200:
+            status["modrinth"] = True
+        elif request(project)[0] == 200:
+            status["modrinth"] = False
     if "curseforge" in enabled:
         _, cf = request(f"https://api.cfwidget.com/{platforms['curseforge']['id']}")
         wanted = f"{config['jarBase']}-{version}.jar"
