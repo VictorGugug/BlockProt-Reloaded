@@ -22,6 +22,9 @@ package de.sean.blockprot.bukkit.admin;
 
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
+import de.sean.blockprot.bukkit.TranslationKey;
+import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.util.ComponentMessages;
 import de.sean.blockprot.bukkit.nbt.PlayerSettingsHandler;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -150,6 +153,17 @@ public final class AdminTierManager {
         }
 
         return false;
+    }
+
+    public static boolean deny(@NotNull Player player, @NotNull AdminAction action) {
+        if (hasPermission(player, action)) return false;
+        ComponentMessages.sendLegacy(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));
+        return true;
+    }
+
+    public static boolean canTeleport(@NotNull Player player) {
+        return player.hasPermission(Permissions.BLOCKS_TP.key())
+            || (BlockProt.getDefaultConfig().isAdminTiersEnabled() && hasPermission(player, AdminAction.TELEPORT));
     }
 
     public static boolean hasAnyAdminPermission(@NotNull CommandSender sender) {

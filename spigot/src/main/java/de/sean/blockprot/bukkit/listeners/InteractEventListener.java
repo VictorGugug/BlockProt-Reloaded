@@ -166,7 +166,8 @@ public class InteractEventListener implements Listener {
 
             BlockNBTHandler blockHandler = new BlockNBTHandler(event.getClickedBlock());
             if (blockHandler.isProtected() && !blockHandler.isOwner(player.getUniqueId())
-                    && !de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.UNLOCK)) {
+                    && !de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.UNLOCK)
+                    && !de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.INFO)) {
                 var friendOpt = blockHandler.getFriend(player.getUniqueId().toString());
                 if (friendOpt.isEmpty() || friendOpt.get().doesRepresentPublic() || !friendOpt.get().canOpenMenu()) {
                     sendMessage(player, Translator.get(TranslationKey.MESSAGES__NO_PERMISSION));

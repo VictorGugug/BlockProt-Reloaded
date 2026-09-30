@@ -21,9 +21,10 @@
 package de.sean.blockprot.bukkit.commands;
 
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.dialogs.DialogOrigin;
 import de.sean.blockprot.bukkit.dialogs.InfoDialog;
 import de.sean.blockprot.bukkit.inventories.AdminBlockListInventory;
@@ -57,13 +58,13 @@ import java.util.List;
  *   <li>Console sender: always requires a player name argument.</li>
  * </ul>
  *
- * Requires {@code blockprot.admin} permission or OP.
+ * Requires the {@code INFO} admin action: OP or {@code blockprot.user.admin}, or tier T1 and above with admin tiers enabled.
  */
 public final class InfoCommand implements CommandExecutor {
 
     @Override
     public boolean canUseCommand(@NotNull CommandSender sender) {
-        return sender.isOp() || sender.hasPermission(Permissions.USER_ADMIN.key());
+        return AdminTierManager.hasPermission(sender, AdminAction.INFO);
     }
 
     @Override

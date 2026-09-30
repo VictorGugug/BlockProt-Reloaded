@@ -18,7 +18,7 @@ Java 21, Paper 1.20.5 through 1.21.6, Folia support, Bedrock Forms, Admin Tiers,
 
 > **Maintenance notice:** the maintainer is taking a break to focus on other projects. Issues and pull requests are welcome for any change and are reviewed as time allows. Read [CONTRIBUTING.md](CONTRIBUTING.md) first.
 
-Block protection plugin for Paper, Purpur, and Folia servers. Players protect chests, furnaces, barrels, doors, trapdoors, item frames, vehicles, and workstations through an intuitive chest GUI - no complex commands required. This fork extends the original NBT core with enterprise stability, thread-safe asynchronous architecture, and rich modern features.
+Block protection plugin for Paper, Purpur, and Folia servers. Players protect chests, furnaces, barrels, doors, trapdoors, item frames, vehicles, and workstations through chest menus, without typing commands. This fork keeps the original NBT storage and adds the features described below.
 
 ## Philosophy
 
@@ -52,7 +52,7 @@ The main interface for locking blocks. Sneak and right-click any lockable block 
 ### Friend Settings
 ![Friend settings](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/friend_settings.png)
 
-Add or remove friends from your protected blocks and assign them Read, Write, or Manager permission levels.
+Add or remove friends from your protected blocks. Every friend can open the block and move items in and out; the level (Basic, Operator, Full Manager, or Custom) decides who may also open its menu, change settings, or manage friends.
 
 ### Player Settings
 ![Player settings](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/user_settings.png)
@@ -78,11 +78,6 @@ Summary of all access attempts to your protected blocks. The audit log records w
 ![Inside log](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/inside_log.png)
 
 Each access record shows a timestamp, player name, and action type: opened, item taken, item placed, or access denied.
-
-### Timed Access
-![Timed access](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/timed_access.png)
-
-Grant temporary access to a friend with an expiration countdown. Access is automatically revoked when the timer expires.
 
 ### Admin Player Block-List
 ![Admin view](https://raw.githubusercontent.com/VictorGugug/BlockProt-Reloaded/main/images/admin_view.png)
@@ -112,9 +107,9 @@ The version suffix is controlled by `versionSuffix` in `gradle.properties`:
 
 | Value | Output |
 |---|---|
-| *(blank)* | `BlockProtReloaded-1.3.6.jar` - stable release |
-| `BEDev` | `BlockProtReloaded-1.3.6-BEDev.jar` - experimental pre-release |
-| `hotfix` | `BlockProtReloaded-1.3.6-hotfix.jar` - targeted bugfix release |
+| *(blank)* | `BlockProtReloadedLegacy-1.4.0.1.jar` - stable release |
+| `BEDev` | `BlockProtReloadedLegacy-1.4.0.1-BEDev.jar` - experimental pre-release |
+| `hotfix` | `BlockProtReloadedLegacy-1.4.0.1-hotfix.jar` - targeted bugfix release |
 
 ## File Layout
 
@@ -180,7 +175,7 @@ Copying settings sends an action bar confirmation. Pasting replaces the friend l
 
 ## Commands
 
-Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus: false`, all subcommands are available via chat. When `use_menus: true`, commands route to `/bp user` and `/bp admin`.
+Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus: false`, all subcommands are available via chat. When `use_menus: true`, players only get `/bp user` and `/bp admin`; the console keeps every subcommand.
 
 **Menu Commands:**
 
@@ -199,24 +194,27 @@ Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus
 | `/bp friends` | `blockprot.user` | Manage global default friends list |
 | `/bp friends addall <player>` | `blockprot.user` | Add a friend to every block you currently own |
 | `/bp stats` | `blockprot.user` | Open block statistics and location list |
-| `/bp transfer <player>` | `blockprot.user` | Transfer target looked-at block to another player |
-| `/bp transfer all <player>` | `blockprot.user` | Transfer all owned blocks to another player |
+| `/bp transferall <player>` | `blockprot.user` | Transfer all owned blocks to another player (a single block is transferred from its lock menu) |
 | `/bp disablehints` | `blockprot.user` | Toggle protection action bar hint messages |
 
 **Admin Commands:**
 
-| Command | Permission | Description |
-|---|---|---|
-| `/bp info <player>` | `blockprot.user.admin` | Inspect all blocks owned by a player (online or offline); prints the list when run from the console |
-| `/bp unlock <player>` | `blockprot.user.admin` | Inspect or unlock protections owned by a player; lists their locked blocks when run from the console |
-| `/bp lockables` | `blockprot.user.admin` | Interactive browser for all known materials with toggleable active status |
-| `/bp tiers [setrole] <player> <role>` | op or `blockprot.user.admin.owner` | Manage staff admin tiers (t1, t2, t3, owner, none) and admins.yml |
-| `/bp protdel` | op or `blockprot.user.admin` | Bulk delete protections in a world with undo support; from the console use `/bp protdel <world> confirm` and `/bp protdel undo` |
-| `/bp reload` | op or `blockprot.user.admin.owner` | Create safety backup and reload configs, blocks, and translations |
-| `/bp update` | op or `blockprot.user.admin.owner` | Check GitHub releases for updates with intelligent channel detection |
-| `/bp integrations` | op or `blockprot.user.admin.owner` | Inspect status of all third-party integrations |
-| `/bp debug <subcommand>` | `blockprot.debug` | Run the full diagnostic suite and class coverage scans; also runs from the console at world spawn |
-| `/bp recommended <blocks|config|all>` | op or console | Apply recommended production configuration profiles |
+With `admin_tiers.enabled: false` (the default) the Permission column applies, where "Admin" means op or `blockprot.user.admin`. With `admin_tiers.enabled: true` the Tier column applies instead: that tier or a higher one grants the command, ops count as Owner, and `blockprot.user.admin` alone reaches T2 commands only.
+
+| Command | Permission | Tier | Description |
+|---|---|---|---|
+| `/bp info <player>` | Admin | T1 | Inspect all blocks owned by a player (online or offline); prints the list when run from the console |
+| `/bp unlock <player>` | Admin | T2 | Inspect or unlock protections owned by a player; lists their locked blocks when run from the console |
+| `/bp lockables` | Admin | T2 | Interactive browser for all known materials with toggleable active status |
+| `/bp protdel` | Admin | T3 | Bulk delete protections in a world with undo support; from the console use `/bp protdel <world> confirm` and `/bp protdel undo` |
+| `/bp debug <subcommand>` | Admin or `blockprot.debug` | T3 | Run the full diagnostic suite and class coverage scans; also runs from the console at world spawn |
+| `/bp reload` | Admin | Owner | Create safety backup and reload configs, blocks, and translations |
+| `/bp update` | Admin | Owner | Check GitHub releases for updates with channel detection |
+| `/bp integrations` | Admin | Owner | Inspect status of all third-party integrations |
+| `/bp recommended <blocks\|config\|all>` | op or `blockprot.user.admin.owner` | Owner | Apply recommended configuration profiles; `undo` reverts them |
+| `/bp tiers [setrole] <player> <role>` | Admin or `blockprot.user.admin.owner` | Owner | Manage staff admin tiers (t1, t2, t3, owner, custom, none) and admins.yml |
+
+The console can run every command.
 
 ## Permissions
 
@@ -224,15 +222,17 @@ Command visibility is controlled by `use_menus` in `config.yml`. When `use_menus
 |---|---|---|
 | `blockprot.user` | true | Standard player features: lock, friends, settings, stats, transfer |
 | `blockprot.user.admin` | op | Full administrator privileges and GUI inspection |
-| `blockprot.user.admin.t1` | op | Staff Tier 1 (Moderator): read-only block info, teleport, audit inspect |
-| `blockprot.user.admin.t2` | op | Staff Tier 2 (Helper): T1 plus block unlock, break protected, lockables GUI |
-| `blockprot.user.admin.t3` | op | Staff Tier 3 (Admin): T2 plus world protection deletion, full config menus |
+| `blockprot.user.admin.t1` | false | Staff Tier 1 (Moderator): player block lists, read-only block info and audit logs, teleport from admin lists |
+| `blockprot.user.admin.t2` | false | Staff Tier 2 (Helper): unlock, break protected blocks, container bypass, lockables GUI |
+| `blockprot.user.admin.t3` | false | Staff Tier 3 (Admin): T2 plus world protection deletion, config editor, and debug |
 | `blockprot.user.admin.owner` | op | Staff Tier 4 (Owner): full control, reload, update, staff role assignments |
 | `blockprot.user.admin.custom` | false | Custom staff role evaluating granular action flags from admins.yml |
 | `blockprot.lockmax` | false | Exemption from the `player_max_locked_block_count` limit |
 | `blockprot.locklimit.<N>` | false | Assigns a custom maximum locked block limit to the player |
 | `blockprot.blocks.tp` | op | Allows teleportation to blocks from statistics and admin block lists |
 | `blockprot.debug` | op | Access to `/bp debug` system diagnostics |
+
+The tier nodes only take effect with `admin_tiers.enabled: true`. Every button of the `/bp admin` hub checks the tier of its action, so a staff member only uses what their tier allows.
 
 ## Key Features
 
@@ -244,10 +244,10 @@ Not available in this edition. Every menu opens as a chest inventory.
 
 ### Four-Tier Staff Hierarchy (`admins.yml`)
 Configurable four-tier staff management system (`admin_tiers.enabled: true`):
-- **Tier 1 (Moderator):** Non-destructive inspection, audit review, and teleportation.
-- **Tier 2 (Helper):** Container unlock and break authorization.
-- **Tier 3 (Admin):** World-wide protection administration and configuration menus.
-- **Tier 4 (Owner):** System reloads, updates, recommended profiles, and staff assignments.
+- **Tier 1 (Moderator):** Player block lists (`/bp info`), a read-only lock menu on other players' blocks with block info and the audit log, and teleporting from admin block lists.
+- **Tier 2 (Helper):** Container unlock, container bypass, breaking protected blocks, and the lockables browser.
+- **Tier 3 (Admin):** World-wide protection deletion, the configuration editor, world expiry, and diagnostics.
+- **Tier 4 (Owner):** System reloads, updates, integrations, recommended profiles, and staff assignments.
 - Custom roles can also be declared with granular action flags.
 
 ### Block Family Expressions
@@ -278,7 +278,7 @@ Villagers whose job-site points to a protected workstation inherit its protectio
 Hoppers are checked using a thread-safe Caffeine cache and `ProtectedBlockCache`, resolving server tick lag without needing to completely disable hopper extraction.
 
 ### Hybrid MySQL / SQLite Access Audit
-Stores block protections in PersistentDataContainer / NBT on the block itself, while providing an optional asynchronous MySQL / MariaDB index for high-speed cross-server lookup. An asynchronous SQLite audit log (`blockprot_audit.sqlite`) records open, item take, item place, and access denied events.
+Stores block protections in PersistentDataContainer / NBT on the block itself. An optional MySQL / MariaDB index mirrors block locations and trust lists so large servers can search them without scanning region files; NBT stays the source of truth. An asynchronous SQLite audit log (`blockprot_audit.sqlite`) records open, item take, item place, and access denied events.
 
 ### Per-World Configuration (`worlds.yml`)
 Enable `per_worlds_config: true` to configure independent block whitelists, protection rules, and feature toggles per world.
@@ -300,7 +300,6 @@ Configurable automated cleanup (`inactivity_cleanup_days`) that unregisters prot
 | SkinsRestorer | Resolves authentic player head textures on offline-mode servers asynchronously |
 | WorldEdit / FAWE | Optional paste auto-lock for newly pasted structures |
 | Floodgate / Geyser | Resolves Bedrock names and skins; native Bedrock touch forms (Cumulus) |
-| ImageFrame | Automatically protects image frame multi-map displays for creators |
 | ViaVersion | Client protocol version detection in the `/bp lockables` interface |
 | Folia | Asynchronous chunk handling and region scheduler compatibility |
 

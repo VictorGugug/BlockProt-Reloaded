@@ -102,5 +102,26 @@ class Resolve(unittest.TestCase):
             del os.environ["MODRINTH_PROJECT_ID"]
 
 
+class DownloadLinks(unittest.TestCase):
+    def test_links_follow_the_enabled_platforms_of_the_edition(self):
+        links = dict(edition.download_links(edition.load_edition("bpr"), "1.4.0", "o/r"))
+        self.assertEqual("https://www.curseforge.com/minecraft/bukkit-plugins/blockprot-reloaded", links["CurseForge"])
+        self.assertEqual(["GitHub", "Modrinth"],
+                         [name for name, _ in edition.download_links(edition.load_edition("bpr-legacy"), "1.4.0", "o/r")])
+
+    def test_legacy_links_use_the_tag_prefix(self):
+        links = dict(edition.download_links(edition.load_edition("bp-legacy"), "1.4.0", "o/r"))
+        self.assertTrue(links["GitHub"].endswith("/releases/tag/bpl-1.4.0"))
+
+    def test_development_builds_link_to_github_only(self):
+        links = edition.download_links(edition.load_edition("bpr"), "1.4.1-BEDev.2", "o/r")
+        self.assertEqual(["GitHub"], [name for name, _ in links])
+
+    def test_tags_belong_to_one_edition(self):
+        self.assertTrue(edition.belongs_to("1.4.0", edition.load_edition("bpr")))
+        self.assertFalse(edition.belongs_to("bprl-1.4.0", edition.load_edition("bpr")))
+        self.assertTrue(edition.belongs_to("bprl-1.4.0", edition.load_edition("bpr-legacy")))
+
+
 if __name__ == "__main__":
     unittest.main()

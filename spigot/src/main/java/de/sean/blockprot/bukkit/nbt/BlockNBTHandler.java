@@ -22,6 +22,8 @@ package de.sean.blockprot.bukkit.nbt;
 
 import de.sean.blockprot.bukkit.BlockProt;
 import de.sean.blockprot.bukkit.Permissions;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.events.BlockProtLockEvent;
 import de.sean.blockprot.bukkit.events.BlockProtUnlockEvent;
@@ -378,7 +380,7 @@ public final class BlockNBTHandler extends FriendSupportingHandler<NBTCompound> 
             ProtectedBlockCache.mark(block);
             HopperEventListener.invalidate(block);
             return new LockReturnValue(true, null);
-        } else if (owner.equals(playerUuid) || player.isOp() || player.hasPermission(Permissions.USER_ADMIN.key())) {
+        } else if (owner.equals(playerUuid) || AdminTierManager.hasPermission(player, AdminAction.UNLOCK)) {
             return performUnlock(player);
         }
 

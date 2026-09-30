@@ -87,14 +87,16 @@ public final class BlockLockDialog {
         DialogBridge bridge = DialogBridgeFactory.getBridge();
         if (bridge == null) return;
 
-        boolean isAdmin = de.sean.blockprot.bukkit.admin.AdminTierManager.hasAnyAdminPermission(player);
+        boolean isAdmin = de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.UNLOCK);
         boolean isNotProtected = handler.isNotProtected();
         boolean isOwner = handler.isOwner(player.getUniqueId());
         boolean isOwnerOrAdmin = isOwner || isAdmin;
         Optional<de.sean.blockprot.bukkit.nbt.FriendHandler> friendOpt = isNotProtected || isOwner ? Optional.empty() : handler.getFriend(player.getUniqueId().toString());
         de.sean.blockprot.bukkit.nbt.FriendHandler friend = (!friendOpt.isEmpty() && !friendOpt.get().doesRepresentPublic()) ? friendOpt.get() : null;
 
-        if (!isNotProtected && !isOwnerOrAdmin && (friend == null || !friend.canOpenMenu())) {
+        boolean canSeeInfo = isAdmin || de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.INFO);
+        boolean canReadLogs = isAdmin || de.sean.blockprot.bukkit.admin.AdminTierManager.hasPermission(player, de.sean.blockprot.bukkit.admin.AdminAction.LOGS);
+        if (!isNotProtected && !isOwnerOrAdmin && !canSeeInfo && (friend == null || !friend.canOpenMenu())) {
             ComponentMessages.sendActionBar(player, LegacyComponentSerializer.legacySection().deserialize(
                 Translator.get(TranslationKey.MESSAGES__NO_PERMISSION)));
             return;
@@ -109,7 +111,7 @@ public final class BlockLockDialog {
         boolean canInspect = !isNotProtected && isStorageBlock
             && block.getState() instanceof InventoryHolder && (isOwnerOrAdmin || (friend != null && friend.canInspect()));
         boolean hasAudit = !isNotProtected && BlockProt.getAuditLogger() != null
-            && (isOwnerOrAdmin || (friend != null && friend.canViewAudit()));
+            && (isOwnerOrAdmin || canReadLogs || (friend != null && friend.canViewAudit()));
         boolean hasClipboard = PlayerInventoryClipboard.contains(player.getUniqueId().toString());
 
         String materialName = formatMaterialName(block.getType().name());
@@ -325,7 +327,7 @@ public final class BlockLockDialog {
             ));
         }
 
-        if (canManage || (!isNotProtected && isAdmin)) {
+        if (canManage || (!isNotProtected && canSeeInfo)) {
             actions.add(actionBtn(
                 stripColor(Translator.get(TranslationKey.INVENTORIES__BLOCK_INFO__TITLE)),
                 SOFT_BLUE,

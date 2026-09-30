@@ -21,9 +21,10 @@
 package de.sean.blockprot.bukkit.inventories;
 
 import de.sean.blockprot.bukkit.BlockProt;
-import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
+import de.sean.blockprot.bukkit.admin.AdminAction;
+import de.sean.blockprot.bukkit.admin.AdminTierManager;
 import de.sean.blockprot.bukkit.audit.AuditLogger;
 import de.sean.blockprot.bukkit.audit.AuditLogger.AuditEntry;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
@@ -132,7 +133,7 @@ public final class AuditInventory extends BlockProtInventory {
                 }
             }
             case COMPASS -> {
-                if (player.hasPermission(Permissions.USER_ADMIN.key())) {
+                if (AdminTierManager.hasPermission(player, AdminAction.TELEPORT)) {
                     var world = Bukkit.getWorld(blockWorld);
                     if (world != null) {
                         player.closeInventory();
@@ -285,7 +286,7 @@ public final class AuditInventory extends BlockProtInventory {
 
         setItemStack(48, Material.CYAN_STAINED_GLASS_PANE,  TranslationKey.INVENTORIES__LAST_PAGE);
         setItemStack(50, Material.BLUE_STAINED_GLASS_PANE,  TranslationKey.INVENTORIES__NEXT_PAGE);
-        if (selectedPlayerUuid == null && player.hasPermission(Permissions.USER_ADMIN.key())) {
+        if (selectedPlayerUuid == null && AdminTierManager.hasPermission(player, AdminAction.TELEPORT)) {
             setItemStack(49, Material.COMPASS, TranslationKey.INVENTORIES__AUDIT__TELEPORT);
         }
 
