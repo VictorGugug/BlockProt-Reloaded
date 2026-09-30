@@ -73,9 +73,18 @@ class Check(unittest.TestCase):
     def test_enabled_platforms_missing_the_version_are_false(self):
         config = edition.load_edition("bpr-legacy")
         config["platforms"]["hangar"]["enabled"] = True
-        with mock.patch.object(platform_status, "request", return_value=(404, None)):
+
+        def public_project(url, token=None):
+            return (200, {}) if url.endswith("/project/blockprot-reloaded-legacy") else (404, None)
+
+        with mock.patch.object(platform_status, "request", side_effect=public_project):
             status = platform_status.check("1.3.9.1", None, config)
         self.assertEqual({"github": False, "modrinth": False, "curseforge": None, "hangar": False}, status)
+
+    def test_a_modrinth_project_that_is_not_public_cannot_be_checked(self):
+        with mock.patch.object(platform_status, "request", return_value=(404, None)):
+            status = platform_status.check("1.4.0.1", None, edition.load_edition("bpr-legacy"))
+        self.assertIsNone(status["modrinth"])
 
     def test_mark_renders_disabled_as_dash(self):
         self.assertEqual(("[-]", "[v]", "[x]"),
