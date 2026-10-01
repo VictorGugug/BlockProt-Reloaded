@@ -202,6 +202,13 @@ hangarPublish {
         id.set("BlockProt-Reloaded")
         channel.set("Release")
         apiKey.set(providers.environmentVariable("HANGAR_API_TOKEN"))
+        val stagedNotes = rootProject.file("build/reports/release-notes.md")
+        val notesFile = rootProject.file("docs/RELEASE_NOTES/${project.version}.RELEASE_NOTES.md")
+        if (stagedNotes.exists()) {
+            changelog.set(stagedNotes.readText(Charsets.UTF_8))
+        } else if (notesFile.exists()) {
+            changelog.set(notesFile.readText(Charsets.UTF_8))
+        }
         platforms {
             paper {
                 jar.set(tasks.shadowJar.flatMap { it.archiveFile })

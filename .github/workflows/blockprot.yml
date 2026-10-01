@@ -404,6 +404,15 @@ jobs:
 
           # Format game versions for mc-publish (newline-delimited)
           MC_NEWLINES=$(echo "$RAW_MC" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '\r' | grep -v '^$')
+          EXPANDED_MC=()
+          while IFS= read -r v; do
+            [ -z "$v" ] && continue
+            EXPANDED_MC+=("$v")
+            if [ "$v" = "26.1" ]; then
+              EXPANDED_MC+=("26.1.1" "26.1.2")
+            fi
+          done <<< "$MC_NEWLINES"
+          MC_NEWLINES=$(printf "%s\n" "${EXPANDED_MC[@]}")
 
           PLATFORMS=$(grep -E '^[[:space:]]*supportedPlatforms=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
           LEGACY=$(grep -E '^[[:space:]]*legacyPlatforms=' "$PROPS" | cut -d'=' -f2 | tr -d '\r\n')
@@ -814,6 +823,38 @@ jobs:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
 
+      - name: Sync Modrinth version metadata
+        id: modrinth_sync
+        if: needs.inspect-and-build.outputs.github_only != 'true' && env.MODRINTH_TOKEN != '' && steps.detect.outputs.modrinth_skip == 'true'
+        run: |
+          VERSION="${{ needs.inspect-and-build.outputs.plugin_version }}"
+          MODRINTH_ID="${{ needs.edition.outputs.modrinth_id }}"
+          VERSIONS_JSON=$(curl -s -H "User-Agent: VictorGugug/BlockProt-Reloaded" "https://api.modrinth.com/v2/project/${MODRINTH_ID}/version")
+          TARGET_ID=$(python3 -c "import sys, json; data = json.loads(sys.argv[1]); print(next((v['id'] for v in data if v['version_number'] == sys.argv[2]), ''))" "$VERSIONS_JSON" "$VERSION")
+          if [ -n "$TARGET_ID" ]; then
+            echo "Syncing Modrinth version $VERSION (ID: $TARGET_ID) game versions..."
+            GV_JSON=$(python3 -c "import sys, json; print(json.dumps([v.strip() for v in sys.argv[1].splitlines() if v.strip()]))" "${{ needs.inspect-and-build.outputs.game_versions }}")
+            RESPONSE=$(curl -s -w "\n%{http_code}" -X PATCH "https://api.modrinth.com/v2/version/${TARGET_ID}" \
+              -H "Authorization: ${MODRINTH_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -H "User-Agent: VictorGugug/BlockProt-Reloaded" \
+              -d "{\"game_versions\": $GV_JSON}")
+            HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+            BODY=$(echo "$RESPONSE" | sed '$d')
+            if [ "$HTTP_CODE" = "204" ] || [ "$HTTP_CODE" = "200" ]; then
+              echo "Successfully synced game_versions on Modrinth version $VERSION."
+              echo "modrinth_synced=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "Modrinth PATCH returned HTTP $HTTP_CODE: $BODY"
+              echo "modrinth_synced=false" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "Version $VERSION not found on Modrinth."
+            echo "modrinth_synced=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+
       - name: Set up JDK 25
         if: needs.inspect-and-build.outputs.github_only != 'true' && env.HANGAR_API_TOKEN != '' && steps.detect.outputs.hangar_skip != 'true'
         uses: actions/setup-java@v6
@@ -865,6 +906,8 @@ jobs:
           fi
           if [ "${{ needs.edition.outputs.modrinth_enabled }}" != "true" ]; then
             echo "| **Modrinth** | [-] Not enabled | No Modrinth page enabled for this edition |" >> "$GITHUB_STEP_SUMMARY"
+          elif [ "${{ steps.modrinth_sync.outputs.modrinth_synced }}" = "true" ]; then
+            echo "| **Modrinth** | [v] Metadata Synced | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` game versions updated on Modrinth |" >> "$GITHUB_STEP_SUMMARY"
           elif [ "${{ steps.detect.outputs.modrinth_skip }}" = "true" ]; then
             echo "| **Modrinth** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on Modrinth (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
           elif [ -z "${{ secrets.MODRINTH_TOKEN }}" ]; then
