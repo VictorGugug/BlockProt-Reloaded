@@ -12,6 +12,7 @@
 [![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
 [![Java](https://img.shields.io/badge/Java-21+-orange?style=flat-square)](https://openjdk.org/projects/jdk/21/)
 [![Paper](https://img.shields.io/badge/Paper-1.21.7%20--%2026.3-white?style=flat-square)](https://papermc.io/)
+[![Sponsor](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=flat-square&logo=githubsponsors)](https://github.com/sponsors/VictorGugug)
 
 Java 21 bytecode (JDK 25 toolchain), Paper 1.21.7 through 26.3, Folia support, Native Paper Dialogs, Bedrock Forms, Admin Tiers, MySQL index, Access Audit, Entity Protection, Villager Workstation Protection, Auto-Backup, Ownership Transfer, Item Frame and Vehicle Protection.
 
@@ -453,6 +454,8 @@ admin_tiers:
 ## Contact and Support
 
 Maintained by **Zar**. [Open an issue](https://github.com/VictorGugug/BlockProt-Reloaded/issues) for bugs or feature suggestions.
+
+If you would like to support the maintenance and development of BlockProt Reloaded, you can sponsor through [GitHub Sponsors](https://github.com/sponsors/VictorGugug) or via the Sponsor button above.
 
 ## License
 
