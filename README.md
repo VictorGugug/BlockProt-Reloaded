@@ -111,9 +111,9 @@ The version suffix is controlled by `versionSuffix` in `gradle.properties`:
 
 | Value | Output |
 |---|---|
-| *(blank)* | `BlockProtReloaded-1.4.0.jar` - stable release |
-| `BEDev` | `BlockProtReloaded-1.4.0-BEDev.jar` - experimental pre-release |
-| `hotfix` | `BlockProtReloaded-1.4.0-hotfix.jar` - targeted bugfix release |
+| *(blank)* | `BlockProtReloaded-1.4.1.jar` - stable release |
+| `BEDev` | `BlockProtReloaded-1.4.1-BEDev.jar` - experimental pre-release |
+| `hotfix.N` | `BlockProtReloaded-1.4.1-hotfix.2.jar` - targeted bugfix release, numbered when a version has several |
 
 ## File Layout
 

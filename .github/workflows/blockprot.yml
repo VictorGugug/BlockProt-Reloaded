@@ -66,8 +66,6 @@ jobs:
   edition:
     name: Resolve Edition
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     outputs:
       edition: ${{ steps.resolve.outputs.edition }}
       operation: ${{ steps.resolve.outputs.operation }}
@@ -333,8 +331,6 @@ jobs:
     needs: [edition, sync-check]
     if: ${{ !cancelled() && needs.edition.result == 'success' && (needs.sync-check.outputs.needed == 'true' || needs.edition.outputs.operation == 'preview' || needs.edition.outputs.operation == 'publish') }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     outputs:
       plugin_version: ${{ steps.meta.outputs.plugin_version }}
       release_tag: ${{ steps.meta.outputs.release_tag }}
@@ -364,18 +360,21 @@ jobs:
 
       - name: Resolve metadata and server platforms from gradle.properties
         id: meta
+        env:
+          SUFFIX_CHOICE: ${{ github.event.inputs.suffix }}
+          TAG_PREFIX: ${{ needs.edition.outputs.tag_prefix }}
         run: |
           PROPS="gradle.properties"
           BASE_VER=$(grep -E '^[[:space:]]*blockProtVersion=' "$PROPS" | cut -d'=' -f2 | tr -d '[:space:]')
           SUFFIX=$(grep -E '^[[:space:]]*versionSuffix=' "$PROPS" | cut -d'=' -f2 | tr -d '[:space:]')
           PROPS_SUFFIX="$SUFFIX"
-          case "${{ github.event.inputs.suffix }}" in
+          case "$SUFFIX_CHOICE" in
             BEDev*) SUFFIX="BEDev" ;;
             Stable*) SUFFIX="" ;;
           esac
           if echo "$SUFFIX" | grep -qiE '^(bedev|bdev)(\.[0-9]+)?$'; then
             LAST=0
-            for T in $(git tag -l "${{ needs.edition.outputs.tag_prefix }}${BASE_VER}-BEDev.*"); do
+            for T in $(git tag -l "${TAG_PREFIX}${BASE_VER}-BEDev.*"); do
               N="${T##*-BEDev.}"
               if echo "$N" | grep -qE '^[0-9]+$' && [ "$N" -gt "$LAST" ]; then LAST="$N"; fi
             done
@@ -421,7 +420,7 @@ jobs:
           LOADERS=$(echo "$PLATFORMS" | tr '[:upper:]' '[:lower:]' | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | tr -d '\r' | grep -v '^$' | tr '\n' ' ')
 
           echo "plugin_version=${PLUGIN_VER}" >> "$GITHUB_OUTPUT"
-          echo "release_tag=${{ needs.edition.outputs.tag_prefix }}${PLUGIN_VER}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=${TAG_PREFIX}${PLUGIN_VER}" >> "$GITHUB_OUTPUT"
           echo "mc_range=${MC_RANGE}" >> "$GITHUB_OUTPUT"
           echo "latest_mc=${LATEST_MC}" >> "$GITHUB_OUTPUT"
           {
@@ -437,11 +436,11 @@ jobs:
 
       - name: Generate release notes changelog
         id: changelog
+        env:
+          TAG_OVERRIDE: ${{ github.event.inputs.tag }}
+          PLUGIN_VERSION: ${{ steps.meta.outputs.plugin_version }}
         run: |
-          TARGET_TAG="${{ github.event.inputs.tag }}"
-          if [ -z "$TARGET_TAG" ]; then
-            TARGET_TAG="${{ steps.meta.outputs.plugin_version }}"
-          fi
+          TARGET_TAG="${TAG_OVERRIDE:-$PLUGIN_VERSION}"
           CLEAN_TAG="${TARGET_TAG#v}"
           mkdir -p build/reports
 
@@ -451,8 +450,8 @@ jobs:
             NOTES_SRC="docs/RELEASE_NOTES/${CLEAN_TAG}.RELEASE_NOTES.md"
           elif echo "$CLEAN_TAG" | grep -qiE -- '-(bedev|bdev|snapshot|exp)' && [ -f "docs/RELEASE_NOTES/${CLEAN_TAG%%-*}.RELEASE_NOTES.md" ]; then
             NOTES_SRC="docs/RELEASE_NOTES/${CLEAN_TAG%%-*}.RELEASE_NOTES.md"
-          elif [ -f "docs/RELEASE_NOTES/${{ steps.meta.outputs.plugin_version }}.RELEASE_NOTES.md" ]; then
-            NOTES_SRC="docs/RELEASE_NOTES/${{ steps.meta.outputs.plugin_version }}.RELEASE_NOTES.md"
+          elif [ -f "docs/RELEASE_NOTES/${PLUGIN_VERSION}.RELEASE_NOTES.md" ]; then
+            NOTES_SRC="docs/RELEASE_NOTES/${PLUGIN_VERSION}.RELEASE_NOTES.md"
           else
             NOTES_SRC=""
           fi
@@ -580,91 +579,106 @@ jobs:
           retention-days: 1
 
       - name: Publish Pre-Flight Inspection Summary
+        env:
+          EDITION_ID: ${{ needs.edition.outputs.edition }}
+          EDITION_TITLE: ${{ needs.edition.outputs.title }}
+          OPERATION: ${{ needs.edition.outputs.operation }}
+          SYNC_NEEDED: ${{ needs.sync-check.outputs.needed }}
+          VERSION: ${{ steps.meta.outputs.plugin_version }}
+          SUFFIX: ${{ steps.meta.outputs.version_suffix }}
+          PROPS_SUFFIX: ${{ steps.meta.outputs.props_suffix }}
+          SUFFIX_CHOICE: ${{ github.event.inputs.suffix }}
+          STABLE_PROMOTION: ${{ steps.meta.outputs.stable_promotion }}
+          MC_RANGE: ${{ steps.meta.outputs.mc_range }}
+          PLATFORMS: ${{ steps.meta.outputs.supported_platforms }}
+          LEGACY: ${{ steps.meta.outputs.legacy_platforms }}
+          UNSUPPORTED_PLATFORMS: ${{ steps.meta.outputs.unsupported_platforms }}
+          UNSUPPORTED_VERSIONS: ${{ steps.meta.outputs.unsupported_versions }}
+          JAR_NAME: ${{ steps.jar.outputs.name }}
+          JAR_SIZE: ${{ steps.jar.outputs.size }}
+          JAR_SHA256: ${{ steps.jar.outputs.sha256 }}
+          CHANNEL: ${{ steps.jar.outputs.channel }}
+          GITHUB_ONLY: ${{ steps.jar.outputs.github_only }}
+          NOTES_SOURCE: ${{ steps.changelog.outputs.notes_source }}
+          NOTES_PATH: ${{ steps.changelog.outputs.notes_path }}
+          NOTES_URL: ${{ steps.changelog.outputs.notes_url }}
+          MODRINTH_ENABLED: ${{ needs.edition.outputs.modrinth_enabled }}
+          MODRINTH_TARGET: ${{ needs.edition.outputs.modrinth_id }}
+          HAS_MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN != '' }}
+          CURSEFORGE_ENABLED: ${{ needs.edition.outputs.curseforge_enabled }}
+          CURSEFORGE_TARGET: Project ID ${{ needs.edition.outputs.curseforge_id }}
+          HAS_CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN != '' }}
+          HANGAR_ENABLED: ${{ needs.edition.outputs.hangar_enabled }}
+          HANGAR_TARGET: ${{ needs.edition.outputs.hangar_slug }}
+          HAS_HANGAR_TOKEN: ${{ secrets.HANGAR_API_TOKEN != '' }}
         run: |
-          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
-          # Pre-Flight Release Inspection Report
+          row() { printf '| **%s** | %s | %s |\n' "$1" "$2" "$3"; }
+          platform_row() {
+            local name="$1" enabled="$2" has_token="$3" target="$4" secret="$5"
+            if [ "$enabled" != "true" ]; then
+              row "$name" "[-] Not enabled" "Edition \`$EDITION_ID\` has no $name page enabled"
+            elif [ "$has_token" = "true" ]; then
+              row "$name" "[v] Ready" "\`$target\`"
+            else
+              row "$name" "[x] Missing Token" "Secret \`$secret\` not configured"
+            fi
+          }
 
-          | Metric / Property | Evaluated Value | Source Location |
-          | :--- | :--- | :--- |
-          EOF
-          echo "| **Edition** | \`${{ needs.edition.outputs.title }}\` (\`${{ needs.edition.outputs.edition }}\`) | \`.github/editions.json\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Active Version** | \`${{ steps.meta.outputs.plugin_version }}\` | \`gradle.properties\` (\`blockProtVersion\`) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Version Suffix** | \`${{ steps.meta.outputs.version_suffix || '(none, stable)' }}\` | Selected: ${{ github.event.inputs.suffix }} (gradle.properties: \`${{ steps.meta.outputs.props_suffix || 'blank' }}\`) |" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${{ steps.meta.outputs.stable_promotion }}" = "true" ]; then
-            echo "| **gradle.properties Update** | \`versionSuffix\` will be cleared and committed on Publish | Stable promotion |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo "| **Target Minecraft Range** | \`${{ steps.meta.outputs.mc_range }}\` | \`gradle.properties\` (\`Supported on...\`) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Supported Server Software** | \`${{ steps.meta.outputs.supported_platforms }}\` | \`gradle.properties\` (\`supportedPlatforms\`) |" >> "$GITHUB_STEP_SUMMARY"
-          if [ -n "${{ steps.meta.outputs.legacy_platforms }}" ]; then
-            echo "| **Legacy / Deprecated Software** | \`${{ steps.meta.outputs.legacy_platforms }}\` (End-of-Support) | \`gradle.properties\` (\`legacyPlatforms\`) |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          echo "| **Unsupported Server Software** | \`${{ steps.meta.outputs.unsupported_platforms }}\` | \`gradle.properties\` (\`unsupportedPlatforms\`) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Unsupported Minecraft Versions** | \`${{ steps.meta.outputs.unsupported_versions }}\` | \`gradle.properties\` (\`unsupportedVersions\`) |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Distribution Binary** | \`${{ steps.jar.outputs.name }}\` (\`${{ steps.jar.outputs.size }}\`) | \`spigot/build/libs/${{ steps.jar.outputs.name }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Artifact SHA-256** | \`${{ steps.jar.outputs.sha256 }}\` | Checksum verification |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| **Release Channel** | \`${{ steps.jar.outputs.channel }}\` | Inferred from version |" >> "$GITHUB_STEP_SUMMARY"
-          if [ "${{ steps.jar.outputs.github_only }}" = "true" ]; then
-            echo "| **Distribution Scope** | GitHub Releases only (pre-release) | Development build suffix detected in version |" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "| **Distribution Scope** | GitHub and every enabled platform of the edition | Stable or hotfix version |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ "${{ steps.changelog.outputs.notes_source }}" = "curated" ]; then
-            echo "| **Release Notes File** | [\`${{ steps.changelog.outputs.notes_path }}\`](${{ steps.changelog.outputs.notes_url }}) | Curated Project Release Documentation |" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "| **Release Notes File** | \`build/reports/release-notes.md\` | Generated from Git history |" >> "$GITHUB_STEP_SUMMARY"
-          fi
+          {
+            echo "# Pre-Flight Release Inspection Report"
+            echo ""
+            echo "| Metric / Property | Evaluated Value | Source Location |"
+            echo "| :--- | :--- | :--- |"
+            row "Edition" "\`$EDITION_TITLE\` (\`$EDITION_ID\`)" "\`.github/editions.json\`"
+            row "Active Version" "\`$VERSION\`" "\`gradle.properties\` (\`blockProtVersion\`)"
+            row "Version Suffix" "\`${SUFFIX:-(none, stable)}\`" "Selected: $SUFFIX_CHOICE (gradle.properties: \`${PROPS_SUFFIX:-blank}\`)"
+            if [ "$STABLE_PROMOTION" = "true" ]; then
+              row "gradle.properties Update" "\`versionSuffix\` will be cleared and committed on Publish" "Stable promotion"
+            fi
+            row "Target Minecraft Range" "\`$MC_RANGE\`" "\`gradle.properties\` (\`Supported on...\`)"
+            row "Supported Server Software" "\`$PLATFORMS\`" "\`gradle.properties\` (\`supportedPlatforms\`)"
+            if [ -n "$LEGACY" ]; then
+              row "Legacy / Deprecated Software" "\`$LEGACY\` (End-of-Support)" "\`gradle.properties\` (\`legacyPlatforms\`)"
+            fi
+            row "Unsupported Server Software" "\`$UNSUPPORTED_PLATFORMS\`" "\`gradle.properties\` (\`unsupportedPlatforms\`)"
+            row "Unsupported Minecraft Versions" "\`$UNSUPPORTED_VERSIONS\`" "\`gradle.properties\` (\`unsupportedVersions\`)"
+            row "Distribution Binary" "\`$JAR_NAME\` (\`$JAR_SIZE\`)" "\`spigot/build/libs/$JAR_NAME\`"
+            row "Artifact SHA-256" "\`$JAR_SHA256\`" "Checksum verification"
+            row "Release Channel" "\`$CHANNEL\`" "Inferred from version"
+            if [ "$GITHUB_ONLY" = "true" ]; then
+              row "Distribution Scope" "GitHub Releases only (pre-release)" "Development build suffix detected in version"
+            else
+              row "Distribution Scope" "GitHub and every enabled platform of the edition" "Stable or hotfix version"
+            fi
+            if [ "$NOTES_SOURCE" = "curated" ]; then
+              row "Release Notes File" "[\`$NOTES_PATH\`]($NOTES_URL)" "Curated Project Release Documentation"
+            else
+              row "Release Notes File" "\`build/reports/release-notes.md\`" "Generated from Git history"
+            fi
 
-          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
-
-          ### Distribution Platform Credentials & Targets
-
-          | Platform | Configuration Status | Target Project / Assets |
-          | :--- | :---: | :--- |
-          | **GitHub Releases** | [v] Ready | Complete Build Assets (Shadow JAR, Sources, Javadoc, Common, SHA-256) |
-          EOF
-          if [ "${{ needs.edition.outputs.modrinth_enabled }}" != "true" ]; then
-            echo "| **Modrinth** | [-] Not enabled | Edition \`${{ needs.edition.outputs.edition }}\` has no Modrinth page enabled |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ -n "${{ secrets.MODRINTH_TOKEN }}" ]; then
-            echo "| **Modrinth** | [v] Ready | \`${{ needs.edition.outputs.modrinth_id }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "| **Modrinth** | [x] Missing Token | Secret \`MODRINTH_TOKEN\` not configured |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ "${{ needs.edition.outputs.curseforge_enabled }}" != "true" ]; then
-            echo "| **CurseForge** | [-] Not enabled | Edition \`${{ needs.edition.outputs.edition }}\` has no CurseForge page enabled |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ -n "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
-            echo "| **CurseForge** | [v] Ready | Project ID \`${{ needs.edition.outputs.curseforge_id }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "| **CurseForge** | [x] Missing Token | Secret \`CURSEFORGE_TOKEN\` not configured |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ "${{ needs.edition.outputs.hangar_enabled }}" != "true" ]; then
-            echo "| **Hangar** | [-] Not enabled | Edition \`${{ needs.edition.outputs.edition }}\` has no Hangar page enabled |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ -n "${{ secrets.HANGAR_API_TOKEN }}" ]; then
-            echo "| **Hangar** | [v] Ready | \`${{ needs.edition.outputs.hangar_slug }}\` |" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "| **Hangar** | [x] Missing Token | Secret \`HANGAR_API_TOKEN\` not configured |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-
-          if [ "${{ needs.edition.outputs.operation }}" = "publish" ] || [ "${{ needs.sync-check.outputs.needed }}" = "true" ]; then
-            cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
-
-          > [!NOTE]
-          > **Publication requested.** The next job publishes once the player tests pass.
-          EOF
-          else
-            cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
-
-          > [!IMPORTANT]
-          > **PRE-FLIGHT INSPECTION ONLY (DRY-RUN):** preview requested.
-          > Metadata, the compiled JAR, checksums, platform targets and release notes were gathered. The player tests report in their own job. **No files were uploaded to any platform.**
-          > To publish this release, re-run this workflow with operation **Publish release**.
-          EOF
-          fi
-
-          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
-
-          ### Release Notes Preview
-          EOF
-          cat build/reports/release-notes.md >> "$GITHUB_STEP_SUMMARY"
+            echo ""
+            echo "### Distribution Platform Credentials & Targets"
+            echo ""
+            echo "| Platform | Configuration Status | Target Project / Assets |"
+            echo "| :--- | :---: | :--- |"
+            row "GitHub Releases" "[v] Ready" "Complete Build Assets (Shadow JAR, Sources, Javadoc, Common, SHA-256)"
+            platform_row "Modrinth" "$MODRINTH_ENABLED" "$HAS_MODRINTH_TOKEN" "$MODRINTH_TARGET" "MODRINTH_TOKEN"
+            platform_row "CurseForge" "$CURSEFORGE_ENABLED" "$HAS_CURSEFORGE_TOKEN" "$CURSEFORGE_TARGET" "CURSEFORGE_TOKEN"
+            platform_row "Hangar" "$HANGAR_ENABLED" "$HAS_HANGAR_TOKEN" "$HANGAR_TARGET" "HANGAR_API_TOKEN"
+            echo ""
+            if [ "$OPERATION" = "publish" ] || [ "$SYNC_NEEDED" = "true" ]; then
+              echo "> [!NOTE]"
+              echo "> **Publication requested.** The next job publishes once the player tests pass."
+            else
+              echo "> [!IMPORTANT]"
+              echo "> **PRE-FLIGHT INSPECTION ONLY (DRY-RUN):** preview requested."
+              echo "> Metadata, the compiled JAR, checksums, platform targets and release notes were gathered. The player tests report in their own job. **No files were uploaded to any platform.**"
+              echo "> To publish this release, re-run this workflow with operation **Publish release**."
+            fi
+            echo ""
+            echo "### Release Notes Preview"
+            cat build/reports/release-notes.md
+          } >> "$GITHUB_STEP_SUMMARY"
 
   publish-platforms:
     name: Execute Multi-Platform Publication
@@ -674,6 +688,8 @@ jobs:
     permissions:
       contents: write
     env:
+      MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+      CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
       HANGAR_API_TOKEN: ${{ secrets.HANGAR_API_TOKEN }}
 
     steps:
@@ -886,61 +902,76 @@ jobs:
 
       - name: Publish Confirmation Summary
         if: always()
+        env:
+          VERSION: ${{ needs.inspect-and-build.outputs.plugin_version }}
+          RELEASE_TAG: ${{ needs.inspect-and-build.outputs.release_tag }}
+          GITHUB_ONLY: ${{ needs.inspect-and-build.outputs.github_only }}
+          GITHUB_OUTCOME: ${{ steps.gh_release.outcome }}
+          MC_PUBLISH_OUTCOME: ${{ steps.mc_publish.outcome }}
+          HANGAR_OUTCOME: ${{ steps.hangar.outcome }}
+          MODRINTH_SYNCED: ${{ steps.modrinth_sync.outputs.modrinth_synced }}
+          MODRINTH_ENABLED: ${{ needs.edition.outputs.modrinth_enabled }}
+          MODRINTH_SKIP: ${{ steps.detect.outputs.modrinth_skip }}
+          MODRINTH_ID: ${{ needs.edition.outputs.modrinth_id }}
+          CURSEFORGE_ENABLED: ${{ needs.edition.outputs.curseforge_enabled }}
+          CURSEFORGE_SKIP: ${{ steps.detect.outputs.curseforge_skip }}
+          CURSEFORGE_ID: ${{ needs.edition.outputs.curseforge_id }}
+          HANGAR_ENABLED: ${{ needs.edition.outputs.hangar_enabled }}
+          HANGAR_SKIP: ${{ steps.detect.outputs.hangar_skip }}
+          HANGAR_SLUG: ${{ needs.edition.outputs.hangar_slug }}
         run: |
-          cat << 'EOF' >> "$GITHUB_STEP_SUMMARY"
-          # Publication Summary
-
-          | Platform | Upload Status | Details |
-          | :--- | :---: | :--- |
-          EOF
-          if [ "${{ steps.gh_release.outcome }}" = "skipped" ]; then
-            echo "| **GitHub Releases** | [v] Already Live | Release \`${{ needs.inspect-and-build.outputs.release_tag }}\` already exists |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ steps.gh_release.outcome }}" = "success" ]; then
-            echo "| **GitHub Releases** | [v] Published | Tag \`${{ needs.inspect-and-build.outputs.release_tag }}\` (Complete Build Assets Attached) |" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "| **GitHub Releases** | [x] Failed | Could not create GitHub Release |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ "${{ needs.inspect-and-build.outputs.github_only }}" = "true" ]; then
-            echo "| **Modrinth / CurseForge / Hangar** | [-] Not applicable | Development build: published on GitHub Releases only |" >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-          if [ "${{ needs.edition.outputs.modrinth_enabled }}" != "true" ]; then
-            echo "| **Modrinth** | [-] Not enabled | No Modrinth page enabled for this edition |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ steps.modrinth_sync.outputs.modrinth_synced }}" = "true" ]; then
-            echo "| **Modrinth** | [v] Metadata Synced | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` game versions updated on Modrinth |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ steps.detect.outputs.modrinth_skip }}" = "true" ]; then
-            echo "| **Modrinth** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on Modrinth (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ -z "${{ secrets.MODRINTH_TOKEN }}" ]; then
-            echo "| **Modrinth** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ steps.mc_publish.outcome }}" = "success" ]; then
-            echo "| **Modrinth** | [v] Published | Project \`${{ needs.edition.outputs.modrinth_id }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "| **Modrinth** | [x] Failed | Upload step outcome: ${{ steps.mc_publish.outcome }} |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ "${{ needs.edition.outputs.curseforge_enabled }}" != "true" ]; then
-            echo "| **CurseForge** | [-] Not enabled | No CurseForge page enabled for this edition |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ steps.detect.outputs.curseforge_skip }}" = "true" ]; then
-            echo "| **CurseForge** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on CurseForge (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ -z "${{ secrets.CURSEFORGE_TOKEN }}" ]; then
-            echo "| **CurseForge** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ steps.mc_publish.outcome }}" = "success" ]; then
-            echo "| **CurseForge** | [v] Uploaded | Project ID \`${{ needs.edition.outputs.curseforge_id }}\` (listed after CurseForge review) |" >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "| **CurseForge** | [x] Failed | Upload step outcome: ${{ steps.mc_publish.outcome }} |" >> "$GITHUB_STEP_SUMMARY"
-          fi
-          if [ "${{ needs.edition.outputs.hangar_enabled }}" != "true" ]; then
-            echo "| **Hangar** | [-] Not enabled | No Hangar page enabled for this edition |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ "${{ steps.detect.outputs.hangar_skip }}" = "true" ]; then
-            echo "| **Hangar** | [v] Already Live | Version \`${{ needs.inspect-and-build.outputs.plugin_version }}\` was already published on Hangar (skipped duplicate) |" >> "$GITHUB_STEP_SUMMARY"
-          elif [ -n "${{ secrets.HANGAR_API_TOKEN }}" ]; then
-            if [ "${{ steps.hangar.outcome }}" = "success" ]; then
-              echo "| **Hangar** | [v] Published | Project \`${{ needs.edition.outputs.hangar_slug }}\` (Clean Shadow JAR) |" >> "$GITHUB_STEP_SUMMARY"
+          row() { printf '| **%s** | %s | %s |\n' "$1" "$2" "$3"; }
+          already_live() { row "$1" "[v] Already Live" "Version \`$VERSION\` was already published on $1 (skipped duplicate)"; }
+          {
+            echo "# Publication Summary"
+            echo ""
+            echo "| Platform | Upload Status | Details |"
+            echo "| :--- | :---: | :--- |"
+            case "$GITHUB_OUTCOME" in
+              skipped) row "GitHub Releases" "[v] Already Live" "Release \`$RELEASE_TAG\` already exists" ;;
+              success) row "GitHub Releases" "[v] Published" "Tag \`$RELEASE_TAG\` (Complete Build Assets Attached)" ;;
+              *)       row "GitHub Releases" "[x] Failed" "Could not create GitHub Release" ;;
+            esac
+            if [ "$GITHUB_ONLY" = "true" ]; then
+              row "Modrinth / CurseForge / Hangar" "[-] Not applicable" "Development build: published on GitHub Releases only"
             else
-              echo "| **Hangar** | [!] Issue | Check Hangar API key format (must be 73 characters <UUID>.<token>) |" >> "$GITHUB_STEP_SUMMARY"
+              if [ "$MODRINTH_ENABLED" != "true" ]; then
+                row "Modrinth" "[-] Not enabled" "No Modrinth page enabled for this edition"
+              elif [ "$MODRINTH_SYNCED" = "true" ]; then
+                row "Modrinth" "[v] Metadata Synced" "Version \`$VERSION\` game versions updated on Modrinth"
+              elif [ "$MODRINTH_SKIP" = "true" ]; then
+                already_live "Modrinth"
+              elif [ -z "$MODRINTH_TOKEN" ]; then
+                row "Modrinth" "[x] Skipped" "Token not set"
+              elif [ "$MC_PUBLISH_OUTCOME" = "success" ]; then
+                row "Modrinth" "[v] Published" "Project \`$MODRINTH_ID\` (Clean Shadow JAR)"
+              else
+                row "Modrinth" "[x] Failed" "Upload step outcome: $MC_PUBLISH_OUTCOME"
+              fi
+              if [ "$CURSEFORGE_ENABLED" != "true" ]; then
+                row "CurseForge" "[-] Not enabled" "No CurseForge page enabled for this edition"
+              elif [ "$CURSEFORGE_SKIP" = "true" ]; then
+                already_live "CurseForge"
+              elif [ -z "$CURSEFORGE_TOKEN" ]; then
+                row "CurseForge" "[x] Skipped" "Token not set"
+              elif [ "$MC_PUBLISH_OUTCOME" = "success" ]; then
+                row "CurseForge" "[v] Uploaded" "Project ID \`$CURSEFORGE_ID\` (listed after CurseForge review)"
+              else
+                row "CurseForge" "[x] Failed" "Upload step outcome: $MC_PUBLISH_OUTCOME"
+              fi
+              if [ "$HANGAR_ENABLED" != "true" ]; then
+                row "Hangar" "[-] Not enabled" "No Hangar page enabled for this edition"
+              elif [ "$HANGAR_SKIP" = "true" ]; then
+                already_live "Hangar"
+              elif [ -z "$HANGAR_API_TOKEN" ]; then
+                row "Hangar" "[x] Skipped" "Token not set"
+              elif [ "$HANGAR_OUTCOME" = "success" ]; then
+                row "Hangar" "[v] Published" "Project \`$HANGAR_SLUG\` (Clean Shadow JAR)"
+              else
+                row "Hangar" "[!] Issue" "Check Hangar API key format (must be 73 characters <UUID>.<token>)"
+              fi
             fi
-          else
-            echo "| **Hangar** | [x] Skipped | Token not set |" >> "$GITHUB_STEP_SUMMARY"
-          fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publish Discord announcement template
         if: always() && steps.gh_release.outcome == 'success'
