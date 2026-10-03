@@ -33,7 +33,6 @@ import de.sean.blockprot.bukkit.metrics.IntegrationBarChart;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 
 import de.sean.blockprot.bukkit.storage.HybridDatabase;
-import de.sean.blockprot.bukkit.storage.ProtectedBlockCache;
 import de.sean.blockprot.bukkit.tasks.ConfigFileWatcher;
 import de.sean.blockprot.bukkit.tasks.BackupTask;
 import de.sean.blockprot.bukkit.tasks.InactivityCleanupTask;
@@ -406,8 +405,6 @@ public final class BlockProt extends JavaPlugin {
         BlockProtConsole.bootStatus("Audit Logger", auditActive, auditActive ? "Active" : "Disabled");
 
         printBootUpdateStatus(version);
-
-        foliaLib.getScheduler().runAsync(task -> populateProtectedBlockCache());
 
         BlockProtConsole.bootStatus(
             Translator.get(TranslationKey.CONSOLE__BOOT_STARTUP_TIME),
@@ -1317,54 +1314,6 @@ public final class BlockProt extends JavaPlugin {
         try {
             this.saveResource(name, replace);
         } catch (Exception ignored) {}
-    }
-
-    /**
-     * Populates the in-memory {@link ProtectedBlockCache} on startup.
-     *
-     * <p>When MySQL is available, iterates the block index returned by
-     * {@link HybridDatabase#getBlockIndexByWorld(String)} for every loaded world.
-     * Otherwise falls back to iterating all offline player stats entries.
-     * Only blocks whose type is currently lockable are marked in the cache.
-     */
-    private void populateProtectedBlockCache() {
-        ProtectedBlockCache.clear();
-        int marked = 0;
-
-        if (hybridDatabase != null && hybridDatabase.isEnabled()) {
-            for (org.bukkit.World world : Bukkit.getWorlds()) {
-                for (org.bukkit.Location loc : hybridDatabase.getBlockIndexByWorld(world.getName())) {
-                    org.bukkit.block.Block block = loc.getBlock();
-                    if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
-                        ProtectedBlockCache.mark(block);
-                        marked++;
-                    }
-                }
-            }
-        } else {
-            // No MySQL: iterate all player stat entries to collect protected locations.
-            if (de.sean.blockprot.bukkit.nbt.StatHandler.isLoaded()) {
-                java.util.Set<org.bukkit.Location> seen = new java.util.HashSet<>();
-                for (org.bukkit.OfflinePlayer op : Bukkit.getOfflinePlayers()) {
-                    de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic pbs =
-                        new de.sean.blockprot.bukkit.nbt.stats.PlayerBlocksStatistic();
-                    de.sean.blockprot.bukkit.nbt.StatHandler.getStatisticByUuid(pbs, op.getUniqueId());
-                    for (de.sean.blockprot.bukkit.nbt.stats.LocationListEntry ls : pbs.get()) {
-                        try {
-                            org.bukkit.Location loc = ls.get();
-                            if (loc.getWorld() == null || !seen.add(loc)) continue;
-                            org.bukkit.block.Block block = loc.getBlock();
-                            if (BlockProt.getDefaultConfig().isLockable(block.getType())) {
-                                ProtectedBlockCache.mark(block);
-                                marked++;
-                            }
-                        } catch (Exception ignored) {}
-                    }
-                }
-            }
-        }
-
-        BlockProtLogger.log("protected-cache", "Populated ProtectedBlockCache with " + marked + " block(s).");
     }
 
     /**
