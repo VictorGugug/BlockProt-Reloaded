@@ -1315,7 +1315,9 @@ public final class BlockProt extends JavaPlugin {
         if (!replace && dest.exists()) return; // already there, skip quietly
         try {
             this.saveResource(name, replace);
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            BlockProtLogger.log("resource", "Could not save resource " + name + ": " + e.getMessage());
+        }
     }
 
     /**
@@ -1546,7 +1548,9 @@ public final class BlockProt extends JavaPlugin {
     private static void markFirstStartDone() {
         try {
             new File(getInstance().getDataFolder(), ".first_start_done").createNewFile();
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            BlockProtLogger.log("startup", "Could not create first-start marker: " + e.getMessage());
+        }
     }
 
     private static void copyDirectoryContents(@NotNull Path src, @NotNull Path dst) throws IOException {

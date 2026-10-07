@@ -92,7 +92,9 @@ public class WorldExpiryTask implements Runnable {
                     if (handler.isProtected() && handler.getLockedAt() > 0 && handler.getLockedAt() < cutoff) {
                         expired.add(loc.clone());
                     }
-                } catch (RuntimeException ignored) {}
+                } catch (RuntimeException e) {
+                    BlockProtLogger.log("world-expiry", "Failed scanning tile block at " + loc + ": " + e.getMessage());
+                }
             }
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
@@ -106,7 +108,9 @@ public class WorldExpiryTask implements Runnable {
                                 if (handler.isProtected() && handler.getLockedAt() > 0 && handler.getLockedAt() < cutoff) {
                                     expired.add(block.getLocation().clone());
                                 }
-                            } catch (RuntimeException ignored) {}
+                            } catch (RuntimeException e) {
+                                BlockProtLogger.log("world-expiry", "Failed scanning block at " + block.getLocation() + ": " + e.getMessage());
+                            }
                         }
                     }
                 }
@@ -131,7 +135,9 @@ public class WorldExpiryTask implements Runnable {
                         StatHandler.removeContainerByUuid(UUID.fromString(ownerUuid), loc);
                     } catch (IllegalArgumentException ignored) {}
                 }
-            } catch (RuntimeException ignored) {}
+            } catch (RuntimeException e) {
+                BlockProtLogger.log("world-expiry", "Failed to clear expired block at " + loc + ": " + e.getMessage());
+            }
         }
 
         BlockProtLogger.log("world-expiry",

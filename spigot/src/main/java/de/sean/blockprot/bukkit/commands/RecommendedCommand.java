@@ -370,7 +370,9 @@ public class RecommendedCommand implements CommandExecutor {
         cfg.set(key, value);
         try {
             cfg.save(f);
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            BlockProtLogger.warn("Failed to save recommended state file: " + e.getMessage());
+        }
     }
 
     @Override

@@ -22,6 +22,7 @@ package de.sean.blockprot.bukkit.tasks;
 
 import com.tcoded.folialib.impl.PlatformScheduler;
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.config.BlockFamilyParser;
 import de.sean.blockprot.bukkit.listeners.HopperEventListener;
 import de.sean.blockprot.bukkit.nbt.BlockNBTHandler;
@@ -212,7 +213,9 @@ public final class WorldProtectionEraser {
                 try { StatHandler.removeContainerByUuid(UUID.fromString(owner), block.getLocation()); }
                 catch (IllegalArgumentException ignored) {}
             }
-        } catch (RuntimeException ignored) {}
+        } catch (RuntimeException e) {
+            BlockProtLogger.log("world-eraser", "Failed to erase block at " + block.getLocation() + ": " + e.getMessage());
+        }
     }
 
     private static boolean restore(@NotNull Snapshot snap) {

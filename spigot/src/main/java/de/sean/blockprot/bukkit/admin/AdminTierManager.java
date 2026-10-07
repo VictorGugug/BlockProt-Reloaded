@@ -21,6 +21,7 @@
 package de.sean.blockprot.bukkit.admin;
 
 import de.sean.blockprot.bukkit.BlockProt;
+import de.sean.blockprot.bukkit.BlockProtLogger;
 import de.sean.blockprot.bukkit.Permissions;
 import de.sean.blockprot.bukkit.TranslationKey;
 import de.sean.blockprot.bukkit.Translator;
@@ -90,7 +91,9 @@ public final class AdminTierManager {
         }
         try {
             config.save(file);
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            BlockProtLogger.warn("Failed to save admins.yml: " + e.getMessage());
+        }
     }
 
     private static File getConfigFile() {

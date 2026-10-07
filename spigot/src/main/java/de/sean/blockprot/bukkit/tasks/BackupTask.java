@@ -121,7 +121,9 @@ public final class BackupTask implements Runnable {
         try {
             version = BlockProt.getPluginVersion();
             if (version.isBlank()) version = "unknown";
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            BlockProtLogger.log("backup", "Could not resolve plugin version: " + e.getMessage());
+        }
 
         String timestamp = DATE_FMT.format(new Date());
         String suffix = version.isBlank() ? "" : "_v" + version.replaceAll("\\s+", "_");

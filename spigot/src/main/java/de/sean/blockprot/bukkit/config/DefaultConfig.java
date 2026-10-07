@@ -1071,7 +1071,11 @@ public final class DefaultConfig extends BlockProtConfig {
                 org.bukkit.configuration.file.YamlConfiguration cfg =
                     org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(configFile);
                 cfg.set("modern_family_blocks", false);
-                try { cfg.save(configFile); } catch (java.io.IOException ignored) {}
+                try {
+                    cfg.save(configFile);
+                } catch (java.io.IOException e) {
+                    BlockProtLogger.warn("Failed to save config.yml: " + e.getMessage());
+                }
                 BlockProtLogger.log("blocks-auto",
                     "All lockable lists empty, disabled modern_family_blocks.");
             }
