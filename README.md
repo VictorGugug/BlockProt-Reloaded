@@ -5,6 +5,8 @@
 ---
 [![CI](https://img.shields.io/github/actions/workflow/status/VictorGugug/BlockProt-Reloaded/blockprot.yml?branch=main&style=flat-square&label=CI)](https://github.com/VictorGugug/BlockProt-Reloaded/actions/workflows/blockprot.yml)
 [![Release](https://img.shields.io/github/v/release/VictorGugug/BlockProt-Reloaded?style=flat-square&color=brightgreen&label=Release)](https://github.com/VictorGugug/BlockProt-Reloaded/releases)
+[![Modrinth](https://img.shields.io/modrinth/dt/R0syLmu8?style=flat-square&color=00AF5C&logo=modrinth&label=Modrinth)](https://modrinth.com/plugin/blockprot-legacy)
+[![bStats](https://img.shields.io/bstats/servers/34386?style=flat-square&label=bStats)](https://bstats.org/plugin/bukkit/BlockProt%20Legacy/34386)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=flat-square)](LICENSE)
 [![GitLocalize](https://gitlocalize.com/repo/10833/whole_project/badge.svg)](https://gitlocalize.com/repo/10833)
 [![Java](https://img.shields.io/badge/Java-17+-orange?style=flat-square)](https://openjdk.org/projects/jdk/17/)
