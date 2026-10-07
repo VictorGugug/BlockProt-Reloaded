@@ -7,9 +7,17 @@ BlockProt is published as three editions. Each edition covers a range of Minecra
 | Minecraft version | Edition | Java | Download |
 | --- | --- | --- | --- |
 | 1.21.7 and newer (including 26.x) | **BlockProt Reloaded** | 21 or newer (25 for Minecraft 26.x) | [Modrinth](https://modrinth.com/plugin/blockprot-reloaded), [CurseForge](https://www.curseforge.com/minecraft/bukkit-plugins/blockprot-reloaded), [Hangar](https://hangar.papermc.io/VictorGugug/BlockProt-Reloaded) |
-| 1.20.5 to 1.21.6 | **BlockProt Reloaded Legacy** | 21 or newer | Coming with the first release (planned slug `blockprot-reloaded-legacy`) |
-| 1.18.2 to 1.20.4 | **BlockProt Legacy** | 17 or newer | Coming with the first release (planned slug `blockprot-legacy`) |
+| 1.20.5 to 1.21.6 | **BlockProt Reloaded Legacy** | 21 or newer | [Modrinth](https://modrinth.com/plugin/blockprot-reloaded-legacy) |
+| 1.18.2 to 1.20.4 | **BlockProt Legacy** | 17 or newer | [Modrinth](https://modrinth.com/plugin/blockprot-legacy) |
 | Older than 1.18.2 | No supported edition | | Older upstream BlockProt releases may run there; they are not maintained here |
+
+## Anonymous usage metrics (bStats)
+
+Each edition reports anonymous metrics to its own bStats plugin page:
+
+- **BlockProt Reloaded** (1.21.7+): [bStats #31548](https://bstats.org/plugin/bukkit/BlockProt%20Reloaded/31548)
+- **BlockProt Reloaded Legacy** (1.20.5 - 1.21.6): [bStats #34385](https://bstats.org/plugin/bukkit/BlockProt%20Reloaded%20Legacy/34385)
+- **BlockProt Legacy** (1.18.2 - 1.20.4): [bStats #34386](https://bstats.org/plugin/bukkit/BlockProt%20Legacy/34386)
 
 BlockProt Reloaded 1.3.8 (Minecraft 1.21.1 to 1.21.6) and 1.3.7 (Minecraft 1.20.5 to 1.21) stay available on [GitHub Releases](https://github.com/VictorGugug/BlockProt-Reloaded/releases). The legacy editions replace them.
 
