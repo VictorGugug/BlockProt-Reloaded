@@ -30,6 +30,7 @@ import de.sean.blockprot.bukkit.config.WorldsConfig;
 import de.sean.blockprot.bukkit.integrations.*;
 import de.sean.blockprot.bukkit.listeners.*;
 import de.sean.blockprot.bukkit.metrics.IntegrationBarChart;
+import de.sean.blockprot.bukkit.metrics.LanguagePieChart;
 import de.sean.blockprot.bukkit.nbt.StatHandler;
 
 import de.sean.blockprot.bukkit.storage.HybridDatabase;
@@ -324,6 +325,7 @@ public final class BlockProt extends JavaPlugin {
 
         metrics = new Metrics(this, pluginId);
         metrics.addCustomChart(new IntegrationBarChart());
+        metrics.addCustomChart(new LanguagePieChart());
 
         final PluginManager pm = getServer().getPluginManager();
         registerEvent(pm, new BlockEventListener(this));
